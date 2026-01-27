@@ -4,6 +4,7 @@ import { Dashboard } from './Dashboard';
 import { ProjectsView } from './ProjectsView';
 import { ForecastView } from './ForecastView';
 import { TimelineView } from './TimelineView';
+import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 
 export function MainLayout() {
   const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -24,11 +25,13 @@ export function MainLayout() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      <main className="flex-1 overflow-auto">
-        {renderView()}
-      </main>
-    </div>
+    <ProjectDataProvider>
+      <div className="flex h-screen overflow-hidden bg-background">
+        <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+        <main className="flex-1 overflow-auto">
+          {renderView()}
+        </main>
+      </div>
+    </ProjectDataProvider>
   );
 }

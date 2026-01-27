@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronLeft, ChevronRight, AlertTriangle, Plus } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { projects, Status } from '@/data/projectData';
+import { Status } from '@/data/projectData';
+import { useProjectDataContext } from '@/contexts/ProjectDataContext';
+import { AddActivityDialog } from './dialogs/AddActivityDialog';
+import { EditActivityDialog } from './dialogs/EditActivityDialog';
 import { cn } from '@/lib/utils';
 
 const containerVariants = {
@@ -54,6 +57,7 @@ const getStatusColor = (status: Status) => {
 };
 
 export function TimelineView() {
+  const { projects } = useProjectDataContext();
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const weeks = useMemo(() => generateWeeks(2026), []);
   
@@ -118,7 +122,7 @@ export function TimelineView() {
             <div className="min-w-[1000px]">
               {/* Header */}
               <div className="sticky top-0 z-10 flex border-b border-border/50 bg-card">
-                <div className="w-64 shrink-0 border-r border-border/50 p-3 font-semibold">
+                <div className="w-72 shrink-0 border-r border-border/50 p-3 font-semibold">
                   Projekt / Aktivitet
                 </div>
                 <div className="flex flex-1">
@@ -144,8 +148,16 @@ export function TimelineView() {
                 <motion.div key={project.id} variants={itemVariants}>
                   {/* Project Header */}
                   <div className="flex border-b border-border/50 bg-muted/30">
-                    <div className="w-64 shrink-0 border-r border-border/50 p-3">
+                    <div className="w-72 shrink-0 border-r border-border/50 p-3 flex items-center justify-between">
                       <span className="font-semibold">{project.code} - {project.name}</span>
+                      <AddActivityDialog 
+                        projectId={project.id} 
+                        trigger={
+                          <Button size="icon" variant="ghost" className="h-6 w-6">
+                            <Plus className="h-3.5 w-3.5" />
+                          </Button>
+                        }
+                      />
                     </div>
                     <div className="flex-1" />
                   </div>
@@ -156,17 +168,33 @@ export function TimelineView() {
                     const endWeek = activity.endDate ? getWeekNumber(activity.endDate) : startWeek;
 
                     return (
-                      <div key={activity.id} className="flex border-b border-border/30 hover:bg-muted/20">
-                        <div className="w-64 shrink-0 border-r border-border/50 p-2 pl-6">
-                          <div className="flex items-center gap-2">
-                            {activity.hasWarning && (
-                              <AlertTriangle className="h-3.5 w-3.5 text-status-delayed" />
-                            )}
-                            <span className="text-sm">{activity.name}</span>
+                      <div key={activity.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
+                        <div className="w-72 shrink-0 border-r border-border/50 p-2 pl-6 flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              {activity.hasWarning && (
+                                <AlertTriangle className="h-3.5 w-3.5 text-status-delayed" />
+                              )}
+                              <span className="text-sm">{activity.name}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {activity.responsible} • {activity.department}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {activity.responsible} • {activity.department}
-                          </div>
+                          <EditActivityDialog 
+                            projectId={project.id} 
+                            activity={activity}
+                            trigger={
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <span className="sr-only">Redigera</span>
+                                ✏️
+                              </Button>
+                            }
+                          />
                         </div>
                         <div className="flex flex-1 items-center">
                           {displayedWeeks.map((week) => {
@@ -203,6 +231,12 @@ export function TimelineView() {
                   })}
                 </motion.div>
               ))}
+
+              {timelineProjects.length === 0 && (
+                <div className="p-8 text-center text-muted-foreground">
+                  Inga aktiviteter med datum. Lägg till aktiviteter med start- och slutdatum för att se dem här.
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
