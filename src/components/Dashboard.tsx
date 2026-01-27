@@ -8,9 +8,11 @@ import {
   Activity
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { projects, yearTotal, monthlyTotals, Status } from '@/data/projectData';
+import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { StatusBadge } from './StatusBadge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -26,6 +28,8 @@ const itemVariants = {
 };
 
 export function Dashboard() {
+  const { projects, monthlyTotals, yearTotal } = useProjectDataContext();
+
   // Calculate statistics
   const allActivities = projects.flatMap(p => p.activities);
   const totalActivities = allActivities.length;
@@ -33,16 +37,13 @@ export function Dashboard() {
   const inProgressActivities = allActivities.filter(a => a.status === 'Pågår').length;
   const warningActivities = allActivities.filter(a => a.hasWarning).length;
   
-  const completionRate = Math.round((completedActivities / totalActivities) * 100);
+  const completionRate = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 0;
 
   // Chart data
-  const chartData = Object.entries(monthlyTotals).map(([month, value]) => ({
+  const chartData = months.map(month => ({
     month,
-    value,
+    value: monthlyTotals[month] || 0,
   }));
-
-  // Recent activities with warnings
-  const recentWarnings = allActivities.filter(a => a.hasWarning);
 
   const stats = [
     {
@@ -90,7 +91,7 @@ export function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
+        {stats.map((stat) => (
           <motion.div key={stat.label} variants={itemVariants}>
             <Card className="border-border/50 bg-card/80">
               <CardContent className="p-6">
@@ -124,7 +125,7 @@ export function Dashboard() {
                   <CardDescription>Månatlig prognos i MSEK</CardDescription>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-primary">{yearTotal} MSEK</p>
+                  <p className="text-2xl font-bold text-primary">{yearTotal.toFixed(1)} MSEK</p>
                   <p className="text-sm text-muted-foreground">Total prognos</p>
                 </div>
               </div>
@@ -195,7 +196,7 @@ export function Dashboard() {
                 {projects.slice(0, 5).map((project) => {
                   const completed = project.activities.filter(a => a.status === 'Slutförd').length;
                   const total = project.activities.length;
-                  const progress = Math.round((completed / total) * 100);
+                  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
                   const hasWarning = project.activities.some(a => a.hasWarning);
 
                   return (
@@ -226,6 +227,11 @@ export function Dashboard() {
                     </div>
                   );
                 })}
+                {projects.length === 0 && (
+                  <p className="text-center text-sm text-muted-foreground py-4">
+                    Inga projekt ännu. Gå till Projekt-vyn för att lägga till projekt.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>

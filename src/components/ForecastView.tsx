@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, Package } from 'lucide-react';
+import { TrendingUp, Package, Pencil } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { salesForecast, monthlyTotals, yearTotal } from '@/data/projectData';
+import { Button } from '@/components/ui/button';
+import { useProjectDataContext, DealStatus } from '@/contexts/ProjectDataContext';
+import { AddForecastDialog } from './dialogs/AddForecastDialog';
+import { EditForecastDialog } from './dialogs/EditForecastDialog';
 import {
   Table,
   TableBody,
@@ -11,6 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { cn } from '@/lib/utils';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthLabels: { [key: string]: string } = {
@@ -41,10 +45,21 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
+const getStatusColor = (status: DealStatus) => {
+  switch (status) {
+    case 'Tagen': return 'text-status-completed bg-status-completed/10';
+    case 'Flyttad': return 'text-status-in-progress bg-status-in-progress/10';
+    case 'Förlorad': return 'text-status-delayed bg-status-delayed/10';
+    default: return 'text-muted-foreground bg-muted';
+  }
+};
+
 export function ForecastView() {
-  const chartData = Object.entries(monthlyTotals).map(([month, value]) => ({
+  const { forecast, monthlyTotals, yearTotal } = useProjectDataContext();
+
+  const chartData = months.map(month => ({
     month: monthLabels[month] || month,
-    value,
+    value: monthlyTotals[month] || 0,
   }));
 
   // Calculate cumulative data
@@ -54,14 +69,11 @@ export function ForecastView() {
     return { ...item, cumulative };
   });
 
-  // Group by product
-  const productGroups = salesForecast.reduce((acc, item) => {
-    if (!acc[item.product]) {
-      acc[item.product] = [];
-    }
-    acc[item.product].push(item);
-    return acc;
-  }, {} as { [key: string]: typeof salesForecast });
+  // Find best month
+  const bestMonth = Object.entries(monthlyTotals).reduce(
+    (best, [month, value]) => (value > best.value ? { month, value } : best),
+    { month: '', value: 0 }
+  );
 
   return (
     <motion.div
@@ -70,9 +82,12 @@ export function ForecastView() {
       animate="visible"
       className="space-y-6 p-6"
     >
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Försäljningsprognos 2026</h1>
-        <p className="text-muted-foreground">Översikt av prognostiserad försäljning per månad</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Försäljningsprognos 2026</h1>
+          <p className="text-muted-foreground">Översikt av prognostiserad försäljning per månad</p>
+        </div>
+        <AddForecastDialog />
       </div>
 
       {/* Summary Cards */}
@@ -83,7 +98,7 @@ export function ForecastView() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total prognos</p>
-                  <p className="mt-1 text-3xl font-bold">{yearTotal} MSEK</p>
+                  <p className="mt-1 text-3xl font-bold">{yearTotal.toFixed(1)} MSEK</p>
                 </div>
                 <div className="rounded-full bg-primary/10 p-3">
                   <TrendingUp className="h-6 w-6 text-primary" />
@@ -99,8 +114,8 @@ export function ForecastView() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Bästa månad</p>
-                  <p className="mt-1 text-3xl font-bold">Maj</p>
-                  <p className="text-sm text-muted-foreground">14.0 MSEK</p>
+                  <p className="mt-1 text-3xl font-bold">{monthLabels[bestMonth.month] || '-'}</p>
+                  <p className="text-sm text-muted-foreground">{bestMonth.value.toFixed(1)} MSEK</p>
                 </div>
                 <div className="rounded-full bg-status-completed/10 p-3">
                   <TrendingUp className="h-6 w-6 text-status-completed" />
@@ -115,8 +130,8 @@ export function ForecastView() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Antal projekt</p>
-                  <p className="mt-1 text-3xl font-bold">{salesForecast.length}</p>
+                  <p className="text-sm text-muted-foreground">Antal affärer</p>
+                  <p className="mt-1 text-3xl font-bold">{forecast.length}</p>
                 </div>
                 <div className="rounded-full bg-chart-4/10 p-3">
                   <Package className="h-6 w-6 text-chart-4" />
@@ -205,19 +220,29 @@ export function ForecastView() {
                   <TableRow className="border-border/50 hover:bg-transparent">
                     <TableHead className="font-semibold">Projekt</TableHead>
                     <TableHead className="font-semibold">Produkt</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
                     {months.map(month => (
                       <TableHead key={month} className="text-center font-semibold">
                         {month}
                       </TableHead>
                     ))}
                     <TableHead className="font-semibold">Not</TableHead>
+                    <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {salesForecast.map((item, index) => (
-                    <TableRow key={index} className="border-border/50">
+                  {forecast.map((item) => (
+                    <TableRow key={item.id} className="border-border/50">
                       <TableCell className="font-medium">{item.project}</TableCell>
                       <TableCell className="text-muted-foreground">{item.product}</TableCell>
+                      <TableCell>
+                        <span className={cn(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                          getStatusColor(item.dealStatus)
+                        )}>
+                          {item.dealStatus}
+                        </span>
+                      </TableCell>
                       {months.map(month => (
                         <TableCell key={month} className="text-center">
                           {item.months[month] ? (
@@ -232,18 +257,31 @@ export function ForecastView() {
                       <TableCell className="text-sm text-muted-foreground">
                         {item.notes || '-'}
                       </TableCell>
+                      <TableCell>
+                        <EditForecastDialog forecast={item} />
+                      </TableCell>
                     </TableRow>
                   ))}
-                  {/* Totals row */}
-                  <TableRow className="border-t-2 border-border bg-muted/30 font-bold">
-                    <TableCell colSpan={2}>Summa per månad</TableCell>
-                    {months.map(month => (
-                      <TableCell key={month} className="text-center text-primary">
-                        {monthlyTotals[month as keyof typeof monthlyTotals]?.toFixed(1) || '-'}
+                  {forecast.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={16} className="text-center py-8 text-muted-foreground">
+                        Inga affärer ännu. Klicka på "Ny affär" för att börja.
                       </TableCell>
-                    ))}
-                    <TableCell></TableCell>
-                  </TableRow>
+                    </TableRow>
+                  )}
+                  {/* Totals row */}
+                  {forecast.length > 0 && (
+                    <TableRow className="border-t-2 border-border bg-muted/30 font-bold">
+                      <TableCell colSpan={3}>Summa per månad</TableCell>
+                      {months.map(month => (
+                        <TableCell key={month} className="text-center text-primary">
+                          {(monthlyTotals[month] || 0).toFixed(1)}
+                        </TableCell>
+                      ))}
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
