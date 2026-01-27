@@ -1,0 +1,141 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  LayoutDashboard,
+  FolderKanban,
+  BarChart3,
+  CalendarDays,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline';
+
+interface SidebarProps {
+  currentView: View;
+  onViewChange: (view: View) => void;
+}
+
+const navItems = [
+  { id: 'dashboard' as View, label: 'Översikt', icon: LayoutDashboard },
+  { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
+  { id: 'forecast' as View, label: 'Prognos', icon: BarChart3 },
+  { id: 'timeline' as View, label: 'Tidslinje', icon: CalendarDays },
+];
+
+export function Sidebar({ currentView, onViewChange }: SidebarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { logout } = useAuth();
+
+  return (
+    <motion.aside
+      initial={false}
+      animate={{ width: isCollapsed ? 72 : 240 }}
+      transition={{ duration: 0.2, ease: 'easeInOut' }}
+      className="relative flex h-screen flex-col border-r border-sidebar-border bg-sidebar"
+    >
+      {/* Logo */}
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg gradient-primary">
+          <FolderKanban className="h-5 w-5 text-primary-foreground" />
+        </div>
+        {!isCollapsed && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="font-semibold text-sidebar-foreground"
+          >
+            Projektstyrning
+          </motion.span>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 p-3">
+        {navItems.map((item) => {
+          const isActive = currentView === item.id;
+          const NavButton = (
+            <Button
+              key={item.id}
+              variant="ghost"
+              onClick={() => onViewChange(item.id)}
+              className={cn(
+                'w-full justify-start gap-3 px-3 py-2.5 text-sidebar-foreground transition-all',
+                isActive
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  : 'hover:bg-sidebar-accent/50',
+                isCollapsed && 'justify-center px-2'
+              )}
+            >
+              <item.icon className={cn('h-5 w-5 shrink-0', isActive && 'text-primary')} />
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="truncate"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </Button>
+          );
+
+          if (isCollapsed) {
+            return (
+              <Tooltip key={item.id} delayDuration={0}>
+                <TooltipTrigger asChild>{NavButton}</TooltipTrigger>
+                <TooltipContent side="right" className="font-medium">
+                  {item.label}
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+
+          return NavButton;
+        })}
+      </nav>
+
+      {/* Collapse button */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+      >
+        {isCollapsed ? (
+          <ChevronRight className="h-3.5 w-3.5" />
+        ) : (
+          <ChevronLeft className="h-3.5 w-3.5" />
+        )}
+      </button>
+
+      {/* Logout */}
+      <div className="border-t border-sidebar-border p-3">
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              onClick={logout}
+              className={cn(
+                'w-full justify-start gap-3 px-3 py-2.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive',
+                isCollapsed && 'justify-center px-2'
+              )}
+            >
+              <LogOut className="h-5 w-5 shrink-0" />
+              {!isCollapsed && <span>Logga ut</span>}
+            </Button>
+          </TooltipTrigger>
+          {isCollapsed && (
+            <TooltipContent side="right" className="font-medium">
+              Logga ut
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </div>
+    </motion.aside>
+  );
+}
