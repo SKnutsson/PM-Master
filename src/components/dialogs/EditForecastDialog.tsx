@@ -79,7 +79,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
     }
   }, [open, forecast]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Convert string amounts to numbers
@@ -92,7 +92,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
     });
 
     if (project.trim() && product.trim()) {
-      updateForecast(forecast.id, {
+      await updateForecast(forecast.id, {
         project: project.trim(),
         product: product.trim(),
         months: newMonths,
@@ -103,9 +103,9 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm('Är du säker på att du vill ta bort denna affär?')) {
-      deleteForecast(forecast.id);
+      await deleteForecast(forecast.id);
       setOpen(false);
     }
   };

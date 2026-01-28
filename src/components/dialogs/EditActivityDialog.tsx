@@ -57,14 +57,14 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
     }
   }, [open, activity]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && responsible.trim()) {
       const days = startDate && endDate 
         ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
         : undefined;
 
-      updateActivity(projectId, activity.id, {
+      await updateActivity(projectId, activity.id, {
         name: name.trim(),
         responsible: responsible.trim(),
         department,
@@ -78,9 +78,9 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm('Är du säker på att du vill ta bort denna aktivitet?')) {
-      deleteActivity(projectId, activity.id);
+      await deleteActivity(projectId, activity.id);
       setOpen(false);
     }
   };

@@ -14,7 +14,189 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          name: string
+          notes: string | null
+          project_id: string
+          responsible: string
+          start_date: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          name: string
+          notes?: string | null
+          project_id: string
+          responsible: string
+          start_date: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          project_id?: string
+          responsible?: string
+          start_date?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forecast_months: {
+        Row: {
+          amount: number
+          created_at: string | null
+          forecast_id: string
+          id: string
+          month: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          forecast_id: string
+          id?: string
+          month: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          forecast_id?: string
+          id?: string
+          month?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forecast_months_forecast_id_fkey"
+            columns: ["forecast_id"]
+            isOneToOne: false
+            referencedRelation: "forecasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forecasts: {
+        Row: {
+          created_at: string | null
+          deal_status: Database["public"]["Enums"]["deal_status"]
+          id: string
+          notes: string | null
+          product: string
+          project: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deal_status?: Database["public"]["Enums"]["deal_status"]
+          id?: string
+          notes?: string | null
+          product: string
+          project: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deal_status?: Database["public"]["Enums"]["deal_status"]
+          id?: string
+          notes?: string | null
+          product?: string
+          project?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          customer: string
+          department: string
+          end_date: string | null
+          id: string
+          name: string
+          progress: number | null
+          start_date: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer: string
+          department: string
+          end_date?: string | null
+          id?: string
+          name: string
+          progress?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer?: string
+          department?: string
+          end_date?: string | null
+          id?: string
+          name?: string
+          progress?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      schedule_history: {
+        Row: {
+          forecast_id: string
+          id: string
+          moved_at: string | null
+          new_month: string
+          original_amount: number
+          original_month: string
+        }
+        Insert: {
+          forecast_id: string
+          id?: string
+          moved_at?: string | null
+          new_month: string
+          original_amount: number
+          original_month: string
+        }
+        Update: {
+          forecast_id?: string
+          id?: string
+          moved_at?: string | null
+          new_month?: string
+          original_amount?: number
+          original_month?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_history_forecast_id_fkey"
+            columns: ["forecast_id"]
+            isOneToOne: false
+            referencedRelation: "forecasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +205,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      deal_status: "Prognos" | "Tagen" | "Flyttad" | "Förlorad"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +332,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      deal_status: ["Prognos", "Tagen", "Flyttad", "Förlorad"],
+    },
   },
 } as const

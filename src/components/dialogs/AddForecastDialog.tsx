@@ -59,11 +59,11 @@ export function AddForecastDialog() {
   const [notes, setNotes] = useState('');
   const { addForecast } = useProjectDataContext();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amountNum = parseFloat(amount);
     if (project.trim() && product.trim() && !isNaN(amountNum)) {
-      addForecast({
+      await addForecast({
         project: project.trim(),
         product: product.trim(),
         months: { [month]: amountNum },

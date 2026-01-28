@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { useProjectData, ExtendedSalesForecast, DealStatus } from '@/hooks/useProjectData';
+import { useDatabaseData, ExtendedSalesForecast, DealStatus, ScheduleChange } from '@/hooks/useDatabaseData';
 import { Project, Activity, Status, Department } from '@/data/projectData';
 
 interface ProjectDataContextType {
@@ -7,21 +7,23 @@ interface ProjectDataContextType {
   forecast: ExtendedSalesForecast[];
   monthlyTotals: { [key: string]: number };
   yearTotal: number;
-  addProject: (project: Omit<Project, 'id'>) => Project;
-  updateProject: (projectId: string, updates: Partial<Project>) => void;
-  deleteProject: (projectId: string) => void;
-  addActivity: (projectId: string, activity: Omit<Activity, 'id'>) => Activity;
-  updateActivity: (projectId: string, activityId: string, updates: Partial<Activity>) => void;
-  deleteActivity: (projectId: string, activityId: string) => void;
-  addForecast: (item: Omit<ExtendedSalesForecast, 'id'>) => ExtendedSalesForecast;
-  updateForecast: (forecastId: string, updates: Partial<ExtendedSalesForecast>) => void;
-  deleteForecast: (forecastId: string) => void;
+  isLoading: boolean;
+  isInitialized: boolean;
+  addProject: (project: Omit<Project, 'id'>) => Promise<Project | null>;
+  updateProject: (projectId: string, updates: Partial<Project>) => Promise<void>;
+  deleteProject: (projectId: string) => Promise<void>;
+  addActivity: (projectId: string, activity: Omit<Activity, 'id'>) => Promise<Activity | null>;
+  updateActivity: (projectId: string, activityId: string, updates: Partial<Activity>) => Promise<void>;
+  deleteActivity: (projectId: string, activityId: string) => Promise<void>;
+  addForecast: (item: Omit<ExtendedSalesForecast, 'id'>) => Promise<ExtendedSalesForecast | null>;
+  updateForecast: (forecastId: string, updates: Partial<ExtendedSalesForecast>) => Promise<void>;
+  deleteForecast: (forecastId: string) => Promise<void>;
 }
 
 const ProjectDataContext = createContext<ProjectDataContextType | null>(null);
 
 export function ProjectDataProvider({ children }: { children: ReactNode }) {
-  const data = useProjectData();
+  const data = useDatabaseData();
 
   return (
     <ProjectDataContext.Provider value={data}>
@@ -38,4 +40,4 @@ export function useProjectDataContext() {
   return context;
 }
 
-export type { ExtendedSalesForecast, DealStatus };
+export type { ExtendedSalesForecast, DealStatus, ScheduleChange };
