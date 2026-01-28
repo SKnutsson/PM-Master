@@ -20,10 +20,10 @@ export function AddProjectDialog() {
   const [name, setName] = useState('');
   const { addProject } = useProjectDataContext();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.trim() && name.trim()) {
-      addProject({
+      await addProject({
         code: code.trim(),
         name: name.trim(),
         activities: [],

@@ -41,14 +41,14 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
   const [endDate, setEndDate] = useState<Date | undefined>();
   const { addActivity } = useProjectDataContext();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && responsible.trim()) {
       const days = startDate && endDate 
         ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
         : undefined;
 
-      addActivity(projectId, {
+      await addActivity(projectId, {
         name: name.trim(),
         responsible: responsible.trim(),
         department,
