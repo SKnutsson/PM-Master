@@ -96,7 +96,7 @@ export function useDatabaseData() {
 
       const projectsWithActivities: Project[] = projectsData.map(p => ({
         id: p.id,
-        code: p.id.substring(0, 5),
+        code: p.code || p.id.substring(0, 8),
         name: p.name,
         activities: (activitiesData || [])
           .filter(a => a.project_id === p.id)
@@ -181,6 +181,7 @@ export function useDatabaseData() {
         .from('projects')
         .insert({
           name: project.name,
+          code: project.code,
           customer: project.name,
           department: 'Projektledare',
           status: 'Pågår',
@@ -239,6 +240,7 @@ export function useDatabaseData() {
       .from('projects')
       .insert({
         name: project.name,
+        code: project.code,
         customer: project.name,
         department: 'Projektledare',
         status: 'Pågår',
