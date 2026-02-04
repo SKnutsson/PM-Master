@@ -30,8 +30,7 @@ const navItems = [
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { logout } = useAuth();
-
+  const { signOut } = useAuth();
   return (
     <motion.aside
       initial={false}
@@ -119,7 +118,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
-              onClick={logout}
+              onClick={() => signOut()}
               className={cn(
                 'w-full justify-start gap-3 px-3 py-2.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive',
                 isCollapsed && 'justify-center px-2'
