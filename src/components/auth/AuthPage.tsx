@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, AlertCircle, Loader2, Mail, KeyRound, UserPlus, LogIn } from 'lucide-react';
+import { AlertCircle, Loader2, Mail, KeyRound, UserPlus, LogIn } from 'lucide-react';
+import alfingLogo from '@/assets/alfing-seating-logo.jpg';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -103,9 +104,9 @@ export function AuthPage() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.3 }}
-              className="mx-auto flex h-16 w-16 items-center justify-center rounded-full gradient-primary"
+              className="mx-auto"
             >
-              <Lock className="h-8 w-8 text-primary-foreground" />
+              <img src={alfingLogo} alt="Alfing Seating" className="h-20 w-auto rounded-lg object-contain" />
             </motion.div>
             <div>
               <CardTitle className="text-2xl font-bold">Projektstyrning</CardTitle>
@@ -267,7 +268,7 @@ export function AuthPage() {
           transition={{ delay: 0.4 }}
           className="mt-6 text-center text-sm text-muted-foreground"
         >
-          Projektledningssystem för intern användning
+          Alfing Seating – Projektledning
         </motion.p>
       </motion.div>
     </div>
