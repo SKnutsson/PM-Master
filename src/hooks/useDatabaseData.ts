@@ -9,7 +9,7 @@ import {
   Department
 } from '@/data/projectData';
 
-export type DealStatus = 'Tagen' | 'Flyttad' | 'Förlorad' | 'Prognos';
+export type DealStatus = 'Tagen' | 'Flyttad' | 'Förlorad' | 'Prognos' | 'Ny affär';
 
 export interface ScheduleChange {
   id: string;

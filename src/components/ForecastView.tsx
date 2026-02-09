@@ -38,14 +38,30 @@ const itemVariants = {
 
 const getStatusColor = (status: DealStatus) => {
   switch (status) {
+    case 'Ny affär':
+      return 'text-blue-400 bg-blue-400/10';
     case 'Tagen':
       return 'text-status-completed bg-status-completed/10';
     case 'Flyttad':
-      return 'text-status-in-progress bg-status-in-progress/10';
+      return 'text-yellow-400 bg-yellow-400/10';
     case 'Förlorad':
-      return 'text-status-delayed bg-status-delayed/10';
-    default:
-      return 'text-muted-foreground bg-muted';
+      return 'text-red-400 bg-red-400/10';
+    default: // Prognos
+      return 'text-foreground bg-muted';
+  }
+};
+
+// Get the amount text color based on deal status
+const getAmountColor = (status: DealStatus) => {
+  switch (status) {
+    case 'Ny affär':
+      return 'text-blue-400';
+    case 'Tagen':
+      return 'text-status-completed';
+    case 'Förlorad':
+      return 'text-red-400 line-through';
+    default: // Prognos
+      return 'text-foreground';
   }
 };
 
@@ -220,12 +236,24 @@ export function ForecastView() {
       {/* Legend */}
       <motion.div variants={itemVariants} className="flex flex-wrap gap-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-status-in-progress/30 border border-status-in-progress"></div>
-          <span className="text-muted-foreground">Flyttad från denna månad</span>
+          <div className="w-4 h-4 rounded bg-blue-400/30 border border-blue-400"></div>
+          <span className="text-muted-foreground">Ny affär</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-status-delayed/30 border border-status-delayed"></div>
-          <span className="text-muted-foreground">Förlorad affär (ej i summor)</span>
+          <div className="w-4 h-4 rounded bg-status-completed/30 border border-status-completed"></div>
+          <span className="text-muted-foreground">Tagen</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-yellow-400/30 border border-yellow-400"></div>
+          <span className="text-muted-foreground">Flyttad (ursprunglig månad)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-red-400/30 border border-red-400"></div>
+          <span className="text-muted-foreground">Förlorad (ej i summor)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-foreground/30 border border-foreground"></div>
+          <span className="text-muted-foreground">Prognos</span>
         </div>
       </motion.div>
 
@@ -286,14 +314,14 @@ export function ForecastView() {
                                 key={month} 
                                 className={cn(
                                   "text-center relative",
-                                  movedFrom && "bg-status-in-progress/20 border-l-2 border-status-in-progress",
-                                  isLostMonth && "bg-status-delayed/20 border-l-2 border-status-delayed"
+                                  movedFrom && !hasValue && "bg-yellow-400/10 border-l-2 border-yellow-400",
+                                  isLostMonth && "bg-red-400/10 border-l-2 border-red-400"
                                 )}
                               >
                                 {movedFrom && !hasValue && (
                                   <UITooltip>
                                     <TooltipTrigger asChild>
-                                      <span className="text-status-in-progress font-medium cursor-help">
+                                      <span className="text-yellow-400 font-medium cursor-help">
                                         ({movedFrom.originalAmount.toFixed(2)})
                                       </span>
                                     </TooltipTrigger>
@@ -308,7 +336,7 @@ export function ForecastView() {
                                 {hasValue && (
                                   <span className={cn(
                                     "font-medium",
-                                    isLostMonth ? "text-status-delayed line-through" : "text-primary"
+                                    getAmountColor(item.dealStatus)
                                   )}>
                                     {item.months[month].toFixed(2)}
                                   </span>
