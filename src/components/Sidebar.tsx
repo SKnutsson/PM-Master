@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import alfingLogo from '@/assets/alfing-seating-logo.jpg';
 import {
   LayoutDashboard,
   FolderKanban,
@@ -40,19 +41,11 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     >
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg gradient-primary">
-          <FolderKanban className="h-5 w-5 text-primary-foreground" />
-        </div>
-        {!isCollapsed && (
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="font-semibold text-sidebar-foreground"
-          >
-            Projektstyrning
-          </motion.span>
-        )}
+        <img
+          src={alfingLogo}
+          alt="Alfing Seating"
+          className={cn("shrink-0 rounded object-cover", isCollapsed ? "h-9 w-9" : "h-9 w-auto max-w-[140px]")}
+        />
       </div>
 
       {/* Navigation */}
