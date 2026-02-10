@@ -13,10 +13,13 @@ export interface Activity {
   hasWarning?: boolean;
 }
 
+export type ProjectStatus = 'Aktiv' | 'Avslutat';
+
 export interface Project {
   id: string;
   code: string;
   name: string;
+  status?: ProjectStatus;
   activities: Activity[];
 }
 

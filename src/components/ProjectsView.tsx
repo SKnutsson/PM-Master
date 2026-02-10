@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, AlertTriangle, Calendar, User, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, AlertTriangle, Calendar, User, Trash2, Archive, RotateCcw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Project, Activity } from '@/data/projectData';
 import { StatusBadge } from './StatusBadge';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
@@ -27,9 +28,12 @@ const itemVariants = {
 interface ProjectCardProps {
   project: Project;
   onDeleteProject: (projectId: string) => void;
+  onArchiveProject?: (projectId: string) => void;
+  onRestoreProject?: (projectId: string) => void;
+  isArchived?: boolean;
 }
 
-function ProjectCard({ project, onDeleteProject }: ProjectCardProps) {
+function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProject, isArchived }: ProjectCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const completed = project.activities.filter(a => a.status === 'Slutförd').length;
@@ -45,9 +49,24 @@ function ProjectCard({ project, onDeleteProject }: ProjectCardProps) {
     }
   };
 
+  const handleArchive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Vill du avsluta och arkivera projektet "${project.code} - ${project.name}"?`)) {
+      onArchiveProject?.(project.id);
+    }
+  };
+
+  const handleRestore = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRestoreProject?.(project.id);
+  };
+
   return (
     <motion.div variants={itemVariants}>
-      <Card className="border-border/50 bg-card/80 overflow-hidden transition-all hover:border-primary/30">
+      <Card className={cn(
+        "border-border/50 overflow-hidden transition-all hover:border-primary/30",
+        isArchived ? "bg-card/50 opacity-80" : "bg-card/80"
+      )}>
         {/* Header */}
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
@@ -57,7 +76,9 @@ function ProjectCard({ project, onDeleteProject }: ProjectCardProps) {
             >
               <div className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold transition-colors',
-                hasWarning ? 'bg-status-delayed/20 text-status-delayed' : 'bg-primary/20 text-primary'
+                isArchived
+                  ? 'bg-muted text-muted-foreground'
+                  : hasWarning ? 'bg-status-delayed/20 text-status-delayed' : 'bg-primary/20 text-primary'
               )}>
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </div>
@@ -67,10 +88,16 @@ function ProjectCard({ project, onDeleteProject }: ProjectCardProps) {
                 </CardTitle>
                 <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
                   <span>{total} aktiviteter</span>
-                  {inProgress > 0 && (
+                  {!isArchived && inProgress > 0 && (
                     <span className="text-status-in-progress">{inProgress} pågår</span>
                   )}
-                  {hasWarning && (
+                  {isArchived && (
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Archive className="h-3.5 w-3.5" />
+                      Avslutat
+                    </span>
+                  )}
+                  {!isArchived && hasWarning && (
                     <span className="flex items-center gap-1 text-status-delayed">
                       <AlertTriangle className="h-3.5 w-3.5" />
                       Varning
@@ -87,34 +114,41 @@ function ProjectCard({ project, onDeleteProject }: ProjectCardProps) {
               </div>
               <div className="h-12 w-12">
                 <svg className="h-12 w-12 -rotate-90 transform">
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    stroke="hsl(var(--muted))"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="4"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeDasharray={`${progress * 1.26} 126`}
-                  />
+                  <circle cx="24" cy="24" r="20" stroke="hsl(var(--muted))" strokeWidth="4" fill="none" />
+                  <circle cx="24" cy="24" r="20" stroke="hsl(var(--primary))" strokeWidth="4" fill="none" strokeLinecap="round" strokeDasharray={`${progress * 1.26} 126`} />
                 </svg>
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={handleDeleteProject}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex flex-col gap-1">
+                {isArchived ? (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    onClick={handleRestore}
+                    title="Återställ projekt"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                    onClick={handleArchive}
+                    title="Avsluta och arkivera"
+                  >
+                    <Archive className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={handleDeleteProject}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -129,21 +163,24 @@ function ProjectCard({ project, onDeleteProject }: ProjectCardProps) {
               transition={{ duration: 0.2 }}
             >
               <CardContent className="border-t border-border/50 pt-4">
-                <div className="mb-3 flex justify-end">
-                  <AddActivityDialog projectId={project.id} />
-                </div>
+                {!isArchived && (
+                  <div className="mb-3 flex justify-end">
+                    <AddActivityDialog projectId={project.id} />
+                  </div>
+                )}
                 <div className="space-y-2">
                   {project.activities.map((activity, index) => (
                     <ActivityRow 
                       key={activity.id} 
                       activity={activity} 
                       projectId={project.id}
-                      index={index} 
+                      index={index}
+                      readOnly={isArchived}
                     />
                   ))}
                   {project.activities.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-4">
-                      Inga aktiviteter ännu. Klicka på "Lägg till aktivitet" för att börja.
+                      Inga aktiviteter ännu.
                     </p>
                   )}
                 </div>
@@ -160,9 +197,10 @@ interface ActivityRowProps {
   activity: Activity;
   projectId: string;
   index: number;
+  readOnly?: boolean;
 }
 
-function ActivityRow({ activity, projectId, index }: ActivityRowProps) {
+function ActivityRow({ activity, projectId, index, readOnly }: ActivityRowProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: -10 }}
@@ -205,14 +243,25 @@ function ActivityRow({ activity, projectId, index }: ActivityRowProps) {
       
       <div className="flex items-center gap-2">
         <StatusBadge status={activity.status} size="sm" />
-        <EditActivityDialog projectId={projectId} activity={activity} />
+        {!readOnly && <EditActivityDialog projectId={projectId} activity={activity} />}
       </div>
     </motion.div>
   );
 }
 
 export function ProjectsView() {
-  const { projects, deleteProject } = useProjectDataContext();
+  const { projects, deleteProject, updateProject } = useProjectDataContext();
+
+  const activeProjects = projects.filter(p => p.status !== 'Avslutat');
+  const archivedProjects = projects.filter(p => p.status === 'Avslutat');
+
+  const handleArchive = async (projectId: string) => {
+    await updateProject(projectId, { status: 'Avslutat' } as any);
+  };
+
+  const handleRestore = async (projectId: string) => {
+    await updateProject(projectId, { status: 'Pågår' } as any);
+  };
 
   return (
     <motion.div
@@ -229,20 +278,50 @@ export function ProjectsView() {
         <AddProjectDialog />
       </div>
 
-      <div className="space-y-4">
-        {projects.map((project) => (
-          <ProjectCard 
-            key={project.id} 
-            project={project} 
-            onDeleteProject={deleteProject}
-          />
-        ))}
-        {projects.length === 0 && (
-          <Card className="border-border/50 bg-card/80 p-8 text-center">
-            <p className="text-muted-foreground">Inga projekt ännu. Klicka på "Nytt projekt" för att börja.</p>
-          </Card>
-        )}
-      </div>
+      <Tabs defaultValue="active" className="w-full">
+        <TabsList>
+          <TabsTrigger value="active">
+            Aktiva ({activeProjects.length})
+          </TabsTrigger>
+          <TabsTrigger value="archived">
+            <Archive className="mr-1.5 h-4 w-4" />
+            Arkiverade ({archivedProjects.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="active" className="mt-4 space-y-4">
+          {activeProjects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              onDeleteProject={deleteProject}
+              onArchiveProject={handleArchive}
+            />
+          ))}
+          {activeProjects.length === 0 && (
+            <Card className="border-border/50 bg-card/80 p-8 text-center">
+              <p className="text-muted-foreground">Inga aktiva projekt. Klicka på "Nytt projekt" för att börja.</p>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="archived" className="mt-4 space-y-4">
+          {archivedProjects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              onDeleteProject={deleteProject}
+              onRestoreProject={handleRestore}
+              isArchived
+            />
+          ))}
+          {archivedProjects.length === 0 && (
+            <Card className="border-border/50 bg-card/80 p-8 text-center">
+              <p className="text-muted-foreground">Inga arkiverade projekt ännu.</p>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </motion.div>
   );
 }
