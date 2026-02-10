@@ -69,7 +69,8 @@ const getStatusColor = (status: Status) => {
 };
 
 export function TimelineView() {
-  const { projects } = useProjectDataContext();
+  const { projects: allProjects } = useProjectDataContext();
+  const projects = allProjects.filter(p => p.status !== 'Avslutat');
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
