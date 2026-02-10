@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import alfingLogo from '@/assets/alfing-seating-logo.jpg';
+import alfingLogo from '@/assets/alfing-seating-logo-green.png';
 import {
   LayoutDashboard,
   FolderKanban,
