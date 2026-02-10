@@ -98,6 +98,7 @@ export function useDatabaseData() {
         id: p.id,
         code: p.code || p.id.substring(0, 8),
         name: p.name,
+        status: (p.status === 'Avslutat' ? 'Avslutat' : 'Aktiv') as Project['status'],
         activities: (activitiesData || [])
           .filter(a => a.project_id === p.id)
           .map(a => ({
@@ -257,12 +258,15 @@ export function useDatabaseData() {
   }, []);
 
   const updateProject = useCallback(async (projectId: string, updates: Partial<Project>) => {
+    const updateData: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.status !== undefined) updateData.status = updates.status;
+
     const { error } = await supabase
       .from('projects')
-      .update({
-        name: updates.name,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', projectId);
 
     if (error) console.error('Error updating project:', error);
