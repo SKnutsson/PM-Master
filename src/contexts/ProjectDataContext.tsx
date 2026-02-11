@@ -2,24 +2,11 @@ import { createContext, useContext, ReactNode } from 'react';
 import { useDatabaseData, ExtendedSalesForecast, DealStatus, ScheduleChange } from '@/hooks/useDatabaseData';
 import { Project, Activity, Status, Department } from '@/data/projectData';
 
-interface RollingMonth {
-  month: string;
-  year: number;
-  label: string;
-  total: number;
-}
-
 interface ProjectDataContextType {
   projects: Project[];
   forecast: ExtendedSalesForecast[];
   monthlyTotals: { [key: string]: number };
   yearTotal: number;
-  monthlyTotals2026: { [key: string]: number };
-  yearTotal2026: number;
-  monthlyTotals2027: { [key: string]: number };
-  yearTotal2027: number;
-  rollingMonthlyTotals: RollingMonth[];
-  rollingTotal: number;
   isLoading: boolean;
   isInitialized: boolean;
   addProject: (project: Omit<Project, 'id'>) => Promise<Project | null>;
@@ -53,4 +40,4 @@ export function useProjectDataContext() {
   return context;
 }
 
-export type { ExtendedSalesForecast, DealStatus, ScheduleChange, RollingMonth };
+export type { ExtendedSalesForecast, DealStatus, ScheduleChange };

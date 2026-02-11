@@ -25,7 +25,6 @@ export interface ExtendedSalesForecast {
   project: string;
   product: string;
   months: { [key: string]: number };
-  monthsByYear: { [year: number]: { [month: string]: number } };
   dealStatus: DealStatus;
   notes?: string;
   scheduleHistory?: ScheduleChange[];
@@ -143,16 +142,10 @@ export function useDatabaseData() {
 
       const forecastsWithMonths: ExtendedSalesForecast[] = forecastsData.map(f => {
         const months: { [key: string]: number } = {};
-        const monthsByYear: { [year: number]: { [month: string]: number } } = {};
-        
         (monthsData || [])
           .filter(m => m.forecast_id === f.id)
           .forEach(m => {
-            const amount = parseFloat(String(m.amount));
-            months[m.month] = (months[m.month] || 0) + amount;
-            const yr = (m as any).year || 2026;
-            if (!monthsByYear[yr]) monthsByYear[yr] = {};
-            monthsByYear[yr][m.month] = (monthsByYear[yr][m.month] || 0) + amount;
+            months[m.month] = parseFloat(String(m.amount));
           });
 
         const scheduleHistory: ScheduleChange[] = (historyData || [])
@@ -173,7 +166,6 @@ export function useDatabaseData() {
           dealStatus: f.deal_status as DealStatus,
           notes: f.notes || undefined,
           months,
-          monthsByYear,
           scheduleHistory,
         };
       });
@@ -446,58 +438,11 @@ export function useDatabaseData() {
 
   const yearTotal = Object.values(monthlyTotals).reduce((sum, val) => sum + val, 0);
 
-  // Year-specific totals based on monthsByYear
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  
-  const computeYearTotals = (year: number) => {
-    return activeForecast.reduce((acc, item) => {
-      const yearMonths = item.monthsByYear?.[year] || {};
-      Object.entries(yearMonths).forEach(([month, value]) => {
-        acc[month] = (acc[month] || 0) + value;
-      });
-      return acc;
-    }, {} as { [key: string]: number });
-  };
-
-  const monthlyTotals2026 = computeYearTotals(2026);
-  const yearTotal2026 = Object.values(monthlyTotals2026).reduce((sum, val) => sum + val, 0);
-
-  const monthlyTotals2027 = computeYearTotals(2027);
-  const yearTotal2027 = Object.values(monthlyTotals2027).reduce((sum, val) => sum + val, 0);
-
-  // Rolling 12 months from current month forward
-  const now = new Date();
-  const currentMonthIndex = now.getMonth(); // 0-based
-  const currentYear = now.getFullYear();
-  
-  const rollingMonths: { month: string; year: number; label: string }[] = [];
-  for (let i = 0; i < 12; i++) {
-    const mIdx = (currentMonthIndex + i) % 12;
-    const yr = currentYear + Math.floor((currentMonthIndex + i) / 12);
-    rollingMonths.push({ month: monthNames[mIdx], year: yr, label: `${monthNames[mIdx]} ${yr}` });
-  }
-
-  const rollingMonthlyTotals = rollingMonths.map(rm => {
-    const total = activeForecast.reduce((sum, item) => {
-      const yearMonths = item.monthsByYear?.[rm.year] || {};
-      return sum + (yearMonths[rm.month] || 0);
-    }, 0);
-    return { ...rm, total };
-  });
-
-  const rollingTotal = rollingMonthlyTotals.reduce((sum, rm) => sum + rm.total, 0);
-
   return {
     projects,
     forecast,
     monthlyTotals,
     yearTotal,
-    monthlyTotals2026,
-    yearTotal2026,
-    monthlyTotals2027,
-    yearTotal2027,
-    rollingMonthlyTotals,
-    rollingTotal,
     isLoading,
     isInitialized,
     addProject,

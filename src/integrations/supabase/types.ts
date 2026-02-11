@@ -68,7 +68,6 @@ export type Database = {
           forecast_id: string
           id: string
           month: string
-          year: number
         }
         Insert: {
           amount?: number
@@ -76,7 +75,6 @@ export type Database = {
           forecast_id: string
           id?: string
           month: string
-          year?: number
         }
         Update: {
           amount?: number
@@ -84,7 +82,6 @@ export type Database = {
           forecast_id?: string
           id?: string
           month?: string
-          year?: number
         }
         Relationships: [
           {

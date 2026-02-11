@@ -67,7 +67,6 @@ export function AddForecastDialog() {
         project: project.trim(),
         product: product.trim(),
         months: { [month]: amountNum },
-        monthsByYear: { 2026: { [month]: amountNum } },
         dealStatus,
         notes: notes.trim() || undefined,
       });
