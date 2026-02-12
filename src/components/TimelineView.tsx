@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, AlertTriangle, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Status } from '@/data/projectData';
@@ -9,12 +9,18 @@ import { AddActivityDialog } from './dialogs/AddActivityDialog';
 import { EditActivityDialog } from './dialogs/EditActivityDialog';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05 }
+    transition: { staggerChildren: 0.03 }
   }
 };
 
@@ -25,7 +31,8 @@ const itemVariants = {
 
 type ViewMode = 'weeks' | 'days';
 
-// Generate weeks for the timeline
+type DerivedStatus = 'Ej påbörjat' | 'Pågår' | 'Slutförd' | 'Försenad';
+
 function generateWeeks(year: number): { weekNum: number; startDate: Date; label: string }[] {
   const weeks: { weekNum: number; startDate: Date; label: string }[] = [];
   const jan1 = new Date(year, 0, 1);
@@ -44,7 +51,6 @@ function generateWeeks(year: number): { weekNum: number; startDate: Date; label:
   return weeks;
 }
 
-// Generate days for a range
 function generateDays(startDate: Date, count: number): { date: Date; label: string; dayOfWeek: number }[] {
   const days: { date: Date; label: string; dayOfWeek: number }[] = [];
   const current = new Date(startDate);
@@ -59,14 +65,47 @@ function generateDays(startDate: Date, count: number): { date: Date; label: stri
   return days;
 }
 
-const getStatusColor = (status: Status) => {
-  switch (status) {
+function deriveStatus(status: Status, endDate?: string): DerivedStatus {
+  if (status === 'Slutförd') return 'Slutförd';
+  if (status === 'Försenad') return 'Försenad';
+  // Auto-derive delayed: if today > endDate and not completed
+  if (endDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+    if (today > end) return 'Försenad';
+  }
+  if (status === 'Pågår') return 'Pågår';
+  return 'Ej påbörjat';
+}
+
+const getStatusColor = (derivedStatus: DerivedStatus) => {
+  switch (derivedStatus) {
     case 'Slutförd': return 'bg-status-completed';
     case 'Pågår': return 'bg-status-in-progress';
     case 'Försenad': return 'bg-status-delayed';
+    case 'Ej påbörjat': return 'bg-status-not-started';
     default: return 'bg-muted-foreground/30';
   }
 };
+
+const getStatusDotColor = (derivedStatus: DerivedStatus) => {
+  switch (derivedStatus) {
+    case 'Slutförd': return 'bg-status-completed';
+    case 'Pågår': return 'bg-status-in-progress';
+    case 'Försenad': return 'bg-status-delayed';
+    case 'Ej påbörjat': return 'bg-status-not-started';
+    default: return 'bg-muted-foreground/30';
+  }
+};
+
+const statusLabels: { status: DerivedStatus; color: string; label: string }[] = [
+  { status: 'Ej påbörjat', color: 'bg-status-not-started', label: 'Ej påbörjat' },
+  { status: 'Pågår', color: 'bg-status-in-progress', label: 'Pågår' },
+  { status: 'Slutförd', color: 'bg-status-completed', label: 'Slutförd' },
+  { status: 'Försenad', color: 'bg-status-delayed', label: 'Försenad' },
+];
 
 export function TimelineView() {
   const { projects: allProjects } = useProjectDataContext();
@@ -76,43 +115,57 @@ export function TimelineView() {
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
   const weeks = useMemo(() => generateWeeks(2026), []);
 
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+  const todayStr = today.toISOString().split('T')[0];
+
   const baseWeekIndex = 4;
   const visibleWeeks = 16;
-  const visibleDays = 28; // 4 weeks of days
+  const visibleDays = 28;
 
   const startIndex = Math.max(0, baseWeekIndex + currentWeekOffset);
   const endIndex = Math.min(weeks.length, startIndex + visibleWeeks);
   const displayedWeeks = weeks.slice(startIndex, endIndex);
 
-  // For day view, generate days starting from the first displayed week
   const displayedDays = useMemo(() => {
     if (viewMode !== 'days' || displayedWeeks.length === 0) return [];
     return generateDays(displayedWeeks[0].startDate, visibleDays);
   }, [viewMode, displayedWeeks, visibleDays]);
 
+  // Compute today's column index
+  const todayWeekNum = useMemo(() => {
+    const startOfYear = new Date(2026, 0, 1);
+    const days = Math.floor((today.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
+  }, [today]);
+
+  const todayDayIndex = useMemo(() => {
+    if (viewMode !== 'days') return -1;
+    return displayedDays.findIndex(d => d.date.toISOString().split('T')[0] === todayStr);
+  }, [viewMode, displayedDays, todayStr]);
+
   const toggleProject = (projectId: string) => {
     setExpandedProjects(prev => {
       const next = new Set(prev);
-      if (next.has(projectId)) {
-        next.delete(projectId);
-      } else {
-        next.add(projectId);
-      }
+      if (next.has(projectId)) next.delete(projectId);
+      else next.add(projectId);
       return next;
     });
-  };
-
-  const expandAll = () => {
-    setExpandedProjects(new Set(timelineProjects.map(p => p.id)));
-  };
-
-  const collapseAll = () => {
-    setExpandedProjects(new Set());
   };
 
   const timelineProjects = projects.filter(p =>
     p.activities.some(a => a.startDate || a.endDate)
   );
+
+  const expandAll = () => {
+    setExpandedProjects(new Set(timelineProjects.map(p => p.id)));
+  };
+  const collapseAll = () => {
+    setExpandedProjects(new Set());
+  };
 
   const getWeekNumber = (dateStr: string): number => {
     const date = new Date(dateStr);
@@ -125,7 +178,6 @@ export function TimelineView() {
     return new Date(dateStr).toISOString().split('T')[0];
   };
 
-  // Get overall project time range for collapsed bar
   const getProjectRange = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return { startWeek: null, endWeek: null };
@@ -153,251 +205,261 @@ export function TimelineView() {
     return { startDay: minDay, endDay: maxDay };
   };
 
-  return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6 p-6"
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tidslinje</h1>
-          <p className="text-muted-foreground">Ganttschema för projektaktiviteter</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-            <TabsList>
-              <TabsTrigger value="weeks">Veckor</TabsTrigger>
-              <TabsTrigger value="days">Dagar</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" onClick={expandAll}>
-              Expandera alla
-            </Button>
-            <Button variant="outline" size="sm" onClick={collapseAll}>
-              Komprimera alla
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentWeekOffset(Math.max(-baseWeekIndex, currentWeekOffset - (viewMode === 'days' ? 4 : 8)))}
-              disabled={startIndex === 0}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm text-muted-foreground px-2">
-              {displayedWeeks[0]?.label} - {displayedWeeks[displayedWeeks.length - 1]?.label}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setCurrentWeekOffset(currentWeekOffset + (viewMode === 'days' ? 4 : 8))}
-              disabled={endIndex >= weeks.length}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+  // Year header groups for weeks
+  const weekYearGroups = useMemo(() => {
+    if (viewMode !== 'weeks') return [];
+    const groups: { year: number; month: string; span: number }[] = [];
+    displayedWeeks.forEach((week) => {
+      const y = week.startDate.getFullYear();
+      const m = week.startDate.toLocaleDateString('sv-SE', { month: 'short' });
+      const label = `${y} • ${m}`;
+      if (groups.length > 0 && groups[groups.length - 1].month === label) {
+        groups[groups.length - 1].span++;
+      } else {
+        groups.push({ year: y, month: label, span: 1 });
+      }
+    });
+    return groups;
+  }, [viewMode, displayedWeeks]);
+
+  // Year header groups for days
+  const dayYearGroups = useMemo(() => {
+    if (viewMode !== 'days') return [];
+    const groups: { label: string; span: number }[] = [];
+    displayedDays.forEach((day) => {
+      const y = day.date.getFullYear();
+      const m = day.date.toLocaleDateString('sv-SE', { month: 'short' });
+      const label = `${y} • ${m}`;
+      if (groups.length > 0 && groups[groups.length - 1].label === label) {
+        groups[groups.length - 1].span++;
+      } else {
+        groups.push({ label, span: 1 });
+      }
+    });
+    return groups;
+  }, [viewMode, displayedDays]);
+
+  // Column count for today marker positioning
+  const columnCount = viewMode === 'weeks' ? displayedWeeks.length : displayedDays.length;
+
+  // Today column index in week view
+  const todayWeekColIndex = useMemo(() => {
+    if (viewMode !== 'weeks') return -1;
+    return displayedWeeks.findIndex(w => w.weekNum === todayWeekNum);
+  }, [viewMode, displayedWeeks, todayWeekNum]);
+
+  const todayColIndex = viewMode === 'weeks' ? todayWeekColIndex : todayDayIndex;
+
+  const renderTodayMarker = () => {
+    if (todayColIndex < 0 || todayColIndex >= columnCount) return null;
+    const leftPercent = ((todayColIndex + 0.5) / columnCount) * 100;
+    return (
+      <div
+        className="absolute top-0 bottom-0 w-0.5 bg-destructive z-20 pointer-events-none"
+        style={{ left: `${leftPercent}%` }}
+      >
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
       </div>
+    );
+  };
 
-      <Card className="border-border/50 bg-card/80 overflow-hidden">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <div className="min-w-[1000px]">
-              {/* Header */}
-              <div className="sticky top-0 z-10 flex border-b border-border/50 bg-card">
-                <div className="w-72 shrink-0 border-r border-border/50 p-3 font-semibold">
-                  Projekt / Aktivitet
-                </div>
-                <div className="flex flex-1">
-                  {viewMode === 'weeks' ? (
-                    displayedWeeks.map((week) => (
-                      <div
-                        key={week.weekNum}
-                        className={cn(
-                          'flex-1 border-r border-border/30 p-2 text-center text-xs font-medium',
-                          week.weekNum === baseWeekIndex + 1 && 'bg-primary/10'
-                        )}
-                      >
-                        <div>{week.label}</div>
-                        <div className="text-muted-foreground">
-                          {week.startDate.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    displayedDays.map((day, i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          'flex-1 border-r border-border/30 p-1 text-center text-[10px] font-medium min-w-[32px]',
-                          (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
-                        )}
-                      >
-                        <div>{['Sö', 'Må', 'Ti', 'On', 'To', 'Fr', 'Lö'][day.dayOfWeek]}</div>
-                        <div className="text-muted-foreground">
-                          {day.date.getDate()}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+  return (
+    <TooltipProvider delayDuration={200}>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="space-y-3 p-4"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Tidslinje</h1>
+            <p className="text-sm text-muted-foreground">Ganttschema för projektaktiviteter</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+              <TabsList className="h-8">
+                <TabsTrigger value="weeks" className="text-xs px-3 h-7">Veckor</TabsTrigger>
+                <TabsTrigger value="days" className="text-xs px-3 h-7">Dagar</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={expandAll}>
+                Expandera
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={collapseAll}>
+                Komprimera
+              </Button>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setCurrentWeekOffset(Math.max(-baseWeekIndex, currentWeekOffset - (viewMode === 'days' ? 4 : 8)))}
+                disabled={startIndex === 0}
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              <span className="text-xs text-muted-foreground px-1">
+                {displayedWeeks[0]?.label} – {displayedWeeks[displayedWeeks.length - 1]?.label}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setCurrentWeekOffset(currentWeekOffset + (viewMode === 'days' ? 4 : 8))}
+                disabled={endIndex >= weeks.length}
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        </div>
 
-              {/* Projects and Activities */}
-              {timelineProjects.map((project) => {
-                const isExpanded = expandedProjects.has(project.id);
-                const { startWeek, endWeek } = getProjectRange(project.id);
-                const { startDay, endDay } = getProjectDayRange(project.id);
-                const activityCount = project.activities.filter(a => a.startDate || a.endDate).length;
+        {/* Legend */}
+        <div className="flex items-center gap-4 text-xs flex-wrap">
+          {statusLabels.map(s => (
+            <div key={s.status} className="flex items-center gap-1.5">
+              <div className={cn('h-2.5 w-5 rounded-sm', s.color)} />
+              <span className="text-muted-foreground">{s.label}</span>
+            </div>
+          ))}
+          <div className="flex items-center gap-1.5 ml-2">
+            <div className="h-3 w-0.5 bg-destructive rounded" />
+            <span className="text-muted-foreground">Idag</span>
+          </div>
+        </div>
 
-                return (
-                  <motion.div key={project.id} variants={itemVariants}>
-                    {/* Project Header - clickable */}
-                    <div
-                      className="flex border-b border-border/50 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => toggleProject(project.id)}
-                    >
-                      <div className="w-72 shrink-0 border-r border-border/50 p-3 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronUp className="h-4 w-4 text-muted-foreground rotate-180" />
-                          )}
-                          <span className="font-semibold">{project.code} - {project.name}</span>
-                          {!isExpanded && (
-                            <span className="text-xs text-muted-foreground">({activityCount})</span>
-                          )}
-                        </div>
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <AddActivityDialog
-                            projectId={project.id}
-                            trigger={
-                              <Button size="icon" variant="ghost" className="h-6 w-6">
-                                <Plus className="h-3.5 w-3.5" />
-                              </Button>
-                            }
-                          />
-                        </div>
-                      </div>
-                      {/* Collapsed summary bar */}
-                      {!isExpanded && (
-                        <div className="flex flex-1 items-center">
-                          {viewMode === 'weeks' ? (
-                            displayedWeeks.map((week) => {
-                              const isInRange = startWeek !== null && endWeek !== null &&
-                                week.weekNum >= startWeek && week.weekNum <= endWeek;
-                              const isStart = week.weekNum === startWeek;
-                              const isEnd = week.weekNum === endWeek;
-                              return (
-                                <div key={week.weekNum} className="flex-1 h-8 flex items-center justify-center border-r border-border/30">
-                                  {isInRange && (
-                                    <div className={cn(
-                                      'h-5 w-full bg-primary/40',
-                                      isStart && 'rounded-l ml-1',
-                                      isEnd && 'rounded-r mr-1'
-                                    )} />
-                                  )}
-                                </div>
-                              );
-                            })
-                          ) : (
-                            displayedDays.map((day, i) => {
-                              const dayStr = day.date.toISOString().split('T')[0];
-                              const isInRange = startDay && endDay && dayStr >= startDay && dayStr <= endDay;
-                              const isStart = dayStr === startDay;
-                              const isEnd = dayStr === endDay;
-                              return (
-                                <div key={i} className={cn(
-                                  'flex-1 h-8 flex items-center justify-center border-r border-border/30 min-w-[32px]',
-                                  (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
-                                )}>
-                                  {isInRange && (
-                                    <div className={cn(
-                                      'h-5 w-full bg-primary/40',
-                                      isStart && 'rounded-l ml-1',
-                                      isEnd && 'rounded-r mr-1'
-                                    )} />
-                                  )}
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      )}
-                      {isExpanded && <div className="flex-1" />}
-                    </div>
-
-                    {/* Activities - shown when expanded */}
-                    <AnimatePresence>
-                      {isExpanded && project.activities.filter(a => a.startDate || a.endDate).map((activity) => {
-                        const actStartWeek = activity.startDate ? getWeekNumber(activity.startDate) : null;
-                        const actEndWeek = activity.endDate ? getWeekNumber(activity.endDate) : actStartWeek;
-                        const actStartDay = activity.startDate ? getDayIndex(activity.startDate) : null;
-                        const actEndDay = activity.endDate ? getDayIndex(activity.endDate) : actStartDay;
-
-                        return (
-                          <motion.div
-                            key={activity.id}
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="flex border-b border-border/30 hover:bg-muted/20 group"
+        <Card className="border-border/50 bg-card/80 overflow-hidden">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <div className="min-w-[1000px]">
+                {/* Year/Month header row */}
+                <div className="sticky top-0 z-10 flex border-b border-border/30 bg-card">
+                  <div className="w-60 shrink-0 border-r border-border/50" />
+                  <div className="flex flex-1">
+                    {viewMode === 'weeks'
+                      ? weekYearGroups.map((g, i) => (
+                          <div
+                            key={i}
+                            className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5"
+                            style={{ flex: g.span }}
                           >
-                            <div className="w-72 shrink-0 border-r border-border/50 p-2 pl-10 flex items-center justify-between">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  {activity.hasWarning && (
-                                    <AlertTriangle className="h-3.5 w-3.5 text-status-delayed" />
-                                  )}
-                                  <span className="text-sm">{activity.name}</span>
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {activity.responsible} • {activity.department}
-                                </div>
-                              </div>
-                              <EditActivityDialog
+                            {g.month}
+                          </div>
+                        ))
+                      : dayYearGroups.map((g, i) => (
+                          <div
+                            key={i}
+                            className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5"
+                            style={{ flex: g.span }}
+                          >
+                            {g.label}
+                          </div>
+                        ))}
+                  </div>
+                </div>
+
+                {/* Week/Day header row */}
+                <div className="sticky top-[21px] z-10 flex border-b border-border/50 bg-card">
+                  <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
+                    Projekt / Aktivitet
+                  </div>
+                  <div className="flex flex-1">
+                    {viewMode === 'weeks' ? (
+                      displayedWeeks.map((week) => (
+                        <div
+                          key={week.weekNum}
+                          className={cn(
+                            'flex-1 border-r border-border/30 py-0.5 text-center text-[10px] font-medium',
+                            week.weekNum === todayWeekNum && 'bg-primary/10'
+                          )}
+                        >
+                          <div>{week.label}</div>
+                          <div className="text-muted-foreground text-[9px]">
+                            {week.startDate.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      displayedDays.map((day, i) => (
+                        <div
+                          key={i}
+                          className={cn(
+                            'flex-1 border-r border-border/30 py-0.5 text-center text-[9px] font-medium min-w-[28px]',
+                            (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40',
+                            day.date.toISOString().split('T')[0] === todayStr && 'bg-primary/10'
+                          )}
+                        >
+                          <div>{['Sö', 'Må', 'Ti', 'On', 'To', 'Fr', 'Lö'][day.dayOfWeek]}</div>
+                          <div className="text-muted-foreground">{day.date.getDate()}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Projects and Activities */}
+                <div className="relative">
+                  {/* Today marker overlay */}
+                  {/* We position it inside the grid area (excluding the left column) */}
+                  <div className="absolute top-0 bottom-0 left-60 right-0 pointer-events-none z-20">
+                    {renderTodayMarker()}
+                  </div>
+
+                  {timelineProjects.map((project) => {
+                    const isExpanded = expandedProjects.has(project.id);
+                    const { startWeek, endWeek } = getProjectRange(project.id);
+                    const { startDay, endDay } = getProjectDayRange(project.id);
+                    const activityCount = project.activities.filter(a => a.startDate || a.endDate).length;
+
+                    return (
+                      <motion.div key={project.id} variants={itemVariants}>
+                        {/* Project Header */}
+                        <div
+                          className="flex border-b border-border/50 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => toggleProject(project.id)}
+                        >
+                          <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {isExpanded ? (
+                                <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+                              ) : (
+                                <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />
+                              )}
+                              <span className="font-semibold text-xs truncate">{project.code} - {project.name}</span>
+                              {!isExpanded && (
+                                <span className="text-[10px] text-muted-foreground shrink-0">({activityCount})</span>
+                              )}
+                            </div>
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <AddActivityDialog
                                 projectId={project.id}
-                                activity={activity}
                                 trigger={
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <span className="sr-only">Redigera</span>
-                                    ✏️
+                                  <Button size="icon" variant="ghost" className="h-5 w-5">
+                                    <Plus className="h-3 w-3" />
                                   </Button>
                                 }
                               />
                             </div>
+                          </div>
+                          {/* Collapsed summary bar */}
+                          {!isExpanded && (
                             <div className="flex flex-1 items-center">
                               {viewMode === 'weeks' ? (
                                 displayedWeeks.map((week) => {
-                                  const isInRange = actStartWeek && actEndWeek &&
-                                    week.weekNum >= actStartWeek && week.weekNum <= actEndWeek;
-                                  const isStart = week.weekNum === actStartWeek;
-                                  const isEnd = week.weekNum === actEndWeek;
+                                  const isInRange = startWeek !== null && endWeek !== null &&
+                                    week.weekNum >= startWeek && week.weekNum <= endWeek;
+                                  const isStart = week.weekNum === startWeek;
+                                  const isEnd = week.weekNum === endWeek;
                                   return (
-                                    <div
-                                      key={week.weekNum}
-                                      className={cn(
-                                        'flex-1 h-8 flex items-center justify-center border-r border-border/30',
-                                        week.weekNum === baseWeekIndex + 1 && 'bg-primary/5'
-                                      )}
-                                    >
+                                    <div key={week.weekNum} className="flex-1 h-6 flex items-center justify-center border-r border-border/30">
                                       {isInRange && (
                                         <div className={cn(
-                                          'h-5 w-full',
-                                          getStatusColor(activity.status),
-                                          isStart && 'rounded-l ml-1',
-                                          isEnd && 'rounded-r mr-1',
-                                          activity.hasWarning && 'animate-pulse'
+                                          'h-3.5 w-full bg-primary/40',
+                                          isStart && 'rounded-l ml-0.5',
+                                          isEnd && 'rounded-r mr-0.5'
                                         )} />
                                       )}
                                     </div>
@@ -406,24 +468,19 @@ export function TimelineView() {
                               ) : (
                                 displayedDays.map((day, i) => {
                                   const dayStr = day.date.toISOString().split('T')[0];
-                                  const isInRange = actStartDay && actEndDay && dayStr >= actStartDay && dayStr <= actEndDay;
-                                  const isStart = dayStr === actStartDay;
-                                  const isEnd = dayStr === actEndDay;
+                                  const isInRange = startDay && endDay && dayStr >= startDay && dayStr <= endDay;
+                                  const isStart = dayStr === startDay;
+                                  const isEnd = dayStr === endDay;
                                   return (
-                                    <div
-                                      key={i}
-                                      className={cn(
-                                        'flex-1 h-8 flex items-center justify-center border-r border-border/30 min-w-[32px]',
-                                        (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
-                                      )}
-                                    >
+                                    <div key={i} className={cn(
+                                      'flex-1 h-6 flex items-center justify-center border-r border-border/30 min-w-[28px]',
+                                      (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
+                                    )}>
                                       {isInRange && (
                                         <div className={cn(
-                                          'h-5 w-full',
-                                          getStatusColor(activity.status),
-                                          isStart && 'rounded-l ml-1',
-                                          isEnd && 'rounded-r mr-1',
-                                          activity.hasWarning && 'animate-pulse'
+                                          'h-3.5 w-full bg-primary/40',
+                                          isStart && 'rounded-l ml-0.5',
+                                          isEnd && 'rounded-r mr-0.5'
                                         )} />
                                       )}
                                     </div>
@@ -431,43 +488,150 @@ export function TimelineView() {
                                 })
                               )}
                             </div>
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-                  </motion.div>
-                );
-              })}
+                          )}
+                          {isExpanded && <div className="flex-1" />}
+                        </div>
 
-              {timelineProjects.length === 0 && (
-                <div className="p-8 text-center text-muted-foreground">
-                  Inga aktiviteter med datum. Lägg till aktiviteter med start- och slutdatum för att se dem här.
+                        {/* Activities */}
+                        <AnimatePresence>
+                          {isExpanded && project.activities.filter(a => a.startDate || a.endDate).map((activity) => {
+                            const derived = deriveStatus(activity.status, activity.endDate);
+                            const actStartWeek = activity.startDate ? getWeekNumber(activity.startDate) : null;
+                            const actEndWeek = activity.endDate ? getWeekNumber(activity.endDate) : actStartWeek;
+                            const actStartDay = activity.startDate ? getDayIndex(activity.startDate) : null;
+                            const actEndDay = activity.endDate ? getDayIndex(activity.endDate) : actStartDay;
+
+                            return (
+                              <motion.div
+                                key={activity.id}
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="flex border-b border-border/30 hover:bg-muted/20 group"
+                              >
+                                <div className="w-60 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center justify-between min-w-0">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="min-w-0 flex items-center gap-1.5">
+                                        <div className={cn('h-2 w-2 rounded-full shrink-0', getStatusDotColor(derived))} />
+                                        <span className="text-xs truncate">{activity.name}</span>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right" className="text-xs max-w-xs">
+                                      <p className="font-semibold">{activity.name}</p>
+                                      <p className="text-muted-foreground">
+                                        {activity.startDate} → {activity.endDate}
+                                      </p>
+                                      <p className="text-muted-foreground">
+                                        Status: {derived} • {activity.responsible}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <EditActivityDialog
+                                    projectId={project.id}
+                                    activity={activity}
+                                    trigger={
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                      >
+                                        <span className="sr-only">Redigera</span>
+                                        ✏️
+                                      </Button>
+                                    }
+                                  />
+                                </div>
+                                <div className="flex flex-1 items-center">
+                                  {viewMode === 'weeks' ? (
+                                    displayedWeeks.map((week) => {
+                                      const isInRange = actStartWeek && actEndWeek &&
+                                        week.weekNum >= actStartWeek && week.weekNum <= actEndWeek;
+                                      const isStart = week.weekNum === actStartWeek;
+                                      const isEnd = week.weekNum === actEndWeek;
+                                      return (
+                                        <div
+                                          key={week.weekNum}
+                                          className={cn(
+                                            'flex-1 h-6 flex items-center justify-center border-r border-border/30',
+                                            week.weekNum === todayWeekNum && 'bg-primary/5'
+                                          )}
+                                        >
+                                          {isInRange && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <div className={cn(
+                                                  'h-3.5 w-full',
+                                                  getStatusColor(derived),
+                                                  isStart && 'rounded-l ml-0.5',
+                                                  isEnd && 'rounded-r mr-0.5'
+                                                )} />
+                                              </TooltipTrigger>
+                                              <TooltipContent className="text-xs">
+                                                <p className="font-semibold">{activity.name}</p>
+                                                <p>{activity.startDate} → {activity.endDate}</p>
+                                                <p>Status: {derived}</p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
+                                        </div>
+                                      );
+                                    })
+                                  ) : (
+                                    displayedDays.map((day, i) => {
+                                      const dayStr = day.date.toISOString().split('T')[0];
+                                      const isInRange = actStartDay && actEndDay && dayStr >= actStartDay && dayStr <= actEndDay;
+                                      const isStart = dayStr === actStartDay;
+                                      const isEnd = dayStr === actEndDay;
+                                      return (
+                                        <div
+                                          key={i}
+                                          className={cn(
+                                            'flex-1 h-6 flex items-center justify-center border-r border-border/30 min-w-[28px]',
+                                            (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
+                                          )}
+                                        >
+                                          {isInRange && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <div className={cn(
+                                                  'h-3.5 w-full',
+                                                  getStatusColor(derived),
+                                                  isStart && 'rounded-l ml-0.5',
+                                                  isEnd && 'rounded-r mr-0.5'
+                                                )} />
+                                              </TooltipTrigger>
+                                              <TooltipContent className="text-xs">
+                                                <p className="font-semibold">{activity.name}</p>
+                                                <p>{activity.startDate} → {activity.endDate}</p>
+                                                <p>Status: {derived}</p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </AnimatePresence>
+                      </motion.div>
+                    );
+                  })}
+
+                  {timelineProjects.length === 0 && (
+                    <div className="p-6 text-center text-muted-foreground text-sm">
+                      Inga aktiviteter med datum. Lägg till aktiviteter med start- och slutdatum för att se dem här.
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Legend */}
-      <div className="flex items-center gap-6 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-6 rounded bg-status-completed" />
-          <span>Slutförd</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-6 rounded bg-status-in-progress" />
-          <span>Pågår</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-6 rounded bg-muted-foreground/30" />
-          <span>Ej påbörjad</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-6 animate-pulse rounded bg-status-delayed" />
-          <span>Varning</span>
-        </div>
-      </div>
-    </motion.div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </TooltipProvider>
   );
 }
