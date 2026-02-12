@@ -9,6 +9,7 @@ import { AddActivityDialog } from './dialogs/AddActivityDialog';
 import { EditActivityDialog } from './dialogs/EditActivityDialog';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StatusLegend } from './StatusLegend';
 import {
   Tooltip,
   TooltipContent,
@@ -318,18 +319,10 @@ export function TimelineView() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-4 text-xs flex-wrap">
-          {statusLabels.map(s => (
-            <div key={s.status} className="flex items-center gap-1.5">
-              <div className={cn('h-2.5 w-5 rounded-sm', s.color)} />
-              <span className="text-muted-foreground">{s.label}</span>
-            </div>
-          ))}
-          <div className="flex items-center gap-1.5 ml-2">
-            <div className="h-3 w-0.5 bg-destructive rounded" />
-            <span className="text-muted-foreground">Idag</span>
-          </div>
-        </div>
+        <StatusLegend
+          items={statusLabels.map(s => ({ color: s.color, label: s.label }))}
+          showTodayMarker
+        />
 
         <Card className="border-border/50 bg-card/80 overflow-hidden">
           <CardContent className="p-0">
