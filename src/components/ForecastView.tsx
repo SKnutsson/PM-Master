@@ -9,6 +9,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { StatusLegend } from './StatusLegend';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthLabels: { [key: string]: string } = {
@@ -234,27 +235,16 @@ export function ForecastView() {
       </motion.div>
 
       {/* Legend */}
-      <motion.div variants={itemVariants} className="flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-blue-400/30 border border-blue-400"></div>
-          <span className="text-muted-foreground">Ny affär</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-status-completed/30 border border-status-completed"></div>
-          <span className="text-muted-foreground">Tagen</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-yellow-400/30 border border-yellow-400"></div>
-          <span className="text-muted-foreground">Flyttad (ursprunglig månad)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-400/30 border border-red-400"></div>
-          <span className="text-muted-foreground">Förlorad (ej i summor)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-foreground/30 border border-foreground"></div>
-          <span className="text-muted-foreground">Prognos</span>
-        </div>
+      <motion.div variants={itemVariants}>
+        <StatusLegend
+          items={[
+            { color: 'bg-blue-400', label: 'Ny affär' },
+            { color: 'bg-status-completed', label: 'Tagen' },
+            { color: 'bg-yellow-400', label: 'Flyttad (ursprunglig månad)' },
+            { color: 'bg-status-delayed', label: 'Förlorad (ej i summor)' },
+            { color: 'bg-foreground/50', label: 'Prognos' },
+          ]}
+        />
       </motion.div>
 
       {/* Forecast Table */}
