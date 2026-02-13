@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,12 +10,14 @@ import { EditActivityDialog } from './dialogs/EditActivityDialog';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatusLegend } from './StatusLegend';
+import { GanttBar } from './GanttBar';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -69,7 +71,6 @@ function generateDays(startDate: Date, count: number): { date: Date; label: stri
 function deriveStatus(status: Status, endDate?: string): DerivedStatus {
   if (status === 'Slutförd') return 'Slutförd';
   if (status === 'Försenad') return 'Försenad';
-  // Auto-derive delayed: if today > endDate and not completed
   if (endDate) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -108,8 +109,12 @@ const statusLabels: { status: DerivedStatus; color: string; label: string }[] = 
   { status: 'Försenad', color: 'bg-status-delayed', label: 'Försenad' },
 ];
 
+function toISODate(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
+
 export function TimelineView() {
-  const { projects: allProjects } = useProjectDataContext();
+  const { projects: allProjects, updateActivity } = useProjectDataContext();
   const projects = allProjects.filter(p => p.status !== 'Avslutat');
   const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
@@ -136,7 +141,6 @@ export function TimelineView() {
     return generateDays(displayedWeeks[0].startDate, visibleDays);
   }, [viewMode, displayedWeeks, visibleDays]);
 
-  // Compute today's column index
   const todayWeekNum = useMemo(() => {
     const startOfYear = new Date(2026, 0, 1);
     const days = Math.floor((today.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
@@ -173,10 +177,6 @@ export function TimelineView() {
     const startOfYear = new Date(date.getFullYear(), 0, 1);
     const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
     return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  };
-
-  const getDayIndex = (dateStr: string): string => {
-    return new Date(dateStr).toISOString().split('T')[0];
   };
 
   const getProjectRange = (projectId: string) => {
@@ -240,16 +240,52 @@ export function TimelineView() {
     return groups;
   }, [viewMode, displayedDays]);
 
-  // Column count for today marker positioning
   const columnCount = viewMode === 'weeks' ? displayedWeeks.length : displayedDays.length;
 
-  // Today column index in week view
   const todayWeekColIndex = useMemo(() => {
     if (viewMode !== 'weeks') return -1;
     return displayedWeeks.findIndex(w => w.weekNum === todayWeekNum);
   }, [viewMode, displayedWeeks, todayWeekNum]);
 
   const todayColIndex = viewMode === 'weeks' ? todayWeekColIndex : todayDayIndex;
+
+  // --- Drag & drop helpers ---
+
+  // Convert a column index to ISO date string
+  const colToDate = useCallback((colIndex: number): string => {
+    const idx = Math.round(Math.max(0, colIndex));
+    if (viewMode === 'weeks') {
+      const weekIdx = Math.min(idx, displayedWeeks.length - 1);
+      if (weekIdx < 0 || displayedWeeks.length === 0) return todayStr;
+      const d = new Date(displayedWeeks[weekIdx].startDate);
+      return toISODate(d);
+    } else {
+      const dayIdx = Math.min(idx, displayedDays.length - 1);
+      if (dayIdx < 0 || displayedDays.length === 0) return todayStr;
+      return toISODate(displayedDays[dayIdx].date);
+    }
+  }, [viewMode, displayedWeeks, displayedDays, todayStr]);
+
+  // Convert ISO date to column index
+  const dateToCol = useCallback((dateStr: string): number => {
+    if (viewMode === 'weeks') {
+      const weekNum = getWeekNumber(dateStr);
+      const idx = displayedWeeks.findIndex(w => w.weekNum === weekNum);
+      return idx >= 0 ? idx : (weekNum < (displayedWeeks[0]?.weekNum ?? 0) ? -1 : displayedWeeks.length);
+    } else {
+      const target = dateStr;
+      const idx = displayedDays.findIndex(d => toISODate(d.date) === target);
+      return idx >= 0 ? idx : (target < toISODate(displayedDays[0]?.date) ? -1 : displayedDays.length);
+    }
+  }, [viewMode, displayedWeeks, displayedDays]);
+
+  // Handle date changes from drag/resize
+  const handleDatesChange = useCallback(async (projectId: string, activityId: string, newStart: string, newEnd: string) => {
+    await updateActivity(projectId, activityId, {
+      startDate: newStart,
+      endDate: newEnd,
+    });
+  }, [updateActivity]);
 
   const renderTodayMarker = () => {
     if (todayColIndex < 0 || todayColIndex >= columnCount) return null;
@@ -264,6 +300,31 @@ export function TimelineView() {
     );
   };
 
+  // Render background cells for an activity row
+  const renderBackgroundCells = () => {
+    if (viewMode === 'weeks') {
+      return displayedWeeks.map((week) => (
+        <div
+          key={week.weekNum}
+          className={cn(
+            'flex-1 h-6 border-r border-border/30',
+            week.weekNum === todayWeekNum && 'bg-primary/5'
+          )}
+        />
+      ));
+    } else {
+      return displayedDays.map((day, i) => (
+        <div
+          key={i}
+          className={cn(
+            'flex-1 h-6 border-r border-border/30 min-w-[28px]',
+            (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
+          )}
+        />
+      ));
+    }
+  };
+
   return (
     <TooltipProvider delayDuration={200}>
       <motion.div
@@ -275,7 +336,7 @@ export function TimelineView() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Tidslinje</h1>
-            <p className="text-sm text-muted-foreground">Ganttschema för projektaktiviteter</p>
+            <p className="text-sm text-muted-foreground">Ganttschema för projektaktiviteter – dra i aktiviteter för att ändra datum</p>
           </div>
           <div className="flex items-center gap-3">
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
@@ -396,7 +457,6 @@ export function TimelineView() {
                 {/* Projects and Activities */}
                 <div className="relative">
                   {/* Today marker overlay */}
-                  {/* We position it inside the grid area (excluding the left column) */}
                   <div className="absolute top-0 bottom-0 left-60 right-0 pointer-events-none z-20">
                     {renderTodayMarker()}
                   </div>
@@ -489,10 +549,9 @@ export function TimelineView() {
                         <AnimatePresence>
                           {isExpanded && project.activities.filter(a => a.startDate || a.endDate).map((activity) => {
                             const derived = deriveStatus(activity.status, activity.endDate);
-                            const actStartWeek = activity.startDate ? getWeekNumber(activity.startDate) : null;
-                            const actEndWeek = activity.endDate ? getWeekNumber(activity.endDate) : actStartWeek;
-                            const actStartDay = activity.startDate ? getDayIndex(activity.startDate) : null;
-                            const actEndDay = activity.endDate ? getDayIndex(activity.endDate) : actStartDay;
+                            const actStartCol = activity.startDate ? dateToCol(activity.startDate) : -1;
+                            const actEndCol = activity.endDate ? dateToCol(activity.endDate) : actStartCol;
+                            const barVisible = actStartCol >= 0 && actEndCol >= 0 && actStartCol < columnCount;
 
                             return (
                               <motion.div
@@ -535,75 +594,29 @@ export function TimelineView() {
                                     }
                                   />
                                 </div>
-                                <div className="flex flex-1 items-center">
-                                  {viewMode === 'weeks' ? (
-                                    displayedWeeks.map((week) => {
-                                      const isInRange = actStartWeek && actEndWeek &&
-                                        week.weekNum >= actStartWeek && week.weekNum <= actEndWeek;
-                                      const isStart = week.weekNum === actStartWeek;
-                                      const isEnd = week.weekNum === actEndWeek;
-                                      return (
-                                        <div
-                                          key={week.weekNum}
-                                          className={cn(
-                                            'flex-1 h-6 flex items-center justify-center border-r border-border/30',
-                                            week.weekNum === todayWeekNum && 'bg-primary/5'
-                                          )}
-                                        >
-                                          {isInRange && (
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <div className={cn(
-                                                  'h-3.5 w-full',
-                                                  getStatusColor(derived),
-                                                  isStart && 'rounded-l ml-0.5',
-                                                  isEnd && 'rounded-r mr-0.5'
-                                                )} />
-                                              </TooltipTrigger>
-                                              <TooltipContent className="text-xs">
-                                                <p className="font-semibold">{activity.name}</p>
-                                                <p>{activity.startDate} → {activity.endDate}</p>
-                                                <p>Status: {derived}</p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          )}
-                                        </div>
-                                      );
-                                    })
-                                  ) : (
-                                    displayedDays.map((day, i) => {
-                                      const dayStr = day.date.toISOString().split('T')[0];
-                                      const isInRange = actStartDay && actEndDay && dayStr >= actStartDay && dayStr <= actEndDay;
-                                      const isStart = dayStr === actStartDay;
-                                      const isEnd = dayStr === actEndDay;
-                                      return (
-                                        <div
-                                          key={i}
-                                          className={cn(
-                                            'flex-1 h-6 flex items-center justify-center border-r border-border/30 min-w-[28px]',
-                                            (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
-                                          )}
-                                        >
-                                          {isInRange && (
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <div className={cn(
-                                                  'h-3.5 w-full',
-                                                  getStatusColor(derived),
-                                                  isStart && 'rounded-l ml-0.5',
-                                                  isEnd && 'rounded-r mr-0.5'
-                                                )} />
-                                              </TooltipTrigger>
-                                              <TooltipContent className="text-xs">
-                                                <p className="font-semibold">{activity.name}</p>
-                                                <p>{activity.startDate} → {activity.endDate}</p>
-                                                <p>Status: {derived}</p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          )}
-                                        </div>
-                                      );
-                                    })
+                                {/* Grid area with absolute-positioned draggable bar */}
+                                <div className="flex flex-1 items-center relative">
+                                  {/* Background cells for grid lines */}
+                                  {renderBackgroundCells()}
+                                  {/* Draggable bar overlay */}
+                                  {barVisible && (
+                                    <GanttBar
+                                      activityId={activity.id}
+                                      projectId={project.id}
+                                      activityName={activity.name}
+                                      startDate={activity.startDate || todayStr}
+                                      endDate={activity.endDate || todayStr}
+                                      statusColor={getStatusColor(derived)}
+                                      derivedStatus={derived}
+                                      responsible={activity.responsible}
+                                      columnCount={columnCount}
+                                      startCol={actStartCol}
+                                      endCol={actEndCol}
+                                      onDatesChange={handleDatesChange}
+                                      colToDate={colToDate}
+                                      dateToCol={dateToCol}
+                                      snapCols={1}
+                                    />
                                   )}
                                 </div>
                               </motion.div>
