@@ -92,7 +92,7 @@ export function useDatabaseData() {
       const { data: activitiesData } = await supabase
         .from('activities')
         .select('*')
-        .order('start_date', { ascending: true });
+        .order('created_at', { ascending: true });
 
       const projectsWithActivities: Project[] = projectsData.map(p => ({
         id: p.id,
@@ -306,16 +306,18 @@ export function useDatabaseData() {
   }, []);
 
   const updateActivity = useCallback(async (projectId: string, activityId: string, updates: Partial<Activity>) => {
+    const updateData: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.responsible !== undefined) updateData.responsible = updates.responsible;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.startDate !== undefined) updateData.start_date = updates.startDate;
+    if (updates.endDate !== undefined) updateData.end_date = updates.endDate;
+
     const { error } = await supabase
       .from('activities')
-      .update({
-        name: updates.name,
-        responsible: updates.responsible,
-        status: updates.status,
-        start_date: updates.startDate,
-        end_date: updates.endDate,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', activityId);
 
     if (error) console.error('Error updating activity:', error);
