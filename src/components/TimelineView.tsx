@@ -34,7 +34,7 @@ const itemVariants = {
 
 type ViewMode = 'weeks' | 'days';
 
-type DerivedStatus = 'Ej påbörjat' | 'Pågår' | 'Slutförd' | 'Försenad';
+type DerivedStatus = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad';
 
 function generateWeeks(year: number): { weekNum: number; startDate: Date; label: string }[] {
   const weeks: { weekNum: number; startDate: Date; label: string }[] = [];
@@ -81,7 +81,7 @@ function deriveStatus(status: Status, endDate?: string): DerivedStatus {
     end.setHours(0, 0, 0, 0);
     if (today > end) return 'Försenad';
   }
-  return 'Ej påbörjat';
+  return 'Ej påbörjad';
 }
 
 const getStatusColor = (derivedStatus: DerivedStatus) => {
@@ -89,7 +89,7 @@ const getStatusColor = (derivedStatus: DerivedStatus) => {
     case 'Slutförd': return 'bg-status-completed';
     case 'Pågår': return 'bg-status-in-progress';
     case 'Försenad': return 'bg-status-delayed';
-    case 'Ej påbörjat': return 'bg-status-not-started';
+    case 'Ej påbörjad': return 'bg-status-not-started';
     default: return 'bg-muted-foreground/30';
   }
 };
@@ -99,13 +99,13 @@ const getStatusDotColor = (derivedStatus: DerivedStatus) => {
     case 'Slutförd': return 'bg-status-completed';
     case 'Pågår': return 'bg-status-in-progress';
     case 'Försenad': return 'bg-status-delayed';
-    case 'Ej påbörjat': return 'bg-status-not-started';
+    case 'Ej påbörjad': return 'bg-status-not-started';
     default: return 'bg-muted-foreground/30';
   }
 };
 
 const statusLabels: { status: DerivedStatus; color: string; label: string }[] = [
-  { status: 'Ej påbörjat', color: 'bg-status-not-started', label: 'Ej påbörjat' },
+  { status: 'Ej påbörjad', color: 'bg-status-not-started', label: 'Ej påbörjad' },
   { status: 'Pågår', color: 'bg-status-in-progress', label: 'Pågår' },
   { status: 'Slutförd', color: 'bg-status-completed', label: 'Slutförd' },
   { status: 'Försenad', color: 'bg-status-delayed', label: 'Försenad' },
