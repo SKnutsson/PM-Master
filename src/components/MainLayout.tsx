@@ -4,6 +4,7 @@ import { Dashboard } from './Dashboard';
 import { ProjectsView } from './ProjectsView';
 import { ForecastView } from './ForecastView';
 import { TimelineView } from './TimelineView';
+import { ResourcePlanningView } from './ResourcePlanningView';
 import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 
 export function MainLayout() {
@@ -19,6 +20,8 @@ export function MainLayout() {
         return <ForecastView />;
       case 'timeline':
         return <TimelineView />;
+      case 'resources':
+        return <ResourcePlanningView />;
       default:
         return <Dashboard />;
     }

@@ -126,6 +126,36 @@ export type Database = {
         }
         Relationships: []
       }
+      installers: {
+        Row: {
+          company: string
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          company?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -149,6 +179,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      project_resource_allocations: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          installer_id: string
+          planned_hours: number
+          project_id: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          installer_id: string
+          planned_hours?: number
+          project_id: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          installer_id?: string
+          planned_hours?: number
+          project_id?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_resource_allocations_installer_id_fkey"
+            columns: ["installer_id"]
+            isOneToOne: false
+            referencedRelation: "installers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_resource_allocations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
@@ -191,6 +269,41 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      resource_estimations: {
+        Row: {
+          created_at: string
+          estimated_install_hours: number
+          estimated_travel_hours: number
+          id: string
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_install_hours?: number
+          estimated_travel_hours?: number
+          id?: string
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estimated_install_hours?: number
+          estimated_travel_hours?: number
+          id?: string
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_estimations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       schedule_history: {
         Row: {
