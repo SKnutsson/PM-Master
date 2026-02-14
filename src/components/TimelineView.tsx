@@ -68,19 +68,10 @@ function generateDays(startDate: Date, count: number): { date: Date; label: stri
   return days;
 }
 
-function deriveStatus(status: Status, endDate?: string): DerivedStatus {
+function deriveStatus(status: Status): DerivedStatus {
   if (status === 'Slutförd') return 'Slutförd';
   if (status === 'Försenad') return 'Försenad';
-  // Respect explicit "Pågår" – don't auto-override to Försenad
   if (status === 'Pågår') return 'Pågår';
-  // Only auto-derive "Försenad" for activities not yet started
-  if (endDate) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const end = new Date(endDate);
-    end.setHours(0, 0, 0, 0);
-    if (today > end) return 'Försenad';
-  }
   return 'Ej påbörjad';
 }
 
@@ -555,7 +546,7 @@ export function TimelineView() {
                         {/* Activities */}
                         <AnimatePresence>
                           {isExpanded && project.activities.filter(a => a.startDate || a.endDate).map((activity) => {
-                            const derived = deriveStatus(activity.status, activity.endDate);
+                            const derived = deriveStatus(activity.status);
                             const actStartCol = activity.startDate ? dateToCol(activity.startDate) : -1;
                             const actEndCol = activity.endDate ? dateToCol(activity.endDate) : actStartCol;
                             const barVisible = actStartCol >= 0 && actEndCol >= 0 && actStartCol < columnCount;
