@@ -65,13 +65,13 @@ export function GanttBar({
   const [currentEndCol, setCurrentEndCol] = useState(endCol);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync with props when not dragging
+  // Sync with props when not dragging AND not saving
   useEffect(() => {
-    if (!dragState) {
+    if (!dragState && !isSaving) {
       setCurrentStartCol(startCol);
       setCurrentEndCol(endCol);
     }
-  }, [startCol, endCol, dragState]);
+  }, [startCol, endCol, dragState, isSaving]);
 
   const getContainerWidth = useCallback(() => {
     const el = containerRef.current?.parentElement;
@@ -120,19 +120,17 @@ export function GanttBar({
     };
 
     const handleMouseUp = async () => {
-      const finalStartCol = dragState.type === 'resize-right' ? currentStartCol :
-        dragState.type === 'move' ? currentStartCol : currentStartCol;
-      const finalEndCol = dragState.type === 'resize-left' ? currentEndCol :
-        dragState.type === 'move' ? currentEndCol : currentEndCol;
+      const finalStartCol = currentStartCol;
+      const finalEndCol = currentEndCol;
 
       const newStartDate = colToDate(Math.max(0, finalStartCol));
       const newEndDate = colToDate(Math.max(0, finalEndCol));
 
-      setDragState(null);
-
       // Only save if dates actually changed
       if (newStartDate !== startDate || newEndDate !== endDate) {
+        // Set saving BEFORE clearing drag so useEffect doesn't revert position
         setIsSaving(true);
+        setDragState(null);
         try {
           await onDatesChange(projectId, activityId, newStartDate, newEndDate);
         } catch {
@@ -143,6 +141,8 @@ export function GanttBar({
         } finally {
           setIsSaving(false);
         }
+      } else {
+        setDragState(null);
       }
     };
 

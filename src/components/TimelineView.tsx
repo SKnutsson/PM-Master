@@ -71,6 +71,9 @@ function generateDays(startDate: Date, count: number): { date: Date; label: stri
 function deriveStatus(status: Status, endDate?: string): DerivedStatus {
   if (status === 'Slutförd') return 'Slutförd';
   if (status === 'Försenad') return 'Försenad';
+  // Respect explicit "Pågår" – don't auto-override to Försenad
+  if (status === 'Pågår') return 'Pågår';
+  // Only auto-derive "Försenad" for activities not yet started
   if (endDate) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -78,7 +81,6 @@ function deriveStatus(status: Status, endDate?: string): DerivedStatus {
     end.setHours(0, 0, 0, 0);
     if (today > end) return 'Försenad';
   }
-  if (status === 'Pågår') return 'Pågår';
   return 'Ej påbörjat';
 }
 
