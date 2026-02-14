@@ -16,41 +16,31 @@ export interface ResourceEstimation {
   estimatedTravelHours: number;
 }
 
-export interface ResourceAllocation {
+export interface ProjectInstaller {
   id: string;
   projectId: string;
   installerId: string;
   installerName?: string;
   installerCompany?: string;
-  startDate: string;
-  endDate: string;
-  plannedHours: number;
+}
+
+export interface DailyResourceEntry {
+  id: string;
+  projectId: string;
+  installerId: string;
+  installerName?: string;
+  installerCompany?: string;
+  date: string;
+  plannedWorkHours: number;
+  plannedTravelHours: number;
 }
 
 export function useResourceData() {
   const [installers, setInstallers] = useState<Installer[]>([]);
   const [estimations, setEstimations] = useState<ResourceEstimation[]>([]);
-  const [allocations, setAllocations] = useState<ResourceAllocation[]>([]);
+  const [projectInstallers, setProjectInstallers] = useState<ProjectInstaller[]>([]);
+  const [dailyEntries, setDailyEntries] = useState<DailyResourceEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const loadAll = useCallback(async () => {
-    setIsLoading(true);
-    await Promise.all([loadInstallers(), loadEstimations(), loadAllocations()]);
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    loadAll();
-
-    const channel = supabase
-      .channel('resource-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'installers' }, () => loadInstallers())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'resource_estimations' }, () => loadEstimations())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_resource_allocations' }, () => loadAllocations())
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, []);
 
   const loadInstallers = async () => {
     const { data } = await supabase.from('installers').select('*').order('name');
@@ -73,17 +63,45 @@ export function useResourceData() {
     }
   };
 
-  const loadAllocations = async () => {
-    const { data } = await supabase.from('project_resource_allocations').select('*, installers(name, company)');
+  const loadProjectInstallers = async () => {
+    const { data } = await supabase.from('project_installers').select('*, installers(name, company)');
     if (data) {
-      setAllocations(data.map((a: any) => ({
-        id: a.id, projectId: a.project_id, installerId: a.installer_id,
-        installerName: a.installers?.name, installerCompany: a.installers?.company,
-        startDate: a.start_date, endDate: a.end_date,
-        plannedHours: parseFloat(String(a.planned_hours)),
+      setProjectInstallers(data.map((pi: any) => ({
+        id: pi.id, projectId: pi.project_id, installerId: pi.installer_id,
+        installerName: pi.installers?.name, installerCompany: pi.installers?.company,
       })));
     }
   };
+
+  const loadDailyEntries = async () => {
+    const { data } = await supabase.from('daily_resource_entries').select('*, installers(name, company)');
+    if (data) {
+      setDailyEntries(data.map((d: any) => ({
+        id: d.id, projectId: d.project_id, installerId: d.installer_id,
+        installerName: d.installers?.name, installerCompany: d.installers?.company,
+        date: d.date, plannedWorkHours: parseFloat(String(d.planned_work_hours)),
+        plannedTravelHours: parseFloat(String(d.planned_travel_hours)),
+      })));
+    }
+  };
+
+  const loadAll = useCallback(async () => {
+    setIsLoading(true);
+    await Promise.all([loadInstallers(), loadEstimations(), loadProjectInstallers(), loadDailyEntries()]);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadAll();
+    const channel = supabase
+      .channel('resource-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'installers' }, () => loadInstallers())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'resource_estimations' }, () => loadEstimations())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_installers' }, () => loadProjectInstallers())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_resource_entries' }, () => loadDailyEntries())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   // Installer CRUD
   const addInstaller = useCallback(async (installer: Omit<Installer, 'id'>) => {
@@ -111,48 +129,81 @@ export function useResourceData() {
     const existing = estimations.find(e => e.projectId === projectId);
     if (existing) {
       await supabase.from('resource_estimations').update({
-        estimated_install_hours: installHours,
-        estimated_travel_hours: travelHours,
+        estimated_install_hours: installHours, estimated_travel_hours: travelHours,
       }).eq('id', existing.id);
     } else {
       await supabase.from('resource_estimations').insert({
-        project_id: projectId,
-        estimated_install_hours: installHours,
-        estimated_travel_hours: travelHours,
+        project_id: projectId, estimated_install_hours: installHours, estimated_travel_hours: travelHours,
       });
     }
   }, [estimations]);
 
-  // Allocation CRUD
-  const addAllocation = useCallback(async (alloc: Omit<ResourceAllocation, 'id' | 'installerName' | 'installerCompany'>) => {
-    const { data, error } = await supabase.from('project_resource_allocations')
-      .insert({
-        project_id: alloc.projectId, installer_id: alloc.installerId,
-        start_date: alloc.startDate, end_date: alloc.endDate,
-        planned_hours: alloc.plannedHours,
-      }).select().single();
+  // Project Installer CRUD
+  const assignInstaller = useCallback(async (projectId: string, installerId: string) => {
+    const { data, error } = await supabase.from('project_installers')
+      .insert({ project_id: projectId, installer_id: installerId })
+      .select('*, installers(name, company)').single();
     if (error) { console.error(error); return null; }
-    return data;
+    const pi: ProjectInstaller = {
+      id: data.id, projectId: data.project_id, installerId: data.installer_id,
+      installerName: (data as any).installers?.name, installerCompany: (data as any).installers?.company,
+    };
+    setProjectInstallers(prev => [...prev, pi]);
+    return pi;
   }, []);
 
-  const updateAllocation = useCallback(async (id: string, updates: Partial<ResourceAllocation>) => {
-    const updateData: Record<string, any> = {};
-    if (updates.installerId !== undefined) updateData.installer_id = updates.installerId;
-    if (updates.startDate !== undefined) updateData.start_date = updates.startDate;
-    if (updates.endDate !== undefined) updateData.end_date = updates.endDate;
-    if (updates.plannedHours !== undefined) updateData.planned_hours = updates.plannedHours;
-    await supabase.from('project_resource_allocations').update(updateData).eq('id', id);
-  }, []);
+  const unassignInstaller = useCallback(async (projectInstallerId: string) => {
+    // Get the project_installer to find project_id and installer_id
+    const pi = projectInstallers.find(p => p.id === projectInstallerId);
+    if (pi) {
+      // Delete all daily entries for this installer on this project
+      await supabase.from('daily_resource_entries').delete()
+        .eq('project_id', pi.projectId).eq('installer_id', pi.installerId);
+      setDailyEntries(prev => prev.filter(d => !(d.projectId === pi.projectId && d.installerId === pi.installerId)));
+    }
+    await supabase.from('project_installers').delete().eq('id', projectInstallerId);
+    setProjectInstallers(prev => prev.filter(p => p.id !== projectInstallerId));
+  }, [projectInstallers]);
 
-  const deleteAllocation = useCallback(async (id: string) => {
-    await supabase.from('project_resource_allocations').delete().eq('id', id);
+  // Daily Entry CRUD
+  const upsertDailyEntry = useCallback(async (projectId: string, installerId: string, date: string, workHours: number, travelHours: number) => {
+    const existing = dailyEntries.find(d => d.projectId === projectId && d.installerId === installerId && d.date === date);
+    if (existing) {
+      if (workHours === 0 && travelHours === 0) {
+        await supabase.from('daily_resource_entries').delete().eq('id', existing.id);
+        setDailyEntries(prev => prev.filter(d => d.id !== existing.id));
+      } else {
+        await supabase.from('daily_resource_entries').update({
+          planned_work_hours: workHours, planned_travel_hours: travelHours,
+        }).eq('id', existing.id);
+        setDailyEntries(prev => prev.map(d => d.id === existing.id ? { ...d, plannedWorkHours: workHours, plannedTravelHours: travelHours } : d));
+      }
+    } else if (workHours > 0 || travelHours > 0) {
+      const { data, error } = await supabase.from('daily_resource_entries').insert({
+        project_id: projectId, installer_id: installerId, date,
+        planned_work_hours: workHours, planned_travel_hours: travelHours,
+      }).select('*, installers(name, company)').single();
+      if (error) { console.error(error); return; }
+      setDailyEntries(prev => [...prev, {
+        id: data.id, projectId: data.project_id, installerId: data.installer_id,
+        installerName: (data as any).installers?.name, installerCompany: (data as any).installers?.company,
+        date: data.date, plannedWorkHours: parseFloat(String(data.planned_work_hours)),
+        plannedTravelHours: parseFloat(String(data.planned_travel_hours)),
+      }]);
+    }
+  }, [dailyEntries]);
+
+  const deleteDailyEntry = useCallback(async (id: string) => {
+    await supabase.from('daily_resource_entries').delete().eq('id', id);
+    setDailyEntries(prev => prev.filter(d => d.id !== id));
   }, []);
 
   return {
-    installers, estimations, allocations, isLoading,
+    installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation,
-    addAllocation, updateAllocation, deleteAllocation,
+    assignInstaller, unassignInstaller,
+    upsertDailyEntry, deleteDailyEntry,
     refresh: loadAll,
   };
 }
