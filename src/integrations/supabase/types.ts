@@ -61,6 +61,54 @@ export type Database = {
           },
         ]
       }
+      daily_resource_entries: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          installer_id: string
+          planned_travel_hours: number
+          planned_work_hours: number
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          installer_id: string
+          planned_travel_hours?: number
+          planned_work_hours?: number
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          installer_id?: string
+          planned_travel_hours?: number
+          planned_work_hours?: number
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_resource_entries_installer_id_fkey"
+            columns: ["installer_id"]
+            isOneToOne: false
+            referencedRelation: "installers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_resource_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forecast_months: {
         Row: {
           amount: number
@@ -179,6 +227,42 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      project_installers: {
+        Row: {
+          created_at: string
+          id: string
+          installer_id: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          installer_id: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          installer_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_installers_installer_id_fkey"
+            columns: ["installer_id"]
+            isOneToOne: false
+            referencedRelation: "installers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_installers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_resource_allocations: {
         Row: {
