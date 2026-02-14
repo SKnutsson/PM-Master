@@ -394,6 +394,7 @@ export function TimelineView() {
                 {/* Year/Month header row */}
                 <div className="sticky top-0 z-10 flex border-b border-border/30 bg-card">
                   <div className="w-60 shrink-0 border-r border-border/50" />
+                  <div className="w-24 shrink-0 border-r border-border/50" />
                   <div className="flex flex-1">
                     {viewMode === 'weeks'
                       ? weekYearGroups.map((g, i) => (
@@ -421,6 +422,9 @@ export function TimelineView() {
                 <div className="sticky top-[21px] z-10 flex border-b border-border/50 bg-card">
                   <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
                     Projekt / Aktivitet
+                  </div>
+                  <div className="w-24 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold text-muted-foreground">
+                    Ansvarig
                   </div>
                   <div className="flex flex-1">
                     {viewMode === 'weeks' ? (
@@ -459,7 +463,7 @@ export function TimelineView() {
                 {/* Projects and Activities */}
                 <div className="relative">
                   {/* Today marker overlay */}
-                  <div className="absolute top-0 bottom-0 left-60 right-0 pointer-events-none z-20">
+                  <div className="absolute top-0 bottom-0 left-[21rem] right-0 pointer-events-none z-20">
                     {renderTodayMarker()}
                   </div>
 
@@ -499,6 +503,7 @@ export function TimelineView() {
                               />
                             </div>
                           </div>
+                          <div className="w-24 shrink-0 border-r border-border/50" />
                           {/* Collapsed summary bar */}
                           {!isExpanded && (
                             <div className="flex flex-1 items-center">
@@ -595,6 +600,9 @@ export function TimelineView() {
                                       </Button>
                                     }
                                   />
+                                </div>
+                                <div className="w-24 shrink-0 border-r border-border/50 px-2 py-0.5 flex items-center">
+                                  <span className="text-[10px] text-muted-foreground truncate">{activity.responsible}</span>
                                 </div>
                                 {/* Grid area with absolute-positioned draggable bar */}
                                 <div className="flex flex-1 items-center relative">
