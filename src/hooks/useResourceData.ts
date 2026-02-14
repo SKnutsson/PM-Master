@@ -91,15 +91,19 @@ export function useResourceData() {
       .insert({ name: installer.name, company: installer.company, phone: installer.phone, email: installer.email })
       .select().single();
     if (error) { console.error(error); return null; }
-    return { ...installer, id: data.id } as Installer;
+    const newInstaller = { ...installer, id: data.id } as Installer;
+    setInstallers(prev => [...prev, newInstaller].sort((a, b) => a.name.localeCompare(b.name)));
+    return newInstaller;
   }, []);
 
   const updateInstaller = useCallback(async (id: string, updates: Partial<Installer>) => {
     await supabase.from('installers').update(updates).eq('id', id);
+    setInstallers(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
   }, []);
 
   const deleteInstaller = useCallback(async (id: string) => {
     await supabase.from('installers').delete().eq('id', id);
+    setInstallers(prev => prev.filter(i => i.id !== id));
   }, []);
 
   // Estimation CRUD
