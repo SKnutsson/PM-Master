@@ -320,7 +320,13 @@ export function useDatabaseData() {
       .update(updateData)
       .eq('id', activityId);
 
-    if (error) console.error('Error updating activity:', error);
+    if (error) {
+      console.error('Error updating activity:', error);
+      throw error;
+    }
+
+    // Immediately refetch to update UI
+    await loadProjects();
   }, []);
 
   const deleteActivity = useCallback(async (projectId: string, activityId: string) => {
