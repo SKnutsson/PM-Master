@@ -175,24 +175,8 @@ export function Dashboard() {
               <CardDescription>Senaste aktiviteter och varningar</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Completion Progress */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Total framgång</span>
-                  <span className="font-medium">{completionRate}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${completionRate}%` }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                    className="h-full gradient-success"
-                  />
-                </div>
-              </div>
-
               {/* Project List */}
-              <div className="space-y-3 pt-4">
+              <div className="space-y-2">
                 {projects.slice(0, 5).map((project) => {
                   const completed = project.activities.filter(a => a.status === 'Slutförd').length;
                   const total = project.activities.length;
@@ -202,7 +186,7 @@ export function Dashboard() {
                   return (
                     <div
                       key={project.id}
-                      className="flex items-center justify-between rounded-lg border border-border/50 p-3 transition-colors hover:bg-muted/50"
+                      className="flex items-center justify-between rounded-lg border border-border/50 p-2 transition-colors hover:bg-muted/50"
                     >
                       <div className="flex items-center gap-3">
                         {hasWarning && (
