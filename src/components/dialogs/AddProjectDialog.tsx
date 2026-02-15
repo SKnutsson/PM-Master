@@ -12,12 +12,18 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 
 export function AddProjectDialog() {
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
+  const [customer, setCustomer] = useState('');
+  const [projectManager, setProjectManager] = useState('');
+  const [salesPerson, setSalesPerson] = useState('');
+  const [product, setProduct] = useState('');
+  const [notes, setNotes] = useState('');
   const { addProject } = useProjectDataContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,10 +32,20 @@ export function AddProjectDialog() {
       await addProject({
         code: code.trim(),
         name: name.trim(),
+        customer: customer.trim(),
+        projectManager: projectManager.trim(),
+        salesPerson: salesPerson.trim(),
+        product: product.trim(),
+        notes: notes.trim(),
         activities: [],
       });
       setCode('');
       setName('');
+      setCustomer('');
+      setProjectManager('');
+      setSalesPerson('');
+      setProduct('');
+      setNotes('');
       setOpen(false);
     }
   };
@@ -42,31 +58,81 @@ export function AddProjectDialog() {
           Nytt projekt
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Lägg till nytt projekt</DialogTitle>
             <DialogDescription>
-              Skapa ett nytt projekt genom att ange projektkod och namn.
+              Fyll i projektinformation nedan.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="code">Projektkod</Label>
+                <Input
+                  id="code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="t.ex. 10040"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="name">Projektnamn</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="t.ex. Nya Arenan"
+                />
+              </div>
+            </div>
             <div className="grid gap-2">
-              <Label htmlFor="code">Projektkod</Label>
+              <Label htmlFor="customer">Kund</Label>
               <Input
-                id="code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="t.ex. 10040"
+                id="customer"
+                value={customer}
+                onChange={(e) => setCustomer(e.target.value)}
+                placeholder="Kundnamn"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="projectManager">Projektledare</Label>
+                <Input
+                  id="projectManager"
+                  value={projectManager}
+                  onChange={(e) => setProjectManager(e.target.value)}
+                  placeholder="Namn"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="salesPerson">Ansvarig säljare</Label>
+                <Input
+                  id="salesPerson"
+                  value={salesPerson}
+                  onChange={(e) => setSalesPerson(e.target.value)}
+                  placeholder="Namn"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="product">Såld produkt</Label>
+              <Input
+                id="product"
+                value={product}
+                onChange={(e) => setProduct(e.target.value)}
+                placeholder="t.ex. Teleskopläktare"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="name">Projektnamn</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="t.ex. Nya Arenan"
+              <Label htmlFor="notes">Noteringar</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Övrig information..."
+                rows={3}
               />
             </div>
           </div>

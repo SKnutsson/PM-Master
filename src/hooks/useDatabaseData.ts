@@ -99,6 +99,11 @@ export function useDatabaseData() {
         code: p.code || p.id.substring(0, 8),
         name: p.name,
         status: (p.status === 'Avslutat' ? 'Avslutat' : 'Aktiv') as Project['status'],
+        customer: p.customer || '',
+        projectManager: (p as any).project_manager || '',
+        salesPerson: (p as any).sales_person || '',
+        product: (p as any).product || '',
+        notes: (p as any).notes || '',
         activities: (activitiesData || [])
           .filter(a => a.project_id === p.id)
           .map(a => ({
@@ -242,10 +247,14 @@ export function useDatabaseData() {
       .insert({
         name: project.name,
         code: project.code,
-        customer: project.name,
+        customer: project.customer || project.name,
         department: 'Projektledare',
         status: 'Pågår',
-      })
+        project_manager: project.projectManager || '',
+        sales_person: project.salesPerson || '',
+        product: project.product || '',
+        notes: project.notes || '',
+      } as any)
       .select()
       .single();
 
@@ -263,6 +272,11 @@ export function useDatabaseData() {
     };
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.customer !== undefined) updateData.customer = updates.customer;
+    if (updates.projectManager !== undefined) updateData.project_manager = updates.projectManager;
+    if (updates.salesPerson !== undefined) updateData.sales_person = updates.salesPerson;
+    if (updates.product !== undefined) updateData.product = updates.product;
+    if (updates.notes !== undefined) updateData.notes = updates.notes;
 
     const { error } = await supabase
       .from('projects')

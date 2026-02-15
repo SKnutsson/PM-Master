@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, AlertTriangle, Calendar, User, Trash2, Archive, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Project, Activity } from '@/data/projectData';
-import { StatusBadge } from './StatusBadge';
+import { Project } from '@/data/projectData';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
-import { AddActivityDialog } from './dialogs/AddActivityDialog';
-import { EditActivityDialog } from './dialogs/EditActivityDialog';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { cn } from '@/lib/utils';
 
@@ -30,17 +29,20 @@ interface ProjectCardProps {
   onDeleteProject: (projectId: string) => void;
   onArchiveProject?: (projectId: string) => void;
   onRestoreProject?: (projectId: string) => void;
+  onUpdateProject: (projectId: string, updates: Partial<Project>) => Promise<void>;
   isArchived?: boolean;
 }
 
-function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProject, isArchived }: ProjectCardProps) {
+function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived }: ProjectCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
-  const completed = project.activities.filter(a => a.status === 'Slutförd').length;
-  const total = project.activities.length;
-  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const hasWarning = project.activities.some(a => a.hasWarning);
-  const inProgress = project.activities.filter(a => a.status === 'Pågår').length;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    customer: project.customer || '',
+    projectManager: project.projectManager || '',
+    salesPerson: project.salesPerson || '',
+    product: project.product || '',
+    notes: project.notes || '',
+  });
 
   const handleDeleteProject = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -61,13 +63,39 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
     onRestoreProject?.(project.id);
   };
 
+  const handleSave = async () => {
+    await onUpdateProject(project.id, editData);
+    setIsEditing(false);
+  };
+
+  const handleStartEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditData({
+      customer: project.customer || '',
+      projectManager: project.projectManager || '',
+      salesPerson: project.salesPerson || '',
+      product: project.product || '',
+      notes: project.notes || '',
+    });
+    setIsEditing(true);
+    if (!isExpanded) setIsExpanded(true);
+  };
+
+  const infoFields = [
+    { label: 'Kund', value: project.customer, icon: User },
+    { label: 'Projektledare', value: project.projectManager, icon: User },
+    { label: 'Ansvarig säljare', value: project.salesPerson, icon: User },
+    { label: 'Såld produkt', value: project.product, icon: ShoppingBag },
+  ];
+
+  const hasInfo = infoFields.some(f => f.value) || project.notes;
+
   return (
     <motion.div variants={itemVariants}>
       <Card className={cn(
         "border-border/50 overflow-hidden transition-all hover:border-primary/30",
         isArchived ? "bg-card/50 opacity-80" : "bg-card/80"
       )}>
-        {/* Header */}
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <button
@@ -78,7 +106,7 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
                 'flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold transition-colors',
                 isArchived
                   ? 'bg-muted text-muted-foreground'
-                  : hasWarning ? 'bg-status-delayed/20 text-status-delayed' : 'bg-primary/20 text-primary'
+                  : 'bg-primary/20 text-primary'
               )}>
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </div>
@@ -87,73 +115,63 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
                   {project.code} - {project.name}
                 </CardTitle>
                 <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>{total} aktiviteter</span>
-                  {!isArchived && inProgress > 0 && (
-                    <span className="text-status-in-progress">{inProgress} pågår</span>
-                  )}
+                  {project.customer && <span>Kund: {project.customer}</span>}
+                  {project.product && <span>Produkt: {project.product}</span>}
                   {isArchived && (
                     <span className="flex items-center gap-1 text-muted-foreground">
                       <Archive className="h-3.5 w-3.5" />
                       Avslutat
                     </span>
                   )}
-                  {!isArchived && hasWarning && (
-                    <span className="flex items-center gap-1 text-status-delayed">
-                      <AlertTriangle className="h-3.5 w-3.5" />
-                      Varning
-                    </span>
-                  )}
                 </div>
               </div>
             </button>
             
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-2xl font-bold">{progress}%</p>
-                <p className="text-xs text-muted-foreground">Klart</p>
-              </div>
-              <div className="h-12 w-12">
-                <svg className="h-12 w-12 -rotate-90 transform">
-                  <circle cx="24" cy="24" r="20" stroke="hsl(var(--muted))" strokeWidth="4" fill="none" />
-                  <circle cx="24" cy="24" r="20" stroke="hsl(var(--primary))" strokeWidth="4" fill="none" strokeLinecap="round" strokeDasharray={`${progress * 1.26} 126`} />
-                </svg>
-              </div>
-              <div className="flex flex-col gap-1">
-                {isArchived ? (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-muted-foreground hover:text-primary"
-                    onClick={handleRestore}
-                    title="Återställ projekt"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-muted-foreground hover:text-primary"
-                    onClick={handleArchive}
-                    title="Avsluta och arkivera"
-                  >
-                    <Archive className="h-4 w-4" />
-                  </Button>
-                )}
+            <div className="flex items-center gap-1">
+              {!isArchived && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  onClick={handleDeleteProject}
+                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  onClick={handleStartEdit}
+                  title="Redigera projektinfo"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
-              </div>
+              )}
+              {isArchived ? (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  onClick={handleRestore}
+                  title="Återställ projekt"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary"
+                  onClick={handleArchive}
+                  title="Avsluta och arkivera"
+                >
+                  <Archive className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={handleDeleteProject}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </CardHeader>
 
-        {/* Activities */}
         <AnimatePresence>
           {isExpanded && (
             <motion.div
@@ -163,88 +181,90 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
               transition={{ duration: 0.2 }}
             >
               <CardContent className="border-t border-border/50 pt-4">
-                {!isArchived && (
-                  <div className="mb-3 flex justify-end">
-                    <AddActivityDialog projectId={project.id} />
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-muted-foreground">Kund</label>
+                        <Input
+                          value={editData.customer}
+                          onChange={(e) => setEditData(prev => ({ ...prev, customer: e.target.value }))}
+                          placeholder="Kundnamn"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-muted-foreground">Projektledare</label>
+                        <Input
+                          value={editData.projectManager}
+                          onChange={(e) => setEditData(prev => ({ ...prev, projectManager: e.target.value }))}
+                          placeholder="Namn"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-muted-foreground">Ansvarig säljare</label>
+                        <Input
+                          value={editData.salesPerson}
+                          onChange={(e) => setEditData(prev => ({ ...prev, salesPerson: e.target.value }))}
+                          placeholder="Namn"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-muted-foreground">Såld produkt</label>
+                        <Input
+                          value={editData.product}
+                          onChange={(e) => setEditData(prev => ({ ...prev, product: e.target.value }))}
+                          placeholder="t.ex. Teleskopläktare"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium text-muted-foreground">Noteringar</label>
+                      <Textarea
+                        value={editData.notes}
+                        onChange={(e) => setEditData(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Övrig information..."
+                        rows={3}
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>Avbryt</Button>
+                      <Button size="sm" onClick={handleSave}>Spara</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                      {infoFields.map((field) => (
+                        <div key={field.label} className="flex items-center gap-2 text-sm">
+                          <field.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="text-muted-foreground">{field.label}:</span>
+                          <span className="font-medium">{field.value || '–'}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {project.notes && (
+                      <div className="flex items-start gap-2 text-sm border-t border-border/50 pt-2">
+                        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-muted-foreground">Noteringar: </span>
+                          <span>{project.notes}</span>
+                        </div>
+                      </div>
+                    )}
+                    {!hasInfo && (
+                      <p className="text-center text-sm text-muted-foreground py-2">
+                        Ingen information tillagd. Klicka på pennikonen för att redigera.
+                      </p>
+                    )}
                   </div>
                 )}
-                <div className="space-y-2">
-                  {project.activities.map((activity, index) => (
-                    <ActivityRow 
-                      key={activity.id} 
-                      activity={activity} 
-                      projectId={project.id}
-                      index={index}
-                      readOnly={isArchived}
-                    />
-                  ))}
-                  {project.activities.length === 0 && (
-                    <p className="text-center text-sm text-muted-foreground py-4">
-                      Inga aktiviteter ännu.
-                    </p>
-                  )}
-                </div>
               </CardContent>
             </motion.div>
           )}
         </AnimatePresence>
       </Card>
-    </motion.div>
-  );
-}
-
-interface ActivityRowProps {
-  activity: Activity;
-  projectId: string;
-  index: number;
-  readOnly?: boolean;
-}
-
-function ActivityRow({ activity, projectId, index, readOnly }: ActivityRowProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.03 }}
-      className={cn(
-        'flex items-center justify-between rounded-lg border border-border/30 p-3 transition-colors hover:bg-muted/30',
-        activity.hasWarning && 'border-status-delayed/30 bg-status-delayed/5'
-      )}
-    >
-      <div className="flex items-center gap-3">
-        {activity.hasWarning && (
-          <AlertTriangle className="h-4 w-4 text-status-delayed" />
-        )}
-        <div>
-          <p className="font-medium">{activity.name}</p>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                {activity.department}
-              </span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <User className="h-3 w-3" />
-              {activity.responsible}
-            </span>
-            {activity.startDate && (
-              <span className="inline-flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {activity.startDate}
-                {activity.endDate && activity.endDate !== activity.startDate && ` → ${activity.endDate}`}
-              </span>
-            )}
-            {activity.days && (
-              <span className="text-xs">({activity.days} dagar)</span>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <StatusBadge status={activity.status} size="sm" />
-        {!readOnly && <EditActivityDialog projectId={projectId} activity={activity} />}
-      </div>
     </motion.div>
   );
 }
@@ -296,6 +316,7 @@ export function ProjectsView() {
               project={project}
               onDeleteProject={deleteProject}
               onArchiveProject={handleArchive}
+              onUpdateProject={updateProject}
             />
           ))}
           {activeProjects.length === 0 && (
@@ -312,6 +333,7 @@ export function ProjectsView() {
               project={project}
               onDeleteProject={deleteProject}
               onRestoreProject={handleRestore}
+              onUpdateProject={updateProject}
               isArchived
             />
           ))}
