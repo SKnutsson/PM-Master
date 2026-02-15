@@ -321,7 +321,11 @@ export type Database = {
           end_date: string | null
           id: string
           name: string
+          notes: string | null
+          product: string | null
           progress: number | null
+          project_manager: string | null
+          sales_person: string | null
           start_date: string | null
           status: string
           updated_at: string | null
@@ -334,7 +338,11 @@ export type Database = {
           end_date?: string | null
           id?: string
           name: string
+          notes?: string | null
+          product?: string | null
           progress?: number | null
+          project_manager?: string | null
+          sales_person?: string | null
           start_date?: string | null
           status?: string
           updated_at?: string | null
@@ -347,7 +355,11 @@ export type Database = {
           end_date?: string | null
           id?: string
           name?: string
+          notes?: string | null
+          product?: string | null
           progress?: number | null
+          project_manager?: string | null
+          sales_person?: string | null
           start_date?: string | null
           status?: string
           updated_at?: string | null

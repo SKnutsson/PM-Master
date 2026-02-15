@@ -20,6 +20,11 @@ export interface Project {
   code: string;
   name: string;
   status?: ProjectStatus;
+  customer?: string;
+  projectManager?: string;
+  salesPerson?: string;
+  product?: string;
+  notes?: string;
   activities: Activity[];
 }
 
