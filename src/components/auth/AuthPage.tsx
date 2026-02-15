@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, Loader2, Mail, KeyRound, UserPlus, LogIn } from 'lucide-react';
-import alfingLogo from '@/assets/alfing-seating-logo.jpg';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
@@ -114,16 +114,8 @@ export function AuthPage() {
       >
         <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
           <CardHeader className="space-y-4 text-center">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
-              className="mx-auto"
-            >
-              <img src={alfingLogo} alt="Alfing Seating" className="h-20 w-auto rounded-lg object-contain" />
-            </motion.div>
             <div>
-              <CardTitle className="text-2xl font-bold">Projektstyrning</CardTitle>
+              <CardTitle className="text-4xl font-extrabold tracking-tight">PM Master</CardTitle>
               <CardDescription className="mt-2 text-muted-foreground">
                 Logga in eller skapa ett konto för att fortsätta
               </CardDescription>
@@ -311,7 +303,7 @@ export function AuthPage() {
           transition={{ delay: 0.4 }}
           className="mt-6 text-center text-sm text-muted-foreground"
         >
-          Alfing Seating – Projektledning
+          PM Master – Projektledning
         </motion.p>
       </motion.div>
     </div>
