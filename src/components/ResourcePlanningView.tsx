@@ -477,7 +477,7 @@ export function ResourcePlanningView() {
               <div className="min-w-[800px]">
                 {/* Year/Month header */}
                 <div className="sticky top-0 z-10 flex border-b border-border/30 bg-card">
-                  <div className="w-52 shrink-0 border-r border-border/50" />
+                  <div className="w-72 shrink-0 border-r border-border/50" />
                   <div className="flex flex-1">
                     {yearGroups.map((g, i) => (
                       <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ flex: g.span }}>
@@ -489,7 +489,7 @@ export function ResourcePlanningView() {
 
                 {/* Week/Day header */}
                 <div className="sticky top-[21px] z-10 flex border-b border-border/50 bg-card">
-                  <div className="w-52 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
+                  <div className="w-72 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
                     Projekt / Montör
                   </div>
                   <div className="flex flex-1">
@@ -509,7 +509,7 @@ export function ResourcePlanningView() {
 
                 {/* Projects */}
                 <div className="relative">
-                  <div className="absolute top-0 bottom-0 left-[13rem] right-0 pointer-events-none z-20">
+                  <div className="absolute top-0 bottom-0 left-[18rem] right-0 pointer-events-none z-20">
                     {renderTodayMarker()}
                   </div>
 
@@ -522,8 +522,8 @@ export function ResourcePlanningView() {
                     return (
                       <motion.div key={project.id} variants={itemVariants}>
                         {/* Project row */}
-                        <div className="flex border-b border-border/50 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleProject(project.id)}>
-                          <div className="w-52 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
+                        <div className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors" onClick={() => toggleProject(project.id)}>
+                          <div className="w-72 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
                           <div className="flex items-center gap-1.5 min-w-0">
                               {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />}
                               <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
@@ -595,7 +595,7 @@ export function ResourcePlanningView() {
                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                               {pInstallers.map(pi => (
                                 <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
-                                  <div className="w-52 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center min-w-0">
+                                  <div className="w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center min-w-0">
                                     <div className="min-w-0 flex items-center gap-1.5">
                                       <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
                                       <span className="text-xs truncate">{pi.installerName || 'Okänd'}</span>
@@ -613,7 +613,7 @@ export function ResourcePlanningView() {
 
                               {pInstallers.length === 0 && (
                                 <div className="flex border-b border-border/30">
-                                  <div className="w-52 shrink-0 border-r border-border/50 px-2 py-2 pl-7">
+                                  <div className="w-72 shrink-0 border-r border-border/50 px-2 py-2 pl-7">
                                     <span className="text-[10px] text-muted-foreground italic">Inga montörer kopplade</span>
                                   </div>
                                   <div className="flex-1" />
