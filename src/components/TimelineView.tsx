@@ -468,7 +468,7 @@ export function TimelineView() {
                       <motion.div key={project.id} variants={itemVariants}>
                         {/* Project Header */}
                         <div
-                          className="flex border-b border-border/50 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                          className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors"
                           onClick={() => toggleProject(project.id)}
                         >
                           <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
