@@ -11,12 +11,13 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   projectId: string;
   date: string;
+  preselectedInstallerId?: string;
   projectInstallers: ProjectInstaller[];
   existingEntries: DailyResourceEntry[];
   onSave: (installerId: string, workHours: number, travelHours: number) => Promise<void>;
 }
 
-export function DailyEntryDialog({ open, onOpenChange, projectId, date, projectInstallers, existingEntries, onSave }: Props) {
+export function DailyEntryDialog({ open, onOpenChange, projectId, date, preselectedInstallerId, projectInstallers, existingEntries, onSave }: Props) {
   const [installerId, setInstallerId] = useState('');
   const [workHours, setWorkHours] = useState('');
   const [travelHours, setTravelHours] = useState('');
@@ -37,11 +38,11 @@ export function DailyEntryDialog({ open, onOpenChange, projectId, date, projectI
 
   useEffect(() => {
     if (open) {
-      setInstallerId('');
+      setInstallerId(preselectedInstallerId || '');
       setWorkHours('');
       setTravelHours('');
     }
-  }, [open]);
+  }, [open, preselectedInstallerId]);
 
   const formattedDate = date ? new Date(date + 'T00:00:00').toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
 

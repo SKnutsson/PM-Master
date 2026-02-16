@@ -32,7 +32,6 @@ type ViewMode = 'weeks' | 'days';
 
 const resourceLegend = [
   { color: 'bg-status-completed', label: 'Inom kalkyl' },
-  { color: 'bg-status-in-progress', label: 'Nära överskridande' },
   { color: 'bg-status-delayed', label: 'Överskrider kalkyl' },
 ];
 
@@ -48,13 +47,20 @@ function generateWeeks(year: number) {
   return weeks;
 }
 
+function formatLocalDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function generateDays(startDate: Date, count: number) {
   const days: { date: Date; dateStr: string; label: string; dayOfWeek: number }[] = [];
   const current = new Date(startDate);
   for (let i = 0; i < count; i++) {
     days.push({
       date: new Date(current),
-      dateStr: current.toISOString().split('T')[0],
+      dateStr: formatLocalDate(current),
       label: current.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }),
       dayOfWeek: current.getDay(),
     });
@@ -85,6 +91,7 @@ export function ResourcePlanningView() {
   const [dailyDialogOpen, setDailyDialogOpen] = useState(false);
   const [dailyDialogProject, setDailyDialogProject] = useState('');
   const [dailyDialogDate, setDailyDialogDate] = useState('');
+  const [dailyDialogInstaller, setDailyDialogInstaller] = useState<string | undefined>(undefined);
 
   // Estimation dialog state
   const [estDialogOpen, setEstDialogOpen] = useState(false);
@@ -93,7 +100,7 @@ export function ResourcePlanningView() {
   const weeks = useMemo(() => generateWeeks(2026), []);
 
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = formatLocalDate(today);
 
   const baseWeekIndex = 4;
   const visibleWeeks = 16;
@@ -208,7 +215,7 @@ export function ResourcePlanningView() {
     );
   };
 
-  const openDailyDialog = (projectId: string, dateStr: string) => {
+  const openDailyDialog = (projectId: string, dateStr: string, installerId?: string) => {
     const pInstallers = getProjectInstallers(projectId);
     if (pInstallers.length === 0) {
       toast.error('Koppla montörer till projektet först');
@@ -216,6 +223,7 @@ export function ResourcePlanningView() {
     }
     setDailyDialogProject(projectId);
     setDailyDialogDate(dateStr);
+    setDailyDialogInstaller(installerId);
     setDailyDialogOpen(true);
   };
 
@@ -224,7 +232,7 @@ export function ResourcePlanningView() {
     const weekStart = week.startDate;
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
-    return { start: weekStart.toISOString().split('T')[0], end: weekEnd.toISOString().split('T')[0] };
+    return { start: formatLocalDate(weekStart), end: formatLocalDate(weekEnd) };
   };
 
   // Render schedule cells for a single installer in DAY view
@@ -243,11 +251,7 @@ export function ResourcePlanningView() {
             'flex-1 h-7 border-r border-border/30 min-w-[28px] relative cursor-pointer hover:bg-primary/10 transition-colors',
             isWeekend && 'bg-muted/40',
           )}
-          onClick={() => {
-            setDailyDialogProject(projectId);
-            setDailyDialogDate(day.dateStr);
-            setDailyDialogOpen(true);
-          }}
+          onClick={() => openDailyDialog(projectId, day.dateStr, installerId)}
         >
           {entry && totalH > 0 && (
             <Tooltip>
@@ -451,9 +455,6 @@ export function ResourcePlanningView() {
             </SelectContent>
           </Select>
 
-          <Button variant={filterOverloaded ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setFilterOverloaded(!filterOverloaded)}>
-            Överbelastade
-          </Button>
           <Button variant={filterNoResources ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setFilterNoResources(!filterNoResources)}>
             Utan resurser
           </Button>
@@ -643,6 +644,7 @@ export function ResourcePlanningView() {
           onOpenChange={setDailyDialogOpen}
           projectId={dailyDialogProject}
           date={dailyDialogDate}
+          preselectedInstallerId={dailyDialogInstaller}
           projectInstallers={getProjectInstallers(dailyDialogProject)}
           existingEntries={getProjectDailyEntries(dailyDialogProject)}
           onSave={async (installerId, workHours, travelHours) => {
