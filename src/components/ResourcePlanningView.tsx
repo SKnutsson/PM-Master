@@ -165,9 +165,7 @@ export function ResourcePlanningView() {
     const totalEstimated = (est?.estimatedInstallHours || 0) + (est?.estimatedTravelHours || 0);
     if (totalEstimated === 0) return 'ok';
     const { total } = getProjectSummary(projectId);
-    const ratio = total / totalEstimated;
-    if (ratio > 1) return 'over';
-    if (ratio > 0.85) return 'warning';
+    if (total > totalEstimated) return 'over';
     return 'ok';
   }
 

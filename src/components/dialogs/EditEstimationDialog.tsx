@@ -17,18 +17,18 @@ export function EditEstimationDialog({
   open, onOpenChange, projectName,
   estimatedInstallHours, estimatedTravelHours, onSave,
 }: EditEstimationDialogProps) {
-  const [installHours, setInstallHours] = useState(estimatedInstallHours);
-  const [travelHours, setTravelHours] = useState(estimatedTravelHours);
+  const [installStr, setInstallStr] = useState('');
+  const [travelStr, setTravelStr] = useState('');
 
   useEffect(() => {
     if (open) {
-      setInstallHours(estimatedInstallHours);
-      setTravelHours(estimatedTravelHours);
+      setInstallStr(estimatedInstallHours > 0 ? String(estimatedInstallHours) : '');
+      setTravelStr(estimatedTravelHours > 0 ? String(estimatedTravelHours) : '');
     }
   }, [open, estimatedInstallHours, estimatedTravelHours]);
 
   const handleSave = () => {
-    onSave(installHours, travelHours);
+    onSave(parseFloat(installStr) || 0, parseFloat(travelStr) || 0);
     onOpenChange(false);
   };
 
@@ -42,18 +42,20 @@ export function EditEstimationDialog({
           <div className="space-y-1">
             <Label className="text-xs">Kalkylerade arbetstimmar (montage)</Label>
             <Input
-              type="number" min={0} step={1}
-              value={installHours}
-              onChange={e => setInstallHours(parseFloat(e.target.value) || 0)}
+              type="text" inputMode="decimal"
+              placeholder="0"
+              value={installStr}
+              onChange={e => setInstallStr(e.target.value.replace(/[^0-9.,]/g, ''))}
               className="h-8 text-sm"
             />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Kalkylerad restid (timmar)</Label>
             <Input
-              type="number" min={0} step={1}
-              value={travelHours}
-              onChange={e => setTravelHours(parseFloat(e.target.value) || 0)}
+              type="text" inputMode="decimal"
+              placeholder="0"
+              value={travelStr}
+              onChange={e => setTravelStr(e.target.value.replace(/[^0-9.,]/g, ''))}
               className="h-8 text-sm"
             />
           </div>
