@@ -128,13 +128,22 @@ export function useResourceData() {
   const upsertEstimation = useCallback(async (projectId: string, installHours: number, travelHours: number) => {
     const existing = estimations.find(e => e.projectId === projectId);
     if (existing) {
-      await supabase.from('resource_estimations').update({
+      const { error } = await supabase.from('resource_estimations').update({
         estimated_install_hours: installHours, estimated_travel_hours: travelHours,
       }).eq('id', existing.id);
+      if (!error) {
+        setEstimations(prev => prev.map(e => e.id === existing.id
+          ? { ...e, estimatedInstallHours: installHours, estimatedTravelHours: travelHours } : e));
+      }
     } else {
-      await supabase.from('resource_estimations').insert({
+      const { data, error } = await supabase.from('resource_estimations').insert({
         project_id: projectId, estimated_install_hours: installHours, estimated_travel_hours: travelHours,
-      });
+      }).select().single();
+      if (!error && data) {
+        setEstimations(prev => [...prev, {
+          id: data.id, projectId, estimatedInstallHours: installHours, estimatedTravelHours: travelHours,
+        }]);
+      }
     }
   }, [estimations]);
 
