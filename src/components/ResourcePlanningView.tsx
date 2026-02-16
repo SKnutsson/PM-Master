@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Users, Filter, Archive, UserPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Users, Filter, Archive, UserPlus, Calculator } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,6 +11,7 @@ import { useResourceData } from '@/hooks/useResourceData';
 import { ManageInstallersDialog } from './dialogs/ManageInstallersDialog';
 import { AssignInstallerDialog } from './dialogs/AssignInstallerDialog';
 import { DailyEntryDialog } from './dialogs/DailyEntryDialog';
+import { EditEstimationDialog } from './dialogs/EditEstimationDialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -85,6 +86,10 @@ export function ResourcePlanningView() {
   const [dailyDialogProject, setDailyDialogProject] = useState('');
   const [dailyDialogDate, setDailyDialogDate] = useState('');
 
+  // Estimation dialog state
+  const [estDialogOpen, setEstDialogOpen] = useState(false);
+  const [estDialogProjectId, setEstDialogProjectId] = useState('');
+  const [estDialogProjectName, setEstDialogProjectName] = useState('');
   const weeks = useMemo(() => generateWeeks(2026), []);
 
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
@@ -555,6 +560,13 @@ export function ResourcePlanningView() {
                             </div>
                             {!isArchived && (
                               <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+                                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
+                                  setEstDialogProjectId(project.id);
+                                  setEstDialogProjectName(`${project.code} - ${project.name}`);
+                                  setEstDialogOpen(true);
+                                }}>
+                                  <Calculator className="h-3 w-3" />
+                                </Button>
                                 <AssignInstallerDialog
                                   projectName={project.name}
                                   installers={installers}
@@ -638,6 +650,19 @@ export function ResourcePlanningView() {
           onSave={async (installerId, workHours, travelHours) => {
             await upsertDailyEntry(dailyDialogProject, installerId, dailyDialogDate, workHours, travelHours);
             toast.success('Dagpost sparad');
+          }}
+        />
+
+        {/* Estimation Dialog */}
+        <EditEstimationDialog
+          open={estDialogOpen}
+          onOpenChange={setEstDialogOpen}
+          projectName={estDialogProjectName}
+          estimatedInstallHours={getEstimation(estDialogProjectId)?.estimatedInstallHours || 0}
+          estimatedTravelHours={getEstimation(estDialogProjectId)?.estimatedTravelHours || 0}
+          onSave={async (installH, travelH) => {
+            await upsertEstimation(estDialogProjectId, installH, travelH);
+            toast.success('Kalkyl sparad');
           }}
         />
       </motion.div>
