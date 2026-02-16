@@ -116,10 +116,16 @@ export function ResourcePlanningView() {
   }, [viewMode, displayedWeeks]);
 
   const todayWeekNum = useMemo(() => {
-    const startOfYear = new Date(2026, 0, 1);
-    const days = Math.floor((today.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  }, [today]);
+    const todayDate = formatLocalDate(today);
+    for (const w of weeks) {
+      const wStart = formatLocalDate(w.startDate);
+      const wEnd = new Date(w.startDate);
+      wEnd.setDate(wEnd.getDate() + 6);
+      const wEndStr = formatLocalDate(wEnd);
+      if (todayDate >= wStart && todayDate <= wEndStr) return w.weekNum;
+    }
+    return -1;
+  }, [today, weeks]);
 
   const activeProjects = allProjects.filter(p => p.status !== 'Avslutat');
   const archivedProjects = allProjects.filter(p => p.status === 'Avslutat');

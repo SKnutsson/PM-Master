@@ -103,7 +103,10 @@ const statusLabels: { status: DerivedStatus; color: string; label: string }[] = 
 ];
 
 function toISODate(d: Date): string {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 export function TimelineView() {
@@ -119,7 +122,7 @@ export function TimelineView() {
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
-  const todayStr = today.toISOString().split('T')[0];
+  const todayStr = toISODate(today);
 
   const baseWeekIndex = 4;
   const visibleWeeks = 16;
@@ -135,14 +138,20 @@ export function TimelineView() {
   }, [viewMode, displayedWeeks, visibleDays]);
 
   const todayWeekNum = useMemo(() => {
-    const startOfYear = new Date(2026, 0, 1);
-    const days = Math.floor((today.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  }, [today]);
+    const todayDate = toISODate(today);
+    for (const w of weeks) {
+      const wStart = toISODate(w.startDate);
+      const wEnd = new Date(w.startDate);
+      wEnd.setDate(wEnd.getDate() + 6);
+      const wEndStr = toISODate(wEnd);
+      if (todayDate >= wStart && todayDate <= wEndStr) return w.weekNum;
+    }
+    return -1;
+  }, [today, weeks]);
 
   const todayDayIndex = useMemo(() => {
     if (viewMode !== 'days') return -1;
-    return displayedDays.findIndex(d => d.date.toISOString().split('T')[0] === todayStr);
+    return displayedDays.findIndex(d => toISODate(d.date) === todayStr);
   }, [viewMode, displayedDays, todayStr]);
 
   const toggleProject = (projectId: string) => {
@@ -440,7 +449,7 @@ export function TimelineView() {
                           className={cn(
                             'flex-1 border-r border-border/30 py-0.5 text-center text-[9px] font-medium min-w-[28px]',
                             (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40',
-                            day.date.toISOString().split('T')[0] === todayStr && 'bg-primary/10'
+                            toISODate(day.date) === todayStr && 'bg-primary/10'
                           )}
                         >
                           <div>{['Sö', 'Må', 'Ti', 'On', 'To', 'Fr', 'Lö'][day.dayOfWeek]}</div>
@@ -518,7 +527,7 @@ export function TimelineView() {
                                 })
                               ) : (
                                 displayedDays.map((day, i) => {
-                                  const dayStr = day.date.toISOString().split('T')[0];
+                                  const dayStr = toISODate(day.date);
                                   const isInRange = startDay && endDay && dayStr >= startDay && dayStr <= endDay;
                                   const isStart = dayStr === startDay;
                                   const isEnd = dayStr === endDay;
