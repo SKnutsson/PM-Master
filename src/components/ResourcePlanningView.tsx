@@ -521,11 +521,37 @@ export function ResourcePlanningView() {
                         {/* Project row */}
                         <div className="flex border-b border-border/50 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleProject(project.id)}>
                           <div className="w-52 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0">
                               {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />}
                               <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
                               <span className="font-semibold text-xs truncate">{project.code} - {project.name}</span>
                               {!isExpanded && <span className="text-[10px] text-muted-foreground shrink-0">({pInstallers.length})</span>}
+                              {(() => {
+                                const est = getEstimation(project.id);
+                                const summary = getProjectSummary(project.id);
+                                const estTotal = (est?.estimatedInstallHours || 0) + (est?.estimatedTravelHours || 0);
+                                if (estTotal === 0 && summary.total === 0) return null;
+                                return (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className={cn(
+                                        'text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-1',
+                                        resourceStatus === 'ok' && 'bg-status-completed/20 text-status-completed',
+                                        resourceStatus === 'warning' && 'bg-status-in-progress/20 text-status-in-progress',
+                                        resourceStatus === 'over' && 'bg-status-delayed/20 text-status-delayed',
+                                      )}>
+                                        {summary.total}h / {estTotal > 0 ? `${estTotal}h` : '–'}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs">
+                                      <p className="font-semibold mb-1">Kalkyl vs Utfall</p>
+                                      <p>Montage: {summary.totalWork}h / {est?.estimatedInstallHours || 0}h kalkyl</p>
+                                      <p>Resa: {summary.totalTravel}h / {est?.estimatedTravelHours || 0}h kalkyl</p>
+                                      <p className="mt-1 font-medium">Totalt: {summary.total}h / {estTotal}h</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })()}
                             </div>
                             {!isArchived && (
                               <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
