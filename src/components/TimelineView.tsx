@@ -291,13 +291,18 @@ export function TimelineView() {
 
   const renderTodayMarker = () => {
     if (todayColIndex < 0 || todayColIndex >= columnCount) return null;
-    const leftPercent = ((todayColIndex + 0.5) / columnCount) * 100;
+    const cols = viewMode === 'weeks' ? displayedWeeks : displayedDays;
     return (
-      <div
-        className="absolute top-0 bottom-0 w-0.5 bg-destructive z-20 pointer-events-none"
-        style={{ left: `${leftPercent}%` }}
-      >
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
+      <div className="absolute top-0 bottom-0 left-[19rem] right-0 pointer-events-none z-20 flex">
+        {cols.map((_, i) => (
+          <div key={i} className={cn('flex-1 relative', viewMode === 'days' && 'min-w-[28px]')}>
+            {i === todayColIndex && (
+              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-destructive">
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     );
   };
@@ -463,9 +468,7 @@ export function TimelineView() {
                 {/* Projects and Activities */}
                 <div className="relative">
                   {/* Today marker overlay */}
-                  <div className="absolute top-0 bottom-0 left-[19rem] right-0 pointer-events-none z-20">
-                    {renderTodayMarker()}
-                  </div>
+                  {renderTodayMarker()}
 
                   {timelineProjects.map((project) => {
                     const isExpanded = expandedProjects.has(project.id);
