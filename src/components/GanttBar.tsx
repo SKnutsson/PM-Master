@@ -64,6 +64,8 @@ export function GanttBar({
   const [currentStartCol, setCurrentStartCol] = useState(startCol);
   const [currentEndCol, setCurrentEndCol] = useState(endCol);
   const [isSaving, setIsSaving] = useState(false);
+  const hasDragged = useRef(false);
+  const DRAG_THRESHOLD = 4; // pixels before drag activates
 
   // Sync with props when not dragging AND not saving
   useEffect(() => {
@@ -85,6 +87,7 @@ export function GanttBar({
   const handleMouseDown = useCallback((e: React.MouseEvent, type: 'move' | 'resize-left' | 'resize-right') => {
     e.preventDefault();
     e.stopPropagation();
+    hasDragged.current = false;
     setDragState({
       type,
       startX: e.clientX,
@@ -97,9 +100,14 @@ export function GanttBar({
     if (!dragState) return;
 
     const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - dragState.startX;
+
+      // Don't start dragging until threshold is exceeded
+      if (!hasDragged.current && Math.abs(deltaX) < DRAG_THRESHOLD) return;
+      hasDragged.current = true;
+
       const containerWidth = getContainerWidth();
       const colWidth = containerWidth / columnCount;
-      const deltaX = e.clientX - dragState.startX;
       const deltaCols = deltaX / colWidth;
 
       if (dragState.type === 'move') {
@@ -110,16 +118,22 @@ export function GanttBar({
         setCurrentEndCol(Math.max(span, newEnd));
       } else if (dragState.type === 'resize-left') {
         const newStart = snap(dragState.origStartCol + deltaCols);
-        // Don't let start go past end
-        setCurrentStartCol(Math.min(newStart, dragState.origEndCol - snapCols));
+        // Allow min 1 day (startCol can equal endCol)
+        setCurrentStartCol(Math.min(newStart, dragState.origEndCol));
       } else if (dragState.type === 'resize-right') {
         const newEnd = snap(dragState.origEndCol + deltaCols);
-        // Don't let end go before start
-        setCurrentEndCol(Math.max(newEnd, dragState.origStartCol + snapCols));
+        // Allow min 1 day (endCol can equal startCol)
+        setCurrentEndCol(Math.max(newEnd, dragState.origStartCol));
       }
     };
 
     const handleMouseUp = async () => {
+      // If user just clicked without dragging, do nothing
+      if (!hasDragged.current) {
+        setDragState(null);
+        return;
+      }
+
       const finalStartCol = currentStartCol;
       const finalEndCol = currentEndCol;
 

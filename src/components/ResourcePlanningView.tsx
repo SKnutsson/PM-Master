@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Plus, Users, Filter, Archive, UserPlus, Calculator } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -210,28 +210,8 @@ export function ResourcePlanningView() {
     return displayedDays.findIndex(d => d.dateStr === todayStr);
   }, [viewMode, displayedWeeks, displayedDays, todayWeekNum, todayStr]);
 
-  // --- Scroll sync ---
-  const topScrollRef = useRef<HTMLDivElement>(null);
+  // --- Scroll ref ---
   const mainScrollRef = useRef<HTMLDivElement>(null);
-  const isSyncing = useRef(false);
-
-  const handleTopScroll = useCallback(() => {
-    if (isSyncing.current) return;
-    isSyncing.current = true;
-    if (mainScrollRef.current && topScrollRef.current) {
-      mainScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
-    }
-    requestAnimationFrame(() => { isSyncing.current = false; });
-  }, []);
-
-  const handleMainScroll = useCallback(() => {
-    if (isSyncing.current) return;
-    isSyncing.current = true;
-    if (topScrollRef.current && mainScrollRef.current) {
-      topScrollRef.current.scrollLeft = mainScrollRef.current.scrollLeft;
-    }
-    requestAnimationFrame(() => { isSyncing.current = false; });
-  }, []);
 
   // Auto-scroll to today on mount / view mode change
   useEffect(() => {
@@ -239,7 +219,6 @@ export function ResourcePlanningView() {
     const scrollPos = Math.max(0, todayColIndex * colWidth - 300);
     requestAnimationFrame(() => {
       if (mainScrollRef.current) mainScrollRef.current.scrollLeft = scrollPos;
-      if (topScrollRef.current) topScrollRef.current.scrollLeft = scrollPos;
     });
   }, [viewMode, todayColIndex, colWidth]);
 
@@ -503,26 +482,15 @@ export function ResourcePlanningView() {
         {/* Main Grid */}
         <Card className="border-border/50 bg-card/80 overflow-hidden">
           <CardContent className="p-0">
-            {/* Top scrollbar */}
-            <div
-              ref={topScrollRef}
-              onScroll={handleTopScroll}
-              className="overflow-x-auto overflow-y-hidden"
-              style={{ height: 12 }}
-            >
-              <div style={{ width: LEFT_COL_WIDTH + gridWidth, height: 1 }} />
-            </div>
-
-            {/* Main scrollable content */}
+            {/* Single scrollable container for both axes */}
             <div
               ref={mainScrollRef}
-              onScroll={handleMainScroll}
-              className="overflow-x-auto"
+              className="overflow-auto max-h-[calc(100vh-280px)]"
             >
               <div style={{ width: LEFT_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header */}
-                <div className="sticky top-0 z-10 flex border-b border-border/30 bg-card">
-                  <div className="w-72 shrink-0 border-r border-border/50" />
+                <div className="sticky top-0 z-30 flex border-b border-border/30 bg-card">
+                  <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50" />
                   <div className="flex">
                     {yearGroups.map((g, i) => (
                       <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
@@ -533,8 +501,8 @@ export function ResourcePlanningView() {
                 </div>
 
                 {/* Week/Day header */}
-                <div className="sticky top-[21px] z-10 flex border-b border-border/50 bg-card">
-                  <div className="w-72 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
+                <div className="sticky top-[21px] z-30 flex border-b border-border/50 bg-card">
+                  <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
                     Projekt / Montör
                   </div>
                   <div className="flex">
@@ -568,7 +536,7 @@ export function ResourcePlanningView() {
                       <motion.div key={project.id} variants={itemVariants}>
                         {/* Project row */}
                         <div className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors" onClick={() => toggleProject(project.id)}>
-                          <div className="w-72 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
+                          <div className="sticky left-0 z-10 bg-primary/15 w-72 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
                           <div className="flex items-center gap-1.5 min-w-0">
                               {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />}
                               <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
@@ -640,7 +608,7 @@ export function ResourcePlanningView() {
                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                               {pInstallers.map(pi => (
                                 <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
-                                  <div className="w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center min-w-0">
+                                  <div className="sticky left-0 z-10 bg-card group-hover:bg-muted/20 w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center min-w-0">
                                     <div className="min-w-0 flex items-center gap-1.5">
                                       <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
                                       <span className="text-xs truncate">{pi.installerName || 'Okänd'}</span>
@@ -658,7 +626,7 @@ export function ResourcePlanningView() {
 
                               {pInstallers.length === 0 && (
                                 <div className="flex border-b border-border/30">
-                                  <div className="w-72 shrink-0 border-r border-border/50 px-2 py-2 pl-7">
+                                  <div className="sticky left-0 z-10 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-2 pl-7">
                                     <span className="text-[10px] text-muted-foreground italic">Inga montörer kopplade</span>
                                   </div>
                                   <div style={{ width: gridWidth }} />
