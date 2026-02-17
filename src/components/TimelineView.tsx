@@ -625,6 +625,7 @@ export function TimelineView() {
                                       onDatesChange={handleDatesChange}
                                       colToDate={colToDate}
                                       dateToCol={dateToCol}
+                                      colWidth={colWidth}
                                       snapCols={1}
                                     />
                                   )}
