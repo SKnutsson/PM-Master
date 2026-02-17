@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   projects as initialProjects, 
@@ -35,6 +35,7 @@ export function useDatabaseData() {
   const [forecast, setForecast] = useState<ExtendedSalesForecast[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const suppressReloadRef = useRef(false);
 
   // Load initial data from database
   useEffect(() => {
@@ -78,6 +79,7 @@ export function useDatabaseData() {
   };
 
   const loadProjects = async () => {
+    if (suppressReloadRef.current) return;
     const { data: projectsData, error: projectsError } = await supabase
       .from('projects')
       .select('*')
@@ -473,12 +475,17 @@ export function useDatabaseData() {
       }).filter(Boolean);
     });
 
-    // Persist to database
-    for (let i = 0; i < orderedProjectIds.length; i++) {
-      await supabase
-        .from('projects')
-        .update({ sort_order: i + 1 } as any)
-        .eq('id', orderedProjectIds[i]);
+    // Suppress realtime reloads during batch update
+    suppressReloadRef.current = true;
+    try {
+      for (let i = 0; i < orderedProjectIds.length; i++) {
+        await supabase
+          .from('projects')
+          .update({ sort_order: i + 1 } as any)
+          .eq('id', orderedProjectIds[i]);
+      }
+    } finally {
+      suppressReloadRef.current = false;
     }
   }, []);
 
@@ -495,12 +502,17 @@ export function useDatabaseData() {
       return { ...p, activities: [...reordered, ...remaining] };
     }));
 
-    // Persist to database
-    for (let i = 0; i < orderedActivityIds.length; i++) {
-      await supabase
-        .from('activities')
-        .update({ sort_order: i + 1 } as any)
-        .eq('id', orderedActivityIds[i]);
+    // Suppress realtime reloads during batch update
+    suppressReloadRef.current = true;
+    try {
+      for (let i = 0; i < orderedActivityIds.length; i++) {
+        await supabase
+          .from('activities')
+          .update({ sort_order: i + 1 } as any)
+          .eq('id', orderedActivityIds[i]);
+      }
+    } finally {
+      suppressReloadRef.current = false;
     }
   }, []);
 
