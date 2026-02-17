@@ -458,7 +458,7 @@ export function TimelineView() {
                 {/* Projects and Activities */}
                 <div className="relative">
                   {/* Today marker overlay */}
-                  <div className="absolute top-0 bottom-0 pointer-events-none z-20" style={{ left: LEFT_COL_WIDTH }}>
+                  <div className="absolute top-0 bottom-0 pointer-events-none z-[5]" style={{ left: LEFT_COL_WIDTH }}>
                     {renderTodayMarker()}
                   </div>
 
