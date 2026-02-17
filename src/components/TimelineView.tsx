@@ -475,8 +475,9 @@ export function TimelineView() {
                           className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors"
                           onClick={() => toggleProject(project.id)}
                         >
-                          <div className="sticky left-0 z-10 bg-primary/15 flex shrink-0">
-                            <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
+                          <div className="sticky left-0 z-10 bg-card flex shrink-0 relative">
+                            <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
+                            <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between relative">
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {isExpanded ? (
                                   <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
@@ -499,7 +500,7 @@ export function TimelineView() {
                                 />
                               </div>
                             </div>
-                            <div className="w-16 shrink-0 border-r border-border/50" />
+                            <div className="w-16 shrink-0 border-r border-border/50 relative" />
                           </div>
                           {/* Collapsed summary bar */}
                           {!isExpanded && (
