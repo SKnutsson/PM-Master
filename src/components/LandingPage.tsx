@@ -13,25 +13,25 @@ import previewForecast from '@/assets/preview-forecast.jpg';
 const features = [
   {
     title: 'Projekt',
-    description: 'Hantera alla projekt med status, ansvariga och milstolpar.',
+    description: 'Lägg enkelt upp nya projekt och projektinformation.',
     icon: BarChart3,
     image: previewProjects,
   },
   {
     title: 'Ganttschema',
-    description: 'Visualisera tidslinjer och beroenden i ett interaktivt schema.',
+    description: 'Visualisera tidslinjer och aktiviteter i ett interaktivt schema.',
     icon: CalendarRange,
     image: previewGantt,
   },
   {
     title: 'Resursplanering',
-    description: 'Fördela montörer och planera arbetstid per projekt.',
+    description: 'Fördela arbetskraft och planera arbetstid per projekt.',
     icon: Users,
     image: previewResources,
   },
   {
     title: 'Prognos',
-    description: 'Följ upp försäljning och intäktsprognoser månadsvis.',
+    description: 'Följ upp försäljning och offertstock.',
     icon: TrendingUp,
     image: previewForecast,
   },
