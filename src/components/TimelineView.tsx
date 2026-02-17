@@ -36,29 +36,32 @@ type ViewMode = 'weeks' | 'days';
 
 type DerivedStatus = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad';
 
-function generateWeeks(year: number): { weekNum: number; startDate: Date; label: string }[] {
-  const weeks: { weekNum: number; startDate: Date; label: string }[] = [];
-  const jan1 = new Date(year, 0, 1);
-  let current = new Date(jan1);
-  while (current.getDay() !== 1) {
-    current.setDate(current.getDate() + 1);
-  }
-  for (let i = 1; i <= 52; i++) {
-    weeks.push({
-      weekNum: i,
-      startDate: new Date(current),
-      label: `V${i}`,
-    });
-    current.setDate(current.getDate() + 7);
+function generateWeeksForRange(startYear: number, endYear: number): { weekNum: number; year: number; startDate: Date; label: string }[] {
+  const weeks: { weekNum: number; year: number; startDate: Date; label: string }[] = [];
+  for (let year = startYear; year <= endYear; year++) {
+    const jan1 = new Date(year, 0, 1);
+    let current = new Date(jan1);
+    while (current.getDay() !== 1) {
+      current.setDate(current.getDate() + 1);
+    }
+    for (let i = 1; i <= 52; i++) {
+      weeks.push({
+        weekNum: i,
+        year,
+        startDate: new Date(current),
+        label: `V${i}`,
+      });
+      current.setDate(current.getDate() + 7);
+    }
   }
   return weeks;
 }
 
-function generateAllDays(year: number): { date: Date; label: string; dayOfWeek: number }[] {
+function generateAllDaysForRange(startYear: number, endYear: number): { date: Date; label: string; dayOfWeek: number }[] {
   const days: { date: Date; label: string; dayOfWeek: number }[] = [];
-  const current = new Date(year, 0, 1);
-  const endDate = new Date(year, 11, 31);
-  while (current <= endDate) {
+  const current = new Date(startYear, 0, 1);
+  const end = new Date(endYear, 11, 31);
+  while (current <= end) {
     days.push({
       date: new Date(current),
       label: current.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }),
@@ -120,8 +123,30 @@ export function TimelineView() {
   const projects = allProjects.filter(p => p.status !== 'Avslutat');
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
-  const weeks = useMemo(() => generateWeeks(2026), []);
-  const allDays = useMemo(() => generateAllDays(2026), []);
+
+  // Determine year range from activity data
+  const { startYear, endYear } = useMemo(() => {
+    let minYear = new Date().getFullYear();
+    let maxYear = minYear;
+    allProjects.forEach(p => {
+      p.activities.forEach(a => {
+        if (a.startDate) {
+          const y = parseInt(a.startDate.substring(0, 4), 10);
+          if (y < minYear) minYear = y;
+          if (y > maxYear) maxYear = y;
+        }
+        if (a.endDate) {
+          const y = parseInt(a.endDate.substring(0, 4), 10);
+          if (y < minYear) minYear = y;
+          if (y > maxYear) maxYear = y;
+        }
+      });
+    });
+    return { startYear: minYear, endYear: maxYear };
+  }, [allProjects]);
+
+  const weeks = useMemo(() => generateWeeksForRange(startYear, endYear), [startYear, endYear]);
+  const allDays = useMemo(() => generateAllDaysForRange(startYear, endYear), [startYear, endYear]);
 
   const today = useMemo(() => {
     const d = new Date();
@@ -133,14 +158,14 @@ export function TimelineView() {
   const displayedWeeks = weeks;
   const displayedDays = allDays;
 
-  const todayWeekNum = useMemo(() => {
+  const todayWeekIndex = useMemo(() => {
     const todayDate = toISODate(today);
-    for (const w of weeks) {
-      const wStart = toISODate(w.startDate);
-      const wEnd = new Date(w.startDate);
+    for (let i = 0; i < weeks.length; i++) {
+      const wStart = toISODate(weeks[i].startDate);
+      const wEnd = new Date(weeks[i].startDate);
       wEnd.setDate(wEnd.getDate() + 6);
       const wEndStr = toISODate(wEnd);
-      if (todayDate >= wStart && todayDate <= wEndStr) return w.weekNum;
+      if (todayDate >= wStart && todayDate <= wEndStr) return i;
     }
     return -1;
   }, [today, weeks]);
@@ -170,7 +195,11 @@ export function TimelineView() {
 
   // Keep local order in sync with data
   useEffect(() => {
-    setLocalProjectOrder(timelineProjects.map(p => p.id));
+    const ids = timelineProjects.map(p => p.id);
+    setLocalProjectOrder(prev => {
+      if (prev.length === ids.length && prev.every((id, i) => id === ids[i])) return prev;
+      return ids;
+    });
   }, [timelineProjects]);
 
   const orderedProjects = useMemo(() => {
@@ -295,19 +324,22 @@ export function TimelineView() {
     return Math.ceil((days + startOfYear.getDay() + 1) / 7);
   };
 
-  const getProjectRange = (projectId: string) => {
+  const getProjectWeekRange = (projectId: string) => {
     const project = projects.find(p => p.id === projectId);
-    if (!project) return { startWeek: null, endWeek: null };
-    let minWeek = Infinity;
-    let maxWeek = -Infinity;
+    if (!project) return { startIdx: null, endIdx: null };
+    let minIdx: number | null = null;
+    let maxIdx: number | null = null;
     project.activities.forEach(a => {
-      if (a.startDate) minWeek = Math.min(minWeek, getWeekNumber(a.startDate));
-      if (a.endDate) maxWeek = Math.max(maxWeek, getWeekNumber(a.endDate));
+      if (a.startDate) {
+        const col = dateToCol(a.startDate);
+        if (minIdx === null || col < minIdx) minIdx = col;
+      }
+      if (a.endDate) {
+        const col = dateToCol(a.endDate);
+        if (maxIdx === null || col > maxIdx) maxIdx = col;
+      }
     });
-    return {
-      startWeek: minWeek === Infinity ? null : minWeek,
-      endWeek: maxWeek === -Infinity ? null : maxWeek,
-    };
+    return { startIdx: minIdx, endIdx: maxIdx };
   };
 
   const getProjectDayRange = (projectId: string) => {
@@ -360,10 +392,7 @@ export function TimelineView() {
   const colWidth = viewMode === 'weeks' ? WEEK_COL_WIDTH : DAY_COL_WIDTH;
   const gridWidth = columnCount * colWidth;
 
-  const todayWeekColIndex = useMemo(() => {
-    if (viewMode !== 'weeks') return -1;
-    return displayedWeeks.findIndex(w => w.weekNum === todayWeekNum);
-  }, [viewMode, displayedWeeks, todayWeekNum]);
+  const todayWeekColIndex = todayWeekIndex;
 
   const todayColIndex = viewMode === 'weeks' ? todayWeekColIndex : todayDayIndex;
 
@@ -396,9 +425,19 @@ export function TimelineView() {
 
   const dateToCol = useCallback((dateStr: string): number => {
     if (viewMode === 'weeks') {
+      const dateYear = parseInt(dateStr.substring(0, 4), 10);
       const weekNum = getWeekNumber(dateStr);
-      const idx = displayedWeeks.findIndex(w => w.weekNum === weekNum);
-      return idx >= 0 ? idx : (weekNum < (displayedWeeks[0]?.weekNum ?? 0) ? -1 : displayedWeeks.length);
+      const idx = displayedWeeks.findIndex(w => w.weekNum === weekNum && w.year === dateYear);
+      if (idx >= 0) return idx;
+      // Fallback: find closest week by date comparison
+      const target = dateStr;
+      for (let i = 0; i < displayedWeeks.length; i++) {
+        const wStart = toISODate(displayedWeeks[i].startDate);
+        const wEnd = new Date(displayedWeeks[i].startDate);
+        wEnd.setDate(wEnd.getDate() + 6);
+        if (target >= wStart && target <= toISODate(wEnd)) return i;
+      }
+      return target < toISODate(displayedWeeks[0]?.startDate) ? -1 : displayedWeeks.length;
     } else {
       const target = dateStr;
       const idx = displayedDays.findIndex(d => toISODate(d.date) === target);
@@ -429,12 +468,12 @@ export function TimelineView() {
   // Render background cells for an activity row
   const renderBackgroundCells = () => {
     if (viewMode === 'weeks') {
-      return displayedWeeks.map((week) => (
+      return displayedWeeks.map((week, i) => (
         <div
-          key={week.weekNum}
+          key={`${week.year}-${week.weekNum}`}
           className={cn(
             'h-6 border-r border-border/30',
-            week.weekNum === todayWeekNum && 'bg-primary/5'
+            i === todayWeekIndex && 'bg-primary/5'
           )}
           style={{ width: colWidth, minWidth: colWidth }}
         />
@@ -539,12 +578,12 @@ export function TimelineView() {
                   </div>
                   <div className="flex">
                     {viewMode === 'weeks' ? (
-                      displayedWeeks.map((week) => (
+                      displayedWeeks.map((week, i) => (
                         <div
-                          key={week.weekNum}
+                          key={`${week.year}-${week.weekNum}`}
                           className={cn(
                             'border-r border-border/30 py-0.5 text-center text-[10px] font-medium',
-                            week.weekNum === todayWeekNum && 'bg-primary/10'
+                            i === todayWeekIndex && 'bg-primary/10'
                           )}
                           style={{ width: colWidth, minWidth: colWidth }}
                         >
@@ -582,7 +621,7 @@ export function TimelineView() {
 
                   {orderedProjects.map((project) => {
                     const isExpanded = expandedProjects.has(project.id);
-                    const { startWeek, endWeek } = getProjectRange(project.id);
+                    const { startIdx, endIdx } = getProjectWeekRange(project.id);
                     const { startDay, endDay } = getProjectDayRange(project.id);
                     const activityCount = project.activities.filter(a => a.startDate || a.endDate).length;
                     const isDragging = dragProjectId === project.id;
@@ -641,13 +680,13 @@ export function TimelineView() {
                           {!isExpanded && (
                             <div className="flex items-center">
                               {viewMode === 'weeks' ? (
-                                displayedWeeks.map((week) => {
-                                  const isInRange = startWeek !== null && endWeek !== null &&
-                                    week.weekNum >= startWeek && week.weekNum <= endWeek;
-                                  const isStart = week.weekNum === startWeek;
-                                  const isEnd = week.weekNum === endWeek;
+                                displayedWeeks.map((week, i) => {
+                                  const isInRange = startIdx !== null && endIdx !== null &&
+                                    i >= startIdx && i <= endIdx;
+                                  const isStart = i === startIdx;
+                                  const isEnd = i === endIdx;
                                   return (
-                                    <div key={week.weekNum} className="h-6 flex items-center justify-center border-r border-border/30" style={{ width: colWidth, minWidth: colWidth }}>
+                                    <div key={`${week.year}-${week.weekNum}`} className="h-6 flex items-center justify-center border-r border-border/30" style={{ width: colWidth, minWidth: colWidth }}>
                                       {isInRange && (
                                         <div className={cn(
                                           'h-3.5 w-full bg-primary/40',
