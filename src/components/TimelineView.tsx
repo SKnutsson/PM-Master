@@ -388,6 +388,22 @@ export function TimelineView() {
     return groups;
   }, [viewMode, displayedDays]);
 
+  // Week number groups for day view
+  const dayWeekGroups = useMemo(() => {
+    if (viewMode !== 'days') return [];
+    const groups: { label: string; span: number }[] = [];
+    displayedDays.forEach((day) => {
+      const wn = getWeekNumber(toISODate(day.date));
+      const label = `V${wn}`;
+      if (groups.length > 0 && groups[groups.length - 1].label === label) {
+        groups[groups.length - 1].span++;
+      } else {
+        groups.push({ label, span: 1 });
+      }
+    });
+    return groups;
+  }, [viewMode, displayedDays]);
+
   const columnCount = viewMode === 'weeks' ? displayedWeeks.length : displayedDays.length;
   const colWidth = viewMode === 'weeks' ? WEEK_COL_WIDTH : DAY_COL_WIDTH;
   const gridWidth = columnCount * colWidth;
@@ -566,8 +582,29 @@ export function TimelineView() {
                   </div>
                 </div>
 
+                {/* Week number row for day view */}
+                {viewMode === 'days' && (
+                  <div className="sticky top-[21px] z-30 flex border-b border-border/30 bg-card">
+                    <div className="sticky left-0 z-40 bg-card flex shrink-0">
+                      <div className="w-60 shrink-0 border-r border-border/50" />
+                      <div className="w-16 shrink-0 border-r border-border/50" />
+                    </div>
+                    <div className="flex">
+                      {dayWeekGroups.map((g, i) => (
+                        <div
+                          key={i}
+                          className="border-r border-border/30 text-center text-[9px] font-semibold text-muted-foreground py-0.5"
+                          style={{ width: g.span * colWidth }}
+                        >
+                          {g.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Week/Day header row */}
-                <div className="sticky top-[21px] z-30 flex border-b border-border/50 bg-card">
+                <div className={cn("sticky z-30 flex border-b border-border/50 bg-card", viewMode === 'days' ? 'top-[42px]' : 'top-[21px]')}>
                   <div className="sticky left-0 z-40 bg-card flex shrink-0">
                     <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
                       Projekt / Aktivitet
