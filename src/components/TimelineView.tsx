@@ -726,7 +726,7 @@ export function TimelineView() {
                                     <div key={`${week.year}-${week.weekNum}`} className="h-6 flex items-center justify-center border-r border-border/30" style={{ width: colWidth, minWidth: colWidth }}>
                                       {isInRange && (
                                         <div className={cn(
-                                          'h-3.5 w-full bg-primary/40',
+                                          'h-3.5 w-full bg-emerald-500/70',
                                           isStart && 'rounded-l ml-0.5',
                                           isEnd && 'rounded-r mr-0.5'
                                         )} />
@@ -747,7 +747,7 @@ export function TimelineView() {
                                     )} style={{ width: colWidth, minWidth: colWidth }}>
                                       {isInRange && (
                                         <div className={cn(
-                                          'h-3.5 w-full bg-primary/40',
+                                          'h-3.5 w-full bg-emerald-500/70',
                                           isStart && 'rounded-l ml-0.5',
                                           isEnd && 'rounded-r mr-0.5'
                                         )} />
