@@ -11,19 +11,12 @@ interface GanttBarProps {
   statusColor: string;
   derivedStatus: string;
   responsible: string;
-  /** Total number of columns in the visible grid */
   columnCount: number;
-  /** Index of the first column where the bar starts (fractional for sub-column precision) */
   startCol: number;
-  /** Index of the last column where the bar ends (fractional) */
   endCol: number;
-  /** Called with new ISO date strings after drag/resize */
   onDatesChange: (projectId: string, activityId: string, startDate: string, endDate: string) => Promise<void>;
-  /** Converts a column index to an ISO date string */
   colToDate: (colIndex: number) => string;
-  /** Converts an ISO date to a column index */
   dateToCol: (dateStr: string) => number;
-  /** Snap granularity in columns (1 for days, 7 for weeks etc) */
   snapCols?: number;
 }
 
@@ -65,7 +58,13 @@ export function GanttBar({
   const [currentEndCol, setCurrentEndCol] = useState(endCol);
   const [isSaving, setIsSaving] = useState(false);
   const hasDragged = useRef(false);
-  const DRAG_THRESHOLD = 4; // pixels before drag activates
+  const DRAG_THRESHOLD = 4;
+
+  // Use refs so mousemove always reads latest values
+  const currentStartColRef = useRef(currentStartCol);
+  const currentEndColRef = useRef(currentEndCol);
+  currentStartColRef.current = currentStartCol;
+  currentEndColRef.current = currentEndCol;
 
   // Sync with props when not dragging AND not saving
   useEffect(() => {
@@ -102,7 +101,6 @@ export function GanttBar({
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - dragState.startX;
 
-      // Don't start dragging until threshold is exceeded
       if (!hasDragged.current && Math.abs(deltaX) < DRAG_THRESHOLD) return;
       hasDragged.current = true;
 
@@ -118,37 +116,33 @@ export function GanttBar({
         setCurrentEndCol(Math.max(span, newEnd));
       } else if (dragState.type === 'resize-left') {
         const newStart = snap(dragState.origStartCol + deltaCols);
-        // Allow min 1 day: start can equal end (same day)
-        setCurrentStartCol(Math.min(newStart, currentEndCol));
+        // Allow shrinking to same day (startCol === endCol)
+        setCurrentStartCol(Math.min(newStart, currentEndColRef.current));
       } else if (dragState.type === 'resize-right') {
         const newEnd = snap(dragState.origEndCol + deltaCols);
-        // Allow min 1 day: end can equal start (same day)
-        setCurrentEndCol(Math.max(newEnd, currentStartCol));
+        // Allow shrinking to same day (endCol === startCol)
+        setCurrentEndCol(Math.max(newEnd, currentStartColRef.current));
       }
     };
 
     const handleMouseUp = async () => {
-      // If user just clicked without dragging, do nothing
       if (!hasDragged.current) {
         setDragState(null);
         return;
       }
 
-      const finalStartCol = currentStartCol;
-      const finalEndCol = currentEndCol;
+      const finalStartCol = currentStartColRef.current;
+      const finalEndCol = currentEndColRef.current;
 
       const newStartDate = colToDate(Math.max(0, finalStartCol));
       const newEndDate = colToDate(Math.max(0, finalEndCol));
 
-      // Only save if dates actually changed
       if (newStartDate !== startDate || newEndDate !== endDate) {
-        // Set saving BEFORE clearing drag so useEffect doesn't revert position
         setIsSaving(true);
         setDragState(null);
         try {
           await onDatesChange(projectId, activityId, newStartDate, newEndDate);
         } catch {
-          // Revert on error
           setCurrentStartCol(startCol);
           setCurrentEndCol(endCol);
           toast.error('Kunde inte spara ändringen. Försök igen.');
@@ -166,7 +160,8 @@ export function GanttBar({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragState, currentStartCol, currentEndCol, columnCount, getContainerWidth, snap, colToDate, onDatesChange, projectId, activityId, startDate, endDate, startCol, endCol, snapCols]);
+    // Only depend on dragState – read current cols from refs
+  }, [dragState, columnCount, getContainerWidth, snap, colToDate, onDatesChange, projectId, activityId, startDate, endDate, startCol, endCol]);
 
   // Compute position as percentages
   const leftPct = (currentStartCol / columnCount) * 100;
@@ -175,6 +170,9 @@ export function GanttBar({
   const currentStartDate = dragState ? colToDate(Math.max(0, currentStartCol)) : startDate;
   const currentEndDate = dragState ? colToDate(Math.max(0, currentEndCol)) : endDate;
   const duration = daysBetween(currentStartDate, currentEndDate);
+
+  // Make resize handles wider on narrow bars
+  const isSingleDay = currentEndCol <= currentStartCol;
 
   return (
     <div
@@ -200,7 +198,7 @@ export function GanttBar({
       >
         {/* Left resize handle */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize opacity-0 group-hover/bar:opacity-100 hover:bg-black/20 rounded-l-sm transition-opacity z-10"
+          className="absolute left-0 top-0 bottom-0 w-2.5 cursor-col-resize opacity-0 group-hover/bar:opacity-100 hover:bg-black/20 rounded-l-sm transition-opacity z-10"
           onMouseDown={(e) => handleMouseDown(e, 'resize-left')}
         >
           <div className="absolute top-1/2 -translate-y-1/2 left-0.5 w-0.5 h-2 bg-white/60 rounded" />
@@ -208,7 +206,7 @@ export function GanttBar({
 
         {/* Right resize handle */}
         <div
-          className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize opacity-0 group-hover/bar:opacity-100 hover:bg-black/20 rounded-r-sm transition-opacity z-10"
+          className="absolute right-0 top-0 bottom-0 w-2.5 cursor-col-resize opacity-0 group-hover/bar:opacity-100 hover:bg-black/20 rounded-r-sm transition-opacity z-10"
           onMouseDown={(e) => handleMouseDown(e, 'resize-right')}
         >
           <div className="absolute top-1/2 -translate-y-1/2 right-0.5 w-0.5 h-2 bg-white/60 rounded" />
