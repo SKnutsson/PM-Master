@@ -14,6 +14,7 @@ interface GanttBarProps {
   columnCount: number;
   startCol: number;
   endCol: number;
+  colWidth: number;
   onDatesChange: (projectId: string, activityId: string, startDate: string, endDate: string) => Promise<void>;
   colToDate: (colIndex: number) => string;
   dateToCol: (dateStr: string) => number;
@@ -42,6 +43,7 @@ export function GanttBar({
   columnCount,
   startCol,
   endCol,
+  colWidth,
   onDatesChange,
   colToDate,
   dateToCol,
@@ -163,13 +165,11 @@ export function GanttBar({
     // Only depend on dragState – read current cols from refs
   }, [dragState, columnCount, getContainerWidth, snap, colToDate, onDatesChange, projectId, activityId, startDate, endDate, startCol, endCol]);
 
-  // Compute position as percentages with small inset to prevent bleeding into adjacent columns
-  const colWidthPct = 100 / columnCount;
+  // Compute position in pixels using fixed column width for precision
+  const BAR_INSET_PX = 2;
   const spanCols = currentEndCol - currentStartCol + 1;
-  const leftPct = currentStartCol * colWidthPct;
-  // Subtract a tiny amount so the bar doesn't visually bleed into the next column
-  const insetPct = 0.15 * colWidthPct; // ~15% of one column as padding
-  const widthPct = Math.max(colWidthPct * 0.7, spanCols * colWidthPct - insetPct);
+  const leftPx = currentStartCol * colWidth + BAR_INSET_PX;
+  const widthPx = Math.max(colWidth * 0.6, spanCols * colWidth - 2 * BAR_INSET_PX);
 
   const currentStartDate = dragState ? colToDate(Math.max(0, currentStartCol)) : startDate;
   const currentEndDate = dragState ? colToDate(Math.max(0, currentEndCol)) : endDate;
@@ -187,8 +187,8 @@ export function GanttBar({
         dragState && 'z-30'
       )}
       style={{
-        left: `${Math.max(0, leftPct)}%`,
-        width: `${Math.max(0.5, widthPct)}%`,
+        left: `${Math.max(0, leftPx)}px`,
+        width: `${Math.max(4, widthPx)}px`,
       }}
     >
       {/* Main bar */}
