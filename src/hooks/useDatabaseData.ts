@@ -93,6 +93,7 @@ export function useDatabaseData() {
       const { data: activitiesData } = await supabase
         .from('activities')
         .select('*')
+        .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true });
 
       const projectsWithActivities: Project[] = projectsData.map(p => ({
@@ -481,6 +482,28 @@ export function useDatabaseData() {
     }
   }, []);
 
+  const updateActivityOrder = useCallback(async (projectId: string, orderedActivityIds: string[]) => {
+    // Optimistically update local state
+    setProjects(prev => prev.map(p => {
+      if (p.id !== projectId) return p;
+      const map = new Map(p.activities.map(a => [a.id, a]));
+      const reordered = orderedActivityIds
+        .map(id => map.get(id))
+        .filter(Boolean) as typeof p.activities;
+      // Include any activities not in the ordered list (e.g. without dates)
+      const remaining = p.activities.filter(a => !orderedActivityIds.includes(a.id));
+      return { ...p, activities: [...reordered, ...remaining] };
+    }));
+
+    // Persist to database
+    for (let i = 0; i < orderedActivityIds.length; i++) {
+      await supabase
+        .from('activities')
+        .update({ sort_order: i + 1 } as any)
+        .eq('id', orderedActivityIds[i]);
+    }
+  }, []);
+
   return {
     projects,
     forecast,
@@ -498,5 +521,6 @@ export function useDatabaseData() {
     updateForecast,
     deleteForecast,
     updateProjectOrder,
+    updateActivityOrder,
   };
 }

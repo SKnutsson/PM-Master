@@ -19,6 +19,7 @@ interface ProjectDataContextType {
   updateForecast: (forecastId: string, updates: Partial<ExtendedSalesForecast>) => Promise<void>;
   deleteForecast: (forecastId: string) => Promise<void>;
   updateProjectOrder: (orderedProjectIds: string[]) => Promise<void>;
+  updateActivityOrder: (projectId: string, orderedActivityIds: string[]) => Promise<void>;
 }
 
 const ProjectDataContext = createContext<ProjectDataContextType | null>(null);

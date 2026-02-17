@@ -23,6 +23,7 @@ export type Database = {
           notes: string | null
           project_id: string
           responsible: string
+          sort_order: number | null
           start_date: string
           status: string
           updated_at: string | null
@@ -35,6 +36,7 @@ export type Database = {
           notes?: string | null
           project_id: string
           responsible: string
+          sort_order?: number | null
           start_date: string
           status?: string
           updated_at?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           notes?: string | null
           project_id?: string
           responsible?: string
+          sort_order?: number | null
           start_date?: string
           status?: string
           updated_at?: string | null
