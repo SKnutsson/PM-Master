@@ -116,7 +116,7 @@ const DAY_COL_WIDTH = 32;  // px per day column
 const LEFT_COL_WIDTH = 304; // w-60 + w-16 = 240 + 64
 
 export function TimelineView() {
-  const { projects: allProjects, updateActivity, updateProjectOrder } = useProjectDataContext();
+  const { projects: allProjects, updateActivity, updateProjectOrder, updateActivityOrder } = useProjectDataContext();
   const projects = allProjects.filter(p => p.status !== 'Avslutat');
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
@@ -221,6 +221,64 @@ export function TimelineView() {
   const handleDragEnd = useCallback(() => {
     setDragProjectId(null);
     setDragOverProjectId(null);
+  }, []);
+
+  // --- Activity drag-and-drop reorder state ---
+  const [dragActivityId, setDragActivityId] = useState<string | null>(null);
+  const [dragOverActivityId, setDragOverActivityId] = useState<string | null>(null);
+  const [dragActivityProjectId, setDragActivityProjectId] = useState<string | null>(null);
+
+  const handleActivityDragStart = useCallback((e: React.DragEvent, projectId: string, activityId: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/activity', activityId);
+    e.dataTransfer.setData('application/activity-project', projectId);
+    setDragActivityId(activityId);
+    setDragActivityProjectId(projectId);
+  }, []);
+
+  const handleActivityDragOver = useCallback((e: React.DragEvent, activityId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (activityId !== dragOverActivityId) {
+      setDragOverActivityId(activityId);
+    }
+  }, [dragOverActivityId]);
+
+  const handleActivityDrop = useCallback((e: React.DragEvent, projectId: string, targetActivityId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('application/activity');
+    const sourceProjectId = e.dataTransfer.getData('application/activity-project');
+    if (!sourceId || sourceId === targetActivityId || sourceProjectId !== projectId) {
+      setDragActivityId(null);
+      setDragOverActivityId(null);
+      setDragActivityProjectId(null);
+      return;
+    }
+
+    const project = orderedProjects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const visibleActivities = project.activities.filter(a => a.startDate || a.endDate);
+    const currentOrder = visibleActivities.map(a => a.id);
+    const sourceIdx = currentOrder.indexOf(sourceId);
+    const targetIdx = currentOrder.indexOf(targetActivityId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const newOrder = [...currentOrder];
+    newOrder.splice(sourceIdx, 1);
+    newOrder.splice(targetIdx, 0, sourceId);
+
+    updateActivityOrder(projectId, newOrder);
+
+    setDragActivityId(null);
+    setDragOverActivityId(null);
+    setDragActivityProjectId(null);
+  }, [orderedProjects, updateActivityOrder]);
+
+  const handleActivityDragEnd = useCallback(() => {
+    setDragActivityId(null);
+    setDragOverActivityId(null);
+    setDragActivityProjectId(null);
   }, []);
 
   const expandAll = () => {
@@ -634,6 +692,8 @@ export function TimelineView() {
                             const actStartCol = activity.startDate ? dateToCol(activity.startDate) : -1;
                             const actEndCol = activity.endDate ? dateToCol(activity.endDate) : actStartCol;
                             const barVisible = actStartCol >= 0 && actEndCol >= 0 && actStartCol < columnCount;
+                            const isActDragging = dragActivityId === activity.id;
+                            const isActDragOver = dragOverActivityId === activity.id && dragActivityId !== activity.id && dragActivityProjectId === project.id;
 
                             return (
                               <motion.div
@@ -641,17 +701,33 @@ export function TimelineView() {
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="flex border-b border-border/30 hover:bg-muted/20 group"
+                                className={cn(
+                                  'flex border-b border-border/30 hover:bg-muted/20 group',
+                                  isActDragging && 'opacity-40',
+                                  isActDragOver && 'border-t-2 border-t-primary'
+                                )}
+                                onDragOver={(e) => { if (e.dataTransfer.types.includes('application/activity')) handleActivityDragOver(e, activity.id); }}
+                                onDrop={(e) => { if (e.dataTransfer.types.includes('application/activity')) handleActivityDrop(e, project.id, activity.id); }}
                               >
                                 <div className="sticky left-0 z-10 bg-card flex shrink-0 group-hover:bg-muted/20">
-                                  <div className="w-60 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center justify-between min-w-0">
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="min-w-0 flex items-center gap-1.5">
-                                          <div className={cn('h-2 w-2 rounded-full shrink-0', getStatusDotColor(derived))} />
-                                          <span className="text-xs truncate">{activity.name}</span>
-                                        </div>
-                                      </TooltipTrigger>
+                                  <div className="w-60 shrink-0 border-r border-border/50 px-1 py-0.5 pl-5 flex items-center justify-between min-w-0">
+                                    <div className="flex items-center gap-1 min-w-0">
+                                      <div
+                                        draggable
+                                        onDragStart={(e) => { e.stopPropagation(); handleActivityDragStart(e, project.id, activity.id); }}
+                                        onDragEnd={handleActivityDragEnd}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="cursor-grab active:cursor-grabbing shrink-0 p-0.5 rounded hover:bg-muted/50 transition-colors"
+                                      >
+                                        <GripVertical className="h-3 w-3 text-muted-foreground/50" />
+                                      </div>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="min-w-0 flex items-center gap-1.5">
+                                            <div className={cn('h-2 w-2 rounded-full shrink-0', getStatusDotColor(derived))} />
+                                            <span className="text-xs truncate">{activity.name}</span>
+                                          </div>
+                                        </TooltipTrigger>
                                       <TooltipContent side="right" className="text-xs max-w-xs">
                                         <p className="font-semibold">{activity.name}</p>
                                         <p className="text-muted-foreground">
@@ -662,6 +738,7 @@ export function TimelineView() {
                                         </p>
                                       </TooltipContent>
                                     </Tooltip>
+                                    </div>
                                     <EditActivityDialog
                                       projectId={project.id}
                                       activity={activity}
