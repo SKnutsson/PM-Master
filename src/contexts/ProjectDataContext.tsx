@@ -18,6 +18,7 @@ interface ProjectDataContextType {
   addForecast: (item: Omit<ExtendedSalesForecast, 'id'>) => Promise<ExtendedSalesForecast | null>;
   updateForecast: (forecastId: string, updates: Partial<ExtendedSalesForecast>) => Promise<void>;
   deleteForecast: (forecastId: string) => Promise<void>;
+  updateProjectOrder: (orderedProjectIds: string[]) => Promise<void>;
 }
 
 const ProjectDataContext = createContext<ProjectDataContextType | null>(null);
