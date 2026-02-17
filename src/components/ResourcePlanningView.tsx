@@ -205,6 +205,21 @@ export function ResourcePlanningView() {
     return groups;
   }, [viewMode, displayedWeeks, displayedDays]);
 
+  // Week number groups for day view
+  const dayWeekGroups = useMemo(() => {
+    if (viewMode !== 'days') return [];
+    const groups: { label: string; span: number }[] = [];
+    displayedDays.forEach(day => {
+      const jan1 = new Date(day.date.getFullYear(), 0, 1);
+      const days = Math.floor((day.date.getTime() - jan1.getTime()) / (24 * 60 * 60 * 1000));
+      const wn = Math.ceil((days + jan1.getDay() + 1) / 7);
+      const label = `V${wn}`;
+      if (groups.length > 0 && groups[groups.length - 1].label === label) groups[groups.length - 1].span++;
+      else groups.push({ label, span: 1 });
+    });
+    return groups;
+  }, [viewMode, displayedDays]);
+
   const todayColIndex = useMemo(() => {
     if (viewMode === 'weeks') return displayedWeeks.findIndex(w => w.weekNum === todayWeekNum);
     return displayedDays.findIndex(d => d.dateStr === todayStr);
@@ -500,8 +515,22 @@ export function ResourcePlanningView() {
                   </div>
                 </div>
 
+                {/* Week number row for day view */}
+                {viewMode === 'days' && (
+                  <div className="sticky top-[21px] z-30 flex border-b border-border/30 bg-card">
+                    <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50" />
+                    <div className="flex">
+                      {dayWeekGroups.map((g, i) => (
+                        <div key={i} className="border-r border-border/30 text-center text-[9px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
+                          {g.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Week/Day header */}
-                <div className="sticky top-[21px] z-30 flex border-b border-border/50 bg-card">
+                <div className={cn("sticky z-30 flex border-b border-border/50 bg-card", viewMode === 'days' ? 'top-[42px]' : 'top-[21px]')}>
                   <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
                     Projekt / Montör
                   </div>
