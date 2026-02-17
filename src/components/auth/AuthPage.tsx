@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { z } from 'zod';
 
@@ -15,7 +14,7 @@ const authSchema = z.object({
   password: z.string().min(6, 'Lösenord måste vara minst 6 tecken'),
 });
 
-export function AuthPage() {
+export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 'signup' }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -99,30 +98,14 @@ export function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      {/* Background decorative elements */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
+    <div className="p-6">
+      <div className="mb-6 text-center">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">PM Master</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Logga in eller skapa ett konto för att fortsätta
+        </p>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardHeader className="space-y-4 text-center">
-            <div>
-              <CardTitle className="text-4xl font-extrabold tracking-tight">PM Master</CardTitle>
-              <CardDescription className="mt-2 text-muted-foreground">
-                Logga in eller skapa ett konto för att fortsätta
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs defaultValue={defaultTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin" className="flex items-center gap-2">
                   <LogIn className="h-4 w-4" />
@@ -294,18 +277,6 @@ export function AuthPage() {
               )}
               Logga in med Google
             </Button>
-          </CardContent>
-        </Card>
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-6 text-center text-sm text-muted-foreground"
-        >
-          PM Master – Projektledning
-        </motion.p>
-      </motion.div>
     </div>
   );
 }
