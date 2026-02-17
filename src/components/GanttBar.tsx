@@ -118,12 +118,12 @@ export function GanttBar({
         setCurrentEndCol(Math.max(span, newEnd));
       } else if (dragState.type === 'resize-left') {
         const newStart = snap(dragState.origStartCol + deltaCols);
-        // Allow min 1 day (startCol can equal endCol)
-        setCurrentStartCol(Math.min(newStart, dragState.origEndCol));
+        // Allow min 1 day: start can equal end (same day)
+        setCurrentStartCol(Math.min(newStart, currentEndCol));
       } else if (dragState.type === 'resize-right') {
         const newEnd = snap(dragState.origEndCol + deltaCols);
-        // Allow min 1 day (endCol can equal startCol)
-        setCurrentEndCol(Math.max(newEnd, dragState.origStartCol));
+        // Allow min 1 day: end can equal start (same day)
+        setCurrentEndCol(Math.max(newEnd, currentStartCol));
       }
     };
 
@@ -170,7 +170,7 @@ export function GanttBar({
 
   // Compute position as percentages
   const leftPct = (currentStartCol / columnCount) * 100;
-  const widthPct = ((currentEndCol - currentStartCol + 1) / columnCount) * 100;
+  const widthPct = Math.max((1 / columnCount) * 100, ((currentEndCol - currentStartCol + 1) / columnCount) * 100);
 
   const currentStartDate = dragState ? colToDate(Math.max(0, currentStartCol)) : startDate;
   const currentEndDate = dragState ? colToDate(Math.max(0, currentEndCol)) : endDate;
