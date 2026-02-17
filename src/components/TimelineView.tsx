@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Status } from '@/data/projectData';
@@ -54,10 +54,11 @@ function generateWeeks(year: number): { weekNum: number; startDate: Date; label:
   return weeks;
 }
 
-function generateDays(startDate: Date, count: number): { date: Date; label: string; dayOfWeek: number }[] {
+function generateAllDays(year: number): { date: Date; label: string; dayOfWeek: number }[] {
   const days: { date: Date; label: string; dayOfWeek: number }[] = [];
-  const current = new Date(startDate);
-  for (let i = 0; i < count; i++) {
+  const current = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31);
+  while (current <= endDate) {
     days.push({
       date: new Date(current),
       label: current.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }),
@@ -109,13 +110,18 @@ function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+// Fixed column widths for consistent layout
+const WEEK_COL_WIDTH = 56; // px per week column
+const DAY_COL_WIDTH = 32;  // px per day column
+const LEFT_COL_WIDTH = 304; // w-60 + w-16 = 240 + 64
+
 export function TimelineView() {
   const { projects: allProjects, updateActivity } = useProjectDataContext();
   const projects = allProjects.filter(p => p.status !== 'Avslutat');
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
   const weeks = useMemo(() => generateWeeks(2026), []);
+  const allDays = useMemo(() => generateAllDays(2026), []);
 
   const today = useMemo(() => {
     const d = new Date();
@@ -124,18 +130,8 @@ export function TimelineView() {
   }, []);
   const todayStr = toISODate(today);
 
-  const baseWeekIndex = 4;
-  const visibleWeeks = 16;
-  const visibleDays = 28;
-
-  const startIndex = Math.max(0, baseWeekIndex + currentWeekOffset);
-  const endIndex = Math.min(weeks.length, startIndex + visibleWeeks);
-  const displayedWeeks = weeks.slice(startIndex, endIndex);
-
-  const displayedDays = useMemo(() => {
-    if (viewMode !== 'days' || displayedWeeks.length === 0) return [];
-    return generateDays(displayedWeeks[0].startDate, visibleDays);
-  }, [viewMode, displayedWeeks, visibleDays]);
+  const displayedWeeks = weeks;
+  const displayedDays = allDays;
 
   const todayWeekNum = useMemo(() => {
     const todayDate = toISODate(today);
@@ -243,6 +239,8 @@ export function TimelineView() {
   }, [viewMode, displayedDays]);
 
   const columnCount = viewMode === 'weeks' ? displayedWeeks.length : displayedDays.length;
+  const colWidth = viewMode === 'weeks' ? WEEK_COL_WIDTH : DAY_COL_WIDTH;
+  const gridWidth = columnCount * colWidth;
 
   const todayWeekColIndex = useMemo(() => {
     if (viewMode !== 'weeks') return -1;
@@ -251,9 +249,40 @@ export function TimelineView() {
 
   const todayColIndex = viewMode === 'weeks' ? todayWeekColIndex : todayDayIndex;
 
-  // --- Drag & drop helpers ---
+  // --- Scroll sync ---
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+  const isSyncing = useRef(false);
 
-  // Convert a column index to ISO date string
+  const handleTopScroll = useCallback(() => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    if (mainScrollRef.current && topScrollRef.current) {
+      mainScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+    requestAnimationFrame(() => { isSyncing.current = false; });
+  }, []);
+
+  const handleMainScroll = useCallback(() => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    if (topScrollRef.current && mainScrollRef.current) {
+      topScrollRef.current.scrollLeft = mainScrollRef.current.scrollLeft;
+    }
+    requestAnimationFrame(() => { isSyncing.current = false; });
+  }, []);
+
+  // Auto-scroll to today on mount / view mode change
+  useEffect(() => {
+    if (todayColIndex < 0) return;
+    const scrollPos = Math.max(0, todayColIndex * colWidth - 300);
+    requestAnimationFrame(() => {
+      if (mainScrollRef.current) mainScrollRef.current.scrollLeft = scrollPos;
+      if (topScrollRef.current) topScrollRef.current.scrollLeft = scrollPos;
+    });
+  }, [viewMode, todayColIndex, colWidth]);
+
+  // --- Drag & drop helpers ---
   const colToDate = useCallback((colIndex: number): string => {
     const idx = Math.round(Math.max(0, colIndex));
     if (viewMode === 'weeks') {
@@ -268,7 +297,6 @@ export function TimelineView() {
     }
   }, [viewMode, displayedWeeks, displayedDays, todayStr]);
 
-  // Convert ISO date to column index
   const dateToCol = useCallback((dateStr: string): number => {
     if (viewMode === 'weeks') {
       const weekNum = getWeekNumber(dateStr);
@@ -281,7 +309,6 @@ export function TimelineView() {
     }
   }, [viewMode, displayedWeeks, displayedDays]);
 
-  // Handle date changes from drag/resize
   const handleDatesChange = useCallback(async (projectId: string, activityId: string, newStart: string, newEnd: string) => {
     await updateActivity(projectId, activityId, {
       startDate: newStart,
@@ -291,18 +318,13 @@ export function TimelineView() {
 
   const renderTodayMarker = () => {
     if (todayColIndex < 0 || todayColIndex >= columnCount) return null;
-    const cols = viewMode === 'weeks' ? displayedWeeks : displayedDays;
+    const leftPx = todayColIndex * colWidth + colWidth / 2;
     return (
-      <div className="absolute top-0 bottom-0 left-[19rem] right-0 pointer-events-none z-20 flex">
-        {cols.map((_, i) => (
-          <div key={i} className={cn('flex-1 relative', viewMode === 'days' && 'min-w-[28px]')}>
-            {i === todayColIndex && (
-              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-destructive">
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
-              </div>
-            )}
-          </div>
-        ))}
+      <div
+        className="absolute top-0 bottom-0 w-0.5 bg-destructive z-20 pointer-events-none"
+        style={{ left: `${leftPx}px` }}
+      >
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
       </div>
     );
   };
@@ -314,9 +336,10 @@ export function TimelineView() {
         <div
           key={week.weekNum}
           className={cn(
-            'flex-1 h-6 border-r border-border/30',
+            'h-6 border-r border-border/30',
             week.weekNum === todayWeekNum && 'bg-primary/5'
           )}
+          style={{ width: colWidth, minWidth: colWidth }}
         />
       ));
     } else {
@@ -324,9 +347,10 @@ export function TimelineView() {
         <div
           key={i}
           className={cn(
-            'flex-1 h-6 border-r border-border/30 min-w-[28px]',
+            'h-6 border-r border-border/30',
             (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
           )}
+          style={{ width: colWidth, minWidth: colWidth }}
         />
       ));
     }
@@ -360,29 +384,6 @@ export function TimelineView() {
                 Komprimera
               </Button>
             </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setCurrentWeekOffset(Math.max(-baseWeekIndex, currentWeekOffset - (viewMode === 'days' ? 4 : 8)))}
-                disabled={startIndex === 0}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <span className="text-xs text-muted-foreground px-1">
-                {displayedWeeks[0]?.label} – {displayedWeeks[displayedWeeks.length - 1]?.label}
-              </span>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setCurrentWeekOffset(currentWeekOffset + (viewMode === 'days' ? 4 : 8))}
-                disabled={endIndex >= weeks.length}
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -394,19 +395,34 @@ export function TimelineView() {
 
         <Card className="border-border/50 bg-card/80 overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <div className="min-w-[1000px]">
+            {/* Top scrollbar */}
+            <div
+              ref={topScrollRef}
+              onScroll={handleTopScroll}
+              className="overflow-x-auto overflow-y-hidden"
+              style={{ height: 12 }}
+            >
+              <div style={{ width: LEFT_COL_WIDTH + gridWidth, height: 1 }} />
+            </div>
+
+            {/* Main scrollable content */}
+            <div
+              ref={mainScrollRef}
+              onScroll={handleMainScroll}
+              className="overflow-x-auto"
+            >
+              <div style={{ width: LEFT_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header row */}
                 <div className="sticky top-0 z-10 flex border-b border-border/30 bg-card">
                   <div className="w-60 shrink-0 border-r border-border/50" />
                   <div className="w-16 shrink-0 border-r border-border/50" />
-                  <div className="flex flex-1">
+                  <div className="flex">
                     {viewMode === 'weeks'
                       ? weekYearGroups.map((g, i) => (
                           <div
                             key={i}
                             className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5"
-                            style={{ flex: g.span }}
+                            style={{ width: g.span * colWidth }}
                           >
                             {g.month}
                           </div>
@@ -415,7 +431,7 @@ export function TimelineView() {
                           <div
                             key={i}
                             className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5"
-                            style={{ flex: g.span }}
+                            style={{ width: g.span * colWidth }}
                           >
                             {g.label}
                           </div>
@@ -431,15 +447,16 @@ export function TimelineView() {
                   <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground">
                     Ansvarig
                   </div>
-                  <div className="flex flex-1">
+                  <div className="flex">
                     {viewMode === 'weeks' ? (
                       displayedWeeks.map((week) => (
                         <div
                           key={week.weekNum}
                           className={cn(
-                            'flex-1 border-r border-border/30 py-0.5 text-center text-[10px] font-medium',
+                            'border-r border-border/30 py-0.5 text-center text-[10px] font-medium',
                             week.weekNum === todayWeekNum && 'bg-primary/10'
                           )}
+                          style={{ width: colWidth, minWidth: colWidth }}
                         >
                           <div>{week.label}</div>
                           <div className="text-muted-foreground text-[9px]">
@@ -452,10 +469,11 @@ export function TimelineView() {
                         <div
                           key={i}
                           className={cn(
-                            'flex-1 border-r border-border/30 py-0.5 text-center text-[9px] font-medium min-w-[28px]',
+                            'border-r border-border/30 py-0.5 text-center text-[9px] font-medium',
                             (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40',
                             toISODate(day.date) === todayStr && 'bg-primary/10'
                           )}
+                          style={{ width: colWidth, minWidth: colWidth }}
                         >
                           <div>{['Sö', 'Må', 'Ti', 'On', 'To', 'Fr', 'Lö'][day.dayOfWeek]}</div>
                           <div className="text-muted-foreground">{day.date.getDate()}</div>
@@ -468,7 +486,9 @@ export function TimelineView() {
                 {/* Projects and Activities */}
                 <div className="relative">
                   {/* Today marker overlay */}
-                  {renderTodayMarker()}
+                  <div className="absolute top-0 bottom-0 pointer-events-none z-20" style={{ left: LEFT_COL_WIDTH }}>
+                    {renderTodayMarker()}
+                  </div>
 
                   {timelineProjects.map((project) => {
                     const isExpanded = expandedProjects.has(project.id);
@@ -509,7 +529,7 @@ export function TimelineView() {
                           <div className="w-16 shrink-0 border-r border-border/50" />
                           {/* Collapsed summary bar */}
                           {!isExpanded && (
-                            <div className="flex flex-1 items-center">
+                            <div className="flex items-center">
                               {viewMode === 'weeks' ? (
                                 displayedWeeks.map((week) => {
                                   const isInRange = startWeek !== null && endWeek !== null &&
@@ -517,7 +537,7 @@ export function TimelineView() {
                                   const isStart = week.weekNum === startWeek;
                                   const isEnd = week.weekNum === endWeek;
                                   return (
-                                    <div key={week.weekNum} className="flex-1 h-6 flex items-center justify-center border-r border-border/30">
+                                    <div key={week.weekNum} className="h-6 flex items-center justify-center border-r border-border/30" style={{ width: colWidth, minWidth: colWidth }}>
                                       {isInRange && (
                                         <div className={cn(
                                           'h-3.5 w-full bg-primary/40',
@@ -536,9 +556,9 @@ export function TimelineView() {
                                   const isEnd = dayStr === endDay;
                                   return (
                                     <div key={i} className={cn(
-                                      'flex-1 h-6 flex items-center justify-center border-r border-border/30 min-w-[28px]',
+                                      'h-6 flex items-center justify-center border-r border-border/30',
                                       (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40'
-                                    )}>
+                                    )} style={{ width: colWidth, minWidth: colWidth }}>
                                       {isInRange && (
                                         <div className={cn(
                                           'h-3.5 w-full bg-primary/40',
@@ -552,7 +572,7 @@ export function TimelineView() {
                               )}
                             </div>
                           )}
-                          {isExpanded && <div className="flex-1" />}
+                          {isExpanded && <div style={{ width: gridWidth }} />}
                         </div>
 
                         {/* Activities */}
@@ -608,7 +628,7 @@ export function TimelineView() {
                                   <span className="text-[9px] text-muted-foreground truncate">{activity.responsible}</span>
                                 </div>
                                 {/* Grid area with absolute-positioned draggable bar */}
-                                <div className="flex flex-1 items-center relative">
+                                <div className="flex items-center relative" style={{ width: gridWidth }}>
                                   {/* Background cells for grid lines */}
                                   {renderBackgroundCells()}
                                   {/* Draggable bar overlay */}
