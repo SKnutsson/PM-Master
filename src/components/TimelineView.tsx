@@ -249,28 +249,8 @@ export function TimelineView() {
 
   const todayColIndex = viewMode === 'weeks' ? todayWeekColIndex : todayDayIndex;
 
-  // --- Scroll sync ---
-  const topScrollRef = useRef<HTMLDivElement>(null);
+  // --- Scroll ref ---
   const mainScrollRef = useRef<HTMLDivElement>(null);
-  const isSyncing = useRef(false);
-
-  const handleTopScroll = useCallback(() => {
-    if (isSyncing.current) return;
-    isSyncing.current = true;
-    if (mainScrollRef.current && topScrollRef.current) {
-      mainScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
-    }
-    requestAnimationFrame(() => { isSyncing.current = false; });
-  }, []);
-
-  const handleMainScroll = useCallback(() => {
-    if (isSyncing.current) return;
-    isSyncing.current = true;
-    if (topScrollRef.current && mainScrollRef.current) {
-      topScrollRef.current.scrollLeft = mainScrollRef.current.scrollLeft;
-    }
-    requestAnimationFrame(() => { isSyncing.current = false; });
-  }, []);
 
   // Auto-scroll to today on mount / view mode change
   useEffect(() => {
@@ -278,7 +258,6 @@ export function TimelineView() {
     const scrollPos = Math.max(0, todayColIndex * colWidth - 300);
     requestAnimationFrame(() => {
       if (mainScrollRef.current) mainScrollRef.current.scrollLeft = scrollPos;
-      if (topScrollRef.current) topScrollRef.current.scrollLeft = scrollPos;
     });
   }, [viewMode, todayColIndex, colWidth]);
 
@@ -395,27 +374,18 @@ export function TimelineView() {
 
         <Card className="border-border/50 bg-card/80 overflow-hidden">
           <CardContent className="p-0">
-            {/* Top scrollbar */}
-            <div
-              ref={topScrollRef}
-              onScroll={handleTopScroll}
-              className="overflow-x-auto overflow-y-hidden"
-              style={{ height: 12 }}
-            >
-              <div style={{ width: LEFT_COL_WIDTH + gridWidth, height: 1 }} />
-            </div>
-
-            {/* Main scrollable content */}
+            {/* Single scrollable container for both axes */}
             <div
               ref={mainScrollRef}
-              onScroll={handleMainScroll}
-              className="overflow-x-auto"
+              className="overflow-auto max-h-[calc(100vh-220px)]"
             >
               <div style={{ width: LEFT_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header row */}
-                <div className="sticky top-0 z-10 flex border-b border-border/30 bg-card">
-                  <div className="w-60 shrink-0 border-r border-border/50" />
-                  <div className="w-16 shrink-0 border-r border-border/50" />
+                <div className="sticky top-0 z-30 flex border-b border-border/30 bg-card">
+                  <div className="sticky left-0 z-40 bg-card border-r border-border/50 flex shrink-0">
+                    <div className="w-60 shrink-0" />
+                    <div className="w-16 shrink-0" />
+                  </div>
                   <div className="flex">
                     {viewMode === 'weeks'
                       ? weekYearGroups.map((g, i) => (
@@ -440,12 +410,14 @@ export function TimelineView() {
                 </div>
 
                 {/* Week/Day header row */}
-                <div className="sticky top-[21px] z-10 flex border-b border-border/50 bg-card">
-                  <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
-                    Projekt / Aktivitet
-                  </div>
-                  <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground">
-                    Ansvarig
+                <div className="sticky top-[21px] z-30 flex border-b border-border/50 bg-card">
+                  <div className="sticky left-0 z-40 bg-card flex shrink-0">
+                    <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
+                      Projekt / Aktivitet
+                    </div>
+                    <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground">
+                      Ansvarig
+                    </div>
                   </div>
                   <div className="flex">
                     {viewMode === 'weeks' ? (
@@ -503,30 +475,32 @@ export function TimelineView() {
                           className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors"
                           onClick={() => toggleProject(project.id)}
                         >
-                          <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              {isExpanded ? (
-                                <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
-                              ) : (
-                                <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />
-                              )}
-                              <span className="font-semibold text-xs truncate">{project.code} - {project.name}</span>
-                              {!isExpanded && (
-                                <span className="text-[10px] text-muted-foreground shrink-0">({activityCount})</span>
-                              )}
+                          <div className="sticky left-0 z-10 bg-primary/15 flex shrink-0">
+                            <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {isExpanded ? (
+                                  <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
+                                ) : (
+                                  <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />
+                                )}
+                                <span className="font-semibold text-xs truncate">{project.code} - {project.name}</span>
+                                {!isExpanded && (
+                                  <span className="text-[10px] text-muted-foreground shrink-0">({activityCount})</span>
+                                )}
+                              </div>
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <AddActivityDialog
+                                  projectId={project.id}
+                                  trigger={
+                                    <Button size="icon" variant="ghost" className="h-5 w-5">
+                                      <Plus className="h-3 w-3" />
+                                    </Button>
+                                  }
+                                />
+                              </div>
                             </div>
-                            <div onClick={(e) => e.stopPropagation()}>
-                              <AddActivityDialog
-                                projectId={project.id}
-                                trigger={
-                                  <Button size="icon" variant="ghost" className="h-5 w-5">
-                                    <Plus className="h-3 w-3" />
-                                  </Button>
-                                }
-                              />
-                            </div>
+                            <div className="w-16 shrink-0 border-r border-border/50" />
                           </div>
-                          <div className="w-16 shrink-0 border-r border-border/50" />
                           {/* Collapsed summary bar */}
                           {!isExpanded && (
                             <div className="flex items-center">
@@ -591,41 +565,43 @@ export function TimelineView() {
                                 exit={{ opacity: 0, height: 0 }}
                                 className="flex border-b border-border/30 hover:bg-muted/20 group"
                               >
-                                <div className="w-60 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center justify-between min-w-0">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="min-w-0 flex items-center gap-1.5">
-                                        <div className={cn('h-2 w-2 rounded-full shrink-0', getStatusDotColor(derived))} />
-                                        <span className="text-xs truncate">{activity.name}</span>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right" className="text-xs max-w-xs">
-                                      <p className="font-semibold">{activity.name}</p>
-                                      <p className="text-muted-foreground">
-                                        {activity.startDate} → {activity.endDate}
-                                      </p>
-                                      <p className="text-muted-foreground">
-                                        Status: {derived} • {activity.responsible}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                  <EditActivityDialog
-                                    projectId={project.id}
-                                    activity={activity}
-                                    trigger={
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                      >
-                                        <span className="sr-only">Redigera</span>
-                                        ✏️
-                                      </Button>
-                                    }
-                                  />
-                                </div>
-                                <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 flex items-center">
-                                  <span className="text-[9px] text-muted-foreground truncate">{activity.responsible}</span>
+                                <div className="sticky left-0 z-10 bg-card flex shrink-0 group-hover:bg-muted/20">
+                                  <div className="w-60 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center justify-between min-w-0">
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="min-w-0 flex items-center gap-1.5">
+                                          <div className={cn('h-2 w-2 rounded-full shrink-0', getStatusDotColor(derived))} />
+                                          <span className="text-xs truncate">{activity.name}</span>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="right" className="text-xs max-w-xs">
+                                        <p className="font-semibold">{activity.name}</p>
+                                        <p className="text-muted-foreground">
+                                          {activity.startDate} → {activity.endDate}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                          Status: {derived} • {activity.responsible}
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                    <EditActivityDialog
+                                      projectId={project.id}
+                                      activity={activity}
+                                      trigger={
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                        >
+                                          <span className="sr-only">Redigera</span>
+                                          ✏️
+                                        </Button>
+                                      }
+                                    />
+                                  </div>
+                                  <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 flex items-center">
+                                    <span className="text-[9px] text-muted-foreground truncate">{activity.responsible}</span>
+                                  </div>
                                 </div>
                                 {/* Grid area with absolute-positioned draggable bar */}
                                 <div className="flex items-center relative" style={{ width: gridWidth }}>
