@@ -300,7 +300,7 @@ export function TimelineView() {
     const leftPx = todayColIndex * colWidth + colWidth / 2;
     return (
       <div
-        className="absolute top-0 bottom-0 w-0.5 bg-destructive z-20 pointer-events-none"
+        className="absolute top-0 bottom-0 w-0.5 bg-destructive pointer-events-none"
         style={{ left: `${leftPx}px` }}
       >
         <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
