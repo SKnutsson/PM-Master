@@ -1,40 +1,37 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, CalendarRange, Users, TrendingUp, LogIn, UserPlus } from 'lucide-react';
+import { FolderOpen, BarChart3, CalendarRange, HardHat, LogIn, UserPlus, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AuthPage } from '@/components/auth/AuthPage';
-
-import previewProjects from '@/assets/preview-projects.jpg';
-import previewGantt from '@/assets/preview-gantt.jpg';
-import previewResources from '@/assets/preview-resources.jpg';
-import previewForecast from '@/assets/preview-forecast.jpg';
 
 const features = [
   {
     title: 'Projekt',
-    description: 'Lägg enkelt upp nya projekt och projektinformation.',
-    icon: BarChart3,
-    image: previewProjects,
-  },
-  {
-    title: 'Ganttschema',
-    description: 'Visualisera tidslinjer och aktiviteter i ett interaktivt schema.',
-    icon: CalendarRange,
-    image: previewGantt,
-  },
-  {
-    title: 'Resursplanering',
-    description: 'Fördela arbetskraft och planera arbetstid per projekt.',
-    icon: Users,
-    image: previewResources,
+    description: 'Skapa, organisera och följ upp alla projekt.',
+    icon: FolderOpen,
   },
   {
     title: 'Prognos',
-    description: 'Följ upp försäljning och offertstock.',
-    icon: TrendingUp,
-    image: previewForecast,
+    description: 'Följ försäljning och prognos i realtid.',
+    icon: BarChart3,
   },
+  {
+    title: 'Ganttschema',
+    description: 'Planera aktiviteter visuellt och interaktivt.',
+    icon: CalendarRange,
+  },
+  {
+    title: 'Resursplanering',
+    description: 'Fördela montörer och resurser effektivt.',
+    icon: HardHat,
+  },
+];
+
+const valueProps = [
+  'Full kontroll över projekt',
+  'Tydlig planering och uppföljning',
+  'Allt samlat i ett system',
 ];
 
 export function LandingPage() {
@@ -71,7 +68,7 @@ export function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="flex flex-col items-center justify-center px-6 pt-40 pb-24 text-center">
+      <section className="relative flex flex-col items-center justify-center px-6 pt-40 pb-28 text-center">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
           <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
@@ -107,36 +104,44 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Features */}
-      <section className="mx-auto max-w-6xl px-6 pb-32">
-        <div className="grid gap-6 sm:grid-cols-2">
+      {/* Features – icon + text cards */}
+      <section className="mx-auto max-w-5xl px-6 pb-28">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f, i) => (
             <motion.div
               key={f.title}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="group overflow-hidden rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm transition-colors hover:border-primary/30"
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.45, delay: i * 0.08 }}
+              className="flex flex-col items-center rounded-xl border border-border/50 bg-card/60 p-8 text-center backdrop-blur-sm transition-colors hover:border-primary/30"
             >
-              <div className="aspect-video overflow-hidden">
-                <img
-                  src={f.image}
-                  alt={f.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                <f.icon className="h-6 w-6 text-primary" />
               </div>
-              <div className="flex items-start gap-3 p-5">
-                <f.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                <div>
-                  <h3 className="font-semibold text-foreground">{f.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{f.description}</p>
-                </div>
-              </div>
+              <h3 className="text-base font-semibold text-foreground">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.description}</p>
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/* Value proposition */}
+      <section className="mx-auto max-w-3xl px-6 pb-28">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center gap-5"
+        >
+          {valueProps.map((text) => (
+            <div key={text} className="flex items-center gap-3 text-foreground">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
+              <span className="text-base font-medium">{text}</span>
+            </div>
+          ))}
+        </motion.div>
       </section>
 
       {/* CTA */}
