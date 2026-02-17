@@ -326,6 +326,7 @@ export type Database = {
           progress: number | null
           project_manager: string | null
           sales_person: string | null
+          sort_order: number | null
           start_date: string | null
           status: string
           updated_at: string | null
@@ -343,6 +344,7 @@ export type Database = {
           progress?: number | null
           project_manager?: string | null
           sales_person?: string | null
+          sort_order?: number | null
           start_date?: string | null
           status?: string
           updated_at?: string | null
@@ -360,6 +362,7 @@ export type Database = {
           progress?: number | null
           project_manager?: string | null
           sales_person?: string | null
+          sort_order?: number | null
           start_date?: string | null
           status?: string
           updated_at?: string | null

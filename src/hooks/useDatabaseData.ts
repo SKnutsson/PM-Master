@@ -81,6 +81,7 @@ export function useDatabaseData() {
     const { data: projectsData, error: projectsError } = await supabase
       .from('projects')
       .select('*')
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true });
 
     if (projectsError) {
@@ -104,6 +105,7 @@ export function useDatabaseData() {
         salesPerson: (p as any).sales_person || '',
         product: (p as any).product || '',
         notes: (p as any).notes || '',
+        sortOrder: (p as any).sort_order || 0,
         activities: (activitiesData || [])
           .filter(a => a.project_id === p.id)
           .map(a => ({
@@ -460,6 +462,25 @@ export function useDatabaseData() {
 
   const yearTotal = Object.values(monthlyTotals).reduce((sum, val) => sum + val, 0);
 
+  const updateProjectOrder = useCallback(async (orderedProjectIds: string[]) => {
+    // Optimistically update local state
+    setProjects(prev => {
+      const map = new Map(prev.map(p => [p.id, p]));
+      return orderedProjectIds.map((id, i) => {
+        const p = map.get(id);
+        return p ? { ...p, sortOrder: i + 1 } : p!;
+      }).filter(Boolean);
+    });
+
+    // Persist to database
+    for (let i = 0; i < orderedProjectIds.length; i++) {
+      await supabase
+        .from('projects')
+        .update({ sort_order: i + 1 } as any)
+        .eq('id', orderedProjectIds[i]);
+    }
+  }, []);
+
   return {
     projects,
     forecast,
@@ -476,5 +497,6 @@ export function useDatabaseData() {
     addForecast,
     updateForecast,
     deleteForecast,
+    updateProjectOrder,
   };
 }

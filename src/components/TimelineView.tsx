@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, GripVertical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Status } from '@/data/projectData';
@@ -116,7 +116,7 @@ const DAY_COL_WIDTH = 32;  // px per day column
 const LEFT_COL_WIDTH = 304; // w-60 + w-16 = 240 + 64
 
 export function TimelineView() {
-  const { projects: allProjects, updateActivity } = useProjectDataContext();
+  const { projects: allProjects, updateActivity, updateProjectOrder } = useProjectDataContext();
   const projects = allProjects.filter(p => p.status !== 'Avslutat');
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
@@ -159,12 +159,72 @@ export function TimelineView() {
     });
   };
 
-  const timelineProjects = projects.filter(p =>
+  const timelineProjects = useMemo(() => projects.filter(p =>
     p.activities.some(a => a.startDate || a.endDate)
-  );
+  ), [projects]);
+
+  // --- Project drag-and-drop reorder state ---
+  const [dragProjectId, setDragProjectId] = useState<string | null>(null);
+  const [dragOverProjectId, setDragOverProjectId] = useState<string | null>(null);
+  const [localProjectOrder, setLocalProjectOrder] = useState<string[]>([]);
+
+  // Keep local order in sync with data
+  useEffect(() => {
+    setLocalProjectOrder(timelineProjects.map(p => p.id));
+  }, [timelineProjects]);
+
+  const orderedProjects = useMemo(() => {
+    if (localProjectOrder.length === 0) return timelineProjects;
+    const map = new Map(timelineProjects.map(p => [p.id, p]));
+    return localProjectOrder.map(id => map.get(id)).filter(Boolean) as typeof timelineProjects;
+  }, [localProjectOrder, timelineProjects]);
+
+  const handleDragStart = useCallback((e: React.DragEvent, projectId: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', projectId);
+    setDragProjectId(projectId);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, projectId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (projectId !== dragOverProjectId) {
+      setDragOverProjectId(projectId);
+    }
+  }, [dragOverProjectId]);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetProjectId: string) => {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/plain');
+    if (!sourceId || sourceId === targetProjectId) {
+      setDragProjectId(null);
+      setDragOverProjectId(null);
+      return;
+    }
+
+    setLocalProjectOrder(prev => {
+      const newOrder = [...prev];
+      const sourceIdx = newOrder.indexOf(sourceId);
+      const targetIdx = newOrder.indexOf(targetProjectId);
+      if (sourceIdx === -1 || targetIdx === -1) return prev;
+      newOrder.splice(sourceIdx, 1);
+      newOrder.splice(targetIdx, 0, sourceId);
+      // Persist
+      updateProjectOrder(newOrder);
+      return newOrder;
+    });
+
+    setDragProjectId(null);
+    setDragOverProjectId(null);
+  }, [updateProjectOrder]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragProjectId(null);
+    setDragOverProjectId(null);
+  }, []);
 
   const expandAll = () => {
-    setExpandedProjects(new Set(timelineProjects.map(p => p.id)));
+    setExpandedProjects(new Set(orderedProjects.map(p => p.id)));
   };
   const collapseAll = () => {
     setExpandedProjects(new Set());
@@ -462,23 +522,40 @@ export function TimelineView() {
                     {renderTodayMarker()}
                   </div>
 
-                  {timelineProjects.map((project) => {
+                  {orderedProjects.map((project) => {
                     const isExpanded = expandedProjects.has(project.id);
                     const { startWeek, endWeek } = getProjectRange(project.id);
                     const { startDay, endDay } = getProjectDayRange(project.id);
                     const activityCount = project.activities.filter(a => a.startDate || a.endDate).length;
+                    const isDragging = dragProjectId === project.id;
+                    const isDragOver = dragOverProjectId === project.id && dragProjectId !== project.id;
 
                     return (
                       <motion.div key={project.id} variants={itemVariants}>
                         {/* Project Header */}
                         <div
-                          className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors"
+                          className={cn(
+                            'flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors',
+                            isDragging && 'opacity-40',
+                            isDragOver && 'border-t-2 border-t-primary'
+                          )}
                           onClick={() => toggleProject(project.id)}
+                          onDragOver={(e) => handleDragOver(e, project.id)}
+                          onDrop={(e) => handleDrop(e, project.id)}
                         >
                           <div className="sticky left-0 z-10 bg-card flex shrink-0 relative">
                             <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
-                            <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between relative">
-                              <div className="flex items-center gap-1.5 min-w-0">
+                            <div className="w-60 shrink-0 border-r border-border/50 px-1 py-1 flex items-center justify-between relative">
+                              <div className="flex items-center gap-1 min-w-0">
+                                <div
+                                  draggable
+                                  onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, project.id); }}
+                                  onDragEnd={handleDragEnd}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="cursor-grab active:cursor-grabbing shrink-0 p-0.5 rounded hover:bg-muted/50 transition-colors"
+                                >
+                                  <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                                </div>
                                 {isExpanded ? (
                                   <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
                                 ) : (
@@ -638,7 +715,7 @@ export function TimelineView() {
                     );
                   })}
 
-                  {timelineProjects.length === 0 && (
+                  {orderedProjects.length === 0 && (
                     <div className="p-6 text-center text-muted-foreground text-sm">
                       Inga aktiviteter med datum. Lägg till aktiviteter med start- och slutdatum för att se dem här.
                     </div>

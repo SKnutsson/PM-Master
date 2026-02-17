@@ -25,6 +25,7 @@ export interface Project {
   salesPerson?: string;
   product?: string;
   notes?: string;
+  sortOrder?: number;
   activities: Activity[];
 }
 
