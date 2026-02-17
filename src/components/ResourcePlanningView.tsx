@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Plus, Users, Filter, Archive, UserPlus, Calculator } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Users, Filter, Archive, UserPlus, Calculator } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -54,10 +54,11 @@ function formatLocalDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function generateDays(startDate: Date, count: number) {
+function generateAllDays(year: number) {
   const days: { date: Date; dateStr: string; label: string; dayOfWeek: number }[] = [];
-  const current = new Date(startDate);
-  for (let i = 0; i < count; i++) {
+  const current = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31);
+  while (current <= endDate) {
     days.push({
       date: new Date(current),
       dateStr: formatLocalDate(current),
@@ -69,6 +70,11 @@ function generateDays(startDate: Date, count: number) {
   return days;
 }
 
+// Fixed column widths
+const WEEK_COL_WIDTH = 56;
+const DAY_COL_WIDTH = 32;
+const LEFT_COL_WIDTH = 288; // w-72 = 18rem = 288px
+
 export function ResourcePlanningView() {
   const { projects: allProjects } = useProjectDataContext();
   const {
@@ -78,7 +84,6 @@ export function ResourcePlanningView() {
     upsertDailyEntry,
   } = useResourceData();
 
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('days');
   const [showArchived, setShowArchived] = useState(false);
@@ -97,23 +102,15 @@ export function ResourcePlanningView() {
   const [estDialogOpen, setEstDialogOpen] = useState(false);
   const [estDialogProjectId, setEstDialogProjectId] = useState('');
   const [estDialogProjectName, setEstDialogProjectName] = useState('');
+
   const weeks = useMemo(() => generateWeeks(2026), []);
+  const allDays = useMemo(() => generateAllDays(2026), []);
 
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
   const todayStr = formatLocalDate(today);
 
-  const baseWeekIndex = 4;
-  const visibleWeeks = 16;
-  const visibleDays = 28;
-
-  const startIndex = Math.max(0, baseWeekIndex + currentWeekOffset);
-  const endIndex = Math.min(weeks.length, startIndex + visibleWeeks);
-  const displayedWeeks = weeks.slice(startIndex, endIndex);
-
-  const displayedDays = useMemo(() => {
-    if (displayedWeeks.length === 0) return [];
-    return generateDays(displayedWeeks[0].startDate, viewMode === 'days' ? visibleDays : visibleWeeks * 7);
-  }, [viewMode, displayedWeeks]);
+  const displayedWeeks = weeks;
+  const displayedDays = allDays;
 
   const todayWeekNum = useMemo(() => {
     const todayDate = formatLocalDate(today);
@@ -191,6 +188,8 @@ export function ResourcePlanningView() {
   };
 
   const columnCount = viewMode === 'weeks' ? displayedWeeks.length : displayedDays.length;
+  const colWidth = viewMode === 'weeks' ? WEEK_COL_WIDTH : DAY_COL_WIDTH;
+  const gridWidth = columnCount * colWidth;
 
   const yearGroups = useMemo(() => {
     const items = viewMode === 'weeks' ? displayedWeeks : displayedDays;
@@ -211,20 +210,48 @@ export function ResourcePlanningView() {
     return displayedDays.findIndex(d => d.dateStr === todayStr);
   }, [viewMode, displayedWeeks, displayedDays, todayWeekNum, todayStr]);
 
+  // --- Scroll sync ---
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+  const isSyncing = useRef(false);
+
+  const handleTopScroll = useCallback(() => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    if (mainScrollRef.current && topScrollRef.current) {
+      mainScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+    requestAnimationFrame(() => { isSyncing.current = false; });
+  }, []);
+
+  const handleMainScroll = useCallback(() => {
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    if (topScrollRef.current && mainScrollRef.current) {
+      topScrollRef.current.scrollLeft = mainScrollRef.current.scrollLeft;
+    }
+    requestAnimationFrame(() => { isSyncing.current = false; });
+  }, []);
+
+  // Auto-scroll to today on mount / view mode change
+  useEffect(() => {
+    if (todayColIndex < 0) return;
+    const scrollPos = Math.max(0, todayColIndex * colWidth - 300);
+    requestAnimationFrame(() => {
+      if (mainScrollRef.current) mainScrollRef.current.scrollLeft = scrollPos;
+      if (topScrollRef.current) topScrollRef.current.scrollLeft = scrollPos;
+    });
+  }, [viewMode, todayColIndex, colWidth]);
+
   const renderTodayMarker = () => {
     if (todayColIndex < 0 || todayColIndex >= columnCount) return null;
-    const cols = viewMode === 'weeks' ? displayedWeeks : displayedDays;
+    const leftPx = todayColIndex * colWidth + colWidth / 2;
     return (
-      <div className="absolute top-0 bottom-0 left-[18rem] right-0 pointer-events-none z-20 flex">
-        {cols.map((_, i) => (
-          <div key={i} className={cn('flex-1 relative', viewMode === 'days' && 'min-w-[28px]')}>
-            {i === todayColIndex && (
-              <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-destructive">
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
-              </div>
-            )}
-          </div>
-        ))}
+      <div
+        className="absolute top-0 bottom-0 w-0.5 bg-destructive z-20 pointer-events-none"
+        style={{ left: `${leftPx}px` }}
+      >
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
       </div>
     );
   };
@@ -241,7 +268,6 @@ export function ResourcePlanningView() {
     setDailyDialogOpen(true);
   };
 
-  // Helper: get week date range strings
   const getWeekRange = (week: { startDate: Date }) => {
     const weekStart = week.startDate;
     const weekEnd = new Date(weekStart);
@@ -262,9 +288,10 @@ export function ResourcePlanningView() {
         <div
           key={i}
           className={cn(
-            'flex-1 h-7 border-r border-border/30 min-w-[28px] relative cursor-pointer hover:bg-primary/10 transition-colors',
+            'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors',
             isWeekend && 'bg-muted/40',
           )}
+          style={{ width: colWidth, minWidth: colWidth }}
           onClick={() => openDailyDialog(projectId, day.dateStr, installerId)}
         >
           {entry && totalH > 0 && (
@@ -309,7 +336,8 @@ export function ResourcePlanningView() {
       return (
         <div
           key={week.weekNum}
-          className={cn('flex-1 h-7 border-r border-border/30 relative', week.weekNum === todayWeekNum && 'bg-primary/5')}
+          className={cn('h-7 border-r border-border/30 relative', week.weekNum === todayWeekNum && 'bg-primary/5')}
+          style={{ width: colWidth, minWidth: colWidth }}
         >
           {totalH > 0 && (
             <Tooltip>
@@ -345,7 +373,8 @@ export function ResourcePlanningView() {
       return (
         <div
           key={week.weekNum}
-          className={cn('flex-1 h-7 border-r border-border/30 relative', week.weekNum === todayWeekNum && 'bg-primary/5')}
+          className={cn('h-7 border-r border-border/30 relative', week.weekNum === todayWeekNum && 'bg-primary/5')}
+          style={{ width: colWidth, minWidth: colWidth }}
         >
           {totalH > 0 && (
             <Tooltip>
@@ -384,9 +413,10 @@ export function ResourcePlanningView() {
         <div
           key={i}
           className={cn(
-            'flex-1 h-7 border-r border-border/30 min-w-[28px] relative cursor-pointer hover:bg-primary/10 transition-colors',
+            'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors',
             isWeekend && 'bg-muted/40',
           )}
+          style={{ width: colWidth, minWidth: colWidth }}
           onClick={() => openDailyDialog(projectId, day.dateStr)}
         >
           {totalH > 0 && (
@@ -429,21 +459,6 @@ export function ResourcePlanningView() {
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={expandAll}>Expandera</Button>
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={collapseAll}>Komprimera</Button>
-            </div>
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-7 w-7"
-                onClick={() => setCurrentWeekOffset(Math.max(-baseWeekIndex, currentWeekOffset - (viewMode === 'days' ? 4 : 8)))}
-                disabled={startIndex === 0}>
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              <span className="text-xs text-muted-foreground px-1">
-                {displayedWeeks[0]?.label} – {displayedWeeks[displayedWeeks.length - 1]?.label}
-              </span>
-              <Button variant="outline" size="icon" className="h-7 w-7"
-                onClick={() => setCurrentWeekOffset(currentWeekOffset + (viewMode === 'days' ? 4 : 8))}
-                disabled={endIndex >= weeks.length}>
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
             </div>
           </div>
         </div>
@@ -488,14 +503,29 @@ export function ResourcePlanningView() {
         {/* Main Grid */}
         <Card className="border-border/50 bg-card/80 overflow-hidden">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <div className="min-w-[800px]">
+            {/* Top scrollbar */}
+            <div
+              ref={topScrollRef}
+              onScroll={handleTopScroll}
+              className="overflow-x-auto overflow-y-hidden"
+              style={{ height: 12 }}
+            >
+              <div style={{ width: LEFT_COL_WIDTH + gridWidth, height: 1 }} />
+            </div>
+
+            {/* Main scrollable content */}
+            <div
+              ref={mainScrollRef}
+              onScroll={handleMainScroll}
+              className="overflow-x-auto"
+            >
+              <div style={{ width: LEFT_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header */}
                 <div className="sticky top-0 z-10 flex border-b border-border/30 bg-card">
                   <div className="w-72 shrink-0 border-r border-border/50" />
-                  <div className="flex flex-1">
+                  <div className="flex">
                     {yearGroups.map((g, i) => (
-                      <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ flex: g.span }}>
+                      <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
                         {g.label}
                       </div>
                     ))}
@@ -507,14 +537,14 @@ export function ResourcePlanningView() {
                   <div className="w-72 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
                     Projekt / Montör
                   </div>
-                  <div className="flex flex-1">
+                  <div className="flex">
                     {viewMode === 'weeks' ? displayedWeeks.map(week => (
-                      <div key={week.weekNum} className={cn('flex-1 border-r border-border/30 py-0.5 text-center text-[10px] font-medium', week.weekNum === todayWeekNum && 'bg-primary/10')}>
+                      <div key={week.weekNum} className={cn('border-r border-border/30 py-0.5 text-center text-[10px] font-medium', week.weekNum === todayWeekNum && 'bg-primary/10')} style={{ width: colWidth, minWidth: colWidth }}>
                         <div>{week.label}</div>
                         <div className="text-muted-foreground text-[9px]">{week.startDate.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}</div>
                       </div>
                     )) : displayedDays.map((day, i) => (
-                      <div key={i} className={cn('flex-1 border-r border-border/30 py-0.5 text-center text-[9px] font-medium min-w-[28px]', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40', day.dateStr === todayStr && 'bg-primary/10')}>
+                      <div key={i} className={cn('border-r border-border/30 py-0.5 text-center text-[9px] font-medium', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40', day.dateStr === todayStr && 'bg-primary/10')} style={{ width: colWidth, minWidth: colWidth }}>
                         <div>{['Sö', 'Må', 'Ti', 'On', 'To', 'Fr', 'Lö'][day.dayOfWeek]}</div>
                         <div className="text-muted-foreground">{day.date.getDate()}</div>
                       </div>
@@ -524,7 +554,9 @@ export function ResourcePlanningView() {
 
                 {/* Projects */}
                 <div className="relative">
-                  {renderTodayMarker()}
+                  <div className="absolute top-0 bottom-0 pointer-events-none z-20" style={{ left: LEFT_COL_WIDTH }}>
+                    {renderTodayMarker()}
+                  </div>
 
                   {filteredProjects.map(project => {
                     const isExpanded = expandedProjects.has(project.id);
@@ -589,20 +621,20 @@ export function ResourcePlanningView() {
                               </div>
                             )}
                           </div>
-                          {/* Schedule cells – collapsed: project-level totals */}
-                          <div className="flex flex-1 items-center relative">
+                          {/* Schedule cells */}
+                          <div className="flex items-center relative">
                             {!isExpanded && viewMode === 'weeks' && renderProjectWeekCells(project.id, resourceStatus)}
                             {!isExpanded && viewMode === 'days' && renderProjectDayCells(project.id, resourceStatus)}
                             {isExpanded && viewMode === 'weeks' && displayedWeeks.map(w => (
-                              <div key={w.weekNum} className={cn('flex-1 h-7 border-r border-border/30', w.weekNum === todayWeekNum && 'bg-primary/5')} />
+                              <div key={w.weekNum} className={cn('h-7 border-r border-border/30', w.weekNum === todayWeekNum && 'bg-primary/5')} style={{ width: colWidth, minWidth: colWidth }} />
                             ))}
                             {isExpanded && viewMode === 'days' && displayedDays.map((day, i) => (
-                              <div key={i} className={cn('flex-1 h-7 border-r border-border/30 min-w-[28px]', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40')} />
+                              <div key={i} className={cn('h-7 border-r border-border/30', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40')} style={{ width: colWidth, minWidth: colWidth }} />
                             ))}
                           </div>
                         </div>
 
-                        {/* Expanded: installer rows only */}
+                        {/* Expanded: installer rows */}
                         <AnimatePresence>
                           {isExpanded && (
                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
@@ -615,7 +647,7 @@ export function ResourcePlanningView() {
                                       <span className="text-[9px] text-muted-foreground">({pi.installerCompany})</span>
                                     </div>
                                   </div>
-                                  <div className="flex flex-1 items-center relative">
+                                  <div className="flex items-center relative">
                                     {viewMode === 'days'
                                       ? renderInstallerDayCells(project.id, pi.installerId, resourceStatus)
                                       : renderInstallerWeekCells(project.id, pi.installerId, resourceStatus)
@@ -629,7 +661,7 @@ export function ResourcePlanningView() {
                                   <div className="w-72 shrink-0 border-r border-border/50 px-2 py-2 pl-7">
                                     <span className="text-[10px] text-muted-foreground italic">Inga montörer kopplade</span>
                                   </div>
-                                  <div className="flex-1" />
+                                  <div style={{ width: gridWidth }} />
                                 </div>
                               )}
                             </motion.div>
