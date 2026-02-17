@@ -163,9 +163,13 @@ export function GanttBar({
     // Only depend on dragState – read current cols from refs
   }, [dragState, columnCount, getContainerWidth, snap, colToDate, onDatesChange, projectId, activityId, startDate, endDate, startCol, endCol]);
 
-  // Compute position as percentages
-  const leftPct = (currentStartCol / columnCount) * 100;
-  const widthPct = Math.max((1 / columnCount) * 100, ((currentEndCol - currentStartCol + 1) / columnCount) * 100);
+  // Compute position as percentages with small inset to prevent bleeding into adjacent columns
+  const colWidthPct = 100 / columnCount;
+  const spanCols = currentEndCol - currentStartCol + 1;
+  const leftPct = currentStartCol * colWidthPct;
+  // Subtract a tiny amount so the bar doesn't visually bleed into the next column
+  const insetPct = 0.15 * colWidthPct; // ~15% of one column as padding
+  const widthPct = Math.max(colWidthPct * 0.7, spanCols * colWidthPct - insetPct);
 
   const currentStartDate = dragState ? colToDate(Math.max(0, currentStartCol)) : startDate;
   const currentEndDate = dragState ? colToDate(Math.max(0, currentEndCol)) : endDate;
