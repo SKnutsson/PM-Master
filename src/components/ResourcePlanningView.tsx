@@ -536,7 +536,8 @@ export function ResourcePlanningView() {
                       <motion.div key={project.id} variants={itemVariants}>
                         {/* Project row */}
                         <div className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors" onClick={() => toggleProject(project.id)}>
-                          <div className="sticky left-0 z-10 bg-primary/15 w-72 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between">
+                          <div className="sticky left-0 z-10 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between relative">
+                            <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
                           <div className="flex items-center gap-1.5 min-w-0">
                               {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />}
                               <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
