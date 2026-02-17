@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { AuthPage } from '@/components/auth/AuthPage';
+import { LandingPage } from '@/components/LandingPage';
 import { MfaVerification } from '@/components/auth/MfaVerification';
 import { MainLayout } from '@/components/MainLayout';
 import { Loader2 } from 'lucide-react';
@@ -15,14 +15,12 @@ const Index = () => {
     );
   }
 
-  // If MFA verification is required
   if (mfaRequired) {
     return <MfaVerification />;
   }
 
-  // If not authenticated, show auth page
   if (!isAuthenticated) {
-    return <AuthPage />;
+    return <LandingPage />;
   }
 
   return <MainLayout />;
