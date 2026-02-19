@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from 'next-themes';
 import alfingLogo from '@/assets/alfing-seating-logo-green.png';
 import {
   LayoutDashboard,
@@ -12,7 +13,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  BarChart2,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -35,7 +37,8 @@ const navItems = [
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { signOut } = useAuth();
-
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === 'dark';
   const isResourcesSection = currentView === 'resources' || currentView === 'resources-analytics';
 
   return (
@@ -155,8 +158,36 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
         )}
       </button>
 
-      {/* Logout */}
-      <div className="border-t border-sidebar-border p-3">
+      {/* Theme toggle + Logout */}
+      <div className="border-t border-sidebar-border p-3 space-y-1">
+        {/* Theme toggle */}
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              className={cn(
+                'w-full justify-start gap-3 px-3 py-2.5 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all',
+                isCollapsed && 'justify-center px-2'
+              )}
+            >
+              <div className="relative h-5 w-5 shrink-0">
+                <Sun className={cn('absolute inset-0 h-5 w-5 transition-all duration-300', isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100')} />
+                <Moon className={cn('absolute inset-0 h-5 w-5 transition-all duration-300', isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50')} />
+              </div>
+              {!isCollapsed && (
+                <span className="text-sm">{isDark ? 'Mörkt läge' : 'Ljust läge'}</span>
+              )}
+            </Button>
+          </TooltipTrigger>
+          {isCollapsed && (
+            <TooltipContent side="right" className="font-medium">
+              {isDark ? 'Byt till ljust' : 'Byt till mörkt'}
+            </TooltipContent>
+          )}
+        </Tooltip>
+
+        {/* Logout */}
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <Button

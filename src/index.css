@@ -6,6 +6,74 @@
 
 @layer base {
   :root {
+    /* Alfing Seating - Light Theme (default) */
+    --background: 0 0% 96%;
+    --foreground: 168 30% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 168 30% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 168 30% 12%;
+
+    --primary: 160 55% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 160 20% 90%;
+    --secondary-foreground: 168 30% 15%;
+
+    --muted: 160 15% 92%;
+    --muted-foreground: 168 15% 45%;
+
+    --accent: 160 25% 88%;
+    --accent-foreground: 168 30% 12%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 160 15% 84%;
+    --input: 160 15% 88%;
+    --ring: 160 55% 36%;
+
+    --radius: 0.5rem;
+
+    /* Status Colors */
+    --status-not-started: 217 70% 55%;
+    --status-in-progress: 25 95% 53%;
+    --status-completed: 142 71% 38%;
+    --status-delayed: 0 72% 51%;
+
+    /* Chart Colors */
+    --chart-1: 160 55% 36%;
+    --chart-2: 142 71% 38%;
+    --chart-3: 25 95% 53%;
+    --chart-4: 180 50% 40%;
+    --chart-5: 130 45% 44%;
+
+    /* Sidebar */
+    --sidebar-background: 160 30% 18%;
+    --sidebar-foreground: 160 20% 88%;
+    --sidebar-primary: 160 55% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 25% 24%;
+    --sidebar-accent-foreground: 160 20% 92%;
+    --sidebar-border: 160 25% 22%;
+    --sidebar-ring: 160 55% 50%;
+
+    /* Custom gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(160 55% 36%) 0%, hsl(145 50% 30%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 38%) 0%, hsl(160 70% 34%) 100%);
+    --gradient-warning: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(40 90% 50%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(160 10% 97%) 100%);
+    --font-sans: "Source Sans Pro", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+    --shadow-sm: 0px 1px 8px 0px hsla(0, 0%, 0%, 0.07);
+    --shadow: 0px 2px 16px 0px hsla(0, 0%, 0%, 0.08);
+    --shadow-md: 0px 4px 24px 0px hsla(0, 0%, 0%, 0.09);
+    --shadow-lg: 0px 8px 40px 0px hsla(0, 0%, 0%, 0.1);
+  }
+
+  .dark {
     /* Alfing Seating - Dark Teal/Green Theme */
     --background: 168 40% 5%;
     --foreground: 160 20% 92%;
@@ -28,14 +96,12 @@
     --accent: 165 20% 22%;
     --accent-foreground: 160 20% 92%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 160 20% 98%;
 
     --border: 168 25% 16%;
     --input: 168 25% 13%;
     --ring: 160 55% 42%;
-
-    --radius: 0.5rem;
 
     /* Status Colors */
     --status-not-started: 217 70% 55%;
@@ -65,42 +131,6 @@
     --gradient-success: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(160 70% 40%) 100%);
     --gradient-warning: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(40 90% 50%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(168 35% 9%) 0%, hsl(168 35% 7%) 100%);
-    --font-sans: "Source Sans Pro", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
-    --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-    --shadow-sm: 0px 1px 8.25px 0px hsla(0, 0%, 0%, 0.13);
-    --shadow: 0px 1px 16.5px 0px hsla(0, 0%, 0%, 0.13);
-    --shadow-md: 0px 1px 24.75px 0px hsla(0, 0%, 0%, 0.13);
-    --shadow-lg: 0px 1px 41.25px 0px hsla(0, 0%, 0%, 0.13);
-  }
-
-  .dark {
-    --background: 168 40% 5%;
-    --foreground: 160 20% 92%;
-    --card: 168 35% 8%;
-    --card-foreground: 160 20% 92%;
-    --popover: 168 35% 10%;
-    --popover-foreground: 160 20% 92%;
-    --primary: 160 55% 42%;
-    --primary-foreground: 168 40% 4%;
-    --secondary: 168 25% 15%;
-    --secondary-foreground: 160 20% 88%;
-    --muted: 168 25% 12%;
-    --muted-foreground: 165 15% 50%;
-    --accent: 165 20% 22%;
-    --accent-foreground: 160 20% 92%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 160 20% 98%;
-    --border: 168 25% 16%;
-    --input: 168 25% 13%;
-    --ring: 160 55% 42%;
-    --sidebar-background: 168 40% 6%;
-    --sidebar-foreground: 160 20% 88%;
-    --sidebar-primary: 160 55% 42%;
-    --sidebar-primary-foreground: 168 40% 4%;
-    --sidebar-accent: 168 25% 12%;
-    --sidebar-accent-foreground: 160 20% 92%;
-    --sidebar-border: 168 25% 14%;
-    --sidebar-ring: 160 55% 42%;
     --font-sans: "Source Sans Pro", ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
     --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
     --shadow-sm: 0px 1px 8.25px 0px hsla(0, 0%, 0%, 0.13);
