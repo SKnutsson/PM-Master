@@ -22,6 +22,7 @@ export interface ProjectInstaller {
   installerId: string;
   installerName?: string;
   installerCompany?: string;
+  isVacant: boolean;
 }
 
 export interface DailyResourceEntry {
@@ -69,6 +70,7 @@ export function useResourceData() {
       setProjectInstallers(data.map((pi: any) => ({
         id: pi.id, projectId: pi.project_id, installerId: pi.installer_id,
         installerName: pi.installers?.name, installerCompany: pi.installers?.company,
+        isVacant: pi.is_vacant ?? false,
       })));
     }
   };
@@ -147,15 +149,70 @@ export function useResourceData() {
     }
   }, [estimations]);
 
+  // Reassign installer on a project_installer row (keeps daily entries)
+  const reassignInstaller = useCallback(async (projectInstallerId: string, newInstallerId: string | null, isVacant: boolean) => {
+    // If reassigning to a real installer, update daily_resource_entries installer_id too
+    const pi = projectInstallers.find(p => p.id === projectInstallerId);
+    if (!pi) return;
+
+    if (isVacant) {
+      // Set is_vacant = true, keep installer_id as placeholder
+      await supabase.from('project_installers').update({ is_vacant: true }).eq('id', projectInstallerId);
+      setProjectInstallers(prev => prev.map(p => p.id === projectInstallerId ? { ...p, isVacant: true, installerName: undefined, installerCompany: undefined } : p));
+    } else if (newInstallerId) {
+      // Update project_installer row
+      const { data } = await supabase.from('project_installers')
+        .update({ installer_id: newInstallerId, is_vacant: false })
+        .eq('id', projectInstallerId)
+        .select('*, installers(name, company)').single();
+      if (data) {
+        // Migrate daily entries from old installer to new installer
+        await supabase.from('daily_resource_entries')
+          .update({ installer_id: newInstallerId })
+          .eq('project_id', pi.projectId)
+          .eq('installer_id', pi.installerId);
+        setProjectInstallers(prev => prev.map(p => p.id === projectInstallerId ? {
+          ...p, installerId: newInstallerId, isVacant: false,
+          installerName: (data as any).installers?.name,
+          installerCompany: (data as any).installers?.company,
+        } : p));
+        setDailyEntries(prev => prev.map(d => d.projectId === pi.projectId && d.installerId === pi.installerId
+          ? { ...d, installerId: newInstallerId } : d));
+      }
+    }
+  }, [projectInstallers]);
+
   // Project Installer CRUD
   const assignInstaller = useCallback(async (projectId: string, installerId: string) => {
     const { data, error } = await supabase.from('project_installers')
-      .insert({ project_id: projectId, installer_id: installerId })
+      .insert({ project_id: projectId, installer_id: installerId, is_vacant: false })
       .select('*, installers(name, company)').single();
     if (error) { console.error(error); return null; }
     const pi: ProjectInstaller = {
       id: data.id, projectId: data.project_id, installerId: data.installer_id,
       installerName: (data as any).installers?.name, installerCompany: (data as any).installers?.company,
+      isVacant: false,
+    };
+    setProjectInstallers(prev => [...prev, pi]);
+    return pi;
+  }, []);
+
+  // Assign a vacant slot
+  const assignVacant = useCallback(async (projectId: string) => {
+    // Use a dummy installer_id — we pick the first installer as placeholder (required by FK)
+    // Actually we need a real installer_id for the FK. Instead we'll insert with a real installer
+    // but mark is_vacant = true. The user can reassign later.
+    // We need at least one installer to create a vacant slot with a valid FK.
+    // Get any existing installer id as placeholder
+    const { data: anyInstaller } = await supabase.from('installers').select('id').limit(1).single();
+    if (!anyInstaller) { console.error('No installers exist yet'); return null; }
+    const { data, error } = await supabase.from('project_installers')
+      .insert({ project_id: projectId, installer_id: anyInstaller.id, is_vacant: true })
+      .select('*, installers(name, company)').single();
+    if (error) { console.error(error); return null; }
+    const pi: ProjectInstaller = {
+      id: data.id, projectId: data.project_id, installerId: data.installer_id,
+      installerName: undefined, installerCompany: undefined, isVacant: true,
     };
     setProjectInstallers(prev => [...prev, pi]);
     return pi;
@@ -164,7 +221,7 @@ export function useResourceData() {
   const unassignInstaller = useCallback(async (projectInstallerId: string) => {
     // Get the project_installer to find project_id and installer_id
     const pi = projectInstallers.find(p => p.id === projectInstallerId);
-    if (pi) {
+    if (pi && !pi.isVacant) {
       // Delete all daily entries for this installer on this project
       await supabase.from('daily_resource_entries').delete()
         .eq('project_id', pi.projectId).eq('installer_id', pi.installerId);
@@ -211,7 +268,7 @@ export function useResourceData() {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation,
-    assignInstaller, unassignInstaller,
+    assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
     upsertDailyEntry, deleteDailyEntry,
     refresh: loadAll,
   };

@@ -236,18 +236,21 @@ export type Database = {
           created_at: string
           id: string
           installer_id: string
+          is_vacant: boolean
           project_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           installer_id: string
+          is_vacant?: boolean
           project_id: string
         }
         Update: {
           created_at?: string
           id?: string
           installer_id?: string
+          is_vacant?: boolean
           project_id?: string
         }
         Relationships: [

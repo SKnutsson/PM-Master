@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusLegend } from './StatusLegend';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
-import { useResourceData } from '@/hooks/useResourceData';
+import { useResourceData, ProjectInstaller } from '@/hooks/useResourceData';
 import { ManageInstallersDialog } from './dialogs/ManageInstallersDialog';
 import { AssignInstallerDialog } from './dialogs/AssignInstallerDialog';
+import { ReassignInstallerDialog } from './dialogs/ReassignInstallerDialog';
 import { DailyEntryDialog } from './dialogs/DailyEntryDialog';
 import { EditEstimationDialog } from './dialogs/EditEstimationDialog';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -79,7 +81,7 @@ export function ResourcePlanningView() {
   const {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
-    upsertEstimation, assignInstaller, unassignInstaller,
+    upsertEstimation, assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
     upsertDailyEntry,
   } = useResourceData();
 
@@ -101,6 +103,10 @@ export function ResourcePlanningView() {
   const [estDialogOpen, setEstDialogOpen] = useState(false);
   const [estDialogProjectId, setEstDialogProjectId] = useState('');
   const [estDialogProjectName, setEstDialogProjectName] = useState('');
+
+  // Reassign dialog state
+  const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
+  const [reassignTarget, setReassignTarget] = useState<ProjectInstaller | null>(null);
 
   const weeks = useMemo(() => generateWeeks(2026), []);
   const allDays = useMemo(() => generateAllDays(2026), []);
@@ -616,6 +622,7 @@ export function ResourcePlanningView() {
                                   installers={installers}
                                   projectInstallers={pInstallers}
                                   onAssign={(installerId) => assignInstaller(project.id, installerId)}
+                                  onAssignVacant={() => assignVacant(project.id)}
                                   onUnassign={unassignInstaller}
                                   trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>}
                                 />
@@ -643,9 +650,20 @@ export function ResourcePlanningView() {
                                 <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
                                   <div className="sticky left-0 z-10 bg-card group-hover:bg-muted/20 w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center min-w-0">
                                     <div className="min-w-0 flex items-center gap-1.5">
-                                      <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
-                                      <span className="text-xs truncate">{pi.installerName || 'Okänd'}</span>
-                                      <span className="text-[9px] text-muted-foreground">({pi.installerCompany})</span>
+                                      <div className={cn('h-2 w-2 rounded-full shrink-0', pi.isVacant ? 'bg-destructive' : getBarColor(resourceStatus))} />
+                                      <button
+                                        className={cn(
+                                          'text-xs truncate hover:underline cursor-pointer text-left',
+                                          pi.isVacant ? 'text-destructive font-semibold' : 'text-foreground'
+                                        )}
+                                        onClick={() => { setReassignTarget(pi); setReassignDialogOpen(true); }}
+                                        title="Klicka för att byta montör"
+                                      >
+                                        {pi.isVacant ? 'Vakant' : (pi.installerName || 'Okänd')}
+                                      </button>
+                                      {!pi.isVacant && (
+                                        <span className="text-[9px] text-muted-foreground shrink-0">({pi.installerCompany})</span>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="flex items-center relative">
@@ -708,6 +726,19 @@ export function ResourcePlanningView() {
           onSave={async (installH, travelH) => {
             await upsertEstimation(estDialogProjectId, installH, travelH);
             toast.success('Kalkyl sparad');
+          }}
+        />
+
+        {/* Reassign Installer Dialog */}
+        <ReassignInstallerDialog
+          open={reassignDialogOpen}
+          onOpenChange={setReassignDialogOpen}
+          projectInstaller={reassignTarget}
+          installers={installers}
+          projectInstallers={reassignTarget ? getProjectInstallers(reassignTarget.projectId) : []}
+          onReassign={async (projectInstallerId, newInstallerId, isVacant) => {
+            await reassignInstaller(projectInstallerId, newInstallerId, isVacant);
+            toast.success(isVacant ? 'Montör markerad som Vakant' : 'Montör bytt');
           }}
         />
       </motion.div>
