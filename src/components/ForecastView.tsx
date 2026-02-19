@@ -259,14 +259,14 @@ export function ForecastView() {
               <Table>
                 <TableHeader>
                     <TableRow className="border-border/50 hover:bg-transparent">
-                     <TableHead className="font-semibold py-2 px-3 text-xs">Projekt</TableHead>
-                     <TableHead className="font-semibold py-2 px-3 text-xs">Produkt</TableHead>
-                     <TableHead className="font-semibold py-2 px-3 text-xs">Status</TableHead>
+                     <TableHead className="font-semibold py-1 px-2 text-xs">Projekt</TableHead>
+                     <TableHead className="font-semibold py-1 px-2 text-xs">Produkt</TableHead>
+                     <TableHead className="font-semibold py-1 px-2 text-xs">Status</TableHead>
                      {months.map(month => (
-                       <TableHead key={month} className="text-center font-semibold py-2 px-2 text-xs">{month}</TableHead>
+                       <TableHead key={month} className="text-center font-semibold py-1 px-1 text-xs">{month}</TableHead>
                      ))}
-                     <TableHead className="font-semibold py-2 px-3 text-xs">Not</TableHead>
-                     <TableHead className="w-10 py-2 px-2"></TableHead>
+                     <TableHead className="font-semibold py-1 px-2 text-xs">Not</TableHead>
+                     <TableHead className="w-8 py-1 px-1"></TableHead>
                    </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -278,17 +278,17 @@ export function ForecastView() {
                         <TableRow 
                           key={item.id} 
                           className={cn(
-                            "border-border/50",
+                            "border-border/30 h-7",
                             isLost && "bg-status-delayed/5 opacity-70"
                           )}
                         >
-                          <TableCell className={cn("font-medium py-1.5 px-3 text-sm", isLost && "line-through")}>
+                          <TableCell className={cn("font-medium py-0 px-2 text-xs", isLost && "line-through")}>
                             {item.project}
                           </TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 px-3 text-sm">{item.product}</TableCell>
-                          <TableCell className="py-1.5 px-3">
+                          <TableCell className="text-muted-foreground py-0 px-2 text-xs">{item.product}</TableCell>
+                          <TableCell className="py-0 px-2">
                             <span className={cn(
-                              'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                              'inline-flex items-center rounded-full px-1.5 py-px text-xs font-medium leading-none',
                               getStatusColor(item.dealStatus)
                             )}>
                               {item.dealStatus}
@@ -303,7 +303,7 @@ export function ForecastView() {
                               <TableCell 
                                 key={month} 
                                 className={cn(
-                                  "text-center relative py-1.5 px-2 text-sm",
+                                  "text-center relative py-0 px-1 text-xs",
                                   movedFrom && !hasValue && "bg-yellow-400/10 border-l-2 border-yellow-400",
                                   isLostMonth && "bg-red-400/10 border-l-2 border-red-400"
                                 )}
@@ -337,10 +337,10 @@ export function ForecastView() {
                               </TableCell>
                             );
                           })}
-                          <TableCell className="text-sm text-muted-foreground py-1.5 px-3">
+                          <TableCell className="text-xs text-muted-foreground py-0 px-2">
                             {item.notes || '-'}
                           </TableCell>
-                          <TableCell className="py-1.5 px-2">
+                          <TableCell className="py-0 px-1">
                             <EditForecastDialog forecast={item} />
                           </TableCell>
                         </TableRow>
@@ -349,25 +349,25 @@ export function ForecastView() {
                   </TooltipProvider>
                   {forecast.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={16} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={16} className="text-center py-6 text-muted-foreground text-xs">
                         Inga affärer ännu. Klicka på "Ny affär" för att börja.
                       </TableCell>
                     </TableRow>
                   )}
                   {/* Totals row - excludes lost deals */}
                   {forecast.length > 0 && (
-                    <TableRow className="border-t-2 border-border bg-muted/30 font-bold">
-                       <TableCell colSpan={3} className="py-1.5 px-3 text-sm">
+                    <TableRow className="border-t-2 border-border bg-muted/30 font-bold h-7">
+                       <TableCell colSpan={3} className="py-0 px-2 text-xs">
                          Summa per månad
                          <span className="text-xs font-normal text-muted-foreground ml-2">(exkl. förlorade)</span>
                        </TableCell>
                        {months.map(month => (
-                         <TableCell key={month} className="text-center text-primary py-1.5 px-2 text-sm">
+                         <TableCell key={month} className="text-center text-primary py-0 px-1 text-xs">
                            {(monthlyTotals[month] || 0).toFixed(1)}
                          </TableCell>
                        ))}
-                       <TableCell className="py-1.5 px-3"></TableCell>
-                       <TableCell className="py-1.5 px-2"></TableCell>
+                       <TableCell className="py-0 px-2"></TableCell>
+                       <TableCell className="py-0 px-1"></TableCell>
                      </TableRow>
                   )}
                 </TableBody>
