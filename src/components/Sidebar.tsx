@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import alfingLogo from '@/assets/alfing-seating-logo-green.png';
@@ -12,11 +12,12 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  BarChart2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources';
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics';
 
 interface SidebarProps {
   currentView: View;
@@ -34,6 +35,9 @@ const navItems = [
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { signOut } = useAuth();
+
+  const isResourcesSection = currentView === 'resources' || currentView === 'resources-analytics';
+
   return (
     <motion.aside
       initial={false}
@@ -51,9 +55,9 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-3">
+      <nav className="flex-1 space-y-0.5 p-3">
         {navItems.map((item) => {
-          const isActive = currentView === item.id;
+          const isActive = item.id === 'resources' ? isResourcesSection : currentView === item.id;
           const NavButton = (
             <Button
               key={item.id}
@@ -80,18 +84,62 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
             </Button>
           );
 
-          if (isCollapsed) {
+          const withTooltip = isCollapsed ? (
+            <Tooltip key={item.id} delayDuration={0}>
+              <TooltipTrigger asChild>{NavButton}</TooltipTrigger>
+              <TooltipContent side="right" className="font-medium">
+                {item.label}
+              </TooltipContent>
+            </Tooltip>
+          ) : NavButton;
+
+          // Sub-items for Resursplanering
+          if (item.id === 'resources') {
             return (
-              <Tooltip key={item.id} delayDuration={0}>
-                <TooltipTrigger asChild>{NavButton}</TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
-                  {item.label}
-                </TooltipContent>
-              </Tooltip>
+              <div key={item.id}>
+                {withTooltip}
+                <AnimatePresence>
+                  {isResourcesSection && !isCollapsed && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      {/* Planering sub-item */}
+                      <button
+                        onClick={() => onViewChange('resources')}
+                        className={cn(
+                          'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 text-xs rounded-md transition-colors',
+                          currentView === 'resources'
+                            ? 'text-primary font-medium'
+                            : 'text-muted-foreground hover:text-sidebar-foreground'
+                        )}
+                      >
+                        <span className={cn('w-1 h-1 rounded-full shrink-0', currentView === 'resources' ? 'bg-primary' : 'bg-muted-foreground/40')} />
+                        Planering
+                      </button>
+                      {/* Analys sub-item */}
+                      <button
+                        onClick={() => onViewChange('resources-analytics')}
+                        className={cn(
+                          'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 text-xs rounded-md transition-colors',
+                          currentView === 'resources-analytics'
+                            ? 'text-primary font-medium'
+                            : 'text-muted-foreground hover:text-sidebar-foreground'
+                        )}
+                      >
+                        <span className={cn('w-1 h-1 rounded-full shrink-0', currentView === 'resources-analytics' ? 'bg-primary' : 'bg-muted-foreground/40')} />
+                        Analys
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             );
           }
 
-          return NavButton;
+          return withTooltip;
         })}
       </nav>
 
