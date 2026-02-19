@@ -89,19 +89,6 @@ export function LandingPage() {
         >
           Projektledning, resursplanering och prognos – i ett system.
         </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-10 flex gap-4"
-        >
-          <Button size="lg" className="gradient-primary text-primary-foreground" onClick={openSignup}>
-            Kom igång
-          </Button>
-          <Button size="lg" variant="outline" onClick={openLogin}>
-            Logga in
-          </Button>
-        </motion.div>
       </section>
 
       {/* Features – icon + text cards */}
