@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Plus, Users, Filter, Archive, UserPlus, Calculator } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusLegend } from './StatusLegend';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
@@ -12,6 +12,7 @@ import { ManageInstallersDialog } from './dialogs/ManageInstallersDialog';
 import { AssignInstallerDialog } from './dialogs/AssignInstallerDialog';
 import { DailyEntryDialog } from './dialogs/DailyEntryDialog';
 import { EditEstimationDialog } from './dialogs/EditEstimationDialog';
+import { ResourceAnalyticsView } from './ResourceAnalyticsView';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -436,20 +437,39 @@ export function ResourcePlanningView() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3 p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Resursplanering</h1>
-            <p className="text-sm text-muted-foreground">Planera montörer och resurser per projekt</p>
+      <div className="h-full flex flex-col">
+        <Tabs defaultValue="planering" className="flex-1 flex flex-col">
+          <div className="px-4 pt-4 pb-0 flex items-center justify-between gap-4 flex-wrap border-b border-border/50">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Resursplanering</h1>
+              <p className="text-sm text-muted-foreground">Planera montörer och resurser per projekt</p>
+            </div>
+            <TabsList className="h-8 mb-2">
+              <TabsTrigger value="planering" className="text-xs px-4 h-7">Planering</TabsTrigger>
+              <TabsTrigger value="analys" className="text-xs px-4 h-7">Analys</TabsTrigger>
+            </TabsList>
           </div>
+
+          <TabsContent value="analys" className="flex-1 overflow-auto mt-0">
+            <ResourceAnalyticsView />
+          </TabsContent>
+
+          <TabsContent value="planering" className="flex-1 overflow-auto mt-0">
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3 p-4">
+        {/* Sub-header for planering */}
+        <div className="flex items-center justify-between">
+          <div />
           <div className="flex items-center gap-3">
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <TabsList className="h-8">
-                <TabsTrigger value="weeks" className="text-xs px-3 h-7">Veckor</TabsTrigger>
-                <TabsTrigger value="days" className="text-xs px-3 h-7">Dagar</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex h-8 items-center gap-1 rounded-md border border-input bg-background p-1">
+              <button
+                onClick={() => setViewMode('weeks')}
+                className={cn('rounded-sm px-3 py-1 text-xs font-medium transition-colors', viewMode === 'weeks' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >Veckor</button>
+              <button
+                onClick={() => setViewMode('days')}
+                className={cn('rounded-sm px-3 py-1 text-xs font-medium transition-colors', viewMode === 'days' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >Dagar</button>
+            </div>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={expandAll}>Expandera</Button>
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={collapseAll}>Komprimera</Button>
@@ -708,6 +728,9 @@ export function ResourcePlanningView() {
           }}
         />
       </motion.div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </TooltipProvider>
   );
 }
