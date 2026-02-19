@@ -1,9 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Plus, Users, Filter, Archive, UserPlus, Calculator } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, Archive, UserPlus, Calculator } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusLegend } from './StatusLegend';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
@@ -12,7 +11,6 @@ import { ManageInstallersDialog } from './dialogs/ManageInstallersDialog';
 import { AssignInstallerDialog } from './dialogs/AssignInstallerDialog';
 import { DailyEntryDialog } from './dialogs/DailyEntryDialog';
 import { EditEstimationDialog } from './dialogs/EditEstimationDialog';
-import { ResourceAnalyticsView } from './ResourceAnalyticsView';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -437,28 +435,13 @@ export function ResourcePlanningView() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="h-full flex flex-col">
-        <Tabs defaultValue="planering" className="flex-1 flex flex-col">
-          <div className="px-4 pt-4 pb-0 flex items-center justify-between gap-4 flex-wrap border-b border-border/50">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Resursplanering</h1>
-              <p className="text-sm text-muted-foreground">Planera montörer och resurser per projekt</p>
-            </div>
-            <TabsList className="h-8 mb-2">
-              <TabsTrigger value="planering" className="text-xs px-4 h-7">Planering</TabsTrigger>
-              <TabsTrigger value="analys" className="text-xs px-4 h-7">Analys</TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="analys" className="flex-1 overflow-auto mt-0">
-            <ResourceAnalyticsView />
-          </TabsContent>
-
-          <TabsContent value="planering" className="flex-1 overflow-auto mt-0">
       <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3 p-4">
-        {/* Sub-header for planering */}
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <div />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Resursplanering</h1>
+            <p className="text-sm text-muted-foreground">Planera montörer och resurser per projekt</p>
+          </div>
           <div className="flex items-center gap-3">
             <div className="flex h-8 items-center gap-1 rounded-md border border-input bg-background p-1">
               <button
@@ -728,9 +711,6 @@ export function ResourcePlanningView() {
           }}
         />
       </motion.div>
-          </TabsContent>
-        </Tabs>
-      </div>
     </TooltipProvider>
   );
 }

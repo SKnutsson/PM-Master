@@ -7,7 +7,7 @@ import { useResourceData } from '@/hooks/useResourceData';
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
-  ResponsiveContainer, Legend, ReferenceLine,
+  ResponsiveContainer, Legend,
 } from 'recharts';
 import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car } from 'lucide-react';
 
@@ -24,37 +24,37 @@ const cardVariants = {
 interface StatCardProps {
   title: string;
   value: string;
-  sub?: string;
   icon: React.ReactNode;
-  accent?: 'default' | 'green' | 'red' | 'yellow';
+  accent?: 'default' | 'green' | 'red';
 }
 
-function StatCard({ title, value, sub, icon, accent = 'default' }: StatCardProps) {
-  const accentClass = {
+function StatCard({ title, value, icon, accent = 'default' }: StatCardProps) {
+  const borderClass = {
     default: 'border-border/50',
     green: 'border-emerald-500/50 bg-emerald-500/5',
     red: 'border-red-500/50 bg-red-500/5',
-    yellow: 'border-yellow-500/50 bg-yellow-500/5',
   }[accent];
 
   const valueClass = {
     default: 'text-foreground',
     green: 'text-emerald-400',
     red: 'text-red-400',
-    yellow: 'text-yellow-400',
   }[accent];
 
   return (
     <motion.div variants={cardVariants}>
-      <Card className={cn('border bg-card/80', accentClass)}>
+      <Card className={cn('border bg-card/80', borderClass)}>
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-xs text-muted-foreground mb-1">{title}</p>
               <p className={cn('text-2xl font-bold tabular-nums', valueClass)}>{value}</p>
-              {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
             </div>
-            <div className={cn('shrink-0 rounded-md p-2 bg-muted/50', accent === 'green' && 'bg-emerald-500/10', accent === 'red' && 'bg-red-500/10', accent === 'yellow' && 'bg-yellow-500/10')}>
+            <div className={cn(
+              'shrink-0 rounded-md p-2 bg-muted/50',
+              accent === 'green' && 'bg-emerald-500/10',
+              accent === 'red' && 'bg-red-500/10',
+            )}>
               {icon}
             </div>
           </div>
@@ -91,11 +91,6 @@ export function ResourceAnalyticsView() {
     [allProjects]
   );
 
-  const selectedProject = useMemo(() =>
-    sortedProjects.find(p => p.id === selectedProjectId) ?? null,
-    [sortedProjects, selectedProjectId]
-  );
-
   const estimation = useMemo(() =>
     estimations.find(e => e.projectId === selectedProjectId) ?? null,
     [estimations, selectedProjectId]
@@ -123,50 +118,31 @@ export function ResourceAnalyticsView() {
   const travelDeviation = actualTravel - estimatedTravel;
   const totalDeviation = (actualWork + actualTravel) - (estimatedWork + estimatedTravel);
 
-  const deviationAccent = (dev: number, hasEst: boolean): 'green' | 'red' | 'yellow' | 'default' => {
-    if (!hasEst) return 'default';
-    if (dev === 0) return 'green';
-    if (dev > 0) return 'red';
-    return 'green';
-  };
+  const hasEstimation = estimatedWork > 0 || estimatedTravel > 0;
+  const hasData = actualWork > 0 || actualTravel > 0 || hasEstimation;
 
   const formatDeviation = (dev: number) => {
     if (dev === 0) return '±0h';
     return dev > 0 ? `+${dev}h` : `${dev}h`;
   };
 
+  // Chart: only Montage and Resa (no Totalt)
   const chartData = [
-    {
-      name: 'Montage',
-      'Kalkyl': estimatedWork,
-      'Utfall': actualWork,
-    },
-    {
-      name: 'Resa',
-      'Kalkyl': estimatedTravel,
-      'Utfall': actualTravel,
-    },
-    {
-      name: 'Totalt',
-      'Kalkyl': estimatedWork + estimatedTravel,
-      'Utfall': actualWork + actualTravel,
-    },
+    { name: 'Montage', 'Kalkyl': estimatedWork, 'Utfall': actualWork },
+    { name: 'Resa', 'Kalkyl': estimatedTravel, 'Utfall': actualTravel },
   ];
-
-  const hasEstimation = estimatedWork > 0 || estimatedTravel > 0;
-  const hasData = actualWork > 0 || actualTravel > 0 || hasEstimation;
 
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-5 p-4"
+      className="space-y-5 p-6"
     >
       {/* Header + Project selector */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Resursanalys</h2>
+          <h1 className="text-2xl font-bold tracking-tight">Resursanalys</h1>
           <p className="text-sm text-muted-foreground">Jämför kalkyl mot utfall per projekt</p>
         </div>
         <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
@@ -200,44 +176,94 @@ export function ResourceAnalyticsView() {
 
       {selectedProjectId && (hasData || isLoading) && (
         <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-            <StatCard
-              title="Kalkyl – montage"
-              value={`${estimatedWork}h`}
-              icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatCard
-              title="Kalkyl – resa"
-              value={`${estimatedTravel}h`}
-              icon={<Car className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatCard
-              title="Utfall – montage"
-              value={`${actualWork}h`}
-              accent={hasEstimation ? (actualWork > estimatedWork ? 'red' : 'green') : 'default'}
-              icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatCard
-              title="Utfall – resa"
-              value={`${actualTravel}h`}
-              accent={hasEstimation ? (actualTravel > estimatedTravel ? 'red' : 'green') : 'default'}
-              icon={<Car className="h-4 w-4 text-muted-foreground" />}
-            />
-            <StatCard
-              title="Total avvikelse"
-              value={formatDeviation(totalDeviation)}
-              sub={hasEstimation ? `Kalkyl: ${estimatedWork + estimatedTravel}h · Utfall: ${actualWork + actualTravel}h` : 'Ingen kalkyl angiven'}
-              accent={deviationAccent(totalDeviation, hasEstimation)}
-              icon={
-                totalDeviation === 0 ? <Minus className="h-4 w-4 text-muted-foreground" /> :
-                totalDeviation > 0 ? <TrendingUp className="h-4 w-4 text-red-400" /> :
-                <TrendingDown className="h-4 w-4 text-emerald-400" />
-              }
-            />
+          {/* Paired stat cards: Montage pair | Resa pair | Total */}
+          <div className="flex flex-wrap gap-3">
+            {/* Montage pair */}
+            <div className="flex gap-3 flex-1 min-w-[300px]">
+              <div className="flex-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 pl-0.5">Montage</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <StatCard
+                    title="Kalkyl"
+                    value={`${estimatedWork}h`}
+                    icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
+                  />
+                  <StatCard
+                    title="Utfall"
+                    value={`${actualWork}h`}
+                    accent={hasEstimation ? (actualWork > estimatedWork ? 'red' : 'green') : 'default'}
+                    icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Resa pair */}
+            <div className="flex gap-3 flex-1 min-w-[300px]">
+              <div className="flex-1">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 pl-0.5">Resa</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <StatCard
+                    title="Kalkyl"
+                    value={`${estimatedTravel}h`}
+                    icon={<Car className="h-4 w-4 text-muted-foreground" />}
+                  />
+                  <StatCard
+                    title="Utfall"
+                    value={`${actualTravel}h`}
+                    accent={hasEstimation ? (actualTravel > estimatedTravel ? 'red' : 'green') : 'default'}
+                    icon={<Car className="h-4 w-4 text-muted-foreground" />}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Total deviation box */}
+            <div className="flex-shrink-0 min-w-[160px]">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 pl-0.5">Totalt</p>
+              <motion.div variants={cardVariants}>
+                <Card className={cn(
+                  'border bg-card/80 h-[calc(100%-24px)]',
+                  !hasEstimation ? 'border-border/50' :
+                  totalDeviation > 0 ? 'border-red-500/50 bg-red-500/5' :
+                  'border-emerald-500/50 bg-emerald-500/5'
+                )}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">Avvikelse</p>
+                        <p className={cn(
+                          'text-2xl font-bold tabular-nums',
+                          !hasEstimation ? 'text-foreground' :
+                          totalDeviation > 0 ? 'text-red-400' : 'text-emerald-400'
+                        )}>
+                          {formatDeviation(totalDeviation)}
+                        </p>
+                        {hasEstimation && (
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {estimatedWork + estimatedTravel}h → {actualWork + actualTravel}h
+                          </p>
+                        )}
+                      </div>
+                      <div className={cn(
+                        'shrink-0 rounded-md p-2',
+                        !hasEstimation ? 'bg-muted/50' :
+                        totalDeviation > 0 ? 'bg-red-500/10' : 'bg-emerald-500/10'
+                      )}>
+                        {totalDeviation === 0
+                          ? <Minus className="h-4 w-4 text-muted-foreground" />
+                          : totalDeviation > 0
+                          ? <TrendingUp className="h-4 w-4 text-red-400" />
+                          : <TrendingDown className="h-4 w-4 text-emerald-400" />}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
           </div>
 
-          {/* Deviation detail */}
+          {/* Deviation detail rows */}
           {hasEstimation && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Card className={cn('border', workDeviation > 0 ? 'border-red-500/30 bg-red-500/5' : 'border-emerald-500/30 bg-emerald-500/5')}>
@@ -267,14 +293,14 @@ export function ResourceAnalyticsView() {
             </div>
           )}
 
-          {/* Bar chart */}
+          {/* Bar chart – Montage & Resa only */}
           <Card className="border-border/50 bg-card/80">
             <CardHeader className="pb-2 pt-4 px-4">
               <CardTitle className="text-sm font-semibold">Kalkyl vs Utfall (timmar)</CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }} barCategoryGap="30%">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }} barCategoryGap="40%">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis
                     dataKey="name"
@@ -290,37 +316,11 @@ export function ResourceAnalyticsView() {
                     width={36}
                   />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }} />
-                  <Legend
-                    wrapperStyle={{ fontSize: 12, paddingTop: 12, color: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <Bar
-                    dataKey="Kalkyl"
-                    fill="hsl(var(--muted-foreground))"
-                    radius={[3, 3, 0, 0]}
-                    opacity={0.6}
-                    maxBarSize={64}
-                  />
-                  <Bar
-                    dataKey="Utfall"
-                    radius={[3, 3, 0, 0]}
-                    maxBarSize={64}
-                    fill="hsl(142 71% 45%)"
-                  />
+                  <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12, color: 'hsl(var(--muted-foreground))' }} />
+                  <Bar dataKey="Kalkyl" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} opacity={0.55} maxBarSize={72} />
+                  <Bar dataKey="Utfall" fill="hsl(142 71% 45%)" radius={[3, 3, 0, 0]} maxBarSize={72} />
                 </BarChart>
               </ResponsiveContainer>
-
-              {hasEstimation && (
-                <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground border-t border-border/30 pt-3">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    Inom kalkyl = grönt utfall
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
-                    Överskridning driver avvikelse
-                  </span>
-                </div>
-              )}
             </CardContent>
           </Card>
         </>
