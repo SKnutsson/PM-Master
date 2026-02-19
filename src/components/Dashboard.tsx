@@ -166,57 +166,59 @@ export function Dashboard() {
 
         {/* Project Status Overview */}
         <motion.div variants={itemVariants}>
-          <Card className="border-border/50 bg-card/80">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" />
+          <Card className="border-border/50 bg-card/80 flex flex-col">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Activity className="h-4 w-4 text-primary" />
                 Projektstatus
               </CardTitle>
-              <CardDescription>Senaste aktiviteter och varningar</CardDescription>
+              <CardDescription className="text-xs">Alla aktiva projekt</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Project List */}
-              <div className="space-y-2">
-                {projects.slice(0, 5).map((project) => {
-                  const completed = project.activities.filter(a => a.status === 'Slutförd').length;
-                  const total = project.activities.length;
-                  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-                  const hasWarning = project.activities.some(a => a.hasWarning);
+            <CardContent className="p-0 flex-1 overflow-auto">
+              {projects.filter(p => p.status !== 'Avslutat').length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-4 px-4">
+                  Inga projekt ännu.
+                </p>
+              ) : (
+                <div className="divide-y divide-border/40">
+                  {/* Header row */}
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-4 py-1.5 text-xs text-muted-foreground font-medium">
+                    <span>Projekt</span>
+                    <span className="text-center w-20">Aktiviteter</span>
+                    <span className="text-right w-16">Framsteg</span>
+                  </div>
+                  {projects.filter(p => p.status !== 'Avslutat').map((project) => {
+                    const completed = project.activities.filter(a => a.status === 'Slutförd').length;
+                    const total = project.activities.length;
+                    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+                    const hasWarning = project.activities.some(a => a.hasWarning);
 
-                  return (
-                    <div
-                      key={project.id}
-                      className="flex items-center justify-between rounded-lg border border-border/50 p-2 transition-colors hover:bg-muted/50"
-                    >
-                      <div className="flex items-center gap-3">
-                        {hasWarning && (
-                          <AlertTriangle className="h-4 w-4 text-status-delayed" />
-                        )}
-                        <div>
-                          <p className="font-medium">{project.code} - {project.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {completed}/{total} aktiviteter
-                          </p>
+                    return (
+                      <div
+                        key={project.id}
+                        className="grid grid-cols-[1fr_auto_auto] gap-2 items-center px-4 py-1.5 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {hasWarning && (
+                            <AlertTriangle className="h-3 w-3 text-status-delayed shrink-0" />
+                          )}
+                          <span className="text-xs font-medium truncate">{project.code} – {project.name}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground text-center w-20">{completed}/{total}</span>
+                        <div className="flex items-center gap-1.5 justify-end w-16">
+                          <div className="h-1.5 w-10 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full bg-primary rounded-full"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-medium w-6 text-right">{progress}%</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="h-2 w-20 overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full bg-primary"
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-medium">{progress}%</span>
-                      </div>
-                    </div>
-                  );
-                })}
-                {projects.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-4">
-                    Inga projekt ännu. Gå till Projekt-vyn för att lägga till projekt.
-                  </p>
-                )}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
