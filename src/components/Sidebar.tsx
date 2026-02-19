@@ -209,6 +209,13 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
           )}
         </Tooltip>
       </div>
+
+      {/* Developer credit */}
+      {!isCollapsed && (
+        <p className="px-4 pb-3 text-[10px] text-muted-foreground/40 select-none">
+          Developed by S. Knutsson
+        </p>
+      )}
     </motion.aside>
   );
 }
