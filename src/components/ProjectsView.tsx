@@ -92,85 +92,81 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
 
   return (
     <motion.div variants={itemVariants}>
-      <Card className={cn(
-        "border-border/50 overflow-hidden transition-all hover:border-primary/30",
-        isArchived ? "bg-card/50 opacity-80" : "bg-card/80"
+      <div className={cn(
+        "border border-border/40 rounded-lg overflow-hidden transition-all hover:border-primary/30",
+        isArchived ? "bg-card/40 opacity-75" : "bg-card/60"
       )}>
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="flex items-center gap-3 text-left"
-            >
-              <div className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold transition-colors',
-                isArchived
-                  ? 'bg-muted text-muted-foreground'
-                  : 'bg-primary/20 text-primary'
-              )}>
-                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        <div className="flex items-center justify-between px-3 py-2">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2 text-left flex-1 min-w-0"
+          >
+            <div className={cn(
+              'flex h-6 w-6 shrink-0 items-center justify-center rounded text-sm transition-colors',
+              isArchived ? 'text-muted-foreground' : 'text-primary'
+            )}>
+              {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+            </div>
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="font-semibold text-sm truncate">
+                {project.code} - {project.name}
+              </span>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0">
+                {project.customer && <span>Kund: {project.customer}</span>}
+                {project.product && <span>Produkt: {project.product}</span>}
+                {isArchived && (
+                  <span className="flex items-center gap-1">
+                    <Archive className="h-3 w-3" />
+                    Avslutat
+                  </span>
+                )}
               </div>
-              <div>
-                <CardTitle className="text-lg font-semibold">
-                  {project.code} - {project.name}
-                </CardTitle>
-                <div className="mt-1 flex items-center gap-4 text-sm text-muted-foreground">
-                  {project.customer && <span>Kund: {project.customer}</span>}
-                  {project.product && <span>Produkt: {project.product}</span>}
-                  {isArchived && (
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <Archive className="h-3.5 w-3.5" />
-                      Avslutat
-                    </span>
-                  )}
-                </div>
-              </div>
-            </button>
-            
-            <div className="flex items-center gap-1">
-              {!isArchived && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary"
-                  onClick={handleStartEdit}
-                  title="Redigera projektinfo"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
-              {isArchived ? (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary"
-                  onClick={handleRestore}
-                  title="Återställ projekt"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary"
-                  onClick={handleArchive}
-                  title="Avsluta och arkivera"
-                >
-                  <Archive className="h-4 w-4" />
-                </Button>
-              )}
+            </div>
+          </button>
+          
+          <div className="flex items-center gap-0.5 shrink-0">
+            {!isArchived && (
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={handleDeleteProject}
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                onClick={handleStartEdit}
+                title="Redigera projektinfo"
               >
-                <Trash2 className="h-4 w-4" />
+                <Pencil className="h-3.5 w-3.5" />
               </Button>
-            </div>
+            )}
+            {isArchived ? (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                onClick={handleRestore}
+                title="Återställ projekt"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </Button>
+            ) : (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                onClick={handleArchive}
+                title="Avsluta och arkivera"
+              >
+                <Archive className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={handleDeleteProject}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
           </div>
-        </CardHeader>
+        </div>
 
         <AnimatePresence>
           {isExpanded && (
@@ -264,7 +260,7 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
             </motion.div>
           )}
         </AnimatePresence>
-      </Card>
+      </div>
     </motion.div>
   );
 }
@@ -309,7 +305,7 @@ export function ProjectsView() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="active" className="mt-4 space-y-4">
+        <TabsContent value="active" className="mt-3 space-y-1">
           {activeProjects.map((project) => (
             <ProjectCard
               key={project.id}
@@ -320,13 +316,13 @@ export function ProjectsView() {
             />
           ))}
           {activeProjects.length === 0 && (
-            <Card className="border-border/50 bg-card/80 p-8 text-center">
-              <p className="text-muted-foreground">Inga aktiva projekt. Klicka på "Nytt projekt" för att börja.</p>
-            </Card>
+            <div className="border border-border/40 rounded-lg bg-card/60 p-6 text-center">
+              <p className="text-muted-foreground text-sm">Inga aktiva projekt. Klicka på "Nytt projekt" för att börja.</p>
+            </div>
           )}
         </TabsContent>
 
-        <TabsContent value="archived" className="mt-4 space-y-4">
+        <TabsContent value="archived" className="mt-3 space-y-1">
           {archivedProjects.map((project) => (
             <ProjectCard
               key={project.id}
@@ -338,9 +334,9 @@ export function ProjectsView() {
             />
           ))}
           {archivedProjects.length === 0 && (
-            <Card className="border-border/50 bg-card/80 p-8 text-center">
-              <p className="text-muted-foreground">Inga arkiverade projekt ännu.</p>
-            </Card>
+            <div className="border border-border/40 rounded-lg bg-card/60 p-6 text-center">
+              <p className="text-muted-foreground text-sm">Inga arkiverade projekt ännu.</p>
+            </div>
           )}
         </TabsContent>
       </Tabs>
