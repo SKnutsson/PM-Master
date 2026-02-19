@@ -297,8 +297,8 @@ export function ResourcePlanningView() {
                     </div>
                   )}
                   {entry.plannedTravelHours > 0 && (
-                    <div className={cn('h-2 rounded-sm opacity-60 flex items-center justify-center', getBarColor(status), 'bg-stripes')}>
-                      <span className="text-[7px] font-bold text-white">{entry.plannedTravelHours}h</span>
+                    <div className={cn('h-3.5 rounded-sm flex items-center justify-center bg-stripes', getBarColor(status), 'brightness-75')}>
+                      <span className="text-[8px] font-bold text-white drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]">{entry.plannedTravelHours}h</span>
                     </div>
                   )}
                 </div>
