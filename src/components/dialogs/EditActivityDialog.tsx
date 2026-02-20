@@ -23,7 +23,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
-import { Activity, Status, Department, departments, statuses } from '@/data/projectData';
+import { Activity, Status, Department, departments, statuses, Phase, phases } from '@/data/projectData';
 import { cn } from '@/lib/utils';
 
 interface EditActivityDialogProps {
@@ -44,6 +44,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
   const [endDate, setEndDate] = useState<Date | undefined>(
     activity.endDate ? new Date(activity.endDate) : undefined
   );
+  const [phase, setPhase] = useState<Phase | ''>(activity.phase || '');
   const { updateActivity, deleteActivity } = useProjectDataContext();
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
       setStatus(activity.status);
       setStartDate(activity.startDate ? new Date(activity.startDate) : undefined);
       setEndDate(activity.endDate ? new Date(activity.endDate) : undefined);
+      setPhase(activity.phase || '');
     }
   }, [open, activity]);
 
@@ -73,6 +75,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
         endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
         days,
         hasWarning: status === 'Försenad',
+        phase: phase || null,
       });
       setOpen(false);
     }
@@ -145,6 +148,21 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
                 <SelectContent>
                   {statuses.map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Fas (valfritt)</Label>
+              <Select value={phase || 'none'} onValueChange={(v) => setPhase(v === 'none' ? '' : v as Phase)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Ingen fas vald" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Ingen fas</SelectItem>
+                  {phases.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -6,7 +6,8 @@ import {
   Project, 
   Activity, 
   Status,
-  Department
+  Department,
+  Phase
 } from '@/data/projectData';
 
 export type DealStatus = 'Tagen' | 'Flyttad' | 'Förlorad' | 'Prognos' | 'Ny affär';
@@ -120,6 +121,7 @@ export function useDatabaseData() {
             startDate: a.start_date,
             endDate: a.end_date,
             notes: a.notes,
+            phase: (a as any).phase as Phase | null,
           }))
       }));
       setProjects(projectsWithActivities);
@@ -312,7 +314,8 @@ export function useDatabaseData() {
         start_date: activity.startDate || new Date().toISOString().split('T')[0],
         end_date: activity.endDate || new Date().toISOString().split('T')[0],
         notes: '',
-      })
+        phase: activity.phase || null,
+      } as any)
       .select()
       .single();
 
@@ -333,6 +336,7 @@ export function useDatabaseData() {
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.startDate !== undefined) updateData.start_date = updates.startDate;
     if (updates.endDate !== undefined) updateData.end_date = updates.endDate;
+    if (updates.phase !== undefined) updateData.phase = updates.phase;
 
     const { error } = await supabase
       .from('activities')
