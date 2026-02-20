@@ -1,6 +1,10 @@
 export type Status = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad';
 export type Department = 'Sälj' | 'Projektledare' | 'Konstruktion' | 'Beredning' | 'Inköp' | 'Produktion' | 'Montageledare';
 
+export type Phase = 'Konstruktion' | 'Produktion' | 'Montage';
+
+export const phases: Phase[] = ['Konstruktion', 'Produktion', 'Montage'];
+
 export interface Activity {
   id: string;
   name: string;
@@ -11,6 +15,7 @@ export interface Activity {
   endDate?: string;
   days?: number;
   hasWarning?: boolean;
+  phase?: Phase | null;
 }
 
 export type ProjectStatus = 'Aktiv' | 'Avslutat';

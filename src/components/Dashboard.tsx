@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FolderKanban, 
@@ -5,12 +6,17 @@ import {
   Clock, 
   AlertTriangle,
   TrendingUp,
-  Activity
+  Activity,
+  Printer,
+  HardHat,
+  Factory,
+  Wrench
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
-import { StatusBadge } from './StatusBadge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Phase } from '@/data/projectData';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -27,8 +33,15 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
+const phaseConfig: Record<Phase, { icon: typeof HardHat; color: string; bg: string }> = {
+  'Konstruktion': { icon: HardHat, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  'Produktion': { icon: Factory, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'Montage': { icon: Wrench, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+};
+
 export function Dashboard() {
   const { projects, monthlyTotals, yearTotal } = useProjectDataContext();
+  const printRef = useRef<HTMLDivElement>(null);
 
   // Calculate statistics
   const allActivities = projects.flatMap(p => p.activities);
@@ -36,8 +49,15 @@ export function Dashboard() {
   const completedActivities = allActivities.filter(a => a.status === 'Slutförd').length;
   const inProgressActivities = allActivities.filter(a => a.status === 'Pågår').length;
   const warningActivities = allActivities.filter(a => a.hasWarning).length;
-  
-  const completionRate = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 0;
+
+  // Projects by phase - based on activities with status "Pågår" and a phase set
+  const projectsByPhase = (['Konstruktion', 'Produktion', 'Montage'] as Phase[]).map(phase => {
+    const projectsInPhase = projects.filter(p => 
+      p.status !== 'Avslutat' &&
+      p.activities.some(a => a.phase === phase && a.status === 'Pågår')
+    );
+    return { phase, projects: projectsInPhase };
+  });
 
   // Chart data
   const chartData = months.map(month => ({
@@ -76,17 +96,28 @@ export function Dashboard() {
     },
   ];
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <motion.div
+      ref={printRef}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 p-6"
+      className="space-y-6 p-6 print:p-2"
     >
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Översikt</h1>
-        <p className="text-muted-foreground">Välkommen till projektledningssystemet</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Översikt</h1>
+          <p className="text-muted-foreground">Välkommen till projektledningssystemet</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handlePrint} className="print:hidden">
+          <Printer className="mr-2 h-4 w-4" />
+          Skriv ut
+        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -109,6 +140,44 @@ export function Dashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* Project Phases */}
+      <motion.div variants={itemVariants}>
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Projektfaser</CardTitle>
+            <CardDescription className="text-xs">Projekt med pågående aktiviteter i respektive fas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              {projectsByPhase.map(({ phase, projects: phaseProjects }) => {
+                const config = phaseConfig[phase];
+                const PhaseIcon = config.icon;
+                return (
+                  <div key={phase} className={`rounded-lg border border-border/50 p-4 ${config.bg}`}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <PhaseIcon className={`h-5 w-5 ${config.color}`} />
+                      <h3 className="font-semibold text-sm">{phase}</h3>
+                      <span className="ml-auto text-xs text-muted-foreground">{phaseProjects.length} projekt</span>
+                    </div>
+                    {phaseProjects.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Inga projekt i denna fas</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {phaseProjects.map(p => (
+                          <div key={p.id} className="text-xs font-medium truncate">
+                            {p.code} – {p.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Charts and Lists */}
       <div className="grid gap-6 lg:grid-cols-2">

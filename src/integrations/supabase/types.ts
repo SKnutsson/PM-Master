@@ -21,6 +21,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          phase: string | null
           project_id: string
           responsible: string
           sort_order: number | null
@@ -34,6 +35,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          phase?: string | null
           project_id: string
           responsible: string
           sort_order?: number | null
@@ -47,6 +49,7 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          phase?: string | null
           project_id?: string
           responsible?: string
           sort_order?: number | null

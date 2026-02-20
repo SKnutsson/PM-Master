@@ -23,7 +23,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
-import { Status, Department, departments, statuses } from '@/data/projectData';
+import { Status, Department, departments, statuses, Phase, phases } from '@/data/projectData';
 import { cn } from '@/lib/utils';
 
 interface AddActivityDialogProps {
@@ -39,6 +39,7 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
   const [status, setStatus] = useState<Status>('Ej påbörjad');
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [phase, setPhase] = useState<Phase | ''>('');
   const { addActivity } = useProjectDataContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,6 +58,7 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
         endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
         days,
         hasWarning: status === 'Försenad',
+        phase: phase || null,
       });
       resetForm();
       setOpen(false);
@@ -70,6 +72,7 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
     setStatus('Ej påbörjad');
     setStartDate(undefined);
     setEndDate(undefined);
+    setPhase('');
   };
 
   return (
@@ -135,6 +138,21 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
                 <SelectContent>
                   {statuses.map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Fas (valfritt)</Label>
+              <Select value={phase} onValueChange={(v) => setPhase(v === 'none' ? '' : v as Phase)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Ingen fas vald" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Ingen fas</SelectItem>
+                  {phases.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
