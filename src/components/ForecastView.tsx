@@ -1,5 +1,7 @@
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Package, AlertTriangle, Loader2 } from 'lucide-react';
+import { TrendingUp, Package, AlertTriangle, Loader2, Printer } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProjectDataContext, DealStatus, ScheduleChange } from '@/contexts/ProjectDataContext';
 import { AddForecastDialog } from './dialogs/AddForecastDialog';
@@ -78,8 +80,26 @@ const isLostDealMonth = (dealStatus: DealStatus, months: { [key: string]: number
   return months[month] !== undefined && months[month] > 0;
 };
 
+const printSection = (element: HTMLElement | null, title: string) => {
+  if (!element) return;
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) return;
+  const styles = Array.from(document.styleSheets)
+    .map(sheet => {
+      try { return Array.from(sheet.cssRules).map(r => r.cssText).join('\n'); }
+      catch { return ''; }
+    }).join('\n');
+  printWindow.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>${styles}
+    body { background: white !important; color: black !important; padding: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @media print { body { padding: 0; } }
+  </style></head><body>${element.innerHTML}</body></html>`);
+  printWindow.document.close();
+  printWindow.onload = () => { printWindow.print(); printWindow.close(); };
+};
+
 export function ForecastView() {
   const { forecast, monthlyTotals, yearTotal, isLoading } = useProjectDataContext();
+  const forecastTableRef = useRef<HTMLDivElement>(null);
 
   const chartData = months.map(month => ({
     month: monthLabels[month] || month,
@@ -251,11 +271,18 @@ export function ForecastView() {
       <motion.div variants={itemVariants}>
         <Card className="border-border/50 bg-card/80">
           <CardHeader>
-            <CardTitle>Detaljerad prognos</CardTitle>
-            <CardDescription>Alla projekt och produkter - gul markering visar ursprunglig månad för flyttade projekt</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Detaljerad prognos</CardTitle>
+                <CardDescription>Alla projekt och produkter - gul markering visar ursprunglig månad för flyttade projekt</CardDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, 'Detaljerad Försäljningsprognos 2026')} className="print:hidden h-8 w-8">
+                <Printer className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <div ref={forecastTableRef} className="overflow-x-auto">
               <Table>
                 <TableHeader>
                     <TableRow className="border-border/50 hover:bg-transparent">
