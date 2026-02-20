@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FolderKanban, 
@@ -18,6 +18,22 @@ import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Phase } from '@/data/projectData';
 
+const printSection = (element: HTMLElement | null, title: string) => {
+  if (!element) return;
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) return;
+  const styles = Array.from(document.styleSheets)
+    .map(sheet => {
+      try { return Array.from(sheet.cssRules).map(r => r.cssText).join('\n'); }
+      catch { return ''; }
+    }).join('\n');
+  printWindow.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>${styles}
+    body { background: white !important; color: black !important; padding: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @media print { body { padding: 0; } }
+  </style></head><body>${element.innerHTML}</body></html>`);
+  printWindow.document.close();
+  printWindow.onload = () => { printWindow.print(); printWindow.close(); };
+};
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const containerVariants = {
@@ -42,6 +58,8 @@ const phaseConfig: Record<Phase, { icon: typeof HardHat; color: string; bg: stri
 export function Dashboard() {
   const { projects, monthlyTotals, yearTotal } = useProjectDataContext();
   const printRef = useRef<HTMLDivElement>(null);
+  const forecastRef = useRef<HTMLDivElement>(null);
+  const phasesRef = useRef<HTMLDivElement>(null);
 
   // Calculate statistics
   const allActivities = projects.flatMap(p => p.activities);
@@ -144,9 +162,17 @@ export function Dashboard() {
       {/* Project Phases */}
       <motion.div variants={itemVariants}>
         <Card className="border-border/50 bg-card/80">
+          <div ref={phasesRef}>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Projektfaser</CardTitle>
-            <CardDescription className="text-xs">Projekt med pågående aktiviteter i respektive fas</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base">Projektfaser</CardTitle>
+                <CardDescription className="text-xs">Projekt med pågående aktiviteter i respektive fas</CardDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => printSection(phasesRef.current, 'Projektfaser')} className="print:hidden h-8 w-8">
+                <Printer className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
@@ -176,6 +202,7 @@ export function Dashboard() {
               })}
             </div>
           </CardContent>
+          </div>
         </Card>
       </motion.div>
 
@@ -184,6 +211,7 @@ export function Dashboard() {
         {/* Sales Forecast Chart */}
         <motion.div variants={itemVariants}>
           <Card className="border-border/50 bg-card/80">
+            <div ref={forecastRef}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -193,6 +221,9 @@ export function Dashboard() {
                   </CardTitle>
                   <CardDescription>Månatlig prognos i MSEK</CardDescription>
                 </div>
+                <Button variant="ghost" size="icon" onClick={() => printSection(forecastRef.current, 'Försäljningsprognos 2026')} className="print:hidden h-8 w-8">
+                  <Printer className="h-4 w-4" />
+                </Button>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-primary">{yearTotal.toFixed(1)} MSEK</p>
                   <p className="text-sm text-muted-foreground">Total prognos</p>
@@ -230,6 +261,7 @@ export function Dashboard() {
                 </ResponsiveContainer>
               </div>
             </CardContent>
+            </div>
           </Card>
         </motion.div>
 
