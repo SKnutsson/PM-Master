@@ -517,7 +517,7 @@ export function ResourcePlanningView() {
                   <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50" />
                   <div className="flex">
                     {yearGroups.map((g, i) =>
-                    <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
+                    <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5 bg-primary-foreground" style={{ width: g.span * colWidth }}>
                         {g.label}
                       </div>
                     )}
@@ -527,7 +527,7 @@ export function ResourcePlanningView() {
                 {/* Week number row for day view */}
                 {viewMode === 'days' &&
                 <div className="sticky top-[21px] z-30 flex border-b border-border/30 bg-card">
-                    <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50" />
+                    <div className="sticky left-0 z-40 w-72 shrink-0 border-r border-border/50 bg-primary-foreground" />
                     <div className="flex">
                       {dayWeekGroups.map((g, i) =>
                     <div key={i} className="border-r border-border/30 text-center text-[9px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
@@ -540,7 +540,7 @@ export function ResourcePlanningView() {
 
                 {/* Week/Day header */}
                 <div className={cn("sticky z-30 flex border-b border-border/50 bg-card", viewMode === 'days' ? 'top-[42px]' : 'top-[21px]')}>
-                  <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
+                  <div className="sticky left-0 z-40 w-72 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold bg-primary-foreground">
                     Projekt / Montör
                   </div>
                   <div className="flex">
@@ -551,8 +551,8 @@ export function ResourcePlanningView() {
                       </div>
                     ) : displayedDays.map((day, i) =>
                     <div key={i} className={cn('border-r border-border/30 py-0.5 text-center text-[9px] font-medium', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40', day.dateStr === todayStr && 'bg-primary/10')} style={{ width: colWidth, minWidth: colWidth }}>
-                        <div>{['Sö', 'Må', 'Ti', 'On', 'To', 'Fr', 'Lö'][day.dayOfWeek]}</div>
-                        <div className="text-muted-foreground">{day.date.getDate()}</div>
+                        <div className="bg-primary-foreground">{['Sö', 'Må', 'Ti', 'On', 'To', 'Fr', 'Lö'][day.dayOfWeek]}</div>
+                        <div className="text-muted-foreground bg-primary-foreground">{day.date.getDate()}</div>
                       </div>
                     )}
                   </div>
@@ -648,7 +648,7 @@ export function ResourcePlanningView() {
                           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                               {pInstallers.map((pi) =>
                             <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
-                                  <div className="sticky left-0 z-10 w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 min-w-0 flex-row flex items-center justify-start bg-primary-foreground">
+                                  <div className="sticky left-0 z-10 w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center min-w-0 bg-primary-foreground">
                                     <div className="min-w-0 flex items-center gap-1.5">
                                       <div className={cn('h-2 w-2 rounded-full shrink-0', pi.isVacant ? 'bg-destructive' : getBarColor(resourceStatus))} />
                                       <button
