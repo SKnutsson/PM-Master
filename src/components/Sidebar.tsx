@@ -212,7 +212,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
       {/* Developer credit */}
       {!isCollapsed &&
-      <p className="px-4 pb-3 text-[10px] select-none text-secondary text-justify">
+      <p className="px-4 pb-3 text-[10px] select-none text-slate-400">
           Developed by S. Knutsson
         </p>
       }
