@@ -15,8 +15,8 @@ import { EditEstimationDialog } from './dialogs/EditEstimationDialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from
-'@/components/ui/tooltip';
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 
 const containerVariants = {
@@ -32,12 +32,12 @@ const itemVariants = {
 type ViewMode = 'weeks' | 'days';
 
 const resourceLegend = [
-{ color: 'bg-status-completed', label: 'Inom kalkyl' },
-{ color: 'bg-status-delayed', label: 'Överskrider kalkyl' }];
-
+  { color: 'bg-status-completed', label: 'Inom kalkyl' },
+  { color: 'bg-status-delayed', label: 'Överskrider kalkyl' },
+];
 
 function generateWeeks(year: number) {
-  const weeks: {weekNum: number;startDate: Date;label: string;}[] = [];
+  const weeks: { weekNum: number; startDate: Date; label: string }[] = [];
   const jan1 = new Date(year, 0, 1);
   let current = new Date(jan1);
   while (current.getDay() !== 1) current.setDate(current.getDate() + 1);
@@ -56,7 +56,7 @@ function formatLocalDate(d: Date): string {
 }
 
 function generateAllDays(year: number) {
-  const days: {date: Date;dateStr: string;label: string;dayOfWeek: number;}[] = [];
+  const days: { date: Date; dateStr: string; label: string; dayOfWeek: number }[] = [];
   const current = new Date(year, 0, 1);
   const endDate = new Date(year, 11, 31);
   while (current <= endDate) {
@@ -64,7 +64,7 @@ function generateAllDays(year: number) {
       date: new Date(current),
       dateStr: formatLocalDate(current),
       label: current.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }),
-      dayOfWeek: current.getDay()
+      dayOfWeek: current.getDay(),
     });
     current.setDate(current.getDate() + 1);
   }
@@ -82,7 +82,7 @@ export function ResourcePlanningView() {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation, assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry
+    upsertDailyEntry,
   } = useResourceData();
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
@@ -111,7 +111,7 @@ export function ResourcePlanningView() {
   const weeks = useMemo(() => generateWeeks(2026), []);
   const allDays = useMemo(() => generateAllDays(2026), []);
 
-  const today = useMemo(() => {const d = new Date();d.setHours(0, 0, 0, 0);return d;}, []);
+  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
   const todayStr = formatLocalDate(today);
 
   const displayedWeeks = weeks;
@@ -129,44 +129,44 @@ export function ResourcePlanningView() {
     return -1;
   }, [today, weeks]);
 
-  const activeProjects = allProjects.filter((p) => p.status !== 'Avslutat');
-  const archivedProjects = allProjects.filter((p) => p.status === 'Avslutat');
+  const activeProjects = allProjects.filter(p => p.status !== 'Avslutat');
+  const archivedProjects = allProjects.filter(p => p.status === 'Avslutat');
   const displayProjects = showArchived ? archivedProjects : activeProjects;
 
   const filteredProjects = useMemo(() => {
     let result = displayProjects;
     if (filterInstaller !== 'all') {
-      const projectIds = projectInstallers.filter((pi) => pi.installerId === filterInstaller).map((pi) => pi.projectId);
-      result = result.filter((p) => projectIds.includes(p.id));
+      const projectIds = projectInstallers.filter(pi => pi.installerId === filterInstaller).map(pi => pi.projectId);
+      result = result.filter(p => projectIds.includes(p.id));
     }
     if (filterCompany !== 'all') {
-      const installerIds = installers.filter((i) => i.company === filterCompany).map((i) => i.id);
-      const projectIds = projectInstallers.filter((pi) => installerIds.includes(pi.installerId)).map((pi) => pi.projectId);
-      result = result.filter((p) => projectIds.includes(p.id));
+      const installerIds = installers.filter(i => i.company === filterCompany).map(i => i.id);
+      const projectIds = projectInstallers.filter(pi => installerIds.includes(pi.installerId)).map(pi => pi.projectId);
+      result = result.filter(p => projectIds.includes(p.id));
     }
     if (filterOverloaded) {
-      result = result.filter((p) => getResourceStatus(p.id) === 'over');
+      result = result.filter(p => getResourceStatus(p.id) === 'over');
     }
     if (filterNoResources) {
-      result = result.filter((p) => !projectInstallers.some((pi) => pi.projectId === p.id));
+      result = result.filter(p => !projectInstallers.some(pi => pi.projectId === p.id));
     }
     return result;
   }, [displayProjects, filterInstaller, filterCompany, filterOverloaded, filterNoResources, projectInstallers, installers, dailyEntries, estimations]);
 
   const toggleProject = (id: string) => {
-    setExpandedProjects((prev) => {
+    setExpandedProjects(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);else next.add(id);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
 
-  const expandAll = () => setExpandedProjects(new Set(filteredProjects.map((p) => p.id)));
+  const expandAll = () => setExpandedProjects(new Set(filteredProjects.map(p => p.id)));
   const collapseAll = () => setExpandedProjects(new Set());
 
-  const getProjectInstallers = (projectId: string) => projectInstallers.filter((pi) => pi.projectId === projectId);
-  const getProjectDailyEntries = (projectId: string) => dailyEntries.filter((d) => d.projectId === projectId);
-  const getEstimation = (projectId: string) => estimations.find((e) => e.projectId === projectId);
+  const getProjectInstallers = (projectId: string) => projectInstallers.filter(pi => pi.projectId === projectId);
+  const getProjectDailyEntries = (projectId: string) => dailyEntries.filter(d => d.projectId === projectId);
+  const getEstimation = (projectId: string) => estimations.find(e => e.projectId === projectId);
 
   function getProjectSummary(projectId: string) {
     const entries = getProjectDailyEntries(projectId);
@@ -186,9 +186,9 @@ export function ResourcePlanningView() {
 
   const getBarColor = (status: 'ok' | 'warning' | 'over') => {
     switch (status) {
-      case 'ok':return 'bg-status-completed';
-      case 'warning':return 'bg-status-in-progress';
-      case 'over':return 'bg-status-delayed';
+      case 'ok': return 'bg-status-completed';
+      case 'warning': return 'bg-status-in-progress';
+      case 'over': return 'bg-status-delayed';
     }
   };
 
@@ -198,14 +198,14 @@ export function ResourcePlanningView() {
 
   const yearGroups = useMemo(() => {
     const items = viewMode === 'weeks' ? displayedWeeks : displayedDays;
-    const groups: {label: string;span: number;}[] = [];
-    items.forEach((item) => {
+    const groups: { label: string; span: number }[] = [];
+    items.forEach(item => {
       const d = 'startDate' in item ? item.startDate : (item as any).date;
       const y = d.getFullYear();
       const m = d.toLocaleDateString('sv-SE', { month: 'short' });
       const label = `${y} • ${m}`;
-      if (groups.length > 0 && groups[groups.length - 1].label === label) groups[groups.length - 1].span++;else
-      groups.push({ label, span: 1 });
+      if (groups.length > 0 && groups[groups.length - 1].label === label) groups[groups.length - 1].span++;
+      else groups.push({ label, span: 1 });
     });
     return groups;
   }, [viewMode, displayedWeeks, displayedDays]);
@@ -213,21 +213,21 @@ export function ResourcePlanningView() {
   // Week number groups for day view
   const dayWeekGroups = useMemo(() => {
     if (viewMode !== 'days') return [];
-    const groups: {label: string;span: number;}[] = [];
-    displayedDays.forEach((day) => {
+    const groups: { label: string; span: number }[] = [];
+    displayedDays.forEach(day => {
       const jan1 = new Date(day.date.getFullYear(), 0, 1);
       const days = Math.floor((day.date.getTime() - jan1.getTime()) / (24 * 60 * 60 * 1000));
       const wn = Math.ceil((days + jan1.getDay() + 1) / 7);
       const label = `V${wn}`;
-      if (groups.length > 0 && groups[groups.length - 1].label === label) groups[groups.length - 1].span++;else
-      groups.push({ label, span: 1 });
+      if (groups.length > 0 && groups[groups.length - 1].label === label) groups[groups.length - 1].span++;
+      else groups.push({ label, span: 1 });
     });
     return groups;
   }, [viewMode, displayedDays]);
 
   const todayColIndex = useMemo(() => {
-    if (viewMode === 'weeks') return displayedWeeks.findIndex((w) => w.weekNum === todayWeekNum);
-    return displayedDays.findIndex((d) => d.dateStr === todayStr);
+    if (viewMode === 'weeks') return displayedWeeks.findIndex(w => w.weekNum === todayWeekNum);
+    return displayedDays.findIndex(d => d.dateStr === todayStr);
   }, [viewMode, displayedWeeks, displayedDays, todayWeekNum, todayStr]);
 
   // --- Scroll ref ---
@@ -248,11 +248,11 @@ export function ResourcePlanningView() {
     return (
       <div
         className="absolute top-0 bottom-0 w-0.5 bg-destructive pointer-events-none"
-        style={{ left: `${leftPx}px` }}>
-
+        style={{ left: `${leftPx}px` }}
+      >
         <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-destructive" />
-      </div>);
-
+      </div>
+    );
   };
 
   const openDailyDialog = (projectId: string, dateStr: string, installerId?: string) => {
@@ -267,7 +267,7 @@ export function ResourcePlanningView() {
     setDailyDialogOpen(true);
   };
 
-  const getWeekRange = (week: {startDate: Date;}) => {
+  const getWeekRange = (week: { startDate: Date }) => {
     const weekStart = week.startDate;
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
@@ -276,8 +276,8 @@ export function ResourcePlanningView() {
 
   // Render schedule cells for a single installer in DAY view
   const renderInstallerDayCells = (projectId: string, installerId: string, status: 'ok' | 'warning' | 'over') => {
-    const entries = dailyEntries.filter((d) => d.projectId === projectId && d.installerId === installerId);
-    const entryMap = new Map(entries.map((e) => [e.date, e]));
+    const entries = dailyEntries.filter(d => d.projectId === projectId && d.installerId === installerId);
+    const entryMap = new Map(entries.map(e => [e.date, e]));
 
     return displayedDays.map((day, i) => {
       const entry = entryMap.get(day.dateStr);
@@ -288,25 +288,25 @@ export function ResourcePlanningView() {
           key={i}
           className={cn(
             'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors',
-            isWeekend && 'bg-muted/40'
+            isWeekend && 'bg-muted/40',
           )}
           style={{ width: colWidth, minWidth: colWidth }}
-          onClick={() => openDailyDialog(projectId, day.dateStr, installerId)}>
-
-          {entry && totalH > 0 &&
-          <Tooltip>
+          onClick={() => openDailyDialog(projectId, day.dateStr, installerId)}
+        >
+          {entry && totalH > 0 && (
+            <Tooltip>
               <TooltipTrigger asChild>
                 <div className="absolute inset-0.5 flex flex-col gap-px">
-                  {entry.plannedWorkHours > 0 &&
-                <div className={cn('flex-1 rounded-sm flex items-center justify-center', getBarColor(status))}>
+                  {entry.plannedWorkHours > 0 && (
+                    <div className={cn('flex-1 rounded-sm flex items-center justify-center', getBarColor(status))}>
                       <span className="text-[8px] font-bold text-white">{entry.plannedWorkHours}h</span>
                     </div>
-                }
-                  {entry.plannedTravelHours > 0 &&
-                <div className={cn('h-3.5 rounded-sm flex items-center justify-center bg-stripes', getBarColor(status), 'brightness-75')}>
+                  )}
+                  {entry.plannedTravelHours > 0 && (
+                    <div className={cn('h-3.5 rounded-sm flex items-center justify-center bg-stripes', getBarColor(status), 'brightness-75')}>
                       <span className="text-[8px] font-bold text-white drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]">{entry.plannedTravelHours}h</span>
                     </div>
-                }
+                  )}
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
@@ -315,19 +315,19 @@ export function ResourcePlanningView() {
                 <p>Resa: {entry.plannedTravelHours}h</p>
               </TooltipContent>
             </Tooltip>
-          }
-        </div>);
-
+          )}
+        </div>
+      );
     });
   };
 
   // Render schedule cells for a single installer in WEEK view
   const renderInstallerWeekCells = (projectId: string, installerId: string, status: 'ok' | 'warning' | 'over') => {
-    const entries = dailyEntries.filter((d) => d.projectId === projectId && d.installerId === installerId);
+    const entries = dailyEntries.filter(d => d.projectId === projectId && d.installerId === installerId);
 
-    return displayedWeeks.map((week) => {
+    return displayedWeeks.map(week => {
       const { start, end } = getWeekRange(week);
-      const weekEntries = entries.filter((e) => e.date >= start && e.date <= end);
+      const weekEntries = entries.filter(e => e.date >= start && e.date <= end);
       const workH = weekEntries.reduce((s, e) => s + e.plannedWorkHours, 0);
       const travelH = weekEntries.reduce((s, e) => s + e.plannedTravelHours, 0);
       const totalH = workH + travelH;
@@ -336,10 +336,10 @@ export function ResourcePlanningView() {
         <div
           key={week.weekNum}
           className={cn('h-7 border-r border-border/30 relative', week.weekNum === todayWeekNum && 'bg-primary/5')}
-          style={{ width: colWidth, minWidth: colWidth }}>
-
-          {totalH > 0 &&
-          <Tooltip>
+          style={{ width: colWidth, minWidth: colWidth }}
+        >
+          {totalH > 0 && (
+            <Tooltip>
               <TooltipTrigger asChild>
                 <div className={cn('absolute inset-0.5 rounded-sm flex items-center justify-center', getBarColor(status))}>
                   <span className="text-[8px] font-bold text-white">
@@ -353,18 +353,18 @@ export function ResourcePlanningView() {
                 <p>Resa: {travelH}h</p>
               </TooltipContent>
             </Tooltip>
-          }
-        </div>);
-
+          )}
+        </div>
+      );
     });
   };
 
   // Render project-level summary cells in WEEK view (collapsed)
   const renderProjectWeekCells = (projectId: string, status: 'ok' | 'warning' | 'over') => {
     const entries = getProjectDailyEntries(projectId);
-    return displayedWeeks.map((week) => {
+    return displayedWeeks.map(week => {
       const { start, end } = getWeekRange(week);
-      const weekEntries = entries.filter((e) => e.date >= start && e.date <= end);
+      const weekEntries = entries.filter(e => e.date >= start && e.date <= end);
       const workH = weekEntries.reduce((s, e) => s + e.plannedWorkHours, 0);
       const travelH = weekEntries.reduce((s, e) => s + e.plannedTravelHours, 0);
       const totalH = workH + travelH;
@@ -373,10 +373,10 @@ export function ResourcePlanningView() {
         <div
           key={week.weekNum}
           className={cn('h-7 border-r border-border/30 relative', week.weekNum === todayWeekNum && 'bg-primary/5')}
-          style={{ width: colWidth, minWidth: colWidth }}>
-
-          {totalH > 0 &&
-          <Tooltip>
+          style={{ width: colWidth, minWidth: colWidth }}
+        >
+          {totalH > 0 && (
+            <Tooltip>
               <TooltipTrigger asChild>
                 <div className={cn('absolute inset-0.5 rounded-sm flex items-center justify-center', getBarColor(status))}>
                   <span className="text-[8px] font-bold text-white">{totalH}h</span>
@@ -388,17 +388,17 @@ export function ResourcePlanningView() {
                 <p>Resa: {travelH}h</p>
               </TooltipContent>
             </Tooltip>
-          }
-        </div>);
-
+          )}
+        </div>
+      );
     });
   };
 
   // Render project-level summary cells in DAY view (collapsed)
   const renderProjectDayCells = (projectId: string, status: 'ok' | 'warning' | 'over') => {
     const entries = getProjectDailyEntries(projectId);
-    const entryByDate = new Map<string, {work: number;travel: number;}>();
-    entries.forEach((e) => {
+    const entryByDate = new Map<string, { work: number; travel: number }>();
+    entries.forEach(e => {
       const existing = entryByDate.get(e.date) || { work: 0, travel: 0 };
       entryByDate.set(e.date, { work: existing.work + e.plannedWorkHours, travel: existing.travel + e.plannedTravelHours });
     });
@@ -413,13 +413,13 @@ export function ResourcePlanningView() {
           key={i}
           className={cn(
             'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors',
-            isWeekend && 'bg-muted/40'
+            isWeekend && 'bg-muted/40',
           )}
           style={{ width: colWidth, minWidth: colWidth }}
-          onClick={() => openDailyDialog(projectId, day.dateStr)}>
-
-          {totalH > 0 &&
-          <Tooltip>
+          onClick={() => openDailyDialog(projectId, day.dateStr)}
+        >
+          {totalH > 0 && (
+            <Tooltip>
               <TooltipTrigger asChild>
                 <div className={cn('absolute inset-0.5 rounded-sm flex items-center justify-center', getBarColor(status))}>
                   <span className="text-[8px] font-bold text-white">{totalH}h</span>
@@ -431,13 +431,13 @@ export function ResourcePlanningView() {
                 <p>Resa: {dayData!.travel}h</p>
               </TooltipContent>
             </Tooltip>
-          }
-        </div>);
-
+          )}
+        </div>
+      );
     });
   };
 
-  const companies = useMemo(() => [...new Set(installers.map((i) => i.company).filter(Boolean))], [installers]);
+  const companies = useMemo(() => [...new Set(installers.map(i => i.company).filter(Boolean))], [installers]);
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -452,12 +452,12 @@ export function ResourcePlanningView() {
             <div className="flex h-8 items-center gap-1 rounded-md border border-input bg-background p-1">
               <button
                 onClick={() => setViewMode('weeks')}
-                className={cn('rounded-sm px-3 py-1 text-xs font-medium transition-colors', viewMode === 'weeks' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
-                Veckor</button>
+                className={cn('rounded-sm px-3 py-1 text-xs font-medium transition-colors', viewMode === 'weeks' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >Veckor</button>
               <button
                 onClick={() => setViewMode('days')}
-                className={cn('rounded-sm px-3 py-1 text-xs font-medium transition-colors', viewMode === 'days' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
-                Dagar</button>
+                className={cn('rounded-sm px-3 py-1 text-xs font-medium transition-colors', viewMode === 'days' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+              >Dagar</button>
             </div>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={expandAll}>Expandera</Button>
@@ -475,7 +475,7 @@ export function ResourcePlanningView() {
             <SelectTrigger className="h-7 w-[140px] text-xs"><SelectValue placeholder="Montör" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs">Alla montörer</SelectItem>
-              {installers.map((i) => <SelectItem key={i.id} value={i.id} className="text-xs">{i.name}</SelectItem>)}
+              {installers.map(i => <SelectItem key={i.id} value={i.id} className="text-xs">{i.name}</SelectItem>)}
             </SelectContent>
           </Select>
 
@@ -483,7 +483,7 @@ export function ResourcePlanningView() {
             <SelectTrigger className="h-7 w-[130px] text-xs"><SelectValue placeholder="Företag" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs">Alla företag</SelectItem>
-              {companies.map((c) => <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>)}
+              {companies.map(c => <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>)}
             </SelectContent>
           </Select>
 
@@ -499,8 +499,8 @@ export function ResourcePlanningView() {
             onAdd={addInstaller}
             onUpdate={updateInstaller}
             onDelete={deleteInstaller}
-            trigger={<Button variant="outline" size="sm" className="h-7 text-xs gap-1"><Users className="h-3 w-3" />Montörer</Button>} />
-
+            trigger={<Button variant="outline" size="sm" className="h-7 text-xs gap-1"><Users className="h-3 w-3" />Montörer</Button>}
+          />
         </div>
 
         {/* Main Grid */}
@@ -509,34 +509,34 @@ export function ResourcePlanningView() {
             {/* Single scrollable container for both axes */}
             <div
               ref={mainScrollRef}
-              className="overflow-auto max-h-[calc(100vh-280px)]">
-
+              className="overflow-auto max-h-[calc(100vh-280px)]"
+            >
               <div style={{ width: LEFT_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header */}
                 <div className="sticky top-0 z-30 flex border-b border-border/30 bg-card">
                   <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50" />
                   <div className="flex">
-                    {yearGroups.map((g, i) =>
-                    <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
+                    {yearGroups.map((g, i) => (
+                      <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
                         {g.label}
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
 
                 {/* Week number row for day view */}
-                {viewMode === 'days' &&
-                <div className="sticky top-[21px] z-30 flex border-b border-border/30 bg-card">
+                {viewMode === 'days' && (
+                  <div className="sticky top-[21px] z-30 flex border-b border-border/30 bg-card">
                     <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50" />
                     <div className="flex">
-                      {dayWeekGroups.map((g, i) =>
-                    <div key={i} className="border-r border-border/30 text-center text-[9px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
+                      {dayWeekGroups.map((g, i) => (
+                        <div key={i} className="border-r border-border/30 text-center text-[9px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
                           {g.label}
                         </div>
-                    )}
+                      ))}
                     </div>
                   </div>
-                }
+                )}
 
                 {/* Week/Day header */}
                 <div className={cn("sticky z-30 flex border-b border-border/50 bg-card", viewMode === 'days' ? 'top-[42px]' : 'top-[21px]')}>
@@ -544,17 +544,17 @@ export function ResourcePlanningView() {
                     Projekt / Montör
                   </div>
                   <div className="flex">
-                    {viewMode === 'weeks' ? displayedWeeks.map((week) =>
-                    <div key={week.weekNum} className={cn('border-r border-border/30 py-0.5 text-center text-[10px] font-medium', week.weekNum === todayWeekNum && 'bg-primary/10')} style={{ width: colWidth, minWidth: colWidth }}>
+                    {viewMode === 'weeks' ? displayedWeeks.map(week => (
+                      <div key={week.weekNum} className={cn('border-r border-border/30 py-0.5 text-center text-[10px] font-medium', week.weekNum === todayWeekNum && 'bg-primary/10')} style={{ width: colWidth, minWidth: colWidth }}>
                         <div>{week.label}</div>
                         <div className="text-muted-foreground text-[9px]">{week.startDate.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}</div>
                       </div>
-                    ) : displayedDays.map((day, i) =>
-                    <div key={i} className={cn('border-r border-border/30 py-0.5 text-center text-[9px] font-medium', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40', day.dateStr === todayStr && 'bg-primary/10')} style={{ width: colWidth, minWidth: colWidth }}>
+                    )) : displayedDays.map((day, i) => (
+                      <div key={i} className={cn('border-r border-border/30 py-0.5 text-center text-[9px] font-medium', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40', day.dateStr === todayStr && 'bg-primary/10')} style={{ width: colWidth, minWidth: colWidth }}>
                         <div>{['Sö', 'Må', 'Ti', 'On', 'To', 'Fr', 'Lö'][day.dayOfWeek]}</div>
                         <div className="text-muted-foreground">{day.date.getDate()}</div>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
 
@@ -564,7 +564,7 @@ export function ResourcePlanningView() {
                     {renderTodayMarker()}
                   </div>
 
-                  {filteredProjects.map((project) => {
+                  {filteredProjects.map(project => {
                     const isExpanded = expandedProjects.has(project.id);
                     const pInstallers = getProjectInstallers(project.id);
                     const resourceStatus = getResourceStatus(project.id);
@@ -593,7 +593,7 @@ export function ResourcePlanningView() {
                                         'text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-1',
                                         resourceStatus === 'ok' && 'bg-status-completed/20 text-status-completed',
                                         resourceStatus === 'warning' && 'bg-status-in-progress/20 text-status-in-progress',
-                                        resourceStatus === 'over' && 'bg-status-delayed/20 text-status-delayed'
+                                        resourceStatus === 'over' && 'bg-status-delayed/20 text-status-delayed',
                                       )}>
                                         {summary.total}h / {estTotal > 0 ? `${estTotal}h` : '–'}
                                       </span>
@@ -604,97 +604,97 @@ export function ResourcePlanningView() {
                                       <p>Resa: {summary.totalTravel}h / {est?.estimatedTravelHours || 0}h kalkyl</p>
                                       <p className="mt-1 font-medium">Totalt: {summary.total}h / {estTotal}h</p>
                                     </TooltipContent>
-                                  </Tooltip>);
-
+                                  </Tooltip>
+                                );
                               })()}
                             </div>
-                            {!isArchived &&
-                            <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+                            {!isArchived && (
+                              <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
                                 <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
-                                setEstDialogProjectId(project.id);
-                                setEstDialogProjectName(`${project.code} - ${project.name}`);
-                                setEstDialogOpen(true);
-                              }}>
+                                  setEstDialogProjectId(project.id);
+                                  setEstDialogProjectName(`${project.code} - ${project.name}`);
+                                  setEstDialogOpen(true);
+                                }}>
                                   <Calculator className="h-3 w-3" />
                                 </Button>
                                 <AssignInstallerDialog
-                                projectName={project.name}
-                                installers={installers}
-                                projectInstallers={pInstallers}
-                                onAssign={(installerId) => assignInstaller(project.id, installerId)}
-                                onAssignVacant={() => assignVacant(project.id)}
-                                onUnassign={unassignInstaller}
-                                trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>} />
-
+                                  projectName={project.name}
+                                  installers={installers}
+                                  projectInstallers={pInstallers}
+                                  onAssign={(installerId) => assignInstaller(project.id, installerId)}
+                                  onAssignVacant={() => assignVacant(project.id)}
+                                  onUnassign={unassignInstaller}
+                                  trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>}
+                                />
                               </div>
-                            }
+                            )}
                           </div>
                           {/* Schedule cells */}
                           <div className="flex items-center relative">
                             {!isExpanded && viewMode === 'weeks' && renderProjectWeekCells(project.id, resourceStatus)}
                             {!isExpanded && viewMode === 'days' && renderProjectDayCells(project.id, resourceStatus)}
-                            {isExpanded && viewMode === 'weeks' && displayedWeeks.map((w) =>
-                            <div key={w.weekNum} className={cn('h-7 border-r border-border/30', w.weekNum === todayWeekNum && 'bg-primary/5')} style={{ width: colWidth, minWidth: colWidth }} />
-                            )}
-                            {isExpanded && viewMode === 'days' && displayedDays.map((day, i) =>
-                            <div key={i} className={cn('h-7 border-r border-border/30', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40')} style={{ width: colWidth, minWidth: colWidth }} />
-                            )}
+                            {isExpanded && viewMode === 'weeks' && displayedWeeks.map(w => (
+                              <div key={w.weekNum} className={cn('h-7 border-r border-border/30', w.weekNum === todayWeekNum && 'bg-primary/5')} style={{ width: colWidth, minWidth: colWidth }} />
+                            ))}
+                            {isExpanded && viewMode === 'days' && displayedDays.map((day, i) => (
+                              <div key={i} className={cn('h-7 border-r border-border/30', (day.dayOfWeek === 0 || day.dayOfWeek === 6) && 'bg-muted/40')} style={{ width: colWidth, minWidth: colWidth }} />
+                            ))}
                           </div>
                         </div>
 
                         {/* Expanded: installer rows */}
                         <AnimatePresence>
-                          {isExpanded &&
-                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                              {pInstallers.map((pi) =>
-                            <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
-                                  <div className="sticky left-0 z-10 w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 min-w-0 flex-row flex items-center justify-start bg-primary-foreground">
+                          {isExpanded && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+                              {pInstallers.map(pi => (
+                                <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
+                                  <div className="sticky left-0 z-10 bg-card group-hover:bg-muted/20 w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center min-w-0">
                                     <div className="min-w-0 flex items-center gap-1.5">
                                       <div className={cn('h-2 w-2 rounded-full shrink-0', pi.isVacant ? 'bg-destructive' : getBarColor(resourceStatus))} />
                                       <button
-                                    className={cn(
-                                      'text-xs truncate hover:underline cursor-pointer text-left',
-                                      pi.isVacant ? 'text-destructive font-semibold' : 'text-foreground'
-                                    )}
-                                    onClick={() => {setReassignTarget(pi);setReassignDialogOpen(true);}}
-                                    title="Klicka för att byta montör">
-
-                                        {pi.isVacant ? 'Vakant' : pi.installerName || 'Okänd'}
+                                        className={cn(
+                                          'text-xs truncate hover:underline cursor-pointer text-left',
+                                          pi.isVacant ? 'text-destructive font-semibold' : 'text-foreground'
+                                        )}
+                                        onClick={() => { setReassignTarget(pi); setReassignDialogOpen(true); }}
+                                        title="Klicka för att byta montör"
+                                      >
+                                        {pi.isVacant ? 'Vakant' : (pi.installerName || 'Okänd')}
                                       </button>
-                                      {!pi.isVacant &&
-                                  <span className="text-[9px] text-muted-foreground shrink-0">({pi.installerCompany})</span>
-                                  }
+                                      {!pi.isVacant && (
+                                        <span className="text-[9px] text-muted-foreground shrink-0">({pi.installerCompany})</span>
+                                      )}
                                     </div>
                                   </div>
                                   <div className="flex items-center relative">
-                                    {viewMode === 'days' ?
-                                renderInstallerDayCells(project.id, pi.installerId, resourceStatus) :
-                                renderInstallerWeekCells(project.id, pi.installerId, resourceStatus)
-                                }
+                                    {viewMode === 'days'
+                                      ? renderInstallerDayCells(project.id, pi.installerId, resourceStatus)
+                                      : renderInstallerWeekCells(project.id, pi.installerId, resourceStatus)
+                                    }
                                   </div>
                                 </div>
-                            )}
+                              ))}
 
-                              {pInstallers.length === 0 &&
-                            <div className="flex border-b border-border/30">
+                              {pInstallers.length === 0 && (
+                                <div className="flex border-b border-border/30">
                                   <div className="sticky left-0 z-10 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-2 pl-7">
                                     <span className="text-[10px] text-muted-foreground italic">Inga montörer kopplade</span>
                                   </div>
                                   <div style={{ width: gridWidth }} />
                                 </div>
-                            }
+                              )}
                             </motion.div>
-                          }
+                          )}
                         </AnimatePresence>
-                      </motion.div>);
-
+                      </motion.div>
+                    );
                   })}
 
-                  {filteredProjects.length === 0 &&
-                  <div className="p-6 text-center text-muted-foreground text-sm">
+                  {filteredProjects.length === 0 && (
+                    <div className="p-6 text-center text-muted-foreground text-sm">
                       {showArchived ? 'Inga arkiverade projekt.' : 'Inga aktiva projekt matchar filtren.'}
                     </div>
-                  }
+                  )}
                 </div>
               </div>
             </div>
@@ -713,8 +713,8 @@ export function ResourcePlanningView() {
           onSave={async (installerId, workHours, travelHours) => {
             await upsertDailyEntry(dailyDialogProject, installerId, dailyDialogDate, workHours, travelHours);
             toast.success('Dagpost sparad');
-          }} />
-
+          }}
+        />
 
         {/* Estimation Dialog */}
         <EditEstimationDialog
@@ -726,8 +726,8 @@ export function ResourcePlanningView() {
           onSave={async (installH, travelH) => {
             await upsertEstimation(estDialogProjectId, installH, travelH);
             toast.success('Kalkyl sparad');
-          }} />
-
+          }}
+        />
 
         {/* Reassign Installer Dialog */}
         <ReassignInstallerDialog
@@ -739,9 +739,9 @@ export function ResourcePlanningView() {
           onReassign={async (projectInstallerId, newInstallerId, isVacant) => {
             await reassignInstaller(projectInstallerId, newInstallerId, isVacant);
             toast.success(isVacant ? 'Montör markerad som Vakant' : 'Montör bytt');
-          }} />
-
+          }}
+        />
       </motion.div>
-    </TooltipProvider>);
-
+    </TooltipProvider>
+  );
 }
