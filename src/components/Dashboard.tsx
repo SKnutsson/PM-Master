@@ -241,9 +241,6 @@ export function Dashboard() {
                           <PhaseIcon className={`h-4 w-4 ${config.color}`} />
                         </div>
                         <h3 className="font-semibold text-sm">{phase}</h3>
-                        <span className={`ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${bgClass} ${config.color}`}>
-                          {phaseProjects.length}
-                        </span>
                       </div>
 
                       {/* Project list */}
