@@ -199,15 +199,8 @@ export function useResourceData() {
 
   // Assign a vacant slot
   const assignVacant = useCallback(async (projectId: string) => {
-    // Use a dummy installer_id — we pick the first installer as placeholder (required by FK)
-    // Actually we need a real installer_id for the FK. Instead we'll insert with a real installer
-    // but mark is_vacant = true. The user can reassign later.
-    // We need at least one installer to create a vacant slot with a valid FK.
-    // Get any existing installer id as placeholder
-    const { data: anyInstaller } = await supabase.from('installers').select('id').limit(1).single();
-    if (!anyInstaller) { console.error('No installers exist yet'); return null; }
     const { data, error } = await supabase.from('project_installers')
-      .insert({ project_id: projectId, installer_id: anyInstaller.id, is_vacant: true })
+      .insert({ project_id: projectId, installer_id: null, is_vacant: true } as any)
       .select('*, installers(name, company)').single();
     if (error) { console.error(error); return null; }
     const pi: ProjectInstaller = {
