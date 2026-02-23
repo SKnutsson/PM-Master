@@ -1,0 +1,1 @@
+ALTER TABLE public.project_installers ALTER COLUMN installer_id DROP NOT NULL;
