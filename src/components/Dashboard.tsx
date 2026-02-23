@@ -159,7 +159,7 @@ export function Dashboard() {
         ))}
       </div>
 
-      {/* Project Phases */}
+      {/* Project Phases - Chevron Layout */}
       <motion.div variants={itemVariants}>
         <Card className="border-border/50 bg-card/80">
           <div ref={phasesRef}>
@@ -175,53 +175,94 @@ export function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              {projectsByPhase.map(({ phase, projects: phaseProjects }) => {
+            <div className="flex overflow-x-auto gap-0 pb-2">
+              {projectsByPhase.map(({ phase, projects: phaseProjects }, index) => {
                 const config = phaseConfig[phase];
                 const PhaseIcon = config.icon;
+                const isFirst = index === 0;
+                const isLast = index === projectsByPhase.length - 1;
+
+                const bgClass = phase === 'Konstruktion'
+                  ? 'bg-blue-500/10 dark:bg-blue-500/15'
+                  : phase === 'Produktion'
+                  ? 'bg-amber-500/10 dark:bg-amber-500/15'
+                  : 'bg-emerald-500/10 dark:bg-emerald-500/15';
+
+                const hoverBgClass = phase === 'Konstruktion'
+                  ? 'hover:bg-blue-500/15 dark:hover:bg-blue-500/20'
+                  : phase === 'Produktion'
+                  ? 'hover:bg-amber-500/15 dark:hover:bg-amber-500/20'
+                  : 'hover:bg-emerald-500/15 dark:hover:bg-emerald-500/20';
+
+                const borderColor = phase === 'Konstruktion'
+                  ? 'border-blue-500/20 dark:border-blue-400/20'
+                  : phase === 'Produktion'
+                  ? 'border-amber-500/20 dark:border-amber-400/20'
+                  : 'border-emerald-500/20 dark:border-emerald-400/20';
+
+                const chevronFill = phase === 'Konstruktion'
+                  ? 'fill-blue-500/10 dark:fill-blue-500/15'
+                  : phase === 'Produktion'
+                  ? 'fill-amber-500/10 dark:fill-amber-500/15'
+                  : 'fill-emerald-500/10 dark:fill-emerald-500/15';
+
+                const chevronStroke = phase === 'Konstruktion'
+                  ? 'stroke-blue-500/30 dark:stroke-blue-400/30'
+                  : phase === 'Produktion'
+                  ? 'stroke-amber-500/30 dark:stroke-amber-400/30'
+                  : 'stroke-emerald-500/30 dark:stroke-emerald-400/30';
+
                 return (
-                  <Card
-                    key={phase}
-                    className={`group relative overflow-hidden border-border/50 bg-card/80 transition-all duration-300 hover:shadow-lg hover:shadow-${phase === 'Konstruktion' ? 'blue' : phase === 'Produktion' ? 'amber' : 'emerald'}-500/10 hover:-translate-y-0.5`}
-                  >
-                    {/* Top accent bar */}
-                    <div className={`absolute inset-x-0 top-0 h-1 ${phase === 'Konstruktion' ? 'bg-blue-500' : phase === 'Produktion' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                    <CardContent className="p-4 pt-5">
+                  <div key={phase} className="flex-1 min-w-[200px] relative group">
+                    {/* Chevron shape via SVG */}
+                    <svg
+                      className="absolute inset-0 w-full h-full"
+                      viewBox="0 0 200 100"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d={
+                          isFirst
+                            ? 'M 0,0 L 185,0 L 200,50 L 185,100 L 0,100 Z'
+                            : isLast
+                            ? 'M 0,0 L 200,0 L 200,100 L 0,100 L 15,50 Z'
+                            : 'M 0,0 L 185,0 L 200,50 L 185,100 L 0,100 L 15,50 Z'
+                        }
+                        className={`${chevronFill} ${chevronStroke} transition-all duration-300`}
+                        strokeWidth="0.5"
+                      />
+                    </svg>
+
+                    <div className={`relative z-10 px-6 py-4 ${!isFirst ? 'pl-8' : ''} transition-all duration-300 group-hover:-translate-y-0.5`}>
+                      {/* Phase header */}
                       <div className="flex items-center gap-2 mb-3">
-                        <div className={`rounded-lg p-1.5 ${config.bg}`}>
+                        <div className={`rounded-lg p-1.5 ${bgClass}`}>
                           <PhaseIcon className={`h-4 w-4 ${config.color}`} />
                         </div>
                         <h3 className="font-semibold text-sm">{phase}</h3>
-                        <span className={`ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${config.bg} ${config.color}`}>
-                          {phaseProjects.length} projekt
+                        <span className={`ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${bgClass} ${config.color}`}>
+                          {phaseProjects.length}
                         </span>
                       </div>
-                      {phaseProjects.length === 0 ? (
-                        <p className="text-xs text-muted-foreground">Inga projekt i denna fas</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-1.5">
-                          {phaseProjects.map(p => {
-                            const completed = p.activities.filter(a => a.status === 'Slutförd').length;
-                            const total = p.activities.length;
-                            const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-                            return (
-                              <div
-                                key={p.id}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-xs transition-colors hover:bg-muted/70"
-                              >
-                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${phase === 'Konstruktion' ? 'bg-blue-500' : phase === 'Produktion' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                                <span className="font-mono text-[10px] text-muted-foreground">{p.code}</span>
-                                <span className="font-medium truncate max-w-[120px]">{p.name}</span>
-                                {total > 0 && (
-                                  <span className="text-[10px] text-muted-foreground">{progress}%</span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+
+                      {/* Project list */}
+                      <div className="max-h-[320px] overflow-y-auto space-y-0.5 pr-1">
+                        {phaseProjects.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">Inga projekt</p>
+                        ) : (
+                          phaseProjects.map(p => (
+                            <div
+                              key={p.id}
+                              className={`rounded-md px-2 py-1.5 text-xs cursor-default transition-colors ${hoverBgClass}`}
+                            >
+                              {p.code} – {p.name}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>
