@@ -180,24 +180,48 @@ export function Dashboard() {
                 const config = phaseConfig[phase];
                 const PhaseIcon = config.icon;
                 return (
-                  <div key={phase} className={`rounded-lg border border-border/50 p-4 ${config.bg}`}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <PhaseIcon className={`h-5 w-5 ${config.color}`} />
-                      <h3 className="font-semibold text-sm">{phase}</h3>
-                      <span className="ml-auto text-xs text-muted-foreground">{phaseProjects.length} projekt</span>
-                    </div>
-                    {phaseProjects.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">Inga projekt i denna fas</p>
-                    ) : (
-                      <div className="space-y-1">
-                        {phaseProjects.map(p => (
-                          <div key={p.id} className="text-xs font-medium truncate">
-                            {p.code} – {p.name}
-                          </div>
-                        ))}
+                  <Card
+                    key={phase}
+                    className={`group relative overflow-hidden border-border/50 bg-card/80 transition-all duration-300 hover:shadow-lg hover:shadow-${phase === 'Konstruktion' ? 'blue' : phase === 'Produktion' ? 'amber' : 'emerald'}-500/10 hover:-translate-y-0.5`}
+                  >
+                    {/* Top accent bar */}
+                    <div className={`absolute inset-x-0 top-0 h-1 ${phase === 'Konstruktion' ? 'bg-blue-500' : phase === 'Produktion' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                    <CardContent className="p-4 pt-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`rounded-lg p-1.5 ${config.bg}`}>
+                          <PhaseIcon className={`h-4 w-4 ${config.color}`} />
+                        </div>
+                        <h3 className="font-semibold text-sm">{phase}</h3>
+                        <span className={`ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${config.bg} ${config.color}`}>
+                          {phaseProjects.length} projekt
+                        </span>
                       </div>
-                    )}
-                  </div>
+                      {phaseProjects.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">Inga projekt i denna fas</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {phaseProjects.map(p => {
+                            const completed = p.activities.filter(a => a.status === 'Slutförd').length;
+                            const total = p.activities.length;
+                            const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+                            return (
+                              <div
+                                key={p.id}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-xs transition-colors hover:bg-muted/70"
+                              >
+                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${phase === 'Konstruktion' ? 'bg-blue-500' : phase === 'Produktion' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                                <span className="font-mono text-[10px] text-muted-foreground">{p.code}</span>
+                                <span className="font-medium truncate max-w-[120px]">{p.name}</span>
+                                {total > 0 && (
+                                  <span className="text-[10px] text-muted-foreground">{progress}%</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
