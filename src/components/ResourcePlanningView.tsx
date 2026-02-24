@@ -442,7 +442,7 @@ export function ResourcePlanningView() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3 p-4">
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex flex-col h-full min-h-0 p-4 gap-3">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -505,12 +505,12 @@ export function ResourcePlanningView() {
         </div>
 
         {/* Main Grid */}
-        <Card className="border-border/50 bg-card/80 overflow-hidden">
-          <CardContent className="p-0">
+        <Card className="border-border/50 bg-card/80 overflow-hidden flex-1 flex flex-col">
+          <CardContent className="p-0 flex-1 flex flex-col">
             {/* Single scrollable container for both axes */}
             <div
               ref={mainScrollRef}
-              className="overflow-auto max-h-[calc(100vh-280px)]">
+              className="overflow-auto flex-1">
 
               <div style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header */}
