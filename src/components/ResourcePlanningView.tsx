@@ -442,7 +442,7 @@ export function ResourcePlanningView() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="flex flex-col h-full min-h-0 p-4 gap-3">
+      <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-3 p-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -505,12 +505,12 @@ export function ResourcePlanningView() {
         </div>
 
         {/* Main Grid */}
-        <Card className="border-border/50 bg-card/80 overflow-hidden flex-1 flex flex-col">
-          <CardContent className="p-0 flex-1 flex flex-col">
+        <Card className="border-border/50 bg-card/80 overflow-hidden">
+          <CardContent className="p-0">
             {/* Single scrollable container for both axes */}
             <div
               ref={mainScrollRef}
-              className="overflow-auto flex-1">
+              className="overflow-auto max-h-[calc(100vh-280px)]">
 
               <div style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header */}
@@ -546,7 +546,7 @@ export function ResourcePlanningView() {
                       Projekt / Montör
                     </div>
                     <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold text-center" style={{ width: KALKYL_COL_WIDTH }}>
-                      Kalkyl/Utfall
+                      Kalkyl
                     </div>
                   </div>
                   <div className="flex">
@@ -590,25 +590,25 @@ export function ResourcePlanningView() {
                                {!isExpanded && <span className="text-[10px] text-muted-foreground shrink-0">({pInstallers.length})</span>}
                              </div>
                              {!isArchived &&
-                              <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
                                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
-                                  setEstDialogProjectId(project.id);
-                                  setEstDialogProjectName(`${project.code} - ${project.name}`);
-                                  setEstDialogOpen(true);
-                                }}>
+                                setEstDialogProjectId(project.id);
+                                setEstDialogProjectName(`${project.code} - ${project.name}`);
+                                setEstDialogOpen(true);
+                              }}>
                                    <Calculator className="h-3 w-3" />
                                  </Button>
                                  <AssignInstallerDialog
-                                  projectName={project.name}
-                                  installers={installers}
-                                  projectInstallers={pInstallers}
-                                  onAssign={(installerId) => assignInstaller(project.id, installerId)}
-                                  onAssignVacant={() => assignVacant(project.id)}
-                                  onUnassign={unassignInstaller}
-                                  trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>} />
+                                projectName={project.name}
+                                installers={installers}
+                                projectInstallers={pInstallers}
+                                onAssign={(installerId) => assignInstaller(project.id, installerId)}
+                                onAssignVacant={() => assignVacant(project.id)}
+                                onUnassign={unassignInstaller}
+                                trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>} />
 
                                </div>
-                              }
+                             }
                            </div>
                             {/* Kalkyl column */}
                             <div className="border-l border-border/50 flex items-center justify-center relative" style={{ width: KALKYL_COL_WIDTH }}>
@@ -663,18 +663,18 @@ export function ResourcePlanningView() {
                                       <div className="min-w-0 flex items-center gap-1.5">
                                        <div className={cn('h-2 w-2 rounded-full shrink-0', pi.isVacant ? 'bg-destructive' : getBarColor(resourceStatus))} />
                                        <button
-                                      className={cn(
-                                        'text-xs truncate hover:underline cursor-pointer text-left',
-                                        pi.isVacant ? 'text-destructive font-semibold' : 'text-foreground'
-                                      )}
-                                      onClick={() => {setReassignTarget(pi);setReassignDialogOpen(true);}}
-                                      title="Klicka för att byta montör">
+                                     className={cn(
+                                       'text-xs truncate hover:underline cursor-pointer text-left',
+                                       pi.isVacant ? 'text-destructive font-semibold' : 'text-foreground'
+                                     )}
+                                     onClick={() => {setReassignTarget(pi);setReassignDialogOpen(true);}}
+                                     title="Klicka för att byta montör">
 
                                          {pi.isVacant ? 'Vakant' : pi.installerName || 'Okänd'}
                                        </button>
                                        {!pi.isVacant &&
-                                    <span className="text-[9px] text-muted-foreground shrink-0">({pi.installerCompany})</span>
-                                    }
+                                   <span className="text-[9px] text-muted-foreground shrink-0">({pi.installerCompany})</span>
+                                   }
                                       </div>
                                     </div>
                                     <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
