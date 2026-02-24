@@ -75,6 +75,7 @@ function generateAllDays(year: number) {
 const WEEK_COL_WIDTH = 56;
 const DAY_COL_WIDTH = 32;
 const LEFT_COL_WIDTH = 288; // w-72 = 18rem = 288px
+const KALKYL_COL_WIDTH = 96; // separate column for kalkyl/utfall
 
 export function ResourcePlanningView() {
   const { projects: allProjects } = useProjectDataContext();
@@ -511,10 +512,10 @@ export function ResourcePlanningView() {
               ref={mainScrollRef}
               className="overflow-auto max-h-[calc(100vh-280px)]">
 
-              <div style={{ width: LEFT_COL_WIDTH + gridWidth }}>
+              <div style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header */}
                 <div className="sticky top-0 z-30 flex border-b border-border/30 bg-card">
-                  <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50" />
+                  <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }} />
                   <div className="flex">
                     {yearGroups.map((g, i) =>
                     <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
@@ -527,7 +528,7 @@ export function ResourcePlanningView() {
                 {/* Week number row for day view */}
                 {viewMode === 'days' &&
                 <div className="sticky top-[21px] z-30 flex border-b border-border/30 bg-card">
-                    <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50" />
+                    <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }} />
                     <div className="flex">
                       {dayWeekGroups.map((g, i) =>
                     <div key={i} className="border-r border-border/30 text-center text-[9px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
@@ -540,8 +541,13 @@ export function ResourcePlanningView() {
 
                 {/* Week/Day header */}
                 <div className={cn("sticky z-30 flex border-b border-border/50 bg-card", viewMode === 'days' ? 'top-[42px]' : 'top-[21px]')}>
-                  <div className="sticky left-0 z-40 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
-                    Projekt / Montör
+                  <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                    <div className="w-72 shrink-0 px-2 py-1 text-xs font-semibold">
+                      Projekt / Montör
+                    </div>
+                    <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold text-center" style={{ width: KALKYL_COL_WIDTH }}>
+                      Kalkyl
+                    </div>
                   </div>
                   <div className="flex">
                     {viewMode === 'weeks' ? displayedWeeks.map((week) =>
@@ -574,13 +580,39 @@ export function ResourcePlanningView() {
                       <motion.div key={project.id} variants={itemVariants}>
                         {/* Project row */}
                         <div className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors" onClick={() => toggleProject(project.id)}>
-                          <div className="sticky left-0 z-10 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-1 flex items-center justify-between relative">
+                          <div className="sticky left-0 z-10 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                            <div className="w-72 shrink-0 px-2 py-1 flex items-center justify-between relative">
                             <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
                           <div className="flex items-center gap-1.5 min-w-0">
-                              {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />}
-                              <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
-                              <span className="font-semibold text-xs truncate">{project.code} - {project.name}</span>
-                              {!isExpanded && <span className="text-[10px] text-muted-foreground shrink-0">({pInstallers.length})</span>}
+                               {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />}
+                               <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
+                               <span className="font-semibold text-xs truncate">{project.code} - {project.name}</span>
+                               {!isExpanded && <span className="text-[10px] text-muted-foreground shrink-0">({pInstallers.length})</span>}
+                             </div>
+                             {!isArchived &&
+                            <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+                                 <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
+                                setEstDialogProjectId(project.id);
+                                setEstDialogProjectName(`${project.code} - ${project.name}`);
+                                setEstDialogOpen(true);
+                              }}>
+                                   <Calculator className="h-3 w-3" />
+                                 </Button>
+                                 <AssignInstallerDialog
+                                projectName={project.name}
+                                installers={installers}
+                                projectInstallers={pInstallers}
+                                onAssign={(installerId) => assignInstaller(project.id, installerId)}
+                                onAssignVacant={() => assignVacant(project.id)}
+                                onUnassign={unassignInstaller}
+                                trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>} />
+
+                               </div>
+                             }
+                           </div>
+                            {/* Kalkyl column */}
+                            <div className="border-l border-border/50 flex items-center justify-center relative" style={{ width: KALKYL_COL_WIDTH }}>
+                              <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
                               {(() => {
                                 const est = getEstimation(project.id);
                                 const summary = getProjectSummary(project.id);
@@ -590,9 +622,8 @@ export function ResourcePlanningView() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <span className={cn(
-                                        'text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-1',
+                                        'text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0',
                                         resourceStatus === 'ok' && 'bg-status-completed/20 text-status-completed',
-                                        resourceStatus === 'warning' && 'bg-status-in-progress/20 text-status-in-progress',
                                         resourceStatus === 'over' && 'bg-status-delayed/20 text-status-delayed'
                                       )}>
                                         {summary.total}h / {estTotal > 0 ? `${estTotal}h` : '–'}
@@ -605,29 +636,8 @@ export function ResourcePlanningView() {
                                       <p className="mt-1 font-medium">Totalt: {summary.total}h / {estTotal}h</p>
                                     </TooltipContent>
                                   </Tooltip>);
-
                               })()}
                             </div>
-                            {!isArchived &&
-                            <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                                <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
-                                setEstDialogProjectId(project.id);
-                                setEstDialogProjectName(`${project.code} - ${project.name}`);
-                                setEstDialogOpen(true);
-                              }}>
-                                  <Calculator className="h-3 w-3" />
-                                </Button>
-                                <AssignInstallerDialog
-                                projectName={project.name}
-                                installers={installers}
-                                projectInstallers={pInstallers}
-                                onAssign={(installerId) => assignInstaller(project.id, installerId)}
-                                onAssignVacant={() => assignVacant(project.id)}
-                                onUnassign={unassignInstaller}
-                                trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>} />
-
-                              </div>
-                            }
                           </div>
                           {/* Schedule cells */}
                           <div className="flex items-center relative">
@@ -648,23 +658,26 @@ export function ResourcePlanningView() {
                           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                               {pInstallers.map((pi) =>
                             <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
-                                  <div className="sticky left-0 z-10 w-72 shrink-0 border-r border-border/50 px-2 py-0.5 pl-7 flex items-center min-w-0 bg-primary-foreground">
-                                    <div className="min-w-0 flex items-center gap-1.5">
-                                      <div className={cn('h-2 w-2 rounded-full shrink-0', pi.isVacant ? 'bg-destructive' : getBarColor(resourceStatus))} />
-                                      <button
-                                    className={cn(
-                                      'text-xs truncate hover:underline cursor-pointer text-left',
-                                      pi.isVacant ? 'text-destructive font-semibold' : 'text-foreground'
-                                    )}
-                                    onClick={() => {setReassignTarget(pi);setReassignDialogOpen(true);}}
-                                    title="Klicka för att byta montör">
+                                  <div className="sticky left-0 z-10 shrink-0 border-r border-border/50 flex bg-primary-foreground" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                                    <div className="w-72 shrink-0 px-2 py-0.5 pl-7 flex items-center min-w-0">
+                                      <div className="min-w-0 flex items-center gap-1.5">
+                                       <div className={cn('h-2 w-2 rounded-full shrink-0', pi.isVacant ? 'bg-destructive' : getBarColor(resourceStatus))} />
+                                       <button
+                                     className={cn(
+                                       'text-xs truncate hover:underline cursor-pointer text-left',
+                                       pi.isVacant ? 'text-destructive font-semibold' : 'text-foreground'
+                                     )}
+                                     onClick={() => {setReassignTarget(pi);setReassignDialogOpen(true);}}
+                                     title="Klicka för att byta montör">
 
-                                        {pi.isVacant ? 'Vakant' : pi.installerName || 'Okänd'}
-                                      </button>
-                                      {!pi.isVacant &&
-                                  <span className="text-[9px] text-muted-foreground shrink-0">({pi.installerCompany})</span>
-                                  }
+                                         {pi.isVacant ? 'Vakant' : pi.installerName || 'Okänd'}
+                                       </button>
+                                       {!pi.isVacant &&
+                                   <span className="text-[9px] text-muted-foreground shrink-0">({pi.installerCompany})</span>
+                                   }
+                                      </div>
                                     </div>
+                                    <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
                                   </div>
                                   <div className="flex items-center relative">
                                     {viewMode === 'days' ?
@@ -677,8 +690,11 @@ export function ResourcePlanningView() {
 
                               {pInstallers.length === 0 &&
                             <div className="flex border-b border-border/30">
-                                  <div className="sticky left-0 z-10 bg-card w-72 shrink-0 border-r border-border/50 px-2 py-2 pl-7">
-                                    <span className="text-[10px] text-muted-foreground italic">Inga montörer kopplade</span>
+                                  <div className="sticky left-0 z-10 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                                    <div className="w-72 shrink-0 px-2 py-2 pl-7">
+                                      <span className="text-[10px] text-muted-foreground italic">Inga montörer kopplade</span>
+                                    </div>
+                                    <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
                                   </div>
                                   <div style={{ width: gridWidth }} />
                                 </div>

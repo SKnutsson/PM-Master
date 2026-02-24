@@ -86,7 +86,7 @@ export function Dashboard() {
   const stats = [
     {
       label: 'Aktiva projekt',
-      value: projects.length,
+      value: projects.filter(p => p.status !== 'Avslutat').length,
       icon: FolderKanban,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
@@ -350,10 +350,15 @@ export function Dashboard() {
                     <span className="text-center w-20">Aktiviteter</span>
                     <span className="text-right w-16">Framsteg</span>
                   </div>
-                  {projects.filter(p => p.status !== 'Avslutat').map((project) => {
-                    const completed = project.activities.filter(a => a.status === 'Slutförd').length;
-                    const total = project.activities.length;
-                    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+                  {projects.filter(p => p.status !== 'Avslutat')
+                    .map((project) => {
+                      const completed = project.activities.filter(a => a.status === 'Slutförd').length;
+                      const total = project.activities.length;
+                      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+                      return { project, completed, total, progress };
+                    })
+                    .sort((a, b) => b.progress - a.progress)
+                    .map(({ project, completed, total, progress }) => {
                     const hasWarning = project.activities.some(a => a.hasWarning);
 
                     return (
