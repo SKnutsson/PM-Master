@@ -249,6 +249,15 @@ export function useDatabaseData() {
 
   // Project functions
   const addProject = useCallback(async (project: Omit<Project, 'id'>) => {
+    // Get max sort_order so new project goes to the bottom of the Gantt
+    const { data: maxData } = await supabase
+      .from('projects')
+      .select('sort_order')
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .single();
+    const nextOrder = ((maxData as any)?.sort_order || 0) + 1;
+
     const { data, error } = await supabase
       .from('projects')
       .insert({
@@ -261,6 +270,7 @@ export function useDatabaseData() {
         sales_person: project.salesPerson || '',
         product: project.product || '',
         notes: project.notes || '',
+        sort_order: nextOrder,
       } as any)
       .select()
       .single();
