@@ -786,7 +786,7 @@ export function TimelineView() {
                                 onDrop={(e) => {if (e.dataTransfer.types.includes('application/activity')) handleActivityDrop(e, project.id, activity.id);}}>
 
                                 <div className="sticky left-0 z-10 bg-card flex shrink-0 group-hover:bg-muted/20">
-                                  <div className="w-60 shrink-0 border-r border-border/50 px-1 py-0.5 pl-5 flex items-center justify-between min-w-0 bg-primary-foreground">
+                                  <div className="w-60 shrink-0 border-r px-1 py-0.5 pl-5 flex items-center justify-between min-w-0 bg-primary-foreground border-primary-foreground">
                                     <div className="flex items-center gap-1 min-w-0">
                                       <div
                                         draggable
