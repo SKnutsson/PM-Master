@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { useDatabaseData, ExtendedSalesForecast, DealStatus, ScheduleChange } from '@/hooks/useDatabaseData';
+import { useDatabaseData, ExtendedSalesForecast, DealStatus, ScheduleChange, ForecastMonthEntry } from '@/hooks/useDatabaseData';
 import { Project, Activity, Status, Department } from '@/data/projectData';
 
 interface ProjectDataContextType {
@@ -42,4 +42,4 @@ export function useProjectDataContext() {
   return context;
 }
 
-export type { ExtendedSalesForecast, DealStatus, ScheduleChange };
+export type { ExtendedSalesForecast, DealStatus, ScheduleChange, ForecastMonthEntry };

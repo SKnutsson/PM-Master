@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useProjectDataContext, DealStatus } from '@/contexts/ProjectDataContext';
+import { useProjectDataContext, DealStatus, ForecastMonthEntry } from '@/contexts/ProjectDataContext';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthLabels: { [key: string]: string } = {
@@ -54,6 +54,7 @@ export function AddForecastDialog() {
   const [project, setProject] = useState('');
   const [product, setProduct] = useState('');
   const [month, setMonth] = useState('Jan');
+  const [year, setYear] = useState(new Date().getFullYear());
   const [amount, setAmount] = useState('');
   const [dealStatus, setDealStatus] = useState<DealStatus>('Prognos');
   const [notes, setNotes] = useState('');
@@ -67,6 +68,7 @@ export function AddForecastDialog() {
         project: project.trim(),
         product: product.trim(),
         months: { [month]: amountNum },
+        monthEntries: [{ month, year, amount: amountNum }],
         dealStatus,
         notes: notes.trim() || undefined,
       });
@@ -79,6 +81,7 @@ export function AddForecastDialog() {
     setProject('');
     setProduct('');
     setMonth('Jan');
+    setYear(new Date().getFullYear());
     setAmount('');
     setDealStatus('Prognos');
     setNotes('');
@@ -125,7 +128,20 @@ export function AddForecastDialog() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="grid gap-2">
+                <Label>År</Label>
+                <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2026">2026</SelectItem>
+                    <SelectItem value="2027">2027</SelectItem>
+                    <SelectItem value="2028">2028</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid gap-2">
                 <Label>Månad</Label>
                 <Select value={month} onValueChange={setMonth}>

@@ -21,11 +21,18 @@ export interface ScheduleChange {
   movedAt: string;
 }
 
+export interface ForecastMonthEntry {
+  month: string;
+  year: number;
+  amount: number;
+}
+
 export interface ExtendedSalesForecast {
   id: string;
   project: string;
   product: string;
   months: { [key: string]: number };
+  monthEntries: ForecastMonthEntry[];
   dealStatus: DealStatus;
   notes?: string;
   scheduleHistory?: ScheduleChange[];
@@ -154,10 +161,16 @@ export function useDatabaseData() {
 
       const forecastsWithMonths: ExtendedSalesForecast[] = forecastsData.map(f => {
         const months: { [key: string]: number } = {};
+        const monthEntries: ForecastMonthEntry[] = [];
         (monthsData || [])
           .filter(m => m.forecast_id === f.id)
           .forEach(m => {
             months[m.month] = parseFloat(String(m.amount));
+            monthEntries.push({
+              month: m.month,
+              year: m.year,
+              amount: parseFloat(String(m.amount)),
+            });
           });
 
         const scheduleHistory: ScheduleChange[] = (historyData || [])
@@ -178,6 +191,7 @@ export function useDatabaseData() {
           dealStatus: f.deal_status as DealStatus,
           notes: f.notes || undefined,
           months,
+          monthEntries,
           scheduleHistory,
         };
       });
@@ -389,13 +403,14 @@ export function useDatabaseData() {
       return null;
     }
 
-    // Insert month amounts
-    for (const [month, amount] of Object.entries(item.months)) {
-      if (amount > 0) {
+    // Insert month amounts with year
+    for (const entry of (item.monthEntries || [])) {
+      if (entry.amount > 0) {
         await supabase.from('forecast_months').insert({
           forecast_id: newForecast.id,
-          month: month,
-          amount: amount,
+          month: entry.month,
+          amount: entry.amount,
+          year: entry.year,
         });
       }
     }
@@ -432,13 +447,27 @@ export function useDatabaseData() {
       // Delete existing month entries and insert new ones
       await supabase.from('forecast_months').delete().eq('forecast_id', forecastId);
       
-      for (const [month, amount] of Object.entries(updates.months)) {
-        if (amount > 0) {
-          await supabase.from('forecast_months').insert({
-            forecast_id: forecastId,
-            month: month,
-            amount: amount,
-          });
+      // Use monthEntries if provided (year-aware), otherwise fallback to months
+      if (updates.monthEntries && updates.monthEntries.length > 0) {
+        for (const entry of updates.monthEntries) {
+          if (entry.amount > 0) {
+            await supabase.from('forecast_months').insert({
+              forecast_id: forecastId,
+              month: entry.month,
+              amount: entry.amount,
+              year: entry.year,
+            });
+          }
+        }
+      } else {
+        for (const [month, amount] of Object.entries(updates.months)) {
+          if (amount > 0) {
+            await supabase.from('forecast_months').insert({
+              forecast_id: forecastId,
+              month: month,
+              amount: amount,
+            });
+          }
         }
       }
     }
