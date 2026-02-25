@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useProjectDataContext, ExtendedSalesForecast, DealStatus } from '@/contexts/ProjectDataContext';
+import { useProjectDataContext, ExtendedSalesForecast, DealStatus, ForecastMonthEntry } from '@/contexts/ProjectDataContext';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthLabels: { [key: string]: string } = {
@@ -58,6 +58,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
   const [open, setOpen] = useState(false);
   const [project, setProject] = useState(forecast.project);
   const [product, setProduct] = useState(forecast.product);
+  const [selectedYear, setSelectedYear] = useState(2026);
   const [monthAmounts, setMonthAmounts] = useState<{ [key: string]: string }>({});
   const [dealStatus, setDealStatus] = useState<DealStatus>(forecast.dealStatus);
   const [notes, setNotes] = useState(forecast.notes || '');
@@ -70,32 +71,54 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
       setDealStatus(forecast.dealStatus);
       setNotes(forecast.notes || '');
       
-      // Initialize month amounts
-      const amounts: { [key: string]: string } = {};
-      months.forEach(m => {
-        amounts[m] = forecast.months[m]?.toString() || '';
-      });
-      setMonthAmounts(amounts);
+      // Determine initial year from monthEntries
+      const years = (forecast.monthEntries || []).map(e => e.year);
+      const initialYear = years.length > 0 ? years[0] : 2026;
+      setSelectedYear(initialYear);
+      
+      // Initialize month amounts for the selected year
+      updateMonthAmountsForYear(initialYear);
     }
   }, [open, forecast]);
+
+  const updateMonthAmountsForYear = (year: number) => {
+    const amounts: { [key: string]: string } = {};
+    months.forEach(m => {
+      const entry = (forecast.monthEntries || []).find(e => e.month === m && e.year === year);
+      amounts[m] = entry ? entry.amount.toString() : '';
+    });
+    setMonthAmounts(amounts);
+  };
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+    updateMonthAmountsForYear(year);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Convert string amounts to numbers
+    // Build monthEntries with year
+    const monthEntries: ForecastMonthEntry[] = [];
     const newMonths: { [key: string]: number } = {};
     Object.entries(monthAmounts).forEach(([month, amount]) => {
       const num = parseFloat(amount);
       if (!isNaN(num) && num > 0) {
         newMonths[month] = num;
+        monthEntries.push({ month, year: selectedYear, amount: num });
       }
     });
+
+    // Also keep entries from other years
+    const otherYearEntries = (forecast.monthEntries || []).filter(e => e.year !== selectedYear);
+    const allEntries = [...otherYearEntries, ...monthEntries];
 
     if (project.trim() && product.trim()) {
       await updateForecast(forecast.id, {
         project: project.trim(),
         product: product.trim(),
         months: newMonths,
+        monthEntries: allEntries,
         dealStatus,
         notes: notes.trim() || undefined,
       });
@@ -170,7 +193,19 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
             </div>
 
             <div className="grid gap-2">
-              <Label>Belopp per månad (MSEK)</Label>
+              <div className="flex items-center justify-between">
+                <Label>Belopp per månad (MSEK)</Label>
+                <Select value={String(selectedYear)} onValueChange={(v) => handleYearChange(Number(v))}>
+                  <SelectTrigger className="w-24 h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2026">2026</SelectItem>
+                    <SelectItem value="2027">2027</SelectItem>
+                    <SelectItem value="2028">2028</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="grid grid-cols-4 gap-2">
                 {months.map((m) => (
                   <div key={m} className="space-y-1">

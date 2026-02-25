@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Package, AlertTriangle, Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,9 @@ import { EditForecastDialog } from './dialogs/EditForecastDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { StatusLegend } from './StatusLegend';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthLabels: { [key: string]: string } = {
@@ -49,35 +49,30 @@ const getStatusColor = (status: DealStatus) => {
       return 'text-yellow-400 bg-yellow-400/10';
     case 'Förlorad':
       return 'text-red-400 bg-red-400/10';
-    default: // Prognos
+    default:
       return 'text-foreground bg-muted';
   }
 };
 
-// Get the amount text color based on deal status
-const getAmountColor = (status: DealStatus) => {
+// Get cell background + text styling based on deal status (for cells with values)
+const getCellStatusStyle = (status: DealStatus) => {
   switch (status) {
     case 'Ny affär':
-      return 'text-blue-400';
+      return 'bg-blue-600 text-white font-medium';
     case 'Tagen':
-      return 'text-status-completed';
+      return 'bg-emerald-600 text-white font-medium';
     case 'Förlorad':
-      return 'text-red-400 line-through';
-    default: // Prognos
-      return 'text-foreground';
+      return 'bg-red-600 text-white font-medium line-through';
+    case 'Flyttad':
+      return 'bg-yellow-400 text-black font-medium';
+    default:
+      return 'text-foreground font-medium';
   }
 };
 
-// Check if a month was the original scheduled month (project was moved FROM this month)
 const getMovedFromMonth = (scheduleHistory: ScheduleChange[] | undefined, month: string): ScheduleChange | undefined => {
   if (!scheduleHistory) return undefined;
   return scheduleHistory.find(h => h.originalMonth === month);
-};
-
-// Check if this is a lost deal's original month
-const isLostDealMonth = (dealStatus: DealStatus, months: { [key: string]: number }, month: string): boolean => {
-  if (dealStatus !== 'Förlorad') return false;
-  return months[month] !== undefined && months[month] > 0;
 };
 
 const printSection = (element: HTMLElement | null, title: string) => {
@@ -97,31 +92,79 @@ const printSection = (element: HTMLElement | null, title: string) => {
   printWindow.onload = () => { printWindow.print(); printWindow.close(); };
 };
 
-export function ForecastView() {
-  const { forecast, monthlyTotals, yearTotal, isLoading } = useProjectDataContext();
-  const forecastTableRef = useRef<HTMLDivElement>(null);
+type PeriodView = '2026' | '2027' | 'rolling12';
 
-  const chartData = months.map(month => ({
-    month: monthLabels[month] || month,
-    value: monthlyTotals[month] || 0
+export function ForecastView() {
+  const { forecast, isLoading } = useProjectDataContext();
+  const forecastTableRef = useRef<HTMLDivElement>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodView>('2026');
+
+  // Filter forecast data based on selected period
+  const { filteredForecast, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel } = useMemo(() => {
+    const now = new Date();
+    const currentMonthIdx = now.getMonth(); // 0-indexed
+    const currentYear = now.getFullYear();
+
+    let displayMonths: { month: string; year: number }[] = [];
+
+    if (selectedPeriod === 'rolling12') {
+      // Rolling 12 months from current month
+      for (let i = 0; i < 12; i++) {
+        const idx = (currentMonthIdx + i) % 12;
+        const yr = currentYear + Math.floor((currentMonthIdx + i) / 12);
+        displayMonths.push({ month: months[idx], year: yr });
+      }
+    } else {
+      const yr = parseInt(selectedPeriod);
+      displayMonths = months.map(m => ({ month: m, year: yr }));
+    }
+
+    // Build filtered months per forecast
+    const filteredForecast = forecast.map(f => {
+      const filteredMonths: { [key: string]: number } = {};
+      for (const dm of displayMonths) {
+        const entry = f.monthEntries?.find(e => e.month === dm.month && e.year === dm.year);
+        if (entry) {
+          filteredMonths[dm.month] = entry.amount;
+        }
+      }
+      return { ...f, months: filteredMonths };
+    });
+
+    // Only include forecasts that have at least one entry in the period, OR show all for completeness
+    const activeForecast = filteredForecast.filter(f => f.dealStatus !== 'Förlorad');
+    const filteredMonthlyTotals: { [key: string]: number } = {};
+    for (const dm of displayMonths) {
+      const total = activeForecast.reduce((sum, f) => sum + (f.months[dm.month] || 0), 0);
+      filteredMonthlyTotals[dm.month] = total;
+    }
+    const filteredYearTotal = Object.values(filteredMonthlyTotals).reduce((s, v) => s + v, 0);
+
+    const periodLabel = selectedPeriod === 'rolling12'
+      ? 'Rullande 12 månader'
+      : `Försäljningsprognos ${selectedPeriod}`;
+
+    return { filteredForecast, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel };
+  }, [forecast, selectedPeriod]);
+
+  const chartData = displayMonths.map(dm => ({
+    month: monthLabels[dm.month] || dm.month,
+    value: filteredMonthlyTotals[dm.month] || 0
   }));
 
-  // Calculate cumulative data
   let cumulative = 0;
   const cumulativeData = chartData.map(item => {
     cumulative += item.value;
     return { ...item, cumulative };
   });
 
-  // Find best month
-  const bestMonth = Object.entries(monthlyTotals).reduce(
+  const bestMonth = Object.entries(filteredMonthlyTotals).reduce(
     (best, [month, value]) => (value > best.value ? { month, value } : best),
     { month: '', value: 0 }
   );
 
-  // Count active deals (excluding lost)
-  const activeDeals = forecast.filter(f => f.dealStatus !== 'Förlorad').length;
-  const lostDeals = forecast.filter(f => f.dealStatus === 'Förlorad').length;
+  const activeDeals = filteredForecast.filter(f => f.dealStatus !== 'Förlorad').length;
+  const lostDeals = filteredForecast.filter(f => f.dealStatus === 'Förlorad').length;
 
   if (isLoading) {
     return (
@@ -133,15 +176,24 @@ export function ForecastView() {
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Försäljningsprognos 2026</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{periodLabel}</h1>
           <p className="text-muted-foreground">
             Översikt av prognostiserad försäljning per månad
             <span className="ml-2 text-xs text-status-completed">(Autospar aktiverat)</span>
           </p>
         </div>
-        <AddForecastDialog />
+        <div className="flex items-center gap-3">
+          <Tabs value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as PeriodView)}>
+            <TabsList>
+              <TabsTrigger value="2026">2026</TabsTrigger>
+              <TabsTrigger value="2027">2027</TabsTrigger>
+              <TabsTrigger value="rolling12">Rullande 12 mån</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <AddForecastDialog />
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -152,7 +204,7 @@ export function ForecastView() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total prognos</p>
-                  <p className="mt-1 text-3xl font-bold">{yearTotal.toFixed(1)} MSEK</p>
+                  <p className="mt-1 text-3xl font-bold">{filteredYearTotal.toFixed(1)} MSEK</p>
                   <p className="text-xs text-muted-foreground mt-1">Exkl. förlorade affärer</p>
                 </div>
                 <div className="rounded-full bg-primary/10 p-3">
@@ -258,10 +310,10 @@ export function ForecastView() {
       <motion.div variants={itemVariants}>
         <StatusLegend
           items={[
-            { color: 'bg-blue-400', label: 'Ny affär' },
-            { color: 'bg-status-completed', label: 'Tagen' },
-            { color: 'bg-yellow-400', label: 'Flyttad (ursprunglig månad)' },
-            { color: 'bg-status-delayed', label: 'Förlorad (ej i summor)' },
+            { color: 'bg-blue-600', label: 'Ny affär' },
+            { color: 'bg-emerald-600', label: 'Tagen' },
+            { color: 'bg-yellow-400', label: 'Flyttad' },
+            { color: 'bg-red-600', label: 'Förlorad' },
             { color: 'bg-foreground/50', label: 'Prognos' },
           ]}
         />
@@ -274,9 +326,9 @@ export function ForecastView() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Detaljerad prognos</CardTitle>
-                <CardDescription>Alla projekt och produkter - gul markering visar ursprunglig månad för flyttade projekt</CardDescription>
+                <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, 'Detaljerad Försäljningsprognos 2026')} className="print:hidden h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsprognos`)} className="print:hidden h-8 w-8">
                 <Printer className="h-4 w-4" />
               </Button>
             </div>
@@ -289,8 +341,11 @@ export function ForecastView() {
                      <TableHead className="font-semibold py-1 px-2 text-xs">Projekt</TableHead>
                      <TableHead className="font-semibold py-1 px-2 text-xs">Produkt</TableHead>
                      <TableHead className="font-semibold py-1 px-2 text-xs">Status</TableHead>
-                     {months.map(month => (
-                       <TableHead key={month} className="text-center font-semibold py-1 px-1 text-xs">{month}</TableHead>
+                     {displayMonths.map((dm, i) => (
+                       <TableHead key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1 px-1 text-xs">
+                         {dm.month}
+                         {selectedPeriod === 'rolling12' && <span className="block text-[9px] text-muted-foreground">{dm.year}</span>}
+                       </TableHead>
                      ))}
                      <TableHead className="font-semibold py-1 px-2 text-xs">Not</TableHead>
                      <TableHead className="w-8 py-1 px-1"></TableHead>
@@ -298,18 +353,15 @@ export function ForecastView() {
                 </TableHeader>
                 <TableBody>
                   <TooltipProvider>
-                    {forecast.map(item => {
+                    {filteredForecast.map(item => {
                       const isLost = item.dealStatus === 'Förlorad';
                       
                       return (
                         <TableRow 
                           key={item.id} 
-                          className={cn(
-                            "border-border/30 h-7",
-                            isLost && "bg-status-delayed/5 opacity-70"
-                          )}
+                          className="border-border/30 h-7"
                         >
-                          <TableCell className={cn("font-medium py-0 px-2 text-xs", isLost && "line-through")}>
+                          <TableCell className={cn("font-medium py-0 px-2 text-xs", isLost && "line-through opacity-70")}>
                             {item.project}
                           </TableCell>
                           <TableCell className="text-muted-foreground py-0 px-2 text-xs">{item.product}</TableCell>
@@ -321,24 +373,23 @@ export function ForecastView() {
                               {item.dealStatus}
                             </span>
                           </TableCell>
-                          {months.map(month => {
-                            const movedFrom = getMovedFromMonth(item.scheduleHistory, month);
-                            const hasValue = item.months[month] && item.months[month] > 0;
-                            const isLostMonth = isLostDealMonth(item.dealStatus, item.months, month);
+                          {displayMonths.map((dm, i) => {
+                            const movedFrom = getMovedFromMonth(item.scheduleHistory, dm.month);
+                            const hasValue = item.months[dm.month] && item.months[dm.month] > 0;
 
                             return (
                               <TableCell 
-                                key={month} 
+                                key={`${dm.month}-${dm.year}-${i}`} 
                                 className={cn(
                                   "text-center relative py-0 px-1 text-xs",
-                                  movedFrom && !hasValue && "bg-yellow-400/10 border-l-2 border-yellow-400",
-                                  isLostMonth && "bg-red-400/10 border-l-2 border-red-400"
+                                  hasValue && getCellStatusStyle(item.dealStatus),
+                                  movedFrom && !hasValue && "bg-yellow-400/20"
                                 )}
                               >
                                 {movedFrom && !hasValue && (
                                   <UITooltip>
                                     <TooltipTrigger asChild>
-                                      <span className="text-yellow-400 font-medium cursor-help">
+                                      <span className="text-yellow-500 font-medium cursor-help">
                                         ({movedFrom.originalAmount.toFixed(2)})
                                       </span>
                                     </TooltipTrigger>
@@ -351,15 +402,12 @@ export function ForecastView() {
                                   </UITooltip>
                                 )}
                                 {hasValue && (
-                                  <span className={cn(
-                                    "font-medium",
-                                    getAmountColor(item.dealStatus)
-                                  )}>
-                                    {item.months[month].toFixed(2)}
+                                  <span>
+                                    {item.months[dm.month].toFixed(2)}
                                   </span>
                                 )}
                                 {!movedFrom && !hasValue && (
-                                  <span className="text-muted-foreground/30">-</span>
+                                  <span className="text-muted-foreground/30"></span>
                                 )}
                               </TableCell>
                             );
@@ -374,23 +422,23 @@ export function ForecastView() {
                       );
                     })}
                   </TooltipProvider>
-                  {forecast.length === 0 && (
+                  {filteredForecast.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={16} className="text-center py-6 text-muted-foreground text-xs">
                         Inga affärer ännu. Klicka på "Ny affär" för att börja.
                       </TableCell>
                     </TableRow>
                   )}
-                  {/* Totals row - excludes lost deals */}
-                  {forecast.length > 0 && (
+                  {/* Totals row */}
+                  {filteredForecast.length > 0 && (
                     <TableRow className="border-t-2 border-border bg-muted/30 font-bold h-7">
                        <TableCell colSpan={3} className="py-0 px-2 text-xs">
                          Summa per månad
                          <span className="text-xs font-normal text-muted-foreground ml-2">(exkl. förlorade)</span>
                        </TableCell>
-                       {months.map(month => (
-                         <TableCell key={month} className="text-center text-primary py-0 px-1 text-xs">
-                           {(monthlyTotals[month] || 0).toFixed(1)}
+                       {displayMonths.map((dm, i) => (
+                         <TableCell key={`total-${dm.month}-${dm.year}-${i}`} className="text-center text-primary py-0 px-1 text-xs">
+                           {(filteredMonthlyTotals[dm.month] || 0).toFixed(1)}
                          </TableCell>
                        ))}
                        <TableCell className="py-0 px-2"></TableCell>
