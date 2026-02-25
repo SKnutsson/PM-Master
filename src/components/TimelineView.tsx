@@ -831,7 +831,7 @@ export function TimelineView() {
 
                                   </div>
                                   <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 flex items-center bg-primary-foreground">
-                                    <span className="text-[9px] text-muted-foreground truncate">{activity.responsible}</span>
+                                    <span className="text-[12px] text-muted-foreground truncate text-center">{activity.responsible}</span>
                                   </div>
                                 </div>
                                 {/* Grid area with absolute-positioned draggable bar */}
