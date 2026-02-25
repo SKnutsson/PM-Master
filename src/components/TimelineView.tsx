@@ -830,7 +830,7 @@ export function TimelineView() {
                                       } />
 
                                   </div>
-                                  <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 flex items-center bg-primary-foreground">
+                                  <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 bg-primary-foreground flex items-center justify-center text-slate-950">
                                     <span className="text-[12px] text-muted-foreground truncate text-center">{activity.responsible}</span>
                                   </div>
                                 </div>
