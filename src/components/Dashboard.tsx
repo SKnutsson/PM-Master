@@ -226,7 +226,7 @@ export function Dashboard() {
                           {phaseProjects.map((p) =>
                           <div
                             key={p.id}
-                            className="rounded-lg px-3 py-2 text-xs cursor-default transition-colors hover:bg-muted/50 border border-transparent hover:border-border/50">
+                            className="rounded-lg px-3 text-xs cursor-default transition-colors hover:bg-muted/50 border border-transparent hover:border-border/50 py-px">
 
                               <span className="font-semibold text-foreground/70">{p.code}</span>
                               <span className="text-muted-foreground mx-1.5">–</span>
