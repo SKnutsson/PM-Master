@@ -813,7 +813,7 @@ export function TimelineView() {
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <div className="min-w-0 flex items-center gap-1.5">
-                                            <div className={cn("h-2 w-2 shrink-0 rounded-none", getStatusDotColor(derived))} />
+                                            <div className={cn("h-5 w-3 shrink-0 rounded-none", getStatusDotColor(derived))} />
                                             <span className="text-xs truncate">{activity.name}</span>
                                           </div>
                                         </TooltipTrigger>
