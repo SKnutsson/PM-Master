@@ -531,7 +531,7 @@ export function TimelineView() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Tidslinje</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Ganttschema</h1>
             <p className="text-sm text-muted-foreground">Ganttschema för projektaktiviteter – dra i aktiviteter för att ändra datum</p>
           </div>
           <div className="flex items-center gap-3">
