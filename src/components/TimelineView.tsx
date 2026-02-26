@@ -622,7 +622,7 @@ export function TimelineView() {
                     <div className="w-60 shrink-0 border-r border-border/50 px-2 py-1 text-xs font-semibold">
                       Projekt / Aktivitet
                     </div>
-                    <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground">
+                    <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground pt-[5px] pl-[13px]">
                       Ansvarig
                     </div>
                   </div>
