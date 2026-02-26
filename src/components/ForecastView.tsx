@@ -1,6 +1,6 @@
 import { useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Package, AlertTriangle, Loader2, Printer } from 'lucide-react';
+import { Package, AlertTriangle, Loader2, Printer, ChartNoAxesColumnIncreasing, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProjectDataContext, DealStatus, ScheduleChange } from '@/contexts/ProjectDataContext';
@@ -211,7 +211,7 @@ export function ForecastView() {
                   <p className="text-xs text-muted-foreground mt-1">Exkl. förlorade affärer</p>
                 </div>
                 <div className="rounded-full bg-primary/10 p-3">
-                  <TrendingUp className="h-6 w-6 text-primary" />
+                  <ChartNoAxesColumnIncreasing className="h-6 w-6 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -228,7 +228,7 @@ export function ForecastView() {
                   <p className="text-sm text-muted-foreground">{bestMonth.value.toFixed(1)} MSEK</p>
                 </div>
                 <div className="rounded-full bg-status-completed/10 p-3">
-                  <TrendingUp className="h-6 w-6 text-status-completed" />
+                  <Trophy className="h-6 w-6 text-status-completed" />
                 </div>
               </div>
             </CardContent>
