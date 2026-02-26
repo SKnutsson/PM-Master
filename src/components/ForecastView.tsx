@@ -369,7 +369,7 @@ export function ForecastView() {
                           </TableCell>
                           <TableCell className="text-muted-foreground py-0 px-2 text-xs">{item.product}</TableCell>
                           <TableCell className="py-0 px-2">
-                            <span className={cn("inline-flex items-center rounded-full text-xs leading-none px-[5px] ml-0 text-center font-medium py-[4px]",
+                            <span className={cn("inline-flex items-center rounded-full text-xs leading-none ml-0 font-medium px-[15px] py-[7px] text-center",
 
                             getStatusColor(item.dealStatus)
                             )}>
