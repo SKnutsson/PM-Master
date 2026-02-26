@@ -131,8 +131,11 @@ export function ForecastView() {
       return { ...f, months: filteredMonths };
     });
 
-    // Only include forecasts that have at least one entry in the period, OR show all for completeness
-    const activeForecast = filteredForecast.filter((f) => f.dealStatus !== 'Förlorad');
+    // Only include forecasts that have at least one entry in the selected period
+    const forecastsInPeriod = filteredForecast.filter((f) => {
+      return Object.values(f.months).some((v) => v > 0);
+    });
+    const activeForecast = forecastsInPeriod.filter((f) => f.dealStatus !== 'Förlorad');
     const filteredMonthlyTotals: {[key: string]: number;} = {};
     for (const dm of displayMonths) {
       const total = activeForecast.reduce((sum, f) => sum + (f.months[dm.month] || 0), 0);
@@ -144,7 +147,7 @@ export function ForecastView() {
     'Rullande 12 månader' :
     `Försäljningsprognos ${selectedPeriod}`;
 
-    return { filteredForecast, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel };
+    return { filteredForecast: forecastsInPeriod, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel };
   }, [forecast, selectedPeriod]);
 
   const chartData = displayMonths.map((dm) => ({

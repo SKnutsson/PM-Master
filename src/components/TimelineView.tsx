@@ -36,23 +36,41 @@ type ViewMode = 'weeks' | 'days';
 
 type DerivedStatus = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad';
 
+// ISO 8601 week number: week 1 contains the first Thursday of the year
+function getISOWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
+function getISOWeekYear(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  return d.getUTCFullYear();
+}
+
 function generateWeeksForRange(startYear: number, endYear: number): {weekNum: number;year: number;startDate: Date;label: string;}[] {
   const weeks: {weekNum: number;year: number;startDate: Date;label: string;}[] = [];
-  for (let year = startYear; year <= endYear; year++) {
-    const jan1 = new Date(year, 0, 1);
-    let current = new Date(jan1);
-    while (current.getDay() !== 1) {
-      current.setDate(current.getDate() + 1);
-    }
-    for (let i = 1; i <= 52; i++) {
+  // Find Monday of ISO week 1 of startYear: the Monday of the week containing Jan 4
+  const jan4 = new Date(startYear, 0, 4);
+  let current = new Date(jan4);
+  current.setDate(current.getDate() - ((current.getDay() + 6) % 7)); // Go to Monday
+
+  const endLimit = new Date(endYear + 1, 1, 1); // well past end of endYear
+  while (current < endLimit) {
+    const isoYear = getISOWeekYear(current);
+    const isoWeek = getISOWeekNumber(current);
+    if (isoYear > endYear) break;
+    if (isoYear >= startYear) {
       weeks.push({
-        weekNum: i,
-        year,
+        weekNum: isoWeek,
+        year: isoYear,
         startDate: new Date(current),
-        label: `V${i}`
+        label: `V${isoWeek}`
       });
-      current.setDate(current.getDate() + 7);
     }
+    current.setDate(current.getDate() + 7);
   }
   return weeks;
 }
@@ -184,9 +202,7 @@ export function TimelineView() {
     });
   };
 
-  const timelineProjects = useMemo(() => projects.filter((p) =>
-  p.activities.some((a) => a.startDate || a.endDate)
-  ), [projects]);
+const timelineProjects = useMemo(() => projects, [projects]);
 
   // --- Project drag-and-drop reorder state ---
   const [dragProjectId, setDragProjectId] = useState<string | null>(null);
@@ -318,10 +334,7 @@ export function TimelineView() {
   };
 
   const getWeekNumber = (dateStr: string): number => {
-    const date = new Date(dateStr);
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    return getISOWeekNumber(new Date(dateStr));
   };
 
   const getProjectWeekRange = (projectId: string) => {

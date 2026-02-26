@@ -36,13 +36,31 @@ const resourceLegend = [
 { color: 'bg-status-delayed', label: 'Överskrider kalkyl' }];
 
 
+// ISO 8601 week number
+function getISOWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+}
+
 function generateWeeks(year: number) {
   const weeks: {weekNum: number;startDate: Date;label: string;}[] = [];
-  const jan1 = new Date(year, 0, 1);
-  let current = new Date(jan1);
-  while (current.getDay() !== 1) current.setDate(current.getDate() + 1);
-  for (let i = 1; i <= 52; i++) {
-    weeks.push({ weekNum: i, startDate: new Date(current), label: `V${i}` });
+  // Find Monday of ISO week 1: Monday of the week containing Jan 4
+  const jan4 = new Date(year, 0, 4);
+  let current = new Date(jan4);
+  current.setDate(current.getDate() - ((current.getDay() + 6) % 7));
+  const endLimit = new Date(year + 1, 1, 1);
+  while (current < endLimit) {
+    const wn = getISOWeekNumber(current);
+    // Only include weeks belonging to this year (ISO week year)
+    const d = new Date(Date.UTC(current.getFullYear(), current.getMonth(), current.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    const isoYear = d.getUTCFullYear();
+    if (isoYear > year) break;
+    if (isoYear === year) {
+      weeks.push({ weekNum: wn, startDate: new Date(current), label: `V${wn}` });
+    }
     current.setDate(current.getDate() + 7);
   }
   return weeks;
@@ -216,9 +234,7 @@ export function ResourcePlanningView() {
     if (viewMode !== 'days') return [];
     const groups: {label: string;span: number;}[] = [];
     displayedDays.forEach((day) => {
-      const jan1 = new Date(day.date.getFullYear(), 0, 1);
-      const days = Math.floor((day.date.getTime() - jan1.getTime()) / (24 * 60 * 60 * 1000));
-      const wn = Math.ceil((days + jan1.getDay() + 1) / 7);
+      const wn = getISOWeekNumber(day.date);
       const label = `V${wn}`;
       if (groups.length > 0 && groups[groups.length - 1].label === label) groups[groups.length - 1].span++;else
       groups.push({ label, span: 1 });
