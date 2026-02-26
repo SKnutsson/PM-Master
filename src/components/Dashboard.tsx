@@ -212,7 +212,7 @@ export function Dashboard() {
                         </div>
                         <div>
                           <h3 className="font-semibold text-white text-2xl text-left">{phase}</h3>
-                          <p className="text-[11px] text-white/60">{phaseProjects.length} projekt</p>
+                          <p className="text-white/60 text-sm font-medium">{phaseProjects.length} projekt</p>
                         </div>
                       </div>
                     </div>
