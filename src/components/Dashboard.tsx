@@ -49,10 +49,28 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
-const phaseConfig: Record<Phase, { icon: typeof HardHat; color: string; bg: string }> = {
-  'Konstruktion': { icon: HardHat, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  'Produktion': { icon: Factory, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  'Montage': { icon: Wrench, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+const phaseConfig: Record<Phase, { icon: typeof HardHat; gradient: string; iconBg: string; iconColor: string; accentBorder: string }> = {
+  'Konstruktion': { 
+    icon: HardHat, 
+    gradient: 'bg-gradient-to-br from-[#18323A] to-[#1C7F72]',
+    iconBg: 'bg-[#1C7F72]/20',
+    iconColor: 'text-[#92AE9D]',
+    accentBorder: 'border-t-[#EBB932]',
+  },
+  'Produktion': { 
+    icon: Factory, 
+    gradient: 'bg-gradient-to-br from-[#1C7F72] to-[#92AE9D]',
+    iconBg: 'bg-[#92AE9D]/20',
+    iconColor: 'text-white',
+    accentBorder: 'border-t-[#EBB932]',
+  },
+  'Montage': { 
+    icon: Wrench, 
+    gradient: 'bg-gradient-to-br from-[#18323A] to-[#1C7F72]',
+    iconBg: 'bg-[#EBB932]/20',
+    iconColor: 'text-[#EBB932]',
+    accentBorder: 'border-t-[#EBB932]',
+  },
 };
 
 export function Dashboard() {
@@ -175,89 +193,48 @@ export function Dashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex overflow-x-auto gap-0 pb-2">
-              {projectsByPhase.map(({ phase, projects: phaseProjects }, index) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-2">
+              {projectsByPhase.map(({ phase, projects: phaseProjects }) => {
                 const config = phaseConfig[phase];
                 const PhaseIcon = config.icon;
-                const isFirst = index === 0;
-                const isLast = index === projectsByPhase.length - 1;
-
-                const bgClass = phase === 'Konstruktion'
-                  ? 'bg-blue-500/10 dark:bg-blue-500/15'
-                  : phase === 'Produktion'
-                  ? 'bg-amber-500/10 dark:bg-amber-500/15'
-                  : 'bg-emerald-500/10 dark:bg-emerald-500/15';
-
-                const hoverBgClass = phase === 'Konstruktion'
-                  ? 'hover:bg-blue-500/15 dark:hover:bg-blue-500/20'
-                  : phase === 'Produktion'
-                  ? 'hover:bg-amber-500/15 dark:hover:bg-amber-500/20'
-                  : 'hover:bg-emerald-500/15 dark:hover:bg-emerald-500/20';
-
-                const borderColor = phase === 'Konstruktion'
-                  ? 'border-blue-500/20 dark:border-blue-400/20'
-                  : phase === 'Produktion'
-                  ? 'border-amber-500/20 dark:border-amber-400/20'
-                  : 'border-emerald-500/20 dark:border-emerald-400/20';
-
-                const chevronFill = phase === 'Konstruktion'
-                  ? 'fill-blue-500/10 dark:fill-blue-500/15'
-                  : phase === 'Produktion'
-                  ? 'fill-amber-500/10 dark:fill-amber-500/15'
-                  : 'fill-emerald-500/10 dark:fill-emerald-500/15';
-
-                const chevronStroke = phase === 'Konstruktion'
-                  ? 'stroke-blue-500/30 dark:stroke-blue-400/30'
-                  : phase === 'Produktion'
-                  ? 'stroke-amber-500/30 dark:stroke-amber-400/30'
-                  : 'stroke-emerald-500/30 dark:stroke-emerald-400/30';
+                const hasActiveProjects = phaseProjects.length > 0;
 
                 return (
-                  <div key={phase} className="flex-1 min-w-[200px] relative group">
-                    {/* Chevron shape via SVG */}
-                    <svg
-                      className="absolute inset-0 w-full h-full"
-                      viewBox="0 0 200 100"
-                      preserveAspectRatio="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d={
-                          isFirst
-                            ? 'M 0,0 L 185,0 L 200,50 L 185,100 L 0,100 Z'
-                            : isLast
-                            ? 'M 0,0 L 200,0 L 200,100 L 0,100 L 15,50 Z'
-                            : 'M 0,0 L 185,0 L 200,50 L 185,100 L 0,100 L 15,50 Z'
-                        }
-                        className={`${chevronFill} ${chevronStroke} transition-all duration-300`}
-                        strokeWidth="0.5"
-                      />
-                    </svg>
-
-                    <div className={`relative z-10 px-6 py-4 ${!isFirst ? 'pl-8' : ''} transition-all duration-300 group-hover:-translate-y-0.5`}>
-                      {/* Phase header */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className={`rounded-lg p-1.5 ${bgClass}`}>
-                          <PhaseIcon className={`h-4 w-4 ${config.color}`} />
+                  <div
+                    key={phase}
+                    className={`relative rounded-xl overflow-hidden border-t-[3px] ${hasActiveProjects ? config.accentBorder : 'border-t-transparent'} shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5`}
+                  >
+                    {/* Card gradient header */}
+                    <div className={`${config.gradient} px-5 py-4`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`rounded-lg p-2 ${config.iconBg} backdrop-blur-sm`}>
+                          <PhaseIcon className={`h-5 w-5 ${config.iconColor}`} />
                         </div>
-                        <h3 className="font-semibold text-sm">{phase}</h3>
+                        <div>
+                          <h3 className="font-semibold text-sm text-white">{phase}</h3>
+                          <p className="text-[11px] text-white/60">{phaseProjects.length} projekt</p>
+                        </div>
                       </div>
+                    </div>
 
-                      {/* Project list */}
-                      <div className="max-h-[320px] overflow-y-auto space-y-0.5 pr-1">
-                        {phaseProjects.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">Inga projekt</p>
-                        ) : (
-                          phaseProjects.map(p => (
+                    {/* Project list */}
+                    <div className="bg-card px-4 py-3 max-h-[280px] overflow-y-auto">
+                      {phaseProjects.length === 0 ? (
+                        <p className="text-xs text-muted-foreground py-2 text-center italic">Inga pågående projekt</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {phaseProjects.map(p => (
                             <div
                               key={p.id}
-                              className={`rounded-md px-2 py-1.5 text-xs cursor-default transition-colors ${hoverBgClass}`}
+                              className="rounded-lg px-3 py-2 text-xs cursor-default transition-colors hover:bg-muted/50 border border-transparent hover:border-border/50"
                             >
-                              {p.code} – {p.name}
+                              <span className="font-semibold text-foreground/70">{p.code}</span>
+                              <span className="text-muted-foreground mx-1.5">–</span>
+                              <span className="text-foreground">{p.name}</span>
                             </div>
-                          ))
-                        )}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
