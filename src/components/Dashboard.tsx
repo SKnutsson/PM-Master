@@ -5,12 +5,12 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
-  TrendingUp,
+
 
   Printer,
   HardHat,
   Factory,
-  Wrench, Check } from
+  Wrench, Check, ChartNoAxesColumnIncreasing } from
 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -255,7 +255,7 @@ export function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
                     Försäljningsprognos 2026
                   </CardTitle>
                   <CardDescription>Månatlig prognos i MSEK</CardDescription>
