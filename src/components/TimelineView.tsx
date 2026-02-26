@@ -55,7 +55,7 @@ function generateWeeksForRange(startYear: number, endYear: number): {weekNum: nu
   // Find Monday of ISO week 1 of startYear: the Monday of the week containing Jan 4
   const jan4 = new Date(startYear, 0, 4);
   let current = new Date(jan4);
-  current.setDate(current.getDate() - ((current.getDay() + 6) % 7)); // Go to Monday
+  current.setDate(current.getDate() - (current.getDay() + 6) % 7); // Go to Monday
 
   const endLimit = new Date(endYear + 1, 1, 1); // well past end of endYear
   while (current < endLimit) {
@@ -202,7 +202,7 @@ export function TimelineView() {
     });
   };
 
-const timelineProjects = useMemo(() => projects, [projects]);
+  const timelineProjects = useMemo(() => projects, [projects]);
 
   // --- Project drag-and-drop reorder state ---
   const [dragProjectId, setDragProjectId] = useState<string | null>(null);
@@ -813,7 +813,7 @@ const timelineProjects = useMemo(() => projects, [projects]);
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <div className="min-w-0 flex items-center gap-1.5">
-                                            <div className={cn('h-2 w-2 rounded-full shrink-0', getStatusDotColor(derived))} />
+                                            <div className={cn("h-2 w-2 shrink-0 rounded-none", getStatusDotColor(derived))} />
                                             <span className="text-xs truncate">{activity.name}</span>
                                           </div>
                                         </TooltipTrigger>
