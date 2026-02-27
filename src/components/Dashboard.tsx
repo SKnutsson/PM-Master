@@ -55,19 +55,19 @@ const phaseConfig: Record<Phase, {icon: typeof HardHat;bg: string;iconBg: string
     icon: HardHat,
     bg: 'bg-[#92AE9D]',
     iconBg: 'bg-white/20',
-    iconColor: 'text-white',
+    iconColor: 'text-white'
   },
   'Produktion': {
     icon: Factory,
     bg: 'bg-[#18323A]',
     iconBg: 'bg-white/20',
-    iconColor: 'text-white',
+    iconColor: 'text-white'
   },
   'Montage': {
     icon: Wrench,
     bg: 'bg-[#1C7F72]',
     iconBg: 'bg-white/20',
-    iconColor: 'text-white',
+    iconColor: 'text-white'
   }
 };
 
@@ -199,8 +199,8 @@ export function Dashboard() {
 
                   return (
                     <div
-                       key={phase}
-                       className="relative rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+                      key={phase}
+                      className="relative rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
 
                     {/* Card solid header */}
                     <div className={`${config.bg} px-5 py-4`}>
@@ -243,37 +243,44 @@ export function Dashboard() {
         </Card>
       </motion.div>
 
-      {/* Forecast + Target + Status — 3-column row */}
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
+      {/* Charts and Lists */}
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Sales Forecast Chart */}
-        <motion.div variants={itemVariants} className="md:col-span-2 lg:col-span-1">
-          <Card className="border-border/50 bg-card/80 h-full flex flex-col">
-             <div ref={forecastRef} className="relative flex flex-col flex-1">
+        <motion.div variants={itemVariants}>
+          <Card className="border-border/50 bg-card/80">
+             <div ref={forecastRef} className="relative">
              <Button variant="ghost" size="icon" onClick={() => printSection(forecastRef.current, 'Försäljningsprognos 2026')} className="print:hidden h-8 w-8 absolute top-4 right-4 z-10">
-               <Printer className="h-4 w-4" />
+               
              </Button>
-             <CardHeader className="pb-2">
+             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2 text-base">
+                  <CardTitle className="flex items-center gap-2">
                     <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
                     Försäljningsprognos 2026
                   </CardTitle>
-                  <CardDescription className="text-xs">Månatlig prognos i MSEK</CardDescription>
+                  <CardDescription>Månatlig prognos i MSEK</CardDescription>
                 </div>
                <div className="text-right">
                   <p className="text-2xl font-bold text-primary">{yearTotal.toFixed(1)} MSEK</p>
-                  <p className="text-xs text-muted-foreground">Total prognos</p>
+                  <p className="text-sm text-muted-foreground">Total prognos</p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-1">
-              <div className="h-[250px]">
+            <CardContent>
+              <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <XAxis
+                        dataKey="month"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12} />
+
+                    <YAxis
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12} />
+
                     <Tooltip
                         contentStyle={{
                           backgroundColor: 'hsl(var(--card))',
@@ -281,7 +288,12 @@ export function Dashboard() {
                           borderRadius: '8px'
                         }}
                         labelStyle={{ color: 'hsl(var(--foreground))' }} />
-                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+
+                    <Bar
+                        dataKey="value"
+                        fill="hsl(var(--primary))"
+                        radius={[4, 4, 0, 0]} />
+
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -294,47 +306,43 @@ export function Dashboard() {
         {(() => {
           const targetYear = 2026;
           const salesTarget = salesTargets[targetYear] || 0;
-          const takenTotal = forecast
-            .filter(f => f.dealStatus === 'Tagen')
-            .reduce((sum, f) => {
-              const yearEntries = (f.monthEntries || []).filter(e => e.year === targetYear);
-              return sum + yearEntries.reduce((s, e) => s + e.amount, 0);
-            }, 0);
-          const pct = salesTarget > 0 ? Math.min((takenTotal / salesTarget) * 100, 100) : 0;
+          const takenTotal = forecast.
+          filter((f) => f.dealStatus === 'Tagen').
+          reduce((sum, f) => {
+            const yearEntries = (f.monthEntries || []).filter((e) => e.year === targetYear);
+            return sum + yearEntries.reduce((s, e) => s + e.amount, 0);
+          }, 0);
+          const pct = salesTarget > 0 ? Math.min(takenTotal / salesTarget * 100, 100) : 0;
 
-          return (
-            <motion.div variants={itemVariants}>
-              <Card className="border-border/50 bg-card/80 h-full flex flex-col">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Måluppfyllnad {targetYear}</CardTitle>
-                  <CardDescription className="text-xs">Tagna affärer vs försäljningsmål</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-center">
-                  {salesTarget > 0 ? (
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <p className="text-3xl font-bold" style={{ color: '#1C7F72' }}>{pct.toFixed(0)}%</p>
-                        <p className="text-xs text-muted-foreground mt-1">{takenTotal.toFixed(1)} / {salesTarget.toFixed(1)} MSEK</p>
-                      </div>
-                      <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${pct}%`, backgroundColor: '#1C7F72' }}
-                        />
-                      </div>
+          return salesTarget > 0 ?
+          <motion.div variants={itemVariants} className="lg:col-span-2">
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-sm font-medium">Måluppfyllnad {targetYear}</p>
+                      <p className="text-xs text-muted-foreground">Tagna affärer vs försäljningsmål</p>
                     </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground text-center italic">Inget försäljningsmål satt</p>
-                  )}
+                    <div className="text-right">
+                      <p className="text-2xl font-bold" style={{ color: '#1C7F72' }}>{pct.toFixed(0)}%</p>
+                      <p className="text-xs text-muted-foreground">{takenTotal.toFixed(1)} / {salesTarget.toFixed(1)} MSEK</p>
+                    </div>
+                  </div>
+                  <div className="relative h-4 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${pct}%`, backgroundColor: '#1C7F72' }} />
+
+                  </div>
                 </CardContent>
               </Card>
-            </motion.div>
-          );
+            </motion.div> :
+          null;
         })()}
 
         {/* Project Status Overview */}
         <motion.div variants={itemVariants}>
-          <Card className="border-border/50 bg-card/80 h-full flex flex-col">
+          <Card className="border-border/50 bg-card/80 flex flex-col">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Check className="h-4 w-4 text-primary" />
@@ -347,7 +355,9 @@ export function Dashboard() {
               <p className="text-center text-sm text-muted-foreground py-4 px-4">
                   Inga projekt ännu.
                 </p> :
+
               <div className="divide-y divide-border/40">
+                  {/* Header row */}
                   <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-4 py-1.5 text-xs text-muted-foreground font-medium">
                     <span>Projekt</span>
                     <span className="text-center w-20">Aktiviteter</span>
@@ -363,10 +373,12 @@ export function Dashboard() {
                 sort((a, b) => b.progress - a.progress).
                 map(({ project, completed, total, progress }) => {
                   const hasWarning = project.activities.some((a) => a.hasWarning);
+
                   return (
                     <div
                       key={project.id}
                       className="grid grid-cols-[1fr_auto_auto] gap-2 items-center px-4 py-1.5 hover:bg-muted/30 transition-colors">
+
                         <div className="flex items-center gap-1.5 min-w-0">
                           {hasWarning &&
                         <AlertTriangle className="h-3 w-3 text-status-delayed shrink-0" />
@@ -379,10 +391,12 @@ export function Dashboard() {
                             <div
                             className="h-full bg-primary rounded-full"
                             style={{ width: `${progress}%` }} />
+
                           </div>
                           <span className="text-xs font-medium w-6 text-right">{progress}%</span>
                         </div>
                       </div>);
+
                 })}
                 </div>
               }
