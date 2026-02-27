@@ -313,7 +313,7 @@ export function Dashboard() {
                   {salesTarget > 0 ?
                   <div className="space-y-4">
                       <div className="text-center">
-                        <p className="text-3xl font-bold" style={{ color: '#1C7F72' }}>{pct.toFixed(0)}%</p>
+                        <p className="font-bold text-4xl text-chart-1" style={{ color: '#1C7F72' }}>{pct.toFixed(0)}%</p>
                         <p className="text-xs text-muted-foreground mt-1">{takenTotal.toFixed(1)} / {salesTarget.toFixed(1)} MSEK</p>
                       </div>
                       <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted">
