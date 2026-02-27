@@ -1,8 +1,9 @@
 import { useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Package, AlertTriangle, Loader2, Printer, ChartNoAxesColumnIncreasing, Trophy } from 'lucide-react';
+import { Package, AlertTriangle, Loader2, Printer, ChartNoAxesColumnIncreasing, Trophy, Target, Pencil, Check as CheckIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useProjectDataContext, DealStatus, ScheduleChange } from '@/contexts/ProjectDataContext';
 import { AddForecastDialog } from './dialogs/AddForecastDialog';
 import { EditForecastDialog } from './dialogs/EditForecastDialog';
@@ -95,9 +96,11 @@ const printSection = (element: HTMLElement | null, title: string) => {
 type PeriodView = '2026' | '2027' | 'rolling12';
 
 export function ForecastView() {
-  const { forecast, isLoading } = useProjectDataContext();
+  const { forecast, isLoading, salesTargets, setSalesTarget } = useProjectDataContext();
   const forecastTableRef = useRef<HTMLDivElement>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodView>('2026');
+  const [editingTarget, setEditingTarget] = useState(false);
+  const [targetInput, setTargetInput] = useState('');
 
   // Filter forecast data based on selected period
   const { filteredForecast, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel } = useMemo(() => {
@@ -198,6 +201,63 @@ export function ForecastView() {
           <AddForecastDialog />
         </div>
       </div>
+
+      {/* Sales Target Input */}
+      {selectedPeriod !== 'rolling12' && (() => {
+        const yr = parseInt(selectedPeriod);
+        const currentTarget = salesTargets[yr] || 0;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Försäljningsmål {yr}:</span>
+            </div>
+            {editingTarget ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={targetInput}
+                  onChange={(e) => setTargetInput(e.target.value)}
+                  placeholder="MSEK"
+                  className="w-28 h-8 text-sm"
+                />
+                <span className="text-sm text-muted-foreground">MSEK</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={async () => {
+                    const val = parseFloat(targetInput);
+                    if (!isNaN(val) && val >= 0) {
+                      await setSalesTarget(yr, val);
+                    }
+                    setEditingTarget(false);
+                  }}
+                >
+                  <CheckIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold">{currentTarget > 0 ? `${currentTarget.toFixed(1)} MSEK` : 'Ej satt'}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    setTargetInput(currentTarget > 0 ? String(currentTarget) : '');
+                    setEditingTarget(true);
+                  }}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
