@@ -250,7 +250,7 @@ export function Dashboard() {
           <Card className="border-border/50 bg-card/80 h-full flex flex-col">
              <div ref={forecastRef} className="relative flex flex-col flex-1">
              <Button variant="ghost" size="icon" onClick={() => printSection(forecastRef.current, 'Försäljningsprognos 2026')} className="print:hidden h-8 w-8 absolute top-4 right-4 z-10">
-               <Printer className="w-0 h-0 px-[5px] py-[5px]" />
+               <Printer className="w-0 h-0 px-[20px] py-[20px]" />
              </Button>
              <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
