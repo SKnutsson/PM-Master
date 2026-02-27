@@ -92,9 +92,9 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
 
   return (
     <motion.div variants={itemVariants}>
-      <div className={cn("border border-border/40 rounded-lg overflow-hidden transition-all hover:border-primary/30 bg-sidebar",
-
-      isArchived ? "bg-card/40 opacity-75" : "bg-card/60"
+      <div className={cn(
+        "border border-border/40 rounded-lg overflow-hidden transition-all hover:border-primary/30",
+        isArchived ? "bg-card/40 opacity-75" : "bg-card/60"
       )}>
         <div className="flex items-center justify-between px-3 py-2 bg-[#20b188]/[0.13]">
           <button
