@@ -413,6 +413,30 @@ export type Database = {
           },
         ]
       }
+      sales_targets: {
+        Row: {
+          created_at: string
+          id: string
+          target_msek: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          target_msek?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          target_msek?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       schedule_history: {
         Row: {
           forecast_id: string

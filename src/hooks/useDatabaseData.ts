@@ -41,6 +41,7 @@ export interface ExtendedSalesForecast {
 export function useDatabaseData() {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [forecast, setForecast] = useState<ExtendedSalesForecast[]>([]);
+  const [salesTargets, setSalesTargets] = useState<{ [year: number]: number }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const suppressReloadRef = useRef(false);
@@ -79,9 +80,35 @@ export function useDatabaseData() {
     };
   }, []);
 
+  const loadSalesTargets = async () => {
+    const { data, error } = await supabase
+      .from('sales_targets')
+      .select('*');
+    if (error) {
+      console.error('Error loading sales targets:', error);
+      return;
+    }
+    const targets: { [year: number]: number } = {};
+    (data || []).forEach((t: any) => {
+      targets[t.year] = parseFloat(String(t.target_msek));
+    });
+    setSalesTargets(targets);
+  };
+
+  const setSalesTarget = useCallback(async (year: number, targetMsek: number) => {
+    const { error } = await supabase
+      .from('sales_targets')
+      .upsert({ year, target_msek: targetMsek }, { onConflict: 'year' });
+    if (error) {
+      console.error('Error setting sales target:', error);
+      return;
+    }
+    setSalesTargets(prev => ({ ...prev, [year]: targetMsek }));
+  }, []);
+
   const loadData = async () => {
     setIsLoading(true);
-    await Promise.all([loadProjects(), loadForecasts()]);
+    await Promise.all([loadProjects(), loadForecasts(), loadSalesTargets()]);
     setIsLoading(false);
     setIsInitialized(true);
   };
@@ -564,6 +591,8 @@ export function useDatabaseData() {
     forecast,
     monthlyTotals,
     yearTotal,
+    salesTargets,
+    setSalesTarget,
     isLoading,
     isInitialized,
     addProject,

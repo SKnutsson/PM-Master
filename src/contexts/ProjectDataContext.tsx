@@ -7,6 +7,8 @@ interface ProjectDataContextType {
   forecast: ExtendedSalesForecast[];
   monthlyTotals: { [key: string]: number };
   yearTotal: number;
+  salesTargets: { [year: number]: number };
+  setSalesTarget: (year: number, targetMsek: number) => Promise<void>;
   isLoading: boolean;
   isInitialized: boolean;
   addProject: (project: Omit<Project, 'id'>) => Promise<Project | null>;

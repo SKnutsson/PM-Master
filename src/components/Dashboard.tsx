@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Phase } from '@/data/projectData';
+import { Progress } from '@/components/ui/progress';
 
 const printSection = (element: HTMLElement | null, title: string) => {
   if (!element) return;
@@ -49,32 +50,29 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
-const phaseConfig: Record<Phase, {icon: typeof HardHat;gradient: string;iconBg: string;iconColor: string;accentBorder: string;}> = {
+const phaseConfig: Record<Phase, {icon: typeof HardHat;bg: string;iconBg: string;iconColor: string;}> = {
   'Konstruktion': {
     icon: HardHat,
-    gradient: 'bg-gradient-to-br from-[#18323A] to-[#1C7F72]',
-    iconBg: 'bg-[#1C7F72]/20',
-    iconColor: 'text-[#92AE9D]',
-    accentBorder: 'border-t-[#EBB932]'
+    bg: 'bg-[#92AE9D]',
+    iconBg: 'bg-white/20',
+    iconColor: 'text-white',
   },
   'Produktion': {
     icon: Factory,
-    gradient: 'bg-gradient-to-br from-[#1C7F72] to-[#92AE9D]',
-    iconBg: 'bg-[#92AE9D]/20',
+    bg: 'bg-[#18323A]',
+    iconBg: 'bg-white/20',
     iconColor: 'text-white',
-    accentBorder: 'border-t-[#EBB932]'
   },
   'Montage': {
     icon: Wrench,
-    gradient: 'bg-gradient-to-br from-[#18323A] to-[#1C7F72]',
-    iconBg: 'bg-[#EBB932]/20',
-    iconColor: 'text-[#EBB932]',
-    accentBorder: 'border-t-[#EBB932]'
+    bg: 'bg-[#1C7F72]',
+    iconBg: 'bg-white/20',
+    iconColor: 'text-white',
   }
 };
 
 export function Dashboard() {
-  const { projects, monthlyTotals, yearTotal } = useProjectDataContext();
+  const { projects, monthlyTotals, yearTotal, forecast, salesTargets } = useProjectDataContext();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
   const phasesRef = useRef<HTMLDivElement>(null);
@@ -201,11 +199,11 @@ export function Dashboard() {
 
                   return (
                     <div
-                      key={phase}
-                      className={`relative rounded-xl overflow-hidden border-t-[3px] ${hasActiveProjects ? config.accentBorder : 'border-t-transparent'} shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5`}>
+                       key={phase}
+                       className="relative rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
 
-                    {/* Card gradient header */}
-                    <div className={`${config.gradient} px-5 py-4`}>
+                    {/* Card solid header */}
+                    <div className={`${config.bg} px-5 py-4`}>
                       <div className="flex items-center gap-3">
                         <div className={`rounded-lg p-2 ${config.iconBg} backdrop-blur-sm`}>
                           <PhaseIcon className={`h-5 w-5 ${config.iconColor}`} />
@@ -250,8 +248,11 @@ export function Dashboard() {
         {/* Sales Forecast Chart */}
         <motion.div variants={itemVariants}>
           <Card className="border-border/50 bg-card/80">
-            <div ref={forecastRef}>
-            <CardHeader>
+             <div ref={forecastRef} className="relative">
+             <Button variant="ghost" size="icon" onClick={() => printSection(forecastRef.current, 'Försäljningsprognos 2026')} className="print:hidden h-8 w-8 absolute top-4 right-4 z-10">
+               <Printer className="h-4 w-4" />
+             </Button>
+             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
@@ -260,10 +261,7 @@ export function Dashboard() {
                   </CardTitle>
                   <CardDescription>Månatlig prognos i MSEK</CardDescription>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => printSection(forecastRef.current, 'Försäljningsprognos 2026')} className="print:hidden h-8 w-8">
-                  <Printer className="h-4 w-4" />
-                </Button>
-                <div className="text-right">
+               <div className="text-right">
                   <p className="text-2xl font-bold text-primary">{yearTotal.toFixed(1)} MSEK</p>
                   <p className="text-sm text-muted-foreground">Total prognos</p>
                 </div>
@@ -303,6 +301,44 @@ export function Dashboard() {
             </div>
           </Card>
         </motion.div>
+
+        {/* Sales Target Progress */}
+        {(() => {
+          const targetYear = 2026;
+          const salesTarget = salesTargets[targetYear] || 0;
+          const takenTotal = forecast
+            .filter(f => f.dealStatus === 'Tagen')
+            .reduce((sum, f) => {
+              const yearEntries = (f.monthEntries || []).filter(e => e.year === targetYear);
+              return sum + yearEntries.reduce((s, e) => s + e.amount, 0);
+            }, 0);
+          const pct = salesTarget > 0 ? Math.min((takenTotal / salesTarget) * 100, 100) : 0;
+
+          return salesTarget > 0 ? (
+            <motion.div variants={itemVariants} className="lg:col-span-2">
+              <Card className="border-border/50 bg-card/80">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-sm font-medium">Måluppfyllnad {targetYear}</p>
+                      <p className="text-xs text-muted-foreground">Tagna affärer vs försäljningsmål</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold" style={{ color: '#1C7F72' }}>{pct.toFixed(0)}%</p>
+                      <p className="text-xs text-muted-foreground">{takenTotal.toFixed(1)} / {salesTarget.toFixed(1)} MSEK</p>
+                    </div>
+                  </div>
+                  <div className="relative h-4 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%`, backgroundColor: '#1C7F72' }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : null;
+        })()}
 
         {/* Project Status Overview */}
         <motion.div variants={itemVariants}>
