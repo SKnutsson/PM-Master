@@ -55,19 +55,19 @@ const phaseConfig: Record<Phase, {icon: typeof HardHat;bg: string;iconBg: string
     icon: HardHat,
     bg: 'bg-[#92AE9D]',
     iconBg: 'bg-white/20',
-    iconColor: 'text-white',
+    iconColor: 'text-white'
   },
   'Produktion': {
     icon: Factory,
     bg: 'bg-[#18323A]',
     iconBg: 'bg-white/20',
-    iconColor: 'text-white',
+    iconColor: 'text-white'
   },
   'Montage': {
     icon: Wrench,
     bg: 'bg-[#1C7F72]',
     iconBg: 'bg-white/20',
-    iconColor: 'text-white',
+    iconColor: 'text-white'
   }
 };
 
@@ -199,8 +199,8 @@ export function Dashboard() {
 
                   return (
                     <div
-                       key={phase}
-                       className="relative rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+                      key={phase}
+                      className="relative rounded-xl overflow-hidden shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
 
                     {/* Card solid header */}
                     <div className={`${config.bg} px-5 py-4`}>
@@ -250,7 +250,7 @@ export function Dashboard() {
           <Card className="border-border/50 bg-card/80 h-full flex flex-col">
              <div ref={forecastRef} className="relative flex flex-col flex-1">
              <Button variant="ghost" size="icon" onClick={() => printSection(forecastRef.current, 'Försäljningsprognos 2026')} className="print:hidden h-8 w-8 absolute top-4 right-4 z-10">
-               <Printer className="h-4 w-4" />
+               <Printer className="w-0 h-0" />
              </Button>
              <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
@@ -294,13 +294,13 @@ export function Dashboard() {
         {(() => {
           const targetYear = 2026;
           const salesTarget = salesTargets[targetYear] || 0;
-          const takenTotal = forecast
-            .filter(f => f.dealStatus === 'Tagen')
-            .reduce((sum, f) => {
-              const yearEntries = (f.monthEntries || []).filter(e => e.year === targetYear);
-              return sum + yearEntries.reduce((s, e) => s + e.amount, 0);
-            }, 0);
-          const pct = salesTarget > 0 ? Math.min((takenTotal / salesTarget) * 100, 100) : 0;
+          const takenTotal = forecast.
+          filter((f) => f.dealStatus === 'Tagen').
+          reduce((sum, f) => {
+            const yearEntries = (f.monthEntries || []).filter((e) => e.year === targetYear);
+            return sum + yearEntries.reduce((s, e) => s + e.amount, 0);
+          }, 0);
+          const pct = salesTarget > 0 ? Math.min(takenTotal / salesTarget * 100, 100) : 0;
 
           return (
             <motion.div variants={itemVariants}>
@@ -310,26 +310,26 @@ export function Dashboard() {
                   <CardDescription className="text-xs">Tagna affärer vs försäljningsmål</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col justify-center">
-                  {salesTarget > 0 ? (
-                    <div className="space-y-4">
+                  {salesTarget > 0 ?
+                  <div className="space-y-4">
                       <div className="text-center">
                         <p className="text-3xl font-bold" style={{ color: '#1C7F72' }}>{pct.toFixed(0)}%</p>
                         <p className="text-xs text-muted-foreground mt-1">{takenTotal.toFixed(1)} / {salesTarget.toFixed(1)} MSEK</p>
                       </div>
                       <div className="relative h-3 w-full overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${pct}%`, backgroundColor: '#1C7F72' }}
-                        />
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, backgroundColor: '#1C7F72' }} />
+
                       </div>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground text-center italic">Inget försäljningsmål satt</p>
-                  )}
+                    </div> :
+
+                  <p className="text-xs text-muted-foreground text-center italic">Inget försäljningsmål satt</p>
+                  }
                 </CardContent>
               </Card>
-            </motion.div>
-          );
+            </motion.div>);
+
         })()}
 
         {/* Project Status Overview */}
