@@ -40,9 +40,23 @@ export interface ExtendedSalesForecast {
   updatedAt?: string;
 }
 
+export interface ForecastEvent {
+  id: string;
+  forecastId: string | null;
+  eventType: string;
+  projectName: string;
+  productName: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  details: string | null;
+  changedBy: string | null;
+  createdAt: string;
+}
+
 export function useDatabaseData() {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [forecast, setForecast] = useState<ExtendedSalesForecast[]>([]);
+  const [forecastEvents, setForecastEvents] = useState<ForecastEvent[]>([]);
   const [salesTargets, setSalesTargets] = useState<{ [year: number]: number }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -108,9 +122,67 @@ export function useDatabaseData() {
     setSalesTargets(prev => ({ ...prev, [year]: targetMsek }));
   }, []);
 
+  const loadForecastEvents = async () => {
+    const { data, error } = await supabase
+      .from('forecast_events')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) {
+      console.error('Error loading forecast events:', error);
+      return;
+    }
+    setForecastEvents((data || []).map((e: any) => ({
+      id: e.id,
+      forecastId: e.forecast_id,
+      eventType: e.event_type,
+      projectName: e.project_name,
+      productName: e.product_name,
+      oldValue: e.old_value,
+      newValue: e.new_value,
+      details: e.details,
+      changedBy: e.changed_by,
+      createdAt: e.created_at,
+    })));
+  };
+
+  const getCurrentUserName = async (): Promise<string> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return 'Okänd';
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('display_name')
+      .eq('user_id', user.id)
+      .single();
+    return profile?.display_name || user.email || 'Okänd';
+  };
+
+  const logForecastEvent = async (params: {
+    forecastId?: string;
+    eventType: string;
+    projectName: string;
+    productName?: string;
+    oldValue?: string;
+    newValue?: string;
+    details?: string;
+  }) => {
+    const changedBy = await getCurrentUserName();
+    await supabase.from('forecast_events').insert({
+      forecast_id: params.forecastId || null,
+      event_type: params.eventType,
+      project_name: params.projectName,
+      product_name: params.productName || null,
+      old_value: params.oldValue || null,
+      new_value: params.newValue || null,
+      details: params.details || null,
+      changed_by: changedBy,
+    } as any);
+    loadForecastEvents();
+  };
+
   const loadData = async () => {
     setIsLoading(true);
-    await Promise.all([loadProjects(), loadForecasts(), loadSalesTargets()]);
+    await Promise.all([loadProjects(), loadForecasts(), loadSalesTargets(), loadForecastEvents()]);
     setIsLoading(false);
     setIsInitialized(true);
   };
@@ -446,6 +518,16 @@ export function useDatabaseData() {
       }
     }
 
+    const totalAmount = (item.monthEntries || []).reduce((s, e) => s + e.amount, 0);
+    await logForecastEvent({
+      forecastId: newForecast.id,
+      eventType: 'created',
+      projectName: item.project,
+      productName: item.product,
+      newValue: item.dealStatus,
+      details: `${totalAmount.toFixed(2)} MSEK`,
+    });
+
     return { ...item, id: newForecast.id } as ExtendedSalesForecast;
   }, []);
 
@@ -503,6 +585,36 @@ export function useDatabaseData() {
       }
     }
 
+    // Log status change event
+    if (currentForecast && updates.dealStatus && updates.dealStatus !== currentForecast.dealStatus) {
+      await logForecastEvent({
+        forecastId: forecastId,
+        eventType: 'status_change',
+        projectName: updates.project || currentForecast.project,
+        productName: updates.product || currentForecast.product,
+        oldValue: currentForecast.dealStatus,
+        newValue: updates.dealStatus,
+      });
+    }
+
+    // Log month move events
+    if (updates.months && currentForecast) {
+      const oldMonthKeys = Object.entries(currentForecast.months).filter(([_, v]) => v > 0).map(([m]) => m);
+      const newMonthKeys = Object.entries(updates.months).filter(([_, v]) => v > 0).map(([m]) => m);
+      const removed = oldMonthKeys.filter(m => !newMonthKeys.includes(m));
+      const added = newMonthKeys.filter(m => !oldMonthKeys.includes(m));
+      if (removed.length > 0 && added.length > 0) {
+        await logForecastEvent({
+          forecastId: forecastId,
+          eventType: 'month_moved',
+          projectName: updates.project || currentForecast.project,
+          productName: updates.product || currentForecast.product,
+          oldValue: removed.join(', '),
+          newValue: added.join(', '),
+        });
+      }
+    }
+
     // Update the forecast record
     const { error } = await supabase
       .from('forecasts')
@@ -519,13 +631,23 @@ export function useDatabaseData() {
   }, [forecast]);
 
   const deleteForecast = useCallback(async (forecastId: string) => {
+    const currentForecast = forecast.find(f => f.id === forecastId);
+    if (currentForecast) {
+      await logForecastEvent({
+        forecastId: forecastId,
+        eventType: 'deleted',
+        projectName: currentForecast.project,
+        productName: currentForecast.product,
+      });
+    }
+
     const { error } = await supabase
       .from('forecasts')
       .delete()
       .eq('id', forecastId);
 
     if (error) console.error('Error deleting forecast:', error);
-  }, []);
+  }, [forecast]);
 
   // Calculate totals - EXCLUDING lost deals
   const activeForecast = forecast.filter(f => f.dealStatus !== 'Förlorad');
@@ -593,6 +715,7 @@ export function useDatabaseData() {
   return {
     projects,
     forecast,
+    forecastEvents,
     monthlyTotals,
     yearTotal,
     salesTargets,

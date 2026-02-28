@@ -115,6 +115,53 @@ export type Database = {
           },
         ]
       }
+      forecast_events: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          details: string | null
+          event_type: string
+          forecast_id: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          product_name: string | null
+          project_name: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          details?: string | null
+          event_type: string
+          forecast_id?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          product_name?: string | null
+          project_name: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          details?: string | null
+          event_type?: string
+          forecast_id?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          product_name?: string | null
+          project_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forecast_events_forecast_id_fkey"
+            columns: ["forecast_id"]
+            isOneToOne: false
+            referencedRelation: "forecasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forecast_months: {
         Row: {
           amount: number

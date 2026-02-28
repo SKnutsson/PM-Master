@@ -72,7 +72,7 @@ const phaseConfig: Record<Phase, {icon: typeof HardHat;bg: string;iconBg: string
 };
 
 export function Dashboard() {
-  const { projects, monthlyTotals, yearTotal, forecast, salesTargets } = useProjectDataContext();
+  const { projects, monthlyTotals, yearTotal, forecast, forecastEvents, salesTargets } = useProjectDataContext();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
   const phasesRef = useRef<HTMLDivElement>(null);
@@ -399,68 +399,76 @@ export function Dashboard() {
             <CardDescription className="text-xs">Ändringar i försäljningsprognosen</CardDescription>
           </CardHeader>
           <CardContent>
-            {(() => {
-              const events = forecast
-                .map((f) => ({
-                  id: f.id,
-                  project: f.project,
-                  product: f.product,
-                  dealStatus: f.dealStatus,
-                  date: f.updatedAt || f.createdAt || '',
-                  isNew: f.createdAt === f.updatedAt,
-                }))
-                .filter((e) => e.date)
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .slice(0, 8);
+            {forecastEvents.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center italic py-2">Inga händelser ännu.</p>
+            ) : (
+              <div className="divide-y divide-border/40">
+                {forecastEvents.slice(0, 10).map((evt) => {
+                  const formatDate = (d: string) => {
+                    const date = new Date(d);
+                    const now = new Date();
+                    const diffMs = now.getTime() - date.getTime();
+                    const diffMin = Math.floor(diffMs / 60000);
+                    if (diffMin < 1) return 'Just nu';
+                    if (diffMin < 60) return `${diffMin} min sedan`;
+                    const diffH = Math.floor(diffMin / 60);
+                    if (diffH < 24) return `${diffH}h sedan`;
+                    const diffD = Math.floor(diffH / 24);
+                    if (diffD < 7) return `${diffD}d sedan`;
+                    return date.toLocaleDateString('sv-SE');
+                  };
 
-              if (events.length === 0) {
-                return <p className="text-xs text-muted-foreground text-center italic py-2">Inga händelser ännu.</p>;
-              }
+                  let description = '';
+                  let badgeCls = 'bg-muted text-muted-foreground';
+                  let badgeText = '';
 
-              const statusLabel = (s: string) => {
-                switch (s) {
-                  case 'Tagen': return { text: 'Tagen', cls: 'bg-status-completed/15 text-status-completed' };
-                  case 'Ny affär': return { text: 'Ny affär', cls: 'bg-blue-500/15 text-blue-600' };
-                  case 'Flyttad': return { text: 'Flyttad', cls: 'bg-yellow-500/15 text-yellow-700' };
-                  case 'Förlorad': return { text: 'Förlorad', cls: 'bg-status-delayed/15 text-status-delayed' };
-                  default: return { text: s, cls: 'bg-muted text-muted-foreground' };
-                }
-              };
+                  switch (evt.eventType) {
+                    case 'created':
+                      description = `Ny affär tillagd${evt.details ? ` (${evt.details})` : ''}`;
+                      badgeText = 'Ny';
+                      badgeCls = 'bg-blue-500/15 text-blue-600';
+                      break;
+                    case 'status_change':
+                      description = `Status ändrad: ${evt.oldValue} → ${evt.newValue}`;
+                      badgeText = evt.newValue || 'Ändrad';
+                      if (evt.newValue === 'Tagen') badgeCls = 'bg-status-completed/15 text-status-completed';
+                      else if (evt.newValue === 'Förlorad') badgeCls = 'bg-status-delayed/15 text-status-delayed';
+                      else if (evt.newValue === 'Flyttad') badgeCls = 'bg-yellow-500/15 text-yellow-700';
+                      else badgeCls = 'bg-primary/15 text-primary';
+                      break;
+                    case 'month_moved':
+                      description = `Flyttad från ${evt.oldValue} till ${evt.newValue}`;
+                      badgeText = 'Flyttad';
+                      badgeCls = 'bg-yellow-500/15 text-yellow-700';
+                      break;
+                    case 'deleted':
+                      description = 'Affär borttagen';
+                      badgeText = 'Borttagen';
+                      badgeCls = 'bg-status-delayed/15 text-status-delayed';
+                      break;
+                    default:
+                      description = evt.details || 'Ändring';
+                      badgeText = 'Ändrad';
+                  }
 
-              const formatDate = (d: string) => {
-                const date = new Date(d);
-                const now = new Date();
-                const diffMs = now.getTime() - date.getTime();
-                const diffMin = Math.floor(diffMs / 60000);
-                if (diffMin < 1) return 'Just nu';
-                if (diffMin < 60) return `${diffMin} min sedan`;
-                const diffH = Math.floor(diffMin / 60);
-                if (diffH < 24) return `${diffH}h sedan`;
-                const diffD = Math.floor(diffH / 24);
-                if (diffD < 7) return `${diffD}d sedan`;
-                return date.toLocaleDateString('sv-SE');
-              };
-
-              return (
-                <div className="divide-y divide-border/40">
-                  {events.map((e) => {
-                    const badge = statusLabel(e.dealStatus);
-                    return (
-                      <div key={e.id + e.date} className="flex items-center justify-between py-2 gap-3">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{e.project}</p>
-                          <p className="text-xs text-muted-foreground truncate">{e.product}</p>
-                        </div>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium shrink-0 ${badge.cls}`}>
-                          {badge.text}
-                        </span>
-                        <span className="text-xs text-muted-foreground shrink-0 w-20 text-right">{formatDate(e.date)}</span>
+                  return (
+                    <div key={evt.id} className="flex items-center gap-3 py-2.5">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{evt.projectName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{description}</p>
                       </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium shrink-0 ${badgeCls}`}>
+                        {badgeText}
+                      </span>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs text-muted-foreground">{formatDate(evt.createdAt)}</p>
+                        {evt.changedBy && <p className="text-[10px] text-muted-foreground/70">{evt.changedBy}</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
