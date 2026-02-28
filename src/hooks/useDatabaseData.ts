@@ -36,6 +36,8 @@ export interface ExtendedSalesForecast {
   dealStatus: DealStatus;
   notes?: string;
   scheduleHistory?: ScheduleChange[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export function useDatabaseData() {
@@ -220,6 +222,8 @@ export function useDatabaseData() {
           months,
           monthEntries,
           scheduleHistory,
+          createdAt: f.created_at || undefined,
+          updatedAt: f.updated_at || undefined,
         };
       });
       setForecast(forecastsWithMonths);
