@@ -1,10 +1,11 @@
 import { createContext, useContext, ReactNode } from 'react';
-import { useDatabaseData, ExtendedSalesForecast, DealStatus, ScheduleChange, ForecastMonthEntry } from '@/hooks/useDatabaseData';
+import { useDatabaseData, ExtendedSalesForecast, DealStatus, ScheduleChange, ForecastMonthEntry, ForecastEvent } from '@/hooks/useDatabaseData';
 import { Project, Activity, Status, Department } from '@/data/projectData';
 
 interface ProjectDataContextType {
   projects: Project[];
   forecast: ExtendedSalesForecast[];
+  forecastEvents: ForecastEvent[];
   monthlyTotals: { [key: string]: number };
   yearTotal: number;
   salesTargets: { [year: number]: number };
@@ -44,4 +45,4 @@ export function useProjectDataContext() {
   return context;
 }
 
-export type { ExtendedSalesForecast, DealStatus, ScheduleChange, ForecastMonthEntry };
+export type { ExtendedSalesForecast, DealStatus, ScheduleChange, ForecastMonthEntry, ForecastEvent };
