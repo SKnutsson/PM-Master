@@ -82,7 +82,7 @@ export function Dashboard() {
   const totalActivities = allActivities.length;
   const completedActivities = allActivities.filter((a) => a.status === 'Slutförd').length;
   const inProgressActivities = allActivities.filter((a) => a.status === 'Pågår').length;
-  const warningActivities = allActivities.filter((a) => a.hasWarning).length;
+  const delayedActivities = allActivities.filter((a) => a.status === 'Försenad').length;
 
   // Projects by phase - based on activities with status "Pågår" and a phase set
   const projectsByPhase = (['Konstruktion', 'Produktion', 'Montage'] as Phase[]).map((phase) => {
@@ -122,8 +122,8 @@ export function Dashboard() {
     bgColor: 'bg-status-in-progress/10'
   },
   {
-    label: 'Varningar',
-    value: warningActivities,
+    label: 'Försenade aktiviteter',
+    value: delayedActivities,
     icon: AlertTriangle,
     color: 'text-status-delayed',
     bgColor: 'bg-status-delayed/10'
@@ -390,6 +390,80 @@ export function Dashboard() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Senaste händelser från Prognos */}
+      <motion.div variants={itemVariants}>
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Senaste händelser</CardTitle>
+            <CardDescription className="text-xs">Ändringar i försäljningsprognosen</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const events = forecast
+                .map((f) => ({
+                  id: f.id,
+                  project: f.project,
+                  product: f.product,
+                  dealStatus: f.dealStatus,
+                  date: f.updatedAt || f.createdAt || '',
+                  isNew: f.createdAt === f.updatedAt,
+                }))
+                .filter((e) => e.date)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .slice(0, 8);
+
+              if (events.length === 0) {
+                return <p className="text-xs text-muted-foreground text-center italic py-2">Inga händelser ännu.</p>;
+              }
+
+              const statusLabel = (s: string) => {
+                switch (s) {
+                  case 'Tagen': return { text: 'Tagen', cls: 'bg-status-completed/15 text-status-completed' };
+                  case 'Ny affär': return { text: 'Ny affär', cls: 'bg-blue-500/15 text-blue-600' };
+                  case 'Flyttad': return { text: 'Flyttad', cls: 'bg-yellow-500/15 text-yellow-700' };
+                  case 'Förlorad': return { text: 'Förlorad', cls: 'bg-status-delayed/15 text-status-delayed' };
+                  default: return { text: s, cls: 'bg-muted text-muted-foreground' };
+                }
+              };
+
+              const formatDate = (d: string) => {
+                const date = new Date(d);
+                const now = new Date();
+                const diffMs = now.getTime() - date.getTime();
+                const diffMin = Math.floor(diffMs / 60000);
+                if (diffMin < 1) return 'Just nu';
+                if (diffMin < 60) return `${diffMin} min sedan`;
+                const diffH = Math.floor(diffMin / 60);
+                if (diffH < 24) return `${diffH}h sedan`;
+                const diffD = Math.floor(diffH / 24);
+                if (diffD < 7) return `${diffD}d sedan`;
+                return date.toLocaleDateString('sv-SE');
+              };
+
+              return (
+                <div className="divide-y divide-border/40">
+                  {events.map((e) => {
+                    const badge = statusLabel(e.dealStatus);
+                    return (
+                      <div key={e.id + e.date} className="flex items-center justify-between py-2 gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{e.project}</p>
+                          <p className="text-xs text-muted-foreground truncate">{e.product}</p>
+                        </div>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium shrink-0 ${badge.cls}`}>
+                          {badge.text}
+                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0 w-20 text-right">{formatDate(e.date)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      </motion.div>
     </motion.div>);
 
 }
