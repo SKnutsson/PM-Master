@@ -35,6 +35,7 @@ export interface ExtendedSalesForecast {
   monthEntries: ForecastMonthEntry[];
   dealStatus: DealStatus;
   notes?: string;
+  salesPerson?: string;
   scheduleHistory?: ScheduleChange[];
   createdAt?: string;
   updatedAt?: string;
@@ -291,6 +292,7 @@ export function useDatabaseData() {
           product: f.product,
           dealStatus: f.deal_status as DealStatus,
           notes: f.notes || undefined,
+          salesPerson: (f as any).sales_person || undefined,
           months,
           monthEntries,
           scheduleHistory,
@@ -497,7 +499,8 @@ export function useDatabaseData() {
         product: item.product,
         deal_status: item.dealStatus,
         notes: item.notes || null,
-      })
+        sales_person: item.salesPerson || null,
+      } as any)
       .select()
       .single();
 
@@ -712,6 +715,18 @@ export function useDatabaseData() {
     }
   }, []);
 
+  const deleteForecastEvent = useCallback(async (eventId: string) => {
+    const { error } = await supabase
+      .from('forecast_events')
+      .delete()
+      .eq('id', eventId);
+    if (error) {
+      console.error('Error deleting forecast event:', error);
+      return;
+    }
+    setForecastEvents(prev => prev.filter(e => e.id !== eventId));
+  }, []);
+
   return {
     projects,
     forecast,
@@ -731,6 +746,7 @@ export function useDatabaseData() {
     addForecast,
     updateForecast,
     deleteForecast,
+    deleteForecastEvent,
     updateProjectOrder,
     updateActivityOrder,
   };

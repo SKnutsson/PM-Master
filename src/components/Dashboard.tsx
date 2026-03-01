@@ -5,12 +5,10 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
-
-
   Printer,
   HardHat,
   Factory,
-  Wrench, Check, ChartNoAxesColumnIncreasing } from
+  Wrench, Check, ChartNoAxesColumnIncreasing, X } from
 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,7 +70,7 @@ const phaseConfig: Record<Phase, {icon: typeof HardHat;bg: string;iconBg: string
 };
 
 export function Dashboard() {
-  const { projects, monthlyTotals, yearTotal, forecast, forecastEvents, salesTargets } = useProjectDataContext();
+  const { projects, monthlyTotals, yearTotal, forecast, forecastEvents, deleteForecastEvent, salesTargets } = useProjectDataContext();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
   const phasesRef = useRef<HTMLDivElement>(null);
@@ -452,7 +450,7 @@ export function Dashboard() {
                   }
 
                   return (
-                    <div key={evt.id} className="flex items-center gap-3 py-2.5">
+                    <div key={evt.id} className="flex items-center gap-3 py-2.5 group">
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium truncate">{evt.projectName}</p>
                         <p className="text-xs text-muted-foreground truncate">{description}</p>
@@ -464,6 +462,13 @@ export function Dashboard() {
                         <p className="text-xs text-muted-foreground">{formatDate(evt.createdAt)}</p>
                         {evt.changedBy && <p className="text-[10px] text-muted-foreground/70">{evt.changedBy}</p>}
                       </div>
+                      <button
+                        onClick={() => deleteForecastEvent(evt.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 shrink-0"
+                        title="Ta bort händelse"
+                      >
+                        <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                      </button>
                     </div>
                   );
                 })}
