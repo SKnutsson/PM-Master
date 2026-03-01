@@ -58,6 +58,7 @@ export function AddForecastDialog() {
   const [amount, setAmount] = useState('');
   const [dealStatus, setDealStatus] = useState<DealStatus>('Prognos');
   const [notes, setNotes] = useState('');
+  const [salesPerson, setSalesPerson] = useState('');
   const { addForecast } = useProjectDataContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,6 +72,7 @@ export function AddForecastDialog() {
         monthEntries: [{ month, year, amount: amountNum }],
         dealStatus,
         notes: notes.trim() || undefined,
+        salesPerson: salesPerson.trim() || undefined,
       });
       resetForm();
       setOpen(false);
@@ -85,6 +87,7 @@ export function AddForecastDialog() {
     setAmount('');
     setDealStatus('Prognos');
     setNotes('');
+    setSalesPerson('');
   };
 
   return (
@@ -181,6 +184,16 @@ export function AddForecastDialog() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="sales-person">Ansvarig säljare</Label>
+              <Input
+                id="sales-person"
+                value={salesPerson}
+                onChange={(e) => setSalesPerson(e.target.value)}
+                placeholder="t.ex. Johan Andersson"
+              />
             </div>
 
             <div className="grid gap-2">
