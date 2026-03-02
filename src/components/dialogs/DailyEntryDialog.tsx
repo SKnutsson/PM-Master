@@ -11,21 +11,21 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   projectId: string;
   date: string;
-  preselectedInstallerId?: string;
+  preselectedProjectInstallerId?: string;
   projectInstallers: ProjectInstaller[];
   existingEntries: DailyResourceEntry[];
-  onSave: (installerId: string, workHours: number, travelHours: number) => Promise<void>;
+  onSave: (projectInstallerId: string, installerId: string | null, workHours: number, travelHours: number) => Promise<void>;
 }
 
-export function DailyEntryDialog({ open, onOpenChange, projectId, date, preselectedInstallerId, projectInstallers, existingEntries, onSave }: Props) {
-  const [installerId, setInstallerId] = useState('');
+export function DailyEntryDialog({ open, onOpenChange, projectId, date, preselectedProjectInstallerId, projectInstallers, existingEntries, onSave }: Props) {
+  const [selectedPiId, setSelectedPiId] = useState('');
   const [workHours, setWorkHours] = useState('');
   const [travelHours, setTravelHours] = useState('');
 
   // Pre-fill when selecting an installer that has existing entry
   useEffect(() => {
-    if (installerId) {
-      const existing = existingEntries.find(e => e.installerId === installerId && e.date === date);
+    if (selectedPiId) {
+      const existing = existingEntries.find(e => e.projectInstallerId === selectedPiId && e.date === date);
       if (existing) {
         setWorkHours(String(existing.plannedWorkHours));
         setTravelHours(String(existing.plannedTravelHours));
@@ -34,21 +34,23 @@ export function DailyEntryDialog({ open, onOpenChange, projectId, date, preselec
         setTravelHours('0');
       }
     }
-  }, [installerId, date, existingEntries]);
+  }, [selectedPiId, date, existingEntries]);
 
   useEffect(() => {
     if (open) {
-      setInstallerId(preselectedInstallerId || '');
+      setSelectedPiId(preselectedProjectInstallerId || '');
       setWorkHours('');
       setTravelHours('');
     }
-  }, [open, preselectedInstallerId]);
+  }, [open, preselectedProjectInstallerId]);
 
   const formattedDate = date ? new Date(date + 'T00:00:00').toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' }) : '';
 
   const handleSave = async () => {
-    if (!installerId) return;
-    await onSave(installerId, parseFloat(workHours) || 0, parseFloat(travelHours) || 0);
+    if (!selectedPiId) return;
+    const pi = projectInstallers.find(p => p.id === selectedPiId);
+    if (!pi) return;
+    await onSave(selectedPiId, pi.installerId || null, parseFloat(workHours) || 0, parseFloat(travelHours) || 0);
     onOpenChange(false);
   };
 
@@ -61,12 +63,12 @@ export function DailyEntryDialog({ open, onOpenChange, projectId, date, preselec
         <div className="space-y-3">
           <div>
             <Label className="text-xs">Montör *</Label>
-            <Select value={installerId} onValueChange={setInstallerId}>
+            <Select value={selectedPiId} onValueChange={setSelectedPiId}>
               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Välj montör" /></SelectTrigger>
               <SelectContent>
                 {projectInstallers.map(pi => (
-                  <SelectItem key={pi.installerId} value={pi.installerId} className="text-xs">
-                    {pi.installerName} ({pi.installerCompany})
+                  <SelectItem key={pi.id} value={pi.id} className="text-xs">
+                    {pi.isVacant ? 'Vakant' : `${pi.installerName} (${pi.installerCompany})`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -87,12 +89,12 @@ export function DailyEntryDialog({ open, onOpenChange, projectId, date, preselec
               <p className="text-[10px] text-muted-foreground mb-1">Befintliga poster denna dag:</p>
               {existingEntries.filter(e => e.date === date).map(e => (
                 <div key={e.id} className="text-[10px] text-muted-foreground">
-                  {e.installerName}: {e.plannedWorkHours}h arbete + {e.plannedTravelHours}h resa
+                  {e.installerName || 'Vakant'}: {e.plannedWorkHours}h arbete + {e.plannedTravelHours}h resa
                 </div>
               ))}
             </div>
           )}
-          <Button className="w-full h-8 text-xs" onClick={handleSave} disabled={!installerId}>
+          <Button className="w-full h-8 text-xs" onClick={handleSave} disabled={!selectedPiId}>
             Spara
           </Button>
         </div>

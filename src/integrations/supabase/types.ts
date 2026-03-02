@@ -17,7 +17,7 @@ export type Database = {
       activities: {
         Row: {
           created_at: string | null
-          end_date: string
+          end_date: string | null
           id: string
           name: string
           notes: string | null
@@ -25,13 +25,13 @@ export type Database = {
           project_id: string
           responsible: string
           sort_order: number | null
-          start_date: string
+          start_date: string | null
           status: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          end_date: string
+          end_date?: string | null
           id?: string
           name: string
           notes?: string | null
@@ -39,13 +39,13 @@ export type Database = {
           project_id: string
           responsible: string
           sort_order?: number | null
-          start_date: string
+          start_date?: string | null
           status?: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          end_date?: string
+          end_date?: string | null
           id?: string
           name?: string
           notes?: string | null
@@ -53,7 +53,7 @@ export type Database = {
           project_id?: string
           responsible?: string
           sort_order?: number | null
-          start_date?: string
+          start_date?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -72,30 +72,33 @@ export type Database = {
           created_at: string
           date: string
           id: string
-          installer_id: string
+          installer_id: string | null
           planned_travel_hours: number
           planned_work_hours: number
           project_id: string
+          project_installer_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           date: string
           id?: string
-          installer_id: string
+          installer_id?: string | null
           planned_travel_hours?: number
           planned_work_hours?: number
           project_id: string
+          project_installer_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           date?: string
           id?: string
-          installer_id?: string
+          installer_id?: string | null
           planned_travel_hours?: number
           planned_work_hours?: number
           project_id?: string
+          project_installer_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -111,6 +114,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_resource_entries_project_installer_id_fkey"
+            columns: ["project_installer_id"]
+            isOneToOne: false
+            referencedRelation: "project_installers"
             referencedColumns: ["id"]
           },
         ]

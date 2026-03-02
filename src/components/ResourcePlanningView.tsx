@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Users, Archive, UserPlus, Calculator } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, Archive, UserPlus, Calculator, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -116,7 +116,7 @@ export function ResourcePlanningView() {
   const [dailyDialogOpen, setDailyDialogOpen] = useState(false);
   const [dailyDialogProject, setDailyDialogProject] = useState('');
   const [dailyDialogDate, setDailyDialogDate] = useState('');
-  const [dailyDialogInstaller, setDailyDialogInstaller] = useState<string | undefined>(undefined);
+  const [dailyDialogProjectInstallerId, setDailyDialogProjectInstallerId] = useState<string | undefined>(undefined);
 
   // Estimation dialog state
   const [estDialogOpen, setEstDialogOpen] = useState(false);
@@ -272,7 +272,7 @@ export function ResourcePlanningView() {
 
   };
 
-  const openDailyDialog = (projectId: string, dateStr: string, installerId?: string) => {
+  const openDailyDialog = (projectId: string, dateStr: string, projectInstallerId?: string) => {
     const pInstallers = getProjectInstallers(projectId);
     if (pInstallers.length === 0) {
       toast.error('Koppla montörer till projektet först');
@@ -280,7 +280,7 @@ export function ResourcePlanningView() {
     }
     setDailyDialogProject(projectId);
     setDailyDialogDate(dateStr);
-    setDailyDialogInstaller(installerId);
+    setDailyDialogProjectInstallerId(projectInstallerId);
     setDailyDialogOpen(true);
   };
 
@@ -292,8 +292,8 @@ export function ResourcePlanningView() {
   };
 
   // Render schedule cells for a single installer in DAY view
-  const renderInstallerDayCells = (projectId: string, installerId: string, status: 'ok' | 'warning' | 'over') => {
-    const entries = dailyEntries.filter((d) => d.projectId === projectId && d.installerId === installerId);
+  const renderInstallerDayCells = (projectId: string, projectInstallerId: string, installerId: string | null, status: 'ok' | 'warning' | 'over') => {
+    const entries = dailyEntries.filter((d) => d.projectInstallerId === projectInstallerId || (!d.projectInstallerId && installerId && d.projectId === projectId && d.installerId === installerId));
     const entryMap = new Map(entries.map((e) => [e.date, e]));
 
     return displayedDays.map((day, i) => {
@@ -308,7 +308,7 @@ export function ResourcePlanningView() {
             isWeekend && 'bg-muted/40'
           )}
           style={{ width: colWidth, minWidth: colWidth }}
-          onClick={() => openDailyDialog(projectId, day.dateStr, installerId)}>
+          onClick={() => openDailyDialog(projectId, day.dateStr, projectInstallerId)}>
 
           {entry && totalH > 0 &&
           <Tooltip>
@@ -339,8 +339,8 @@ export function ResourcePlanningView() {
   };
 
   // Render schedule cells for a single installer in WEEK view
-  const renderInstallerWeekCells = (projectId: string, installerId: string, status: 'ok' | 'warning' | 'over') => {
-    const entries = dailyEntries.filter((d) => d.projectId === projectId && d.installerId === installerId);
+  const renderInstallerWeekCells = (projectId: string, projectInstallerId: string, installerId: string | null, status: 'ok' | 'warning' | 'over') => {
+    const entries = dailyEntries.filter((d) => d.projectInstallerId === projectInstallerId || (!d.projectInstallerId && installerId && d.projectId === projectId && d.installerId === installerId));
 
     return displayedWeeks.map((week) => {
       const { start, end } = getWeekRange(week);
@@ -675,7 +675,7 @@ export function ResourcePlanningView() {
                               {pInstallers.map((pi) =>
                             <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
                                   <div className="sticky left-0 z-10 shrink-0 border-r border-border/50 flex bg-primary-foreground" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
-                                    <div className="w-72 shrink-0 px-2 py-0.5 pl-7 flex items-center min-w-0">
+                                    <div className="w-72 shrink-0 px-2 py-0.5 pl-7 flex items-center justify-between min-w-0">
                                       <div className="min-w-0 flex items-center gap-1.5">
                                        <div className={cn('h-2 w-2 rounded-full shrink-0', pi.isVacant ? 'bg-destructive' : getBarColor(resourceStatus))} />
                                        <button
@@ -692,13 +692,27 @@ export function ResourcePlanningView() {
                                    <span className="text-[9px] text-muted-foreground shrink-0">({pi.installerCompany})</span>
                                    }
                                       </div>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-destructive hover:text-destructive"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (confirm(`Ta bort ${pi.isVacant ? 'vakant plats' : pi.installerName} och all planerad tid?`)) {
+                                            unassignInstaller(pi.id);
+                                            toast.success('Montör och planerad tid borttagen');
+                                          }
+                                        }}
+                                        title="Ta bort montör och all tid">
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
                                     </div>
                                     <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
                                   </div>
                                   <div className="flex items-center relative">
                                     {viewMode === 'days' ?
-                                renderInstallerDayCells(project.id, pi.installerId, resourceStatus) :
-                                renderInstallerWeekCells(project.id, pi.installerId, resourceStatus)
+                                renderInstallerDayCells(project.id, pi.id, pi.installerId, resourceStatus) :
+                                renderInstallerWeekCells(project.id, pi.id, pi.installerId, resourceStatus)
                                 }
                                   </div>
                                 </div>
@@ -739,11 +753,11 @@ export function ResourcePlanningView() {
           onOpenChange={setDailyDialogOpen}
           projectId={dailyDialogProject}
           date={dailyDialogDate}
-          preselectedInstallerId={dailyDialogInstaller}
+          preselectedProjectInstallerId={dailyDialogProjectInstallerId}
           projectInstallers={getProjectInstallers(dailyDialogProject)}
           existingEntries={getProjectDailyEntries(dailyDialogProject)}
-          onSave={async (installerId, workHours, travelHours) => {
-            await upsertDailyEntry(dailyDialogProject, installerId, dailyDialogDate, workHours, travelHours);
+          onSave={async (projectInstallerId, installerId, workHours, travelHours) => {
+            await upsertDailyEntry(dailyDialogProject, projectInstallerId, installerId, dailyDialogDate, workHours, travelHours);
             toast.success('Dagpost sparad');
           }} />
 
