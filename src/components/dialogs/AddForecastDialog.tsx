@@ -118,17 +118,13 @@ export function AddForecastDialog() {
             </div>
 
             <div className="grid gap-2">
-              <Label>Produkttyp</Label>
-              <Select value={product} onValueChange={setProduct}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Välj produkttyp" />
-                </SelectTrigger>
-                <SelectContent>
-                  {productTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="forecast-product">Produkttyp</Label>
+              <Input
+                id="forecast-product"
+                value={product}
+                onChange={(e) => setProduct(e.target.value)}
+                placeholder="t.ex. Teleskopläktare"
+              />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
