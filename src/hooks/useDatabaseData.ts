@@ -440,8 +440,8 @@ export function useDatabaseData() {
         name: activity.name,
         responsible: activity.responsible,
         status: activity.status,
-        start_date: activity.startDate || new Date().toISOString().split('T')[0],
-        end_date: activity.endDate || new Date().toISOString().split('T')[0],
+        start_date: activity.startDate || null,
+        end_date: activity.endDate || null,
         notes: '',
         phase: activity.phase || null,
       } as any)

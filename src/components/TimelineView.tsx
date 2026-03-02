@@ -303,7 +303,7 @@ export function TimelineView() {
     const project = orderedProjects.find((p) => p.id === projectId);
     if (!project) return;
 
-    const visibleActivities = project.activities.filter((a) => a.startDate || a.endDate);
+    const visibleActivities = project.activities;
     const currentOrder = visibleActivities.map((a) => a.id);
     const sourceIdx = currentOrder.indexOf(sourceId);
     const targetIdx = currentOrder.indexOf(targetActivityId);
@@ -673,7 +673,7 @@ export function TimelineView() {
                     const isExpanded = expandedProjects.has(project.id);
                     const { startIdx, endIdx } = getProjectWeekRange(project.id);
                     const { startDay, endDay } = getProjectDayRange(project.id);
-                    const activityCount = project.activities.filter((a) => a.startDate || a.endDate).length;
+                    const activityCount = project.activities.length;
                     const isDragging = dragProjectId === project.id;
                     const isDragOver = dragOverProjectId === project.id && dragProjectId !== project.id;
 
@@ -776,11 +776,12 @@ export function TimelineView() {
 
                         {/* Activities */}
                         <AnimatePresence>
-                          {isExpanded && project.activities.filter((a) => a.startDate || a.endDate).map((activity) => {
+                          {isExpanded && project.activities.map((activity) => {
                             const derived = deriveStatus(activity.status);
+                            const hasDates = !!(activity.startDate || activity.endDate);
                             const actStartCol = activity.startDate ? dateToCol(activity.startDate) : -1;
                             const actEndCol = activity.endDate ? dateToCol(activity.endDate) : actStartCol;
-                            const barVisible = actStartCol >= 0 && actEndCol >= 0 && actStartCol < columnCount;
+                            const barVisible = hasDates && actStartCol >= 0 && actEndCol >= 0 && actStartCol < columnCount;
                             const isActDragging = dragActivityId === activity.id;
                             const isActDragOver = dragOverActivityId === activity.id && dragActivityId !== activity.id && dragActivityProjectId === project.id;
 
@@ -819,9 +820,13 @@ export function TimelineView() {
                                         </TooltipTrigger>
                                       <TooltipContent side="right" className="text-xs max-w-xs">
                                         <p className="font-semibold">{activity.name}</p>
-                                        <p className="text-muted-foreground">
-                                          {activity.startDate} → {activity.endDate}
-                                        </p>
+                                        {hasDates ? (
+                                          <p className="text-muted-foreground">
+                                            {activity.startDate} → {activity.endDate}
+                                          </p>
+                                        ) : (
+                                          <p className="text-muted-foreground italic">Datum ej angivet</p>
+                                        )}
                                         <p className="text-muted-foreground">
                                           Status: {derived} • {activity.responsible}
                                         </p>

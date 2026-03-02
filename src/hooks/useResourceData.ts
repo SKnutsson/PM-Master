@@ -29,6 +29,7 @@ export interface DailyResourceEntry {
   id: string;
   projectId: string;
   installerId: string;
+  projectInstallerId: string | null;
   installerName?: string;
   installerCompany?: string;
   date: string;
@@ -80,6 +81,7 @@ export function useResourceData() {
     if (data) {
       setDailyEntries(data.map((d: any) => ({
         id: d.id, projectId: d.project_id, installerId: d.installer_id,
+        projectInstallerId: d.project_installer_id || null,
         installerName: d.installers?.name, installerCompany: d.installers?.company,
         date: d.date, plannedWorkHours: parseFloat(String(d.planned_work_hours)),
         plannedTravelHours: parseFloat(String(d.planned_travel_hours)),
@@ -151,32 +153,32 @@ export function useResourceData() {
 
   // Reassign installer on a project_installer row (keeps daily entries)
   const reassignInstaller = useCallback(async (projectInstallerId: string, newInstallerId: string | null, isVacant: boolean) => {
-    // If reassigning to a real installer, update daily_resource_entries installer_id too
     const pi = projectInstallers.find(p => p.id === projectInstallerId);
     if (!pi) return;
 
     if (isVacant) {
-      // Set is_vacant = true, keep installer_id as placeholder
-      await supabase.from('project_installers').update({ is_vacant: true }).eq('id', projectInstallerId);
-      setProjectInstallers(prev => prev.map(p => p.id === projectInstallerId ? { ...p, isVacant: true, installerName: undefined, installerCompany: undefined } : p));
+      await supabase.from('project_installers').update({ is_vacant: true, installer_id: null } as any).eq('id', projectInstallerId);
+      // Update daily entries to remove installer_id but keep project_installer_id
+      await supabase.from('daily_resource_entries').update({ installer_id: null } as any)
+        .eq('project_installer_id', projectInstallerId);
+      setProjectInstallers(prev => prev.map(p => p.id === projectInstallerId ? { ...p, isVacant: true, installerId: null as any, installerName: undefined, installerCompany: undefined } : p));
+      setDailyEntries(prev => prev.map(d => d.projectInstallerId === projectInstallerId ? { ...d, installerId: null as any } : d));
     } else if (newInstallerId) {
-      // Update project_installer row
       const { data } = await supabase.from('project_installers')
         .update({ installer_id: newInstallerId, is_vacant: false })
         .eq('id', projectInstallerId)
         .select('*, installers(name, company)').single();
       if (data) {
-        // Migrate daily entries from old installer to new installer
+        // Migrate daily entries to new installer
         await supabase.from('daily_resource_entries')
-          .update({ installer_id: newInstallerId })
-          .eq('project_id', pi.projectId)
-          .eq('installer_id', pi.installerId);
+          .update({ installer_id: newInstallerId } as any)
+          .eq('project_installer_id', projectInstallerId);
         setProjectInstallers(prev => prev.map(p => p.id === projectInstallerId ? {
           ...p, installerId: newInstallerId, isVacant: false,
           installerName: (data as any).installers?.name,
           installerCompany: (data as any).installers?.company,
         } : p));
-        setDailyEntries(prev => prev.map(d => d.projectId === pi.projectId && d.installerId === pi.installerId
+        setDailyEntries(prev => prev.map(d => d.projectInstallerId === projectInstallerId
           ? { ...d, installerId: newInstallerId } : d));
       }
     }
@@ -212,21 +214,24 @@ export function useResourceData() {
   }, []);
 
   const unassignInstaller = useCallback(async (projectInstallerId: string) => {
-    // Get the project_installer to find project_id and installer_id
+    // Delete all daily entries for this project_installer (handles both vacant and non-vacant via CASCADE + manual)
+    await supabase.from('daily_resource_entries').delete()
+      .eq('project_installer_id', projectInstallerId);
+    // Also clean up by installer_id for older entries without project_installer_id
     const pi = projectInstallers.find(p => p.id === projectInstallerId);
-    if (pi && !pi.isVacant) {
-      // Delete all daily entries for this installer on this project
+    if (pi && pi.installerId) {
       await supabase.from('daily_resource_entries').delete()
-        .eq('project_id', pi.projectId).eq('installer_id', pi.installerId);
-      setDailyEntries(prev => prev.filter(d => !(d.projectId === pi.projectId && d.installerId === pi.installerId)));
+        .eq('project_id', pi.projectId).eq('installer_id', pi.installerId)
+        .is('project_installer_id', null);
     }
     await supabase.from('project_installers').delete().eq('id', projectInstallerId);
+    setDailyEntries(prev => prev.filter(d => d.projectInstallerId !== projectInstallerId));
     setProjectInstallers(prev => prev.filter(p => p.id !== projectInstallerId));
   }, [projectInstallers]);
 
-  // Daily Entry CRUD
-  const upsertDailyEntry = useCallback(async (projectId: string, installerId: string, date: string, workHours: number, travelHours: number) => {
-    const existing = dailyEntries.find(d => d.projectId === projectId && d.installerId === installerId && d.date === date);
+  // Daily Entry CRUD - now uses projectInstallerId as primary link
+  const upsertDailyEntry = useCallback(async (projectId: string, projectInstallerId: string, installerId: string | null, date: string, workHours: number, travelHours: number) => {
+    const existing = dailyEntries.find(d => d.projectInstallerId === projectInstallerId && d.date === date);
     if (existing) {
       if (workHours === 0 && travelHours === 0) {
         await supabase.from('daily_resource_entries').delete().eq('id', existing.id);
@@ -239,12 +244,17 @@ export function useResourceData() {
       }
     } else if (workHours > 0 || travelHours > 0) {
       const { data, error } = await supabase.from('daily_resource_entries').insert({
-        project_id: projectId, installer_id: installerId, date,
-        planned_work_hours: workHours, planned_travel_hours: travelHours,
-      }).select('*, installers(name, company)').single();
+        project_id: projectId,
+        installer_id: installerId,
+        project_installer_id: projectInstallerId,
+        date,
+        planned_work_hours: workHours,
+        planned_travel_hours: travelHours,
+      } as any).select('*, installers(name, company)').single();
       if (error) { console.error(error); return; }
       setDailyEntries(prev => [...prev, {
         id: data.id, projectId: data.project_id, installerId: data.installer_id,
+        projectInstallerId: (data as any).project_installer_id || null,
         installerName: (data as any).installers?.name, installerCompany: (data as any).installers?.company,
         date: data.date, plannedWorkHours: parseFloat(String(data.planned_work_hours)),
         plannedTravelHours: parseFloat(String(data.planned_travel_hours)),
