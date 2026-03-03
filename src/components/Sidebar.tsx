@@ -27,7 +27,7 @@ interface SidebarProps {
 }
 
 const navItems = [
-{ id: 'dashboard' as View, label: 'Översikt', icon: LayoutDashboard },
+{ id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard },
 { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
 { id: 'forecast' as View, label: 'Prognos', icon: BarChart3 },
 { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
