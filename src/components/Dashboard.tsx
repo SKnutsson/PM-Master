@@ -106,13 +106,6 @@ export function Dashboard() {
     bgColor: 'bg-primary/10'
   },
   {
-    label: 'Slutförda aktiviteter',
-    value: completedActivities,
-    icon: CheckCircle2,
-    color: 'text-status-completed',
-    bgColor: 'bg-status-completed/10'
-  },
-  {
     label: 'Pågående aktiviteter',
     value: inProgressActivities,
     icon: Clock,
@@ -143,7 +136,7 @@ export function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Översikt</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">Välkommen till projektledningssystemet</p>
         </div>
         <Button variant="outline" size="sm" onClick={handlePrint} className="print:hidden">
@@ -153,7 +146,7 @@ export function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         {stats.map((stat) =>
         <motion.div key={stat.label} variants={itemVariants}>
             <Card className="border-border/50 bg-card/80">

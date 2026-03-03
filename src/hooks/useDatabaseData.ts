@@ -79,6 +79,12 @@ export function useDatabaseData() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_history' }, () => {
         loadForecasts();
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'forecast_events' }, () => {
+        loadForecastEvents();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_targets' }, () => {
+        loadSalesTargets();
+      })
       .subscribe();
 
     const projectsChannel = supabase
@@ -463,8 +469,8 @@ export function useDatabaseData() {
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.responsible !== undefined) updateData.responsible = updates.responsible;
     if (updates.status !== undefined) updateData.status = updates.status;
-    if (updates.startDate !== undefined) updateData.start_date = updates.startDate;
-    if (updates.endDate !== undefined) updateData.end_date = updates.endDate;
+    if ('startDate' in updates) updateData.start_date = updates.startDate ?? null;
+    if ('endDate' in updates) updateData.end_date = updates.endDate ?? null;
     if (updates.phase !== undefined) updateData.phase = updates.phase;
 
     const { error } = await supabase
