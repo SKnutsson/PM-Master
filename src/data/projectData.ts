@@ -17,6 +17,7 @@ export interface Activity {
   hasWarning?: boolean;
   phase?: Phase | null;
   isMilestone?: boolean;
+  notes?: string | null;
 }
 
 export type ProjectStatus = 'Aktiv' | 'Avslutat';

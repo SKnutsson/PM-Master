@@ -204,7 +204,7 @@ export function GanttBar({
             transform: 'rotate(45deg)',
           }}
         >
-          <div className={cn('w-full h-full rounded-[2px]', statusColor)} />
+          <div className={cn('w-full h-full rounded-none', statusColor)} />
         </div>
         {/* Drag tooltip */}
         {dragState && (

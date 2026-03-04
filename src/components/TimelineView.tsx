@@ -815,7 +815,7 @@ export function TimelineView() {
                                         <TooltipTrigger asChild>
                                           <div className="min-w-0 flex items-center gap-1.5">
                                             {activity.isMilestone ? (
-                                              <div className={cn("h-3 w-3 shrink-0 rotate-45 rounded-[1px]", getStatusDotColor(derived))} />
+                                              <div className={cn("h-3 w-3 shrink-0 rotate-45 rounded-none", getStatusDotColor(derived))} />
                                             ) : (
                                               <div className={cn("h-5 w-3 shrink-0 rounded-none", getStatusDotColor(derived))} />
                                             )}
@@ -834,6 +834,11 @@ export function TimelineView() {
                                         <p className="text-muted-foreground">
                                           Status: {derived} • {activity.responsible}
                                         </p>
+                                        {activity.notes && (
+                                          <p className="text-muted-foreground italic mt-0.5">
+                                            {activity.notes}
+                                          </p>
+                                        )}
                                       </TooltipContent>
                                     </Tooltip>
                                     </div>

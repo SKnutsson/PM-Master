@@ -475,6 +475,7 @@ export function useDatabaseData() {
     if ('endDate' in updates) updateData.end_date = updates.endDate ?? null;
     if (updates.phase !== undefined) updateData.phase = updates.phase;
     if ('isMilestone' in updates) updateData.is_milestone = updates.isMilestone ?? false;
+    if ('notes' in updates) updateData.notes = updates.notes ?? null;
 
     const { error } = await supabase
       .from('activities')
