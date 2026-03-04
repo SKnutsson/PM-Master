@@ -16,6 +16,7 @@ export interface Activity {
   days?: number;
   hasWarning?: boolean;
   phase?: Phase | null;
+  isMilestone?: boolean;
 }
 
 export type ProjectStatus = 'Aktiv' | 'Avslutat';

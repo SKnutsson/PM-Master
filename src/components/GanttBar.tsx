@@ -19,6 +19,7 @@ interface GanttBarProps {
   colToDate: (colIndex: number) => string;
   dateToCol: (dateStr: string) => number;
   snapCols?: number;
+  isMilestone?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -48,6 +49,7 @@ export function GanttBar({
   colToDate,
   dateToCol,
   snapCols = 1,
+  isMilestone = false,
 }: GanttBarProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<{
@@ -168,6 +170,53 @@ export function GanttBar({
   // Compute position in pixels using fixed column width for precision
   const BAR_INSET_PX = 2;
   const spanCols = currentEndCol - currentStartCol + 1;
+
+  // Milestone: render as diamond centered on the column
+  if (isMilestone) {
+    const DIAMOND_SIZE = 16;
+    const centerPx = currentStartCol * colWidth + colWidth / 2;
+
+    const currentStartDate = dragState ? colToDate(Math.max(0, currentStartCol)) : startDate;
+    const currentEndDate = currentStartDate;
+
+    return (
+      <div
+        ref={containerRef}
+        className={cn(
+          'absolute top-0 bottom-0 group/bar flex items-center justify-center',
+          isSaving && 'opacity-60',
+          dragState && 'z-30'
+        )}
+        style={{
+          left: `${centerPx - DIAMOND_SIZE / 2 - 2}px`,
+          width: `${DIAMOND_SIZE + 4}px`,
+        }}
+      >
+        <div
+          className={cn(
+            'cursor-grab active:cursor-grabbing',
+            dragState?.type === 'move' && 'ring-2 ring-primary/50'
+          )}
+          onMouseDown={(e) => handleMouseDown(e, 'move')}
+          style={{
+            width: DIAMOND_SIZE,
+            height: DIAMOND_SIZE,
+            transform: 'rotate(45deg)',
+          }}
+        >
+          <div className={cn('w-full h-full rounded-[2px]', statusColor)} />
+        </div>
+        {/* Drag tooltip */}
+        {dragState && (
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover border border-border rounded px-2 py-0.5 text-[10px] whitespace-nowrap shadow-md z-40 pointer-events-none">
+            <span className="font-medium">{formatDate(currentStartDate)}</span>
+            <span className="text-muted-foreground ml-1">(milstolpe)</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const leftPx = currentStartCol * colWidth + BAR_INSET_PX;
   const widthPx = Math.max(colWidth * 0.6, spanCols * colWidth - 2 * BAR_INSET_PX);
 

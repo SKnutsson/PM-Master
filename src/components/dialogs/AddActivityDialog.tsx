@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, CalendarIcon } from 'lucide-react';
+import { Plus, CalendarIcon, Diamond } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { Status, Department, departments, statuses, Phase, phases } from '@/data/projectData';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface AddActivityDialogProps {
   projectId: string;
@@ -40,13 +41,15 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [phase, setPhase] = useState<Phase | ''>('');
+  const [isMilestone, setIsMilestone] = useState(false);
   const { addActivity } = useProjectDataContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && responsible.trim()) {
-      const days = startDate && endDate 
-        ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      const effectiveEndDate = isMilestone && startDate ? startDate : endDate;
+      const days = startDate && effectiveEndDate 
+        ? Math.ceil((effectiveEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
         : undefined;
 
       await addActivity(projectId, {
@@ -55,10 +58,11 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
         department,
         status,
         startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
-        endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
+        endDate: effectiveEndDate ? format(effectiveEndDate, 'yyyy-MM-dd') : undefined,
         days,
         hasWarning: status === 'Försenad',
         phase: phase || null,
+        isMilestone,
       });
       resetForm();
       setOpen(false);
@@ -73,6 +77,7 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
     setStartDate(undefined);
     setEndDate(undefined);
     setPhase('');
+    setIsMilestone(false);
   };
 
   return (
@@ -156,6 +161,18 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="add-milestone"
+                checked={isMilestone}
+                onCheckedChange={(checked) => setIsMilestone(checked === true)}
+              />
+              <Label htmlFor="add-milestone" className="flex items-center gap-1.5 cursor-pointer">
+                <Diamond className="h-3.5 w-3.5" />
+                Milstolpe
+              </Label>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

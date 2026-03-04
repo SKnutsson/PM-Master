@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CalendarIcon, Pencil, Trash2, X } from 'lucide-react';
+import { CalendarIcon, Pencil, Trash2, X, Diamond } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { Activity, Status, Department, departments, statuses, Phase, phases } from '@/data/projectData';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface EditActivityDialogProps {
   projectId: string;
@@ -45,6 +46,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
     activity.endDate ? new Date(activity.endDate) : undefined
   );
   const [phase, setPhase] = useState<Phase | ''>(activity.phase || '');
+  const [isMilestone, setIsMilestone] = useState(activity.isMilestone || false);
   const { updateActivity, deleteActivity } = useProjectDataContext();
 
   useEffect(() => {
@@ -56,14 +58,16 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
       setStartDate(activity.startDate ? new Date(activity.startDate) : undefined);
       setEndDate(activity.endDate ? new Date(activity.endDate) : undefined);
       setPhase(activity.phase || '');
+      setIsMilestone(activity.isMilestone || false);
     }
   }, [open, activity]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && responsible.trim()) {
-      const days = startDate && endDate 
-        ? Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      const effectiveEndDate = isMilestone && startDate ? startDate : endDate;
+      const days = startDate && effectiveEndDate 
+        ? Math.ceil((effectiveEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
         : undefined;
 
       await updateActivity(projectId, activity.id, {
@@ -72,10 +76,11 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
         department,
         status,
         startDate: startDate ? format(startDate, 'yyyy-MM-dd') : null,
-        endDate: endDate ? format(endDate, 'yyyy-MM-dd') : null,
+        endDate: effectiveEndDate ? format(effectiveEndDate, 'yyyy-MM-dd') : null,
         days,
         hasWarning: status === 'Försenad',
         phase: phase || null,
+        isMilestone,
       });
       setOpen(false);
     }
@@ -166,6 +171,18 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="edit-milestone"
+                checked={isMilestone}
+                onCheckedChange={(checked) => setIsMilestone(checked === true)}
+              />
+              <Label htmlFor="edit-milestone" className="flex items-center gap-1.5 cursor-pointer">
+                <Diamond className="h-3.5 w-3.5" />
+                Milstolpe
+              </Label>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
