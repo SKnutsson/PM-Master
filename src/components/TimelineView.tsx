@@ -814,7 +814,11 @@ export function TimelineView() {
                                       <Tooltip>
                                         <TooltipTrigger asChild>
                                           <div className="min-w-0 flex items-center gap-1.5">
-                                            <div className={cn("h-5 w-3 shrink-0 rounded-none", getStatusDotColor(derived))} />
+                                            {activity.isMilestone ? (
+                                              <div className={cn("h-3 w-3 shrink-0 rotate-45 rounded-[1px]", getStatusDotColor(derived))} />
+                                            ) : (
+                                              <div className={cn("h-5 w-3 shrink-0 rounded-none", getStatusDotColor(derived))} />
+                                            )}
                                             <span className="text-xs truncate">{activity.name}</span>
                                           </div>
                                         </TooltipTrigger>
@@ -874,7 +878,8 @@ export function TimelineView() {
                                     colToDate={colToDate}
                                     dateToCol={dateToCol}
                                     colWidth={colWidth}
-                                    snapCols={1} />
+                                    snapCols={1}
+                                    isMilestone={activity.isMilestone} />
 
                                   }
                                 </div>

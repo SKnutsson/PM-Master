@@ -237,6 +237,7 @@ export function useDatabaseData() {
             endDate: a.end_date,
             notes: a.notes,
             phase: (a as any).phase as Phase | null,
+            isMilestone: (a as any).is_milestone === true,
           }))
       }));
       setProjects(projectsWithActivities);
@@ -450,6 +451,7 @@ export function useDatabaseData() {
         end_date: activity.endDate || null,
         notes: '',
         phase: activity.phase || null,
+        is_milestone: activity.isMilestone || false,
       } as any)
       .select()
       .single();
@@ -472,6 +474,7 @@ export function useDatabaseData() {
     if ('startDate' in updates) updateData.start_date = updates.startDate ?? null;
     if ('endDate' in updates) updateData.end_date = updates.endDate ?? null;
     if (updates.phase !== undefined) updateData.phase = updates.phase;
+    if ('isMilestone' in updates) updateData.is_milestone = updates.isMilestone ?? false;
 
     const { error } = await supabase
       .from('activities')

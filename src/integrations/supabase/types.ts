@@ -19,6 +19,7 @@ export type Database = {
           created_at: string | null
           end_date: string | null
           id: string
+          is_milestone: boolean
           name: string
           notes: string | null
           phase: string | null
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string | null
           end_date?: string | null
           id?: string
+          is_milestone?: boolean
           name: string
           notes?: string | null
           phase?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           created_at?: string | null
           end_date?: string | null
           id?: string
+          is_milestone?: boolean
           name?: string
           notes?: string | null
           phase?: string | null
