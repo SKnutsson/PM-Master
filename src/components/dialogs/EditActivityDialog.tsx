@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -47,6 +48,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
   );
   const [phase, setPhase] = useState<Phase | ''>(activity.phase || '');
   const [isMilestone, setIsMilestone] = useState(activity.isMilestone || false);
+  const [notes, setNotes] = useState(activity.notes || '');
   const { updateActivity, deleteActivity } = useProjectDataContext();
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
       setEndDate(activity.endDate ? new Date(activity.endDate) : undefined);
       setPhase(activity.phase || '');
       setIsMilestone(activity.isMilestone || false);
+      setNotes(activity.notes || '');
     }
   }, [open, activity]);
 
@@ -81,6 +84,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
         hasWarning: status === 'Försenad',
         phase: phase || null,
         isMilestone,
+        notes: notes.trim() || null,
       });
       setOpen(false);
     }
@@ -252,6 +256,17 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-notes">Kommentar</Label>
+              <Textarea
+                id="edit-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Lägg till en kommentar..."
+                className="min-h-[60px] resize-none"
+              />
             </div>
           </div>
           <DialogFooter className="flex justify-between">
