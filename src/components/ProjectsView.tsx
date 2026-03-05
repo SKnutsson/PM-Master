@@ -96,10 +96,10 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
         "border border-border/40 rounded-lg overflow-hidden transition-all hover:border-primary/30",
         isArchived ? "bg-card/40 opacity-75" : "bg-card/60"
       )}>
-        <div className="flex items-center justify-between px-3 py-2 bg-primary-foreground">
+        <div className="flex items-center justify-between px-3 py-2 bg-[#20b188]/[0.13]">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2 text-left flex-1 min-w-0 bg-secondary">
+            className="flex items-center gap-2 text-left flex-1 min-w-0">
 
             <div className={cn(
               'flex h-6 w-6 shrink-0 items-center justify-center rounded text-sm transition-colors',
@@ -124,7 +124,7 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
             </div>
           </button>
           
-          <div className="flex items-center gap-0.5 shrink-0 bg-primary-foreground">
+          <div className="flex items-center gap-0.5 shrink-0">
             {!isArchived &&
             <Button
               size="icon"
