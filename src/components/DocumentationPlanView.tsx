@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, AlertTriangle, Check, Clock, FileText, Filter } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, AlertTriangle, Check, Clock, FileText, Filter, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { format, isPast, isToday, addDays } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +27,7 @@ interface DocumentationItem {
   status: string;
   submitted_date: string | null;
   submitted_to: string | null;
+  responsible: string | null;
   notes: string | null;
   sort_order: number;
 }
@@ -75,6 +76,7 @@ export function DocumentationPlanView() {
   const [formSubmittedDate, setFormSubmittedDate] = useState<Date | undefined>();
   const [formSubmittedTo, setFormSubmittedTo] = useState('');
   const [formNotes, setFormNotes] = useState('');
+  const [formResponsible, setFormResponsible] = useState('');
 
   // Fetch items
   useEffect(() => {
@@ -125,6 +127,7 @@ export function DocumentationPlanView() {
     setFormSubmittedDate(undefined);
     setFormSubmittedTo('');
     setFormNotes('');
+    setFormResponsible('');
     setDialogOpen(true);
   };
 
@@ -137,6 +140,7 @@ export function DocumentationPlanView() {
     setFormSubmittedDate(item.submitted_date ? new Date(item.submitted_date) : undefined);
     setFormSubmittedTo(item.submitted_to || '');
     setFormNotes(item.notes || '');
+    setFormResponsible(item.responsible || '');
     setDialogOpen(true);
   };
 
@@ -153,6 +157,7 @@ export function DocumentationPlanView() {
       status: formStatus,
       submitted_date: formSubmittedDate ? format(formSubmittedDate, 'yyyy-MM-dd') : null,
       submitted_to: formSubmittedTo.trim() || null,
+      responsible: formResponsible.trim() || null,
       notes: formNotes.trim() || null,
     };
 
@@ -198,6 +203,12 @@ export function DocumentationPlanView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5" onClick={() => setExpandedProjects(new Set(activeProjects.map(p => p.id)))}>
+            <ChevronsUpDown className="h-3.5 w-3.5" />Expandera alla
+          </Button>
+          <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5" onClick={() => setExpandedProjects(new Set())}>
+            <ChevronsDownUp className="h-3.5 w-3.5" />Komprimera alla
+          </Button>
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
             <SelectTrigger className="w-[160px] h-9">
               <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
@@ -256,6 +267,7 @@ export function DocumentationPlanView() {
                             <thead>
                               <tr className="bg-muted/50 text-muted-foreground text-xs">
                                 <th className="text-left py-2 px-3 font-medium">Dokumenttyp</th>
+                                <th className="text-left py-2 px-3 font-medium">Ansvarig</th>
                                 <th className="text-left py-2 px-3 font-medium">Deadline</th>
                                 <th className="text-left py-2 px-3 font-medium">Status</th>
                                 <th className="text-left py-2 px-3 font-medium hidden md:table-cell">Inlämnat</th>
@@ -273,6 +285,7 @@ export function DocumentationPlanView() {
                                       <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                       {item.document_type}
                                     </td>
+                                    <td className="py-2 px-3 text-muted-foreground">{item.responsible || '—'}</td>
                                     <td className={cn("py-2 px-3", isOverdue && "text-destructive font-medium")}>
                                       {item.deadline ? format(new Date(item.deadline), 'd MMM yyyy', { locale: sv }) : '—'}
                                     </td>
@@ -328,6 +341,11 @@ export function DocumentationPlanView() {
               <datalist id="doc-type-list">
                 {DOC_TYPE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
               </datalist>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Ansvarig</Label>
+              <Input value={formResponsible} onChange={e => setFormResponsible(e.target.value)} placeholder="t.ex. Anna Svensson" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

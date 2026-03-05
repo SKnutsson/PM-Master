@@ -33,7 +33,7 @@ const navItems = [
 { id: 'forecast' as View, label: 'Prognos', icon: BarChart3 },
 { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
 { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
-{ id: 'documentation' as View, label: 'Dokumentation', icon: ClipboardList }];
+{ id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList }];
 
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
