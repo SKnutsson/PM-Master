@@ -1,0 +1,1 @@
+ALTER TABLE public.documentation_items ADD COLUMN responsible text;

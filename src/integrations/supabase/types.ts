@@ -136,6 +136,7 @@ export type Database = {
           id: string
           notes: string | null
           project_id: string
+          responsible: string | null
           sort_order: number
           status: string
           submitted_date: string | null
@@ -149,6 +150,7 @@ export type Database = {
           id?: string
           notes?: string | null
           project_id: string
+          responsible?: string | null
           sort_order?: number
           status?: string
           submitted_date?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           id?: string
           notes?: string | null
           project_id?: string
+          responsible?: string | null
           sort_order?: number
           status?: string
           submitted_date?: string | null
