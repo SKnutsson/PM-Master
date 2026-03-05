@@ -10,6 +10,7 @@ import {
   BarChart3,
   CalendarDays,
   HardHat,
+  ClipboardList,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -19,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics';
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation';
 
 interface SidebarProps {
   currentView: View;
@@ -31,7 +32,8 @@ const navItems = [
 { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
 { id: 'forecast' as View, label: 'Prognos', icon: BarChart3 },
 { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
-{ id: 'resources' as View, label: 'Resursplanering', icon: HardHat }];
+{ id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
+{ id: 'documentation' as View, label: 'Dokumentation', icon: ClipboardList }];
 
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {

@@ -6,6 +6,7 @@ import { ForecastView } from './ForecastView';
 import { TimelineView } from './TimelineView';
 import { ResourcePlanningView } from './ResourcePlanningView';
 import { ResourceAnalyticsView } from './ResourceAnalyticsView';
+import { DocumentationPlanView } from './DocumentationPlanView';
 import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 
 export function MainLayout() {
@@ -25,6 +26,8 @@ export function MainLayout() {
         return <ResourcePlanningView />;
       case 'resources-analytics':
         return <ResourceAnalyticsView />;
+      case 'documentation':
+        return <DocumentationPlanView />;
       default:
         return <Dashboard />;
     }
