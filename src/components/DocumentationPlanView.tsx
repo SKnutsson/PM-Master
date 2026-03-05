@@ -34,20 +34,20 @@ interface DocumentationItem {
 
 const DOC_STATUSES = ['Ej påbörjad', 'Pågående', 'Inlämnad'] as const;
 const DOC_TYPE_SUGGESTIONS = [
-  'Egenkontroll', 'Relationsritning', 'CE-dokumentation', 'Drift & underhåll',
-  'Installationsprotokoll', 'Provningsprotokoll', 'Garantihandling', 'Bruksanvisning'
-];
+'Egenkontroll', 'Relationsritning', 'CE-dokumentation', 'Drift & underhåll',
+'Installationsprotokoll', 'Provningsprotokoll', 'Garantihandling', 'Bruksanvisning'];
+
 const SUBMITTED_TO_SUGGESTIONS = ['Kund', 'Beställare', 'Kommun', 'Konsult', 'Entreprenör'];
 
 type StatusFilter = 'all' | 'Ej påbörjad' | 'Pågående' | 'Inlämnad' | 'overdue';
 
 function getStatusBadge(status: string, deadline: string | null) {
   const isOverdue = deadline && isPast(new Date(deadline)) && !isToday(new Date(deadline)) && status !== 'Inlämnad';
-  
+
   if (isOverdue) {
     return <Badge variant="destructive" className="text-xs gap-1"><AlertTriangle className="h-3 w-3" />Försenad</Badge>;
   }
-  
+
   switch (status) {
     case 'Inlämnad':
       return <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 text-xs gap-1"><Check className="h-3 w-3" />Inlämnad</Badge>;
@@ -84,11 +84,11 @@ export function DocumentationPlanView() {
   }, []);
 
   const fetchItems = async () => {
-    const { data, error } = await supabase
-      .from('documentation_items')
-      .select('*')
-      .order('sort_order', { ascending: true });
-    
+    const { data, error } = await supabase.
+    from('documentation_items').
+    select('*').
+    order('sort_order', { ascending: true });
+
     if (error) {
       toast({ title: 'Fel', description: 'Kunde inte hämta dokumentation', variant: 'destructive' });
     } else {
@@ -97,21 +97,21 @@ export function DocumentationPlanView() {
     setIsLoading(false);
   };
 
-  const activeProjects = useMemo(() => 
-    projects.filter(p => p.status !== 'Avslutat'), 
-    [projects]
+  const activeProjects = useMemo(() =>
+  projects.filter((p) => p.status !== 'Avslutat'),
+  [projects]
   );
 
   const filteredItems = useMemo(() => {
     if (statusFilter === 'all') return items;
     if (statusFilter === 'overdue') {
-      return items.filter(i => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad');
+      return items.filter((i) => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad');
     }
-    return items.filter(i => i.status === statusFilter);
+    return items.filter((i) => i.status === statusFilter);
   }, [items, statusFilter]);
 
   const toggleProject = (id: string) => {
-    setExpandedProjects(prev => {
+    setExpandedProjects((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -158,15 +158,15 @@ export function DocumentationPlanView() {
       submitted_date: formSubmittedDate ? format(formSubmittedDate, 'yyyy-MM-dd') : null,
       submitted_to: formSubmittedTo.trim() || null,
       responsible: formResponsible.trim() || null,
-      notes: formNotes.trim() || null,
+      notes: formNotes.trim() || null
     };
 
     if (editingItem) {
       const { error } = await supabase.from('documentation_items').update(payload).eq('id', editingItem.id);
-      if (error) { toast({ title: 'Fel vid uppdatering', variant: 'destructive' }); return; }
+      if (error) {toast({ title: 'Fel vid uppdatering', variant: 'destructive' });return;}
     } else {
       const { error } = await supabase.from('documentation_items').insert(payload);
-      if (error) { toast({ title: 'Fel vid tillägg', variant: 'destructive' }); return; }
+      if (error) {toast({ title: 'Fel vid tillägg', variant: 'destructive' });return;}
     }
 
     setDialogOpen(false);
@@ -177,14 +177,14 @@ export function DocumentationPlanView() {
   const handleDelete = async (id: string) => {
     if (!confirm('Är du säker på att du vill ta bort denna dokumentationspunkt?')) return;
     const { error } = await supabase.from('documentation_items').delete().eq('id', id);
-    if (error) { toast({ title: 'Fel vid borttagning', variant: 'destructive' }); return; }
+    if (error) {toast({ title: 'Fel vid borttagning', variant: 'destructive' });return;}
     fetchItems();
     toast({ title: 'Dokumentation borttagen' });
   };
 
-  const overdueCount = useMemo(() => 
-    items.filter(i => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad').length,
-    [items]
+  const overdueCount = useMemo(() =>
+  items.filter((i) => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad').length,
+  [items]
   );
 
   if (isLoading) {
@@ -203,7 +203,7 @@ export function DocumentationPlanView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5" onClick={() => setExpandedProjects(new Set(activeProjects.map(p => p.id)))}>
+          <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5" onClick={() => setExpandedProjects(new Set(activeProjects.map((p) => p.id)))}>
             <ChevronsUpDown className="h-3.5 w-3.5" />Expandera alla
           </Button>
           <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5" onClick={() => setExpandedProjects(new Set())}>
@@ -227,16 +227,16 @@ export function DocumentationPlanView() {
 
       {/* Project sections */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-        {activeProjects.map(project => {
-          const projectItems = filteredItems.filter(i => i.project_id === project.id);
-          const allProjectItems = items.filter(i => i.project_id === project.id);
+        {activeProjects.map((project) => {
+          const projectItems = filteredItems.filter((i) => i.project_id === project.id);
+          const allProjectItems = items.filter((i) => i.project_id === project.id);
           const isExpanded = expandedProjects.has(project.id);
-          const hasOverdue = allProjectItems.some(i => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad');
+          const hasOverdue = allProjectItems.some((i) => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad');
 
           return (
             <Card key={project.id} className={cn("transition-colors", hasOverdue && "border-destructive/30")}>
               <CardHeader className="py-3 px-4 cursor-pointer" onClick={() => toggleProject(project.id)}>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between bg-border text-secondary-foreground">
                   <div className="flex items-center gap-2">
                     {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                     <CardTitle className="text-sm font-semibold">
@@ -247,22 +247,22 @@ export function DocumentationPlanView() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">{allProjectItems.length} dok</span>
-                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); openAddDialog(project.id); }}>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => {e.stopPropagation();openAddDialog(project.id);}}>
                       <Plus className="h-3.5 w-3.5 mr-1" />Lägg till
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               <AnimatePresence>
-                {isExpanded && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                {isExpanded &&
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                     <CardContent className="pt-0 px-4 pb-3">
-                      {projectItems.length === 0 ? (
-                        <p className="text-xs text-muted-foreground py-2 text-center">
+                      {projectItems.length === 0 ?
+                    <p className="text-xs text-muted-foreground py-2 text-center">
                           {statusFilter !== 'all' ? 'Inga dokument matchar filtret' : 'Inga dokument tillagda ännu'}
-                        </p>
-                      ) : (
-                        <div className="border rounded-md overflow-hidden">
+                        </p> :
+
+                    <div className="border rounded-md overflow-hidden">
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="bg-muted/50 text-muted-foreground text-xs">
@@ -277,10 +277,10 @@ export function DocumentationPlanView() {
                               </tr>
                             </thead>
                             <tbody>
-                              {projectItems.map(item => {
-                                const isOverdue = item.deadline && isPast(new Date(item.deadline)) && !isToday(new Date(item.deadline)) && item.status !== 'Inlämnad';
-                                return (
-                                  <tr key={item.id} className={cn("border-t transition-colors hover:bg-muted/30", isOverdue && "bg-destructive/5")}>
+                              {projectItems.map((item) => {
+                            const isOverdue = item.deadline && isPast(new Date(item.deadline)) && !isToday(new Date(item.deadline)) && item.status !== 'Inlämnad';
+                            return (
+                              <tr key={item.id} className={cn("border-t transition-colors hover:bg-muted/30", isOverdue && "bg-destructive/5")}>
                                     <td className="py-2 px-3 font-medium flex items-center gap-1.5">
                                       <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                       {item.document_type}
@@ -295,12 +295,12 @@ export function DocumentationPlanView() {
                                     </td>
                                     <td className="py-2 px-3 hidden md:table-cell text-muted-foreground">{item.submitted_to || '—'}</td>
                                     <td className="py-2 px-3 hidden lg:table-cell text-muted-foreground truncate max-w-[200px]">
-                                      {item.notes ? (
-                                        <Tooltip>
+                                      {item.notes ?
+                                  <Tooltip>
                                           <TooltipTrigger asChild><span className="cursor-default">{item.notes}</span></TooltipTrigger>
                                           <TooltipContent className="max-w-xs"><p>{item.notes}</p></TooltipContent>
-                                        </Tooltip>
-                                      ) : '—'}
+                                        </Tooltip> :
+                                  '—'}
                                     </td>
                                     <td className="py-2 px-3">
                                       <div className="flex items-center gap-1 justify-end">
@@ -312,19 +312,19 @@ export function DocumentationPlanView() {
                                         </Button>
                                       </div>
                                     </td>
-                                  </tr>
-                                );
-                              })}
+                                  </tr>);
+
+                          })}
                             </tbody>
                           </table>
                         </div>
-                      )}
+                    }
                     </CardContent>
                   </motion.div>
-                )}
+                }
               </AnimatePresence>
-            </Card>
-          );
+            </Card>);
+
         })}
       </motion.div>
 
@@ -337,15 +337,15 @@ export function DocumentationPlanView() {
           <div className="grid gap-4 py-2">
             <div className="grid gap-2">
               <Label>Dokumenttyp</Label>
-              <Input value={formType} onChange={e => setFormType(e.target.value)} placeholder="t.ex. Egenkontroll" list="doc-type-list" />
+              <Input value={formType} onChange={(e) => setFormType(e.target.value)} placeholder="t.ex. Egenkontroll" list="doc-type-list" />
               <datalist id="doc-type-list">
-                {DOC_TYPE_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                {DOC_TYPE_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
               </datalist>
             </div>
 
             <div className="grid gap-2">
               <Label>Ansvarig</Label>
-              <Input value={formResponsible} onChange={e => setFormResponsible(e.target.value)} placeholder="t.ex. Anna Svensson" />
+              <Input value={formResponsible} onChange={(e) => setFormResponsible(e.target.value)} placeholder="t.ex. Anna Svensson" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -368,7 +368,7 @@ export function DocumentationPlanView() {
                 <Select value={formStatus} onValueChange={setFormStatus}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {DOC_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    {DOC_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -391,16 +391,16 @@ export function DocumentationPlanView() {
 
               <div className="grid gap-2">
                 <Label>Inlämnat till</Label>
-                <Input value={formSubmittedTo} onChange={e => setFormSubmittedTo(e.target.value)} placeholder="t.ex. Kund" list="submitted-to-list" />
+                <Input value={formSubmittedTo} onChange={(e) => setFormSubmittedTo(e.target.value)} placeholder="t.ex. Kund" list="submitted-to-list" />
                 <datalist id="submitted-to-list">
-                  {SUBMITTED_TO_SUGGESTIONS.map(s => <option key={s} value={s} />)}
+                  {SUBMITTED_TO_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
                 </datalist>
               </div>
             </div>
 
             <div className="grid gap-2">
               <Label>Kommentar</Label>
-              <Textarea value={formNotes} onChange={e => setFormNotes(e.target.value)} placeholder="Valfri kommentar..." className="min-h-[60px] resize-none" />
+              <Textarea value={formNotes} onChange={(e) => setFormNotes(e.target.value)} placeholder="Valfri kommentar..." className="min-h-[60px] resize-none" />
             </div>
           </div>
           <DialogFooter>
@@ -409,6 +409,6 @@ export function DocumentationPlanView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>);
+
 }
