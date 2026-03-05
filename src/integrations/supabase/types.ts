@@ -128,6 +128,56 @@ export type Database = {
           },
         ]
       }
+      documentation_items: {
+        Row: {
+          created_at: string
+          deadline: string | null
+          document_type: string
+          id: string
+          notes: string | null
+          project_id: string
+          sort_order: number
+          status: string
+          submitted_date: string | null
+          submitted_to: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deadline?: string | null
+          document_type?: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          sort_order?: number
+          status?: string
+          submitted_date?: string | null
+          submitted_to?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deadline?: string | null
+          document_type?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          sort_order?: number
+          status?: string
+          submitted_date?: string | null
+          submitted_to?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentation_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forecast_events: {
         Row: {
           changed_by: string | null
