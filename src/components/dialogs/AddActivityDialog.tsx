@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Plus, CalendarIcon, Diamond } from 'lucide-react';
+import { useProfiles } from '@/hooks/useProfiles';
+import { UserSelect } from '@/components/UserSelect';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +38,7 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [responsible, setResponsible] = useState('');
+  const { profiles } = useProfiles();
   const [department, setDepartment] = useState<Department>('Projektledare');
   const [status, setStatus] = useState<Status>('Ej påbörjad');
   const [startDate, setStartDate] = useState<Date | undefined>();
@@ -112,11 +115,10 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="responsible">Ansvarig</Label>
-                <Input
-                  id="responsible"
-                  value={responsible}
-                  onChange={(e) => setResponsible(e.target.value)}
-                  placeholder="t.ex. SK"
+                <UserSelect
+                  profiles={profiles}
+                  value={responsible || 'none'}
+                  onValueChange={(v) => setResponsible(v === 'none' ? '' : v)}
                 />
               </div>
               <div className="grid gap-2">
