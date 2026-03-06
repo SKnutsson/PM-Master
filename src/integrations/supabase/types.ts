@@ -328,25 +328,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_color: string | null
           created_at: string
           display_name: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
+          phone: string | null
           updated_at: string
           user_id: string
+          user_role: string | null
         }
         Insert: {
+          avatar_color?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
           updated_at?: string
           user_id: string
+          user_role?: string | null
         }
         Update: {
+          avatar_color?: string | null
           created_at?: string
           display_name?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
           updated_at?: string
           user_id?: string
+          user_role?: string | null
         }
         Relationships: []
       }
