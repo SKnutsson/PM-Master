@@ -97,8 +97,14 @@ export function DocumentationPlanView() {
     setIsLoading(false);
   };
 
-  const activeProjects = useMemo(() => 
-    projects.filter(p => p.status !== 'Avslutat'), 
+  const activeProjects = useMemo(() => {
+    const active = projects.filter(p => p.status !== 'Avslutat');
+    const archived = projects.filter(p => p.status === 'Avslutat');
+    return [...active, ...archived];
+  }, [projects]);
+
+  const archivedProjectIds = useMemo(() => 
+    new Set(projects.filter(p => p.status === 'Avslutat').map(p => p.id)),
     [projects]
   );
 
@@ -242,6 +248,7 @@ export function DocumentationPlanView() {
                     <CardTitle className="text-sm font-semibold">
                       {project.code && <span className="text-muted-foreground font-normal mr-1.5">{project.code}</span>}
                       {project.name}
+                      {archivedProjectIds.has(project.id) && <Badge variant="secondary" className="ml-2 text-[10px] py-0">Arkiverad</Badge>}
                     </CardTitle>
                     {hasOverdue && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
                   </div>
@@ -263,17 +270,17 @@ export function DocumentationPlanView() {
                         </p>
                       ) : (
                         <div className="border rounded-md overflow-hidden">
-                          <table className="w-full text-sm">
+                          <table className="w-full text-sm table-fixed">
                             <thead>
                               <tr className="bg-muted/50 text-muted-foreground text-xs">
-                                <th className="text-left py-2 px-3 font-medium">Dokumenttyp</th>
-                                <th className="text-left py-2 px-3 font-medium">Ansvarig</th>
-                                <th className="text-left py-2 px-3 font-medium">Deadline</th>
-                                <th className="text-left py-2 px-3 font-medium">Status</th>
-                                <th className="text-left py-2 px-3 font-medium hidden md:table-cell">Inlämnat</th>
-                                <th className="text-left py-2 px-3 font-medium hidden md:table-cell">Inlämnat till</th>
-                                <th className="text-left py-2 px-3 font-medium hidden lg:table-cell">Kommentar</th>
-                                <th className="py-2 px-3 w-20"></th>
+                                <th className="text-left py-2 px-3 font-medium w-[20%]">Dokumenttyp</th>
+                                <th className="text-left py-2 px-3 font-medium w-[10%]">Ansvarig</th>
+                                <th className="text-left py-2 px-3 font-medium w-[10%]">Deadline</th>
+                                <th className="text-left py-2 px-3 font-medium w-[10%]">Status</th>
+                                <th className="text-left py-2 px-3 font-medium w-[12%] hidden md:table-cell">Inlämnat</th>
+                                <th className="text-left py-2 px-3 font-medium w-[12%] hidden md:table-cell">Inlämnat till</th>
+                                <th className="text-left py-2 px-3 font-medium w-[18%] hidden lg:table-cell">Kommentar</th>
+                                <th className="py-2 px-3 w-[8%]"></th>
                               </tr>
                             </thead>
                             <tbody>
