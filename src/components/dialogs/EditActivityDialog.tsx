@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CalendarIcon, Pencil, Trash2, X, Diamond } from 'lucide-react';
+import { useProfiles } from '@/hooks/useProfiles';
+import { UserSelect } from '@/components/UserSelect';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +41,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
   const [name, setName] = useState(activity.name);
   const [responsible, setResponsible] = useState(activity.responsible);
   const [department, setDepartment] = useState<Department>(activity.department);
+  const { profiles } = useProfiles();
   const [status, setStatus] = useState<Status>(activity.status);
   const [startDate, setStartDate] = useState<Date | undefined>(
     activity.startDate ? new Date(activity.startDate) : undefined
@@ -127,10 +130,10 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-responsible">Ansvarig</Label>
-                <Input
-                  id="edit-responsible"
-                  value={responsible}
-                  onChange={(e) => setResponsible(e.target.value)}
+                <UserSelect
+                  profiles={profiles}
+                  value={responsible || 'none'}
+                  onValueChange={(v) => setResponsible(v === 'none' ? '' : v)}
                 />
               </div>
               <div className="grid gap-2">

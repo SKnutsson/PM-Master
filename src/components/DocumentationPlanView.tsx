@@ -18,6 +18,9 @@ import { cn } from '@/lib/utils';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useProfiles, getDisplayName } from '@/hooks/useProfiles';
+import { UserAvatar } from '@/components/UserAvatar';
+import { UserSelect } from '@/components/UserSelect';
 
 interface DocumentationItem {
   id: string;
@@ -61,6 +64,7 @@ function getStatusBadge(status: string, deadline: string | null) {
 export function DocumentationPlanView() {
   const { projects } = useProjectDataContext();
   const { toast } = useToast();
+  const { profiles } = useProfiles();
   const [items, setItems] = useState<DocumentationItem[]>([]);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -292,7 +296,20 @@ export function DocumentationPlanView() {
                                       <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                       {item.document_type}
                                     </td>
-                                    <td className="py-2 px-3 text-muted-foreground">{item.responsible || '—'}</td>
+                                    <td className="py-2 px-3 text-muted-foreground">
+                                      {(() => {
+                                        const matchedProfile = profiles.find(p => getDisplayName(p) === item.responsible);
+                                        if (matchedProfile) {
+                                          return (
+                                            <div className="flex items-center gap-1.5">
+                                              <UserAvatar profile={matchedProfile} size="xs" />
+                                              <span className="truncate text-xs">{item.responsible}</span>
+                                            </div>
+                                          );
+                                        }
+                                        return item.responsible || '—';
+                                      })()}
+                                    </td>
                                     <td className={cn("py-2 px-3", isOverdue && "text-destructive font-medium")}>
                                       {item.deadline ? format(new Date(item.deadline), 'd MMM yyyy', { locale: sv }) : '—'}
                                     </td>
@@ -352,7 +369,11 @@ export function DocumentationPlanView() {
 
             <div className="grid gap-2">
               <Label>Ansvarig</Label>
-              <Input value={formResponsible} onChange={e => setFormResponsible(e.target.value)} placeholder="t.ex. Anna Svensson" />
+              <UserSelect
+                profiles={profiles}
+                value={formResponsible || 'none'}
+                onValueChange={(v) => setFormResponsible(v === 'none' ? '' : v)}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

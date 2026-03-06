@@ -18,6 +18,8 @@ import {
   TooltipTrigger } from
 '@/components/ui/tooltip';
 import { toast } from 'sonner';
+import { useProfiles, getDisplayName } from '@/hooks/useProfiles';
+import { UserAvatar } from '@/components/UserAvatar';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -139,6 +141,7 @@ const LEFT_COL_WIDTH = 304; // w-60 + w-16 = 240 + 64
 export function TimelineView() {
   const { projects: allProjects, updateActivity, updateProjectOrder, updateActivityOrder } = useProjectDataContext();
   const projects = allProjects.filter((p) => p.status !== 'Avslutat');
+  const { profiles } = useProfiles();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
 
@@ -858,7 +861,20 @@ export function TimelineView() {
 
                                   </div>
                                   <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 bg-primary-foreground flex items-center justify-center text-slate-950">
-                                    <span className="text-[12px] text-muted-foreground truncate text-center">{activity.responsible}</span>
+                                    {(() => {
+                                      const matchedProfile = profiles.find(p => getDisplayName(p) === activity.responsible);
+                                      if (matchedProfile) {
+                                        return (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <div><UserAvatar profile={matchedProfile} size="xs" /></div>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="right" className="text-xs">{activity.responsible}</TooltipContent>
+                                          </Tooltip>
+                                        );
+                                      }
+                                      return <span className="text-[12px] text-muted-foreground truncate text-center">{activity.responsible}</span>;
+                                    })()}
                                   </div>
                                 </div>
                                 {/* Grid area with absolute-positioned draggable bar */}
