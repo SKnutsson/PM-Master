@@ -71,6 +71,7 @@ export function DocumentationPlanView() {
   const [editingItem, setEditingItem] = useState<DocumentationItem | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [showArchived, setShowArchived] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Form state
