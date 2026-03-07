@@ -29,15 +29,22 @@ interface SidebarProps {
   onViewChange: (view: View) => void;
 }
 
-const navItems = [
-{ id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard },
-{ id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
-{ id: 'forecast' as View, label: 'Prognos', icon: BarChart3 },
-{ id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
-{ id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
-{ id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
-{ id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
-{ id: 'profile' as View, label: 'Profil', icon: UserCircle }];
+const topItems = [
+  { id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard },
+];
+
+const mainItems = [
+  { id: 'forecast' as View, label: 'Prognos', icon: BarChart3 },
+  { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
+  { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
+  { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
+  { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
+  { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
+];
+
+const bottomNavItems = [
+  { id: 'profile' as View, label: 'Profil', icon: UserCircle },
+];
 
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
