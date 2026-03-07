@@ -16,12 +16,13 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  UserCircle } from
+  UserCircle,
+  ListChecks } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile';
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks';
 
 interface SidebarProps {
   currentView: View;
@@ -30,6 +31,7 @@ interface SidebarProps {
 
 const navItems = [
 { id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard },
+{ id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
 { id: 'forecast' as View, label: 'Prognos', icon: BarChart3 },
 { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
 { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
