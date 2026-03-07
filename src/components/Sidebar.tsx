@@ -71,92 +71,25 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 p-3">
-        {navItems.map((item) => {
-          const isActive = item.id === 'resources' ? isResourcesSection : currentView === item.id;
-          const NavButton =
-          <Button
-            key={item.id}
-            variant="ghost"
-            onClick={() => onViewChange(item.id)}
-            className={cn(
-              'w-full justify-start gap-3 px-3 py-2.5 text-sidebar-foreground transition-all',
-              isActive ?
-              'bg-sidebar-accent text-sidebar-accent-foreground' :
-              'hover:bg-sidebar-accent/50',
-              isCollapsed && 'justify-center px-2'
-            )}>
+      <nav className="flex-1 p-3 space-y-1">
+        {/* Dashboard - standalone */}
+        {renderNavItems(topItems)}
 
-              <item.icon className={cn('h-5 w-5 shrink-0', isActive && 'text-primary')} />
-              {!isCollapsed &&
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="truncate">
+        {/* Separator */}
+        <div className="py-1.5">
+          <div className="h-px bg-sidebar-border" />
+        </div>
 
-                  {item.label}
-                </motion.span>
-            }
-            </Button>;
+        {/* Main project items */}
+        {renderNavItems(mainItems)}
 
+        {/* Separator */}
+        <div className="py-1.5">
+          <div className="h-px bg-sidebar-border" />
+        </div>
 
-          const withTooltip = isCollapsed ?
-          <Tooltip key={item.id} delayDuration={0}>
-              <TooltipTrigger asChild>{NavButton}</TooltipTrigger>
-              <TooltipContent side="right" className="font-medium">
-                {item.label}
-              </TooltipContent>
-            </Tooltip> :
-          NavButton;
-
-          // Sub-items for Resursplanering
-          if (item.id === 'resources') {
-            return (
-              <div key={item.id}>
-                {withTooltip}
-                <AnimatePresence>
-                  {isResourcesSection && !isCollapsed &&
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden">
-
-                      {/* Planering sub-item */}
-                      <button
-                      onClick={() => onViewChange('resources')}
-                      className={cn(
-                        'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 text-xs rounded-md transition-colors',
-                        currentView === 'resources' ?
-                        'text-primary font-medium' :
-                        'text-muted-foreground hover:text-sidebar-foreground'
-                      )}>
-
-                        <span className={cn('w-1 h-1 rounded-full shrink-0', currentView === 'resources' ? 'bg-primary' : 'bg-muted-foreground/40')} />
-                        Planering
-                      </button>
-                      {/* Analys sub-item */}
-                      <button
-                      onClick={() => onViewChange('resources-analytics')}
-                      className={cn(
-                        'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 text-xs rounded-md transition-colors',
-                        currentView === 'resources-analytics' ?
-                        'text-primary font-medium' :
-                        'text-muted-foreground hover:text-sidebar-foreground'
-                      )}>
-
-                        <span className={cn('w-1 h-1 rounded-full shrink-0', currentView === 'resources-analytics' ? 'bg-primary' : 'bg-muted-foreground/40')} />
-                        Analys
-                      </button>
-                    </motion.div>
-                  }
-                </AnimatePresence>
-              </div>);
-
-          }
-
-          return withTooltip;
-        })}
+        {/* Profile - standalone */}
+        {renderNavItems(bottomNavItems)}
       </nav>
 
       {/* Collapse button */}
