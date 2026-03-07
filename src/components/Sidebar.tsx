@@ -16,7 +16,8 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  UserCircle } from
+  UserCircle,
+  ListChecks } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
