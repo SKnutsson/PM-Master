@@ -104,9 +104,10 @@ export function DocumentationPlanView() {
 
   const activeProjects = useMemo(() => {
     const active = projects.filter(p => p.status !== 'Avslutat');
+    if (!showArchived) return active;
     const archived = projects.filter(p => p.status === 'Avslutat');
     return [...active, ...archived];
-  }, [projects]);
+  }, [projects, showArchived]);
 
   const archivedProjectIds = useMemo(() => 
     new Set(projects.filter(p => p.status === 'Avslutat').map(p => p.id)),
