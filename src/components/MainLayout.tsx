@@ -8,6 +8,7 @@ import { ResourcePlanningView } from './ResourcePlanningView';
 import { ResourceAnalyticsView } from './ResourceAnalyticsView';
 import { DocumentationPlanView } from './DocumentationPlanView';
 import { ProfileView } from './ProfileView';
+import { MyTasksView } from './MyTasksView';
 import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 
 export function MainLayout() {
