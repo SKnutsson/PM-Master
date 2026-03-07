@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Plus, GripVertical } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, GripVertical, Archive } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Status } from '@/data/projectData';
@@ -140,7 +140,12 @@ const LEFT_COL_WIDTH = 304; // w-60 + w-16 = 240 + 64
 
 export function TimelineView() {
   const { projects: allProjects, updateActivity, updateProjectOrder, updateActivityOrder } = useProjectDataContext();
-  const projects = allProjects.filter((p) => p.status !== 'Avslutat');
+  const [showArchived, setShowArchived] = useState(false);
+  const projects = useMemo(() => {
+    const active = allProjects.filter((p) => p.status !== 'Avslutat');
+    if (!showArchived) return active;
+    return [...active, ...allProjects.filter((p) => p.status === 'Avslutat')];
+  }, [allProjects, showArchived]);
   const { profiles } = useProfiles();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
@@ -545,6 +550,15 @@ export function TimelineView() {
               </TabsList>
             </Tabs>
             <div className="flex items-center gap-1">
+              <Button
+                variant={showArchived ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs gap-1.5"
+                onClick={() => setShowArchived(!showArchived)}
+              >
+                <Archive className="h-3.5 w-3.5" />
+                Arkiverade
+              </Button>
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={expandAll}>
                 Expandera
               </Button>

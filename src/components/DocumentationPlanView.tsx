@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, AlertTriangle, Check, Clock, FileText, Filter, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, AlertTriangle, Check, Clock, FileText, Filter, ChevronsDownUp, ChevronsUpDown, Archive } from 'lucide-react';
 import { format, isPast, isToday, addDays } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -71,6 +71,7 @@ export function DocumentationPlanView() {
   const [editingItem, setEditingItem] = useState<DocumentationItem | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [showArchived, setShowArchived] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Form state
@@ -103,9 +104,10 @@ export function DocumentationPlanView() {
 
   const activeProjects = useMemo(() => {
     const active = projects.filter(p => p.status !== 'Avslutat');
+    if (!showArchived) return active;
     const archived = projects.filter(p => p.status === 'Avslutat');
     return [...active, ...archived];
-  }, [projects]);
+  }, [projects, showArchived]);
 
   const archivedProjectIds = useMemo(() => 
     new Set(projects.filter(p => p.status === 'Avslutat').map(p => p.id)),
@@ -213,6 +215,15 @@ export function DocumentationPlanView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant={showArchived ? 'default' : 'outline'}
+            size="sm"
+            className="h-9 text-xs gap-1.5"
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            <Archive className="h-3.5 w-3.5" />
+            Arkiverade
+          </Button>
           <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5" onClick={() => setExpandedProjects(new Set(activeProjects.map(p => p.id)))}>
             <ChevronsUpDown className="h-3.5 w-3.5" />Expandera alla
           </Button>
