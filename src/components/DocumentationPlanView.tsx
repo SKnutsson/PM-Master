@@ -215,6 +215,15 @@ export function DocumentationPlanView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant={showArchived ? 'default' : 'outline'}
+            size="sm"
+            className="h-9 text-xs gap-1.5"
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            <Archive className="h-3.5 w-3.5" />
+            Arkiverade
+          </Button>
           <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5" onClick={() => setExpandedProjects(new Set(activeProjects.map(p => p.id)))}>
             <ChevronsUpDown className="h-3.5 w-3.5" />Expandera alla
           </Button>

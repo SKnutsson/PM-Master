@@ -550,6 +550,15 @@ export function TimelineView() {
               </TabsList>
             </Tabs>
             <div className="flex items-center gap-1">
+              <Button
+                variant={showArchived ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs gap-1.5"
+                onClick={() => setShowArchived(!showArchived)}
+              >
+                <Archive className="h-3.5 w-3.5" />
+                Arkiverade
+              </Button>
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={expandAll}>
                 Expandera
               </Button>
