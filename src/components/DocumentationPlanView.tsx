@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, AlertTriangle, Check, Clock, FileText, Filter, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, AlertTriangle, Check, Clock, FileText, Filter, ChevronsDownUp, ChevronsUpDown, Archive } from 'lucide-react';
 import { format, isPast, isToday, addDays } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
