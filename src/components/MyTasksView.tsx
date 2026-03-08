@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Status } from '@/data/projectData';
 
 type StatusFilter = 'all' | 'Ej påbörjad' | 'Pågår' | 'Försenad';
+const EXCLUDED_STATUSES = ['Slutförd', 'Avslutat', 'Klar'];
 
 interface ActivityWithProject {
   id: string;
