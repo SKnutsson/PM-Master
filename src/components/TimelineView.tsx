@@ -142,9 +142,8 @@ export function TimelineView() {
   const { projects: allProjects, updateActivity, updateProjectOrder, updateActivityOrder } = useProjectDataContext();
   const [showArchived, setShowArchived] = useState(false);
   const projects = useMemo(() => {
-    const active = allProjects.filter((p) => p.status !== 'Avslutat');
-    if (!showArchived) return active;
-    return [...active, ...allProjects.filter((p) => p.status === 'Avslutat')];
+    if (showArchived) return allProjects.filter((p) => p.status === 'Avslutat');
+    return allProjects.filter((p) => p.status !== 'Avslutat');
   }, [allProjects, showArchived]);
   const { profiles } = useProfiles();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());

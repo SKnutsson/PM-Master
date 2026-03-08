@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { Status } from '@/data/projectData';
 
 type StatusFilter = 'all' | 'Ej påbörjad' | 'Pågår' | 'Försenad';
+const EXCLUDED_STATUSES = ['Slutförd', 'Avslutat', 'Klar'];
 
 interface ActivityWithProject {
   id: string;
@@ -100,8 +101,9 @@ export function MyTasksView() {
   };
 
   const filterByStatus = <T extends { status: string }>(items: T[]) => {
-    if (statusFilter === 'all') return items;
-    return items.filter((item) => item.status === statusFilter);
+    const nonCompleted = items.filter((item) => !EXCLUDED_STATUSES.includes(item.status));
+    if (statusFilter === 'all') return nonCompleted;
+    return nonCompleted.filter((item) => item.status === statusFilter);
   };
 
   const filteredActivities = useMemo(
