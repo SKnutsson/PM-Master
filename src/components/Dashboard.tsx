@@ -188,9 +188,9 @@ export function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Försenade — warm accent */}
+        {/* Försenade — red */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_25%_50%)] to-[hsl(160_20%_38%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10 flex items-center justify-between">
