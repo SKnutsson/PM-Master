@@ -369,7 +369,7 @@ export function Dashboard() {
                 </div>
 
                 {/* Project list */}
-                <div className="bg-card px-4 py-3 max-h-[220px] overflow-y-auto">
+                <div className="bg-card px-4 py-3 flex-1">
                   {phaseProjects.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-3 text-center italic">Inga pågående projekt</p>
                   ) : (
