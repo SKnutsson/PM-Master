@@ -348,7 +348,7 @@ export function Dashboard() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.08, type: 'spring' as const, stiffness: 300, damping: 26 }}
-                className="rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group border border-border/30"
+                className="rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group border border-border/30 flex flex-col"
               >
                 {/* Phase header */}
                 <div className={`${config.bg} px-5 py-4 relative overflow-hidden`}>
@@ -369,7 +369,7 @@ export function Dashboard() {
                 </div>
 
                 {/* Project list */}
-                <div className="bg-card px-4 py-3 max-h-[220px] overflow-y-auto">
+                <div className="bg-card px-4 py-3 flex-1">
                   {phaseProjects.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-3 text-center italic">Inga pågående projekt</p>
                   ) : (

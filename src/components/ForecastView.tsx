@@ -259,72 +259,72 @@ export function ForecastView() {
         );
       })()}
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Summary Cards — Dashboard-style gradient hero cards */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <motion.div variants={itemVariants}>
-          <Card className="border-border/50 bg-card/80">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total prognos</p>
-                  <p className="mt-1 text-3xl font-bold">{filteredYearTotal.toFixed(1)} MSEK</p>
-                  <p className="text-xs text-muted-foreground mt-1">Exkl. förlorade affärer</p>
-                </div>
-                <div className="rounded-full bg-primary/10 p-3">
-                  <ChartNoAxesColumnIncreasing className="h-6 w-6 text-primary" />
-                </div>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Total prognos</p>
+                <p className="text-3xl font-bold text-white mt-1">{filteredYearTotal.toFixed(1)} MSEK</p>
+                <p className="text-xs text-white/40 mt-1">Exkl. förlorade affärer</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
+                <ChartNoAxesColumnIncreasing className="h-7 w-7 text-white/80" />
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="border-border/50 bg-card/80">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Bästa månad</p>
-                  <p className="mt-1 text-3xl font-bold">{monthLabels[bestMonth.month] || '-'}</p>
-                  <p className="text-sm text-muted-foreground">{bestMonth.value.toFixed(1)} MSEK</p>
-                </div>
-                <div className="rounded-full bg-status-completed/10 p-3">
-                  <Trophy className="h-6 w-6 text-status-completed" />
-                </div>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_55%_26%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Bästa månad</p>
+                <p className="text-3xl font-bold text-white mt-1">{monthLabels[bestMonth.month] || '-'}</p>
+                <p className="text-xs text-white/40 mt-1">{bestMonth.value.toFixed(1)} MSEK</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
+                <Trophy className="h-7 w-7 text-white/80" />
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="border-border/50 bg-card/80">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Aktiva affärer</p>
-                  <p className="mt-1 text-3xl font-bold">{activeDeals}</p>
-                </div>
-                <div className="rounded-full bg-chart-4/10 p-3">
-                  <Package className="h-6 w-6 text-chart-4" />
-                </div>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_25%_50%)] to-[hsl(160_20%_38%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Aktiva affärer</p>
+                <p className="text-3xl font-bold text-white mt-1">{activeDeals}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
+                <Package className="h-7 w-7 text-white/80" />
+              </div>
+            </div>
+          </div>
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="border-border/50 bg-card/80">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Förlorade affärer</p>
-                  <p className="mt-1 text-3xl font-bold text-status-delayed">{lostDeals}</p>
-                </div>
-                <div className="rounded-full bg-status-delayed/10 p-3">
-                  <AlertTriangle className="h-6 w-6 text-status-delayed" />
-                </div>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_32%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Förlorade affärer</p>
+                <p className="text-3xl font-bold text-white mt-1">{lostDeals}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
+                <AlertTriangle className="h-7 w-7 text-white/80" />
+              </div>
+            </div>
+          </div>
         </motion.div>
       </div>
 
