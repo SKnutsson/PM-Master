@@ -201,10 +201,30 @@ export function MyTasksView() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <SummaryCard label="Totalt" count={actCounts.total + docCounts.total} variant="default" />
-        <SummaryCard label="Ej påbörjad" count={actCounts.notStarted + docCounts.notStarted} variant="muted" />
-        <SummaryCard label="Pågår" count={actCounts.inProgress + docCounts.inProgress} variant="progress" />
-        <SummaryCard label="Försenad" count={actCounts.delayed + docCounts.delayed} variant="delayed" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168,30%,16%)] to-[hsl(168,40%,10%)] p-5 shadow-md">
+          <Layers className="absolute top-3 right-3 h-8 w-8 text-white/10" />
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Totalt</p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.total + docCounts.total} /></p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160,55%,36%)] to-[hsl(160,45%,28%)] p-5 shadow-md">
+          <ClipboardList className="absolute top-3 right-3 h-8 w-8 text-white/10" />
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Ej påbörjad</p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.notStarted + docCounts.notStarted} /></p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160,25%,50%)] to-[hsl(160,20%,40%)] p-5 shadow-md">
+          <Clock className="absolute top-3 right-3 h-8 w-8 text-white/10" />
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Pågår</p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.inProgress + docCounts.inProgress} /></p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0,45%,45%)] to-[hsl(0,40%,35%)] p-5 shadow-md">
+          <AlertTriangle className="absolute top-3 right-3 h-8 w-8 text-white/10" />
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Försenad</p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.delayed + docCounts.delayed} /></p>
+        </motion.div>
       </div>
 
       {/* Tabs */}
