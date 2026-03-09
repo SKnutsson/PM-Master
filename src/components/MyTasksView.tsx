@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfiles, getDisplayName, UserProfile } from '@/hooks/useProfiles';
@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, ClipboardList, Filter } from 'lucide-react';
+import { CalendarDays, ClipboardList, Filter, Layers, Clock, AlertTriangle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import type { Status } from '@/data/projectData';
 
@@ -200,10 +201,30 @@ export function MyTasksView() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <SummaryCard label="Totalt" count={actCounts.total + docCounts.total} variant="default" />
-        <SummaryCard label="Ej påbörjad" count={actCounts.notStarted + docCounts.notStarted} variant="muted" />
-        <SummaryCard label="Pågår" count={actCounts.inProgress + docCounts.inProgress} variant="progress" />
-        <SummaryCard label="Försenad" count={actCounts.delayed + docCounts.delayed} variant="delayed" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168,30%,16%)] to-[hsl(168,40%,10%)] p-5 shadow-md">
+          <Layers className="absolute top-3 right-3 h-8 w-8 text-white/10" />
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Totalt</p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.total + docCounts.total} /></p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160,55%,36%)] to-[hsl(160,45%,28%)] p-5 shadow-md">
+          <ClipboardList className="absolute top-3 right-3 h-8 w-8 text-white/10" />
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Ej påbörjad</p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.notStarted + docCounts.notStarted} /></p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160,25%,50%)] to-[hsl(160,20%,40%)] p-5 shadow-md">
+          <Clock className="absolute top-3 right-3 h-8 w-8 text-white/10" />
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Pågår</p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.inProgress + docCounts.inProgress} /></p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0,45%,45%)] to-[hsl(0,40%,35%)] p-5 shadow-md">
+          <AlertTriangle className="absolute top-3 right-3 h-8 w-8 text-white/10" />
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Försenad</p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.delayed + docCounts.delayed} /></p>
+        </motion.div>
       </div>
 
       {/* Tabs */}
@@ -295,21 +316,22 @@ function ResponsibleAvatar({ name, profiles }: { name: string; profiles: UserPro
   );
 }
 
-function SummaryCard({ label, count, variant }: { label: string; count: number; variant: 'default' | 'muted' | 'progress' | 'delayed' }) {
-  const colors = {
-    default: 'border-primary/30 bg-primary/5',
-    muted: 'border-border bg-muted/30',
-    progress: 'border-status-in-progress/30 bg-status-in-progress/5',
-    delayed: 'border-status-delayed/30 bg-status-delayed/5',
-  };
-  return (
-    <Card className={`${colors[variant]} border`}>
-      <CardContent className="py-3 px-4 text-center">
-        <p className="text-2xl font-bold">{count}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </CardContent>
-    </Card>
-  );
+function AnimatedNumber({ value, duration = 800 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (value === 0) { setDisplay(0); return; }
+    const start = performance.now();
+    let raf: number;
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(eased * value));
+      if (progress < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+  return <>{display}</>;
 }
 
 function EmptyState({ message }: { message: string }) {
