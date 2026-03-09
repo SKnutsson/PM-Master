@@ -169,9 +169,9 @@ export function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Pågående — primary green */}
+        {/* Pågår — orange */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_55%_26%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(25_95%_53%)] to-[hsl(25_90%_42%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10 flex items-center justify-between">
