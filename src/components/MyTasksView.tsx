@@ -316,21 +316,22 @@ function ResponsibleAvatar({ name, profiles }: { name: string; profiles: UserPro
   );
 }
 
-function SummaryCard({ label, count, variant }: { label: string; count: number; variant: 'default' | 'muted' | 'progress' | 'delayed' }) {
-  const colors = {
-    default: 'border-primary/30 bg-primary/5',
-    muted: 'border-border bg-muted/30',
-    progress: 'border-status-in-progress/30 bg-status-in-progress/5',
-    delayed: 'border-status-delayed/30 bg-status-delayed/5',
-  };
-  return (
-    <Card className={`${colors[variant]} border`}>
-      <CardContent className="py-3 px-4 text-center">
-        <p className="text-2xl font-bold">{count}</p>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </CardContent>
-    </Card>
-  );
+function AnimatedNumber({ value, duration = 800 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (value === 0) { setDisplay(0); return; }
+    const start = performance.now();
+    let raf: number;
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(eased * value));
+      if (progress < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+  return <>{display}</>;
 }
 
 function EmptyState({ message }: { message: string }) {
