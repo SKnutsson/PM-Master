@@ -384,7 +384,7 @@ export function Dashboard() {
                       
                           <span className="font-semibold text-foreground/60">{p.code}</span>
                           <span className="text-muted-foreground mx-2">–</span>
-                          <span className="text-foreground">{p.name}</span>
+                          <span className="font-semibold text-secondary-foreground">{p.name}</span>
                         </motion.div>
                     )}
                     </div>
