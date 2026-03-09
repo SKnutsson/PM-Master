@@ -42,7 +42,7 @@ const DOC_TYPE_SUGGESTIONS = [
 ];
 const SUBMITTED_TO_SUGGESTIONS = ['Kund', 'Beställare', 'Kommun', 'Konsult', 'Entreprenör'];
 
-type StatusFilter = 'all' | 'Ej påbörjad' | 'Pågående' | 'Inlämnad' | 'overdue';
+type StatusFilter = 'all' | 'Ej påbörjad' | 'Pågår' | 'Inlämnad' | 'overdue';
 
 function getStatusBadge(status: string, deadline: string | null) {
   const isOverdue = deadline && isPast(new Date(deadline)) && !isToday(new Date(deadline)) && status !== 'Inlämnad';
