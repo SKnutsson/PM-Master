@@ -238,7 +238,7 @@ export function DocumentationPlanView() {
             <SelectContent>
               <SelectItem value="all">Alla status</SelectItem>
               <SelectItem value="Ej påbörjad">Ej påbörjad</SelectItem>
-              <SelectItem value="Pågående">Pågående</SelectItem>
+              <SelectItem value="Pågår">Pågår</SelectItem>
               <SelectItem value="Inlämnad">Inlämnad</SelectItem>
               <SelectItem value="overdue">Försenade</SelectItem>
             </SelectContent>

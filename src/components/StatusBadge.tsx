@@ -35,7 +35,7 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
           status === 'Slutförd' && 'bg-status-completed',
           status === 'Pågår' && 'bg-status-in-progress',
           status === 'Försenad' && 'bg-status-delayed',
-          status === 'Ej påbörjad' && 'bg-muted-foreground'
+          status === 'Ej påbörjad' && 'bg-status-not-started'
         )}
       />
       {status}
