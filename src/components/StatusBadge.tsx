@@ -17,7 +17,7 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
         return 'bg-status-delayed/15 text-status-delayed border-status-delayed/30';
       case 'Ej påbörjad':
       default:
-        return 'bg-muted text-muted-foreground border-border';
+        return 'bg-status-not-started/15 text-status-not-started border-status-not-started/30';
     }
   };
 
@@ -35,7 +35,7 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
           status === 'Slutförd' && 'bg-status-completed',
           status === 'Pågår' && 'bg-status-in-progress',
           status === 'Försenad' && 'bg-status-delayed',
-          status === 'Ej påbörjad' && 'bg-muted-foreground'
+          status === 'Ej påbörjad' && 'bg-status-not-started'
         )}
       />
       {status}

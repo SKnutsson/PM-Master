@@ -1,0 +1,1 @@
+UPDATE public.documentation_items SET status = 'Pågår' WHERE status = 'Pågående';
