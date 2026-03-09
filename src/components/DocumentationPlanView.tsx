@@ -54,8 +54,8 @@ function getStatusBadge(status: string, deadline: string | null) {
   switch (status) {
     case 'Inlämnad':
       return <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 text-xs gap-1"><Check className="h-3 w-3" />Inlämnad</Badge>;
-    case 'Pågående':
-      return <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/20 text-xs gap-1"><Clock className="h-3 w-3" />Pågående</Badge>;
+    case 'Pågår':
+      return <Badge className="bg-status-in-progress/15 text-status-in-progress border-status-in-progress/20 text-xs gap-1"><Clock className="h-3 w-3" />Pågår</Badge>;
     default:
       return <Badge variant="secondary" className="text-xs">Ej påbörjad</Badge>;
   }
