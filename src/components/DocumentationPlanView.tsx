@@ -35,7 +35,7 @@ interface DocumentationItem {
   sort_order: number;
 }
 
-const DOC_STATUSES = ['Ej påbörjad', 'Pågående', 'Inlämnad'] as const;
+const DOC_STATUSES = ['Ej påbörjad', 'Pågår', 'Inlämnad'] as const;
 const DOC_TYPE_SUGGESTIONS = [
   'Egenkontroll', 'Relationsritning', 'CE-dokumentation', 'Drift & underhåll',
   'Installationsprotokoll', 'Provningsprotokoll', 'Garantihandling', 'Bruksanvisning'
