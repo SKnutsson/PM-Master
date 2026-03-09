@@ -176,7 +176,7 @@ export function Dashboard() {
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Pågår</p>
+                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Pågående aktiviteter </p>
                 <p className="text-5xl font-bold text-white mt-1">
                   <AnimatedNumber value={inProgressActivities} />
                 </p>
