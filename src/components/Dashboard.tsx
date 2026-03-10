@@ -265,15 +265,28 @@ export function Dashboard() {
                   <div>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
-                      Orderstock & Prognos {targetYear}
+                      Orderstock & Prognos
                     </CardTitle>
                     <CardDescription className="text-xs">Tagna affärer vs prognos per månad (MSEK)</CardDescription>
                   </div>
-                  <div className="text-right pr-10">
-                    <p className="text-3xl font-bold text-primary">
-                      <AnimatedNumber value={yearTotal} decimals={1} duration={1200} />
-                    </p>
-                    <p className="text-xs text-muted-foreground">Total MSEK</p>
+                  <div className="flex items-center gap-2 pr-10">
+                    <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+                      {(['2026', '2027', 'rolling'] as const).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setChartPeriod(p)}
+                          className={`px-3 py-1.5 transition-colors ${chartPeriod === p ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'}`}
+                        >
+                          {p === 'rolling' ? 'Rullande 12m' : p}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="text-right ml-2">
+                      <p className="text-3xl font-bold text-primary">
+                        <AnimatedNumber value={chartYearTotal} decimals={1} duration={1200} />
+                      </p>
+                      <p className="text-xs text-muted-foreground">Total MSEK</p>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
