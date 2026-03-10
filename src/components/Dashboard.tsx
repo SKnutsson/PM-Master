@@ -246,9 +246,9 @@ export function Dashboard() {
                   <div>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
-                      Försäljningsprognos {targetYear}
+                      Orderstock & Prognos {targetYear}
                     </CardTitle>
-                    <CardDescription className="text-xs">Månatlig prognos i MSEK</CardDescription>
+                    <CardDescription className="text-xs">Tagna affärer vs prognos per månad (MSEK)</CardDescription>
                   </div>
                   <div className="text-right pr-10">
                     <p className="text-3xl font-bold text-primary">
