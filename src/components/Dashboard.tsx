@@ -176,7 +176,7 @@ export function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           
         </div>
-        <Button variant="outline" size="sm" onClick={() => window.print()} className="print:hidden gap-2">
+        <Button variant="outline" size="sm" onClick={() => printSection(printRef.current, 'Dashboard')} className="print:hidden gap-2">
           <Printer className="h-4 w-4" />
           Skriv ut
         </Button>
@@ -253,13 +253,6 @@ export function Dashboard() {
         <motion.div variants={itemVariants}>
           <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
             <div ref={forecastRef} className="relative flex flex-col flex-1">
-              <Button
-                variant="ghost" size="icon"
-                onClick={() => printSection(forecastRef.current, 'Försäljningsprognos')}
-                className="print:hidden h-8 w-8 absolute top-4 right-4 z-10">
-                
-                <Printer className="h-4 w-4" />
-              </Button>
               <CardHeader className="pb-1">
                 <div className="flex items-center justify-between">
                   <div>
@@ -269,7 +262,7 @@ export function Dashboard() {
                     </CardTitle>
                     <CardDescription className="text-xs">Tagna affärer vs prognos per månad (MSEK)</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2 pr-10">
+                  <div className="flex items-center gap-2">
                     <div className="flex rounded-lg border border-border overflow-hidden text-xs">
                       {(['2026', '2027', 'rolling'] as const).map((p) => (
                         <button
