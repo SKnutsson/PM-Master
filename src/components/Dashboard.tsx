@@ -253,13 +253,6 @@ export function Dashboard() {
         <motion.div variants={itemVariants}>
           <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
             <div ref={forecastRef} className="relative flex flex-col flex-1">
-              <Button
-                variant="ghost" size="icon"
-                onClick={() => printSection(forecastRef.current, 'Försäljningsprognos')}
-                className="print:hidden h-8 w-8 absolute top-4 right-4 z-10">
-                
-                <Printer className="h-4 w-4" />
-              </Button>
               <CardHeader className="pb-1">
                 <div className="flex items-center justify-between">
                   <div>
