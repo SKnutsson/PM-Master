@@ -136,8 +136,6 @@ export function Dashboard() {
   });
   const currentMonth = months[new Date().getMonth()];
 
-  const targetYear = 2026;
-  const salesTarget = salesTargets[targetYear] || 0;
   const takenTotal = forecast.
   filter((f) => f.dealStatus === 'Tagen').
   reduce((sum, f) => {
