@@ -115,6 +115,9 @@ export function Dashboard() {
     )
   }));
 
+  const targetYear = 2026;
+  const salesTarget = salesTargets[targetYear] || 0;
+
   // Build stacked chart data: Tagen vs Prognos per month for 2026
   const chartData = months.map((month) => {
     let tagen = 0;
