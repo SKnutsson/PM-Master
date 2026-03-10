@@ -41,9 +41,9 @@ const itemVariants = {
   }
 };
 
-const phaseConfig: Record<Phase, {icon: typeof HardHat;bg: string;accent: string;}> = {
+const phaseConfig: Record<Phase, {icon: typeof Monitor;bg: string;accent: string;}> = {
   Konstruktion: {
-    icon: HardHat,
+    icon: Monitor,
     bg: 'bg-[hsl(160_20%_55%)]',
     accent: 'hsl(160 20% 55%)'
   },
