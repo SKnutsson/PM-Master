@@ -101,7 +101,7 @@ export function Dashboard() {
   } = useProjectDataContext();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
-  const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
+  
 
   const allActivities = projects.flatMap((p) => p.activities);
   const inProgressActivities = allActivities.filter((a) => a.status === 'Pågår').length;
