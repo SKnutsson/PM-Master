@@ -262,7 +262,7 @@ export function Dashboard() {
                     </CardTitle>
                     <CardDescription className="text-xs">Tagna affärer vs prognos per månad (MSEK)</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2 pr-10">
+                  <div className="flex items-center gap-2">
                     <div className="flex rounded-lg border border-border overflow-hidden text-xs">
                       {(['2026', '2027', 'rolling'] as const).map((p) => (
                         <button
