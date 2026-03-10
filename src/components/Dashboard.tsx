@@ -279,6 +279,7 @@ export function Dashboard() {
                           name === 'tagen' ? 'Tagen' : 'Prognos'
                         ]}
                         cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
+                      <Legend formatter={(value: string) => value === 'tagen' ? 'Tagen' : 'Prognos'} wrapperStyle={{ fontSize: 12 }} />
                       <Bar dataKey="tagen" stackId="a" name="tagen" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
                       <Bar dataKey="prognos" stackId="a" name="prognos" fill="hsl(var(--primary) / 0.35)" radius={[4, 4, 0, 0]} />
                     </BarChart>
