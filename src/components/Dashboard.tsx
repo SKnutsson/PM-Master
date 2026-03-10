@@ -101,7 +101,7 @@ export function Dashboard() {
   } = useProjectDataContext();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
-  
+  const [chartPeriod, setChartPeriod] = useState<'2026' | '2027' | 'rolling'>('2026');
 
   const allActivities = projects.flatMap((p) => p.activities);
   const inProgressActivities = allActivities.filter((a) => a.status === 'Pågår').length;
