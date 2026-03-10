@@ -19,7 +19,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Phase } from '@/data/projectData';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -101,7 +101,7 @@ export function Dashboard() {
   } = useProjectDataContext();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
-  const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
+  
 
   const allActivities = projects.flatMap((p) => p.activities);
   const inProgressActivities = allActivities.filter((a) => a.status === 'Pågår').length;
@@ -115,7 +115,22 @@ export function Dashboard() {
     )
   }));
 
-  const chartData = months.map((month) => ({ month, value: monthlyTotals[month] || 0 }));
+  // Build stacked chart data: Tagen vs Prognos per month for 2026
+  const chartData = months.map((month) => {
+    let tagen = 0;
+    let prognos = 0;
+    forecast.forEach((f) => {
+      if (f.dealStatus === 'Förlorad') return;
+      const yearEntries = (f.monthEntries || []).filter((e) => e.year === targetYear && e.month === month);
+      const sum = yearEntries.reduce((s, e) => s + e.amount, 0);
+      if (f.dealStatus === 'Tagen') {
+        tagen += sum;
+      } else {
+        prognos += sum;
+      }
+    });
+    return { month, tagen, prognos };
+  });
   const currentMonth = months[new Date().getMonth()];
 
   const targetYear = 2026;
@@ -231,9 +246,9 @@ export function Dashboard() {
                   <div>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
-                      Försäljningsprognos {targetYear}
+                      Orderstock & Prognos {targetYear}
                     </CardTitle>
-                    <CardDescription className="text-xs">Månatlig prognos i MSEK</CardDescription>
+                    <CardDescription className="text-xs">Tagna affärer vs prognos per månad (MSEK)</CardDescription>
                   </div>
                   <div className="text-right pr-10">
                     <p className="text-3xl font-bold text-primary">
@@ -246,7 +261,7 @@ export function Dashboard() {
               <CardContent className="flex-1 pb-4">
                 <div className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} onMouseLeave={() => setHoveredMonth(null)}>
+                    <BarChart data={chartData} stackOffset="none">
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                       <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
@@ -259,23 +274,14 @@ export function Dashboard() {
                           padding: '10px 14px'
                         }}
                         labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: 13 }}
+                        formatter={(value: number, name: string) => [
+                          `${value.toFixed(2)} MSEK`,
+                          name === 'tagen' ? 'Tagen' : 'Prognos'
+                        ]}
                         cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
-                      
-                      <Bar dataKey="value" radius={[6, 6, 0, 0]} onMouseEnter={(_, idx) => setHoveredMonth(chartData[idx]?.month || null)}>
-                        {chartData.map((entry) =>
-                        <Cell
-                          key={entry.month}
-                          fill={
-                          entry.month === currentMonth ?
-                          'hsl(var(--primary))' :
-                          hoveredMonth === entry.month ?
-                          'hsl(var(--primary) / 0.75)' :
-                          'hsl(var(--primary) / 0.4)'
-                          }
-                          style={{ transition: 'fill 0.2s ease' }} />
-
-                        )}
-                      </Bar>
+                      <Legend formatter={(value: string) => value === 'tagen' ? 'Tagen' : 'Prognos'} wrapperStyle={{ fontSize: 12 }} />
+                      <Bar dataKey="tagen" stackId="a" name="tagen" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="prognos" stackId="a" name="prognos" fill="hsl(var(--primary) / 0.35)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
