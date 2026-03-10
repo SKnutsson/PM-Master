@@ -115,7 +115,22 @@ export function Dashboard() {
     )
   }));
 
-  const chartData = months.map((month) => ({ month, value: monthlyTotals[month] || 0 }));
+  // Build stacked chart data: Tagen vs Prognos per month for 2026
+  const chartData = months.map((month) => {
+    let tagen = 0;
+    let prognos = 0;
+    forecast.forEach((f) => {
+      if (f.dealStatus === 'Förlorad') return;
+      const yearEntries = (f.monthEntries || []).filter((e) => e.year === targetYear && e.month === month);
+      const sum = yearEntries.reduce((s, e) => s + e.amount, 0);
+      if (f.dealStatus === 'Tagen') {
+        tagen += sum;
+      } else {
+        prognos += sum;
+      }
+    });
+    return { month, tagen, prognos };
+  });
   const currentMonth = months[new Date().getMonth()];
 
   const targetYear = 2026;
