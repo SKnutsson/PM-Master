@@ -5,7 +5,7 @@ import {
   Clock,
   AlertTriangle,
   Printer,
-  HardHat,
+  Monitor,
   Factory,
   Wrench,
   Check,
