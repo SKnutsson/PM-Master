@@ -261,7 +261,7 @@ export function Dashboard() {
               <CardContent className="flex-1 pb-4">
                 <div className="h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} onMouseLeave={() => setHoveredMonth(null)}>
+                    <BarChart data={chartData} stackOffset="none">
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                       <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
@@ -274,23 +274,13 @@ export function Dashboard() {
                           padding: '10px 14px'
                         }}
                         labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: 13 }}
+                        formatter={(value: number, name: string) => [
+                          `${value.toFixed(2)} MSEK`,
+                          name === 'tagen' ? 'Tagen' : 'Prognos'
+                        ]}
                         cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
-                      
-                      <Bar dataKey="value" radius={[6, 6, 0, 0]} onMouseEnter={(_, idx) => setHoveredMonth(chartData[idx]?.month || null)}>
-                        {chartData.map((entry) =>
-                        <Cell
-                          key={entry.month}
-                          fill={
-                          entry.month === currentMonth ?
-                          'hsl(var(--primary))' :
-                          hoveredMonth === entry.month ?
-                          'hsl(var(--primary) / 0.75)' :
-                          'hsl(var(--primary) / 0.4)'
-                          }
-                          style={{ transition: 'fill 0.2s ease' }} />
-
-                        )}
-                      </Bar>
+                      <Bar dataKey="tagen" stackId="a" name="tagen" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="prognos" stackId="a" name="prognos" fill="hsl(var(--primary) / 0.35)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
