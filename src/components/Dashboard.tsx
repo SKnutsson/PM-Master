@@ -176,7 +176,7 @@ export function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           
         </div>
-        <Button variant="outline" size="sm" onClick={() => window.print()} className="print:hidden gap-2">
+        <Button variant="outline" size="sm" onClick={() => printSection(printRef.current, 'Dashboard')} className="print:hidden gap-2">
           <Printer className="h-4 w-4" />
           Skriv ut
         </Button>
