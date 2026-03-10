@@ -115,34 +115,52 @@ export function Dashboard() {
     )
   }));
 
-  const targetYear = 2026;
-  const salesTarget = salesTargets[targetYear] || 0;
+  // Build chart period labels
+  const now = new Date();
+  const currentMonthIndex = now.getMonth();
+  const currentYear = now.getFullYear();
 
-  // Build stacked chart data: Tagen vs Prognos per month for 2026
-  const chartData = months.map((month) => {
+  const chartLabels: { month: string; year: number }[] = (() => {
+    if (chartPeriod === 'rolling') {
+      const labels: { month: string; year: number }[] = [];
+      for (let i = 0; i < 12; i++) {
+        const idx = (currentMonthIndex + i) % 12;
+        const yr = currentYear + Math.floor((currentMonthIndex + i) / 12);
+        labels.push({ month: months[idx], year: yr });
+      }
+      return labels;
+    }
+    const yr = parseInt(chartPeriod);
+    return months.map((m) => ({ month: m, year: yr }));
+  })();
+
+  const chartData = chartLabels.map(({ month, year }) => {
     let tagen = 0;
     let prognos = 0;
     forecast.forEach((f) => {
       if (f.dealStatus === 'Förlorad') return;
-      const yearEntries = (f.monthEntries || []).filter((e) => e.year === targetYear && e.month === month);
-      const sum = yearEntries.reduce((s, e) => s + e.amount, 0);
+      const entries = (f.monthEntries || []).filter((e) => e.year === year && e.month === month);
+      const sum = entries.reduce((s, e) => s + e.amount, 0);
       if (f.dealStatus === 'Tagen') {
         tagen += sum;
       } else {
         prognos += sum;
       }
     });
-    return { month, tagen, prognos };
+    const label = chartPeriod === 'rolling' ? `${month} ${String(year).slice(2)}` : month;
+    return { month: label, tagen, prognos };
   });
-  const currentMonth = months[new Date().getMonth()];
 
-  const takenTotal = forecast.
-  filter((f) => f.dealStatus === 'Tagen').
-  reduce((sum, f) => {
-    const yearEntries = (f.monthEntries || []).filter((e) => e.year === targetYear);
-    return sum + yearEntries.reduce((s, e) => s + e.amount, 0);
-  }, 0);
+  const chartYearTotal = chartData.reduce((s, d) => s + d.tagen + d.prognos, 0);
+
+  // Target uses selected year (or current year for rolling)
+  const targetYear = chartPeriod === 'rolling' ? currentYear : parseInt(chartPeriod);
+  const salesTarget = salesTargets[targetYear] || 0;
+
+  const takenTotal = chartData.reduce((s, d) => s + d.tagen, 0);
   const pct = salesTarget > 0 ? Math.min(takenTotal / salesTarget * 100, 100) : 0;
+
+  const periodLabel = chartPeriod === 'rolling' ? 'Rullande 12 mån' : chartPeriod;
 
   return (
     <motion.div
