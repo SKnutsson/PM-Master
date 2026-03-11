@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FolderOpen, BarChart3, CalendarRange, HardHat, LogIn, UserPlus, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AuthPage } from '@/components/auth/AuthPage';
 
 const features = [
