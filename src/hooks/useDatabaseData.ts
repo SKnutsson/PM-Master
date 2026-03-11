@@ -465,6 +465,10 @@ export function useDatabaseData() {
   }, []);
 
   const updateActivity = useCallback(async (projectId: string, activityId: string, updates: Partial<Activity>) => {
+    // Check for phase status change to log event
+    const project = projects.find(p => p.id === projectId);
+    const currentActivity = project?.activities.find(a => a.id === activityId);
+
     const updateData: Record<string, any> = {
       updated_at: new Date().toISOString(),
     };
@@ -487,9 +491,28 @@ export function useDatabaseData() {
       throw error;
     }
 
+    // Log phase change event if an activity with a phase changes to/from "Pågår"
+    if (currentActivity && updates.status !== undefined && currentActivity.phase) {
+      const wasInProgress = currentActivity.status === 'Pågår';
+      const isNowInProgress = updates.status === 'Pågår';
+      if (!wasInProgress && isNowInProgress) {
+        await logForecastEvent({
+          eventType: 'phase_started',
+          projectName: project ? `${project.code} – ${project.name}` : 'Okänt projekt',
+          details: `Fas "${currentActivity.phase}" startad`,
+        });
+      } else if (wasInProgress && !isNowInProgress) {
+        await logForecastEvent({
+          eventType: 'phase_ended',
+          projectName: project ? `${project.code} – ${project.name}` : 'Okänt projekt',
+          details: `Fas "${currentActivity.phase}" ${updates.status === 'Slutförd' ? 'slutförd' : 'avslutad'}`,
+        });
+      }
+    }
+
     // Immediately refetch to update UI
     await loadProjects();
-  }, []);
+  }, [projects]);
 
   const deleteActivity = useCallback(async (projectId: string, activityId: string) => {
     const { error } = await supabase
