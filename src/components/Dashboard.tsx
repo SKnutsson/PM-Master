@@ -14,10 +14,17 @@ import {
   TrendingUp,
   Activity,
   ArrowUpRight,
-  ArrowDownRight } from
+  ArrowDownRight,
+  Plus,
+  RefreshCw,
+  MessageSquare } from
 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Phase } from '@/data/projectData';
