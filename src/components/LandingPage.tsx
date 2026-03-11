@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FolderOpen, BarChart3, CalendarRange, HardHat, LogIn, UserPlus, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AuthPage } from '@/components/auth/AuthPage';
 
 const features = [
@@ -47,6 +46,20 @@ export function LandingPage() {
     setAuthTab('signup');
     setAuthOpen(true);
   };
+
+  if (authOpen) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setAuthOpen(false)}
+          className="absolute top-5 left-6 z-50 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 lg:text-white/60 lg:hover:text-white"
+        >
+          ← Tillbaka
+        </button>
+        <AuthPage defaultTab={authTab} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -144,13 +157,6 @@ export function LandingPage() {
           </Button>
         </div>
       </section>
-
-      {/* Auth Dialog */}
-      <Dialog open={authOpen} onOpenChange={setAuthOpen}>
-        <DialogContent className="max-w-md border-border/50 bg-card p-0 [&>button]:text-foreground">
-          <AuthPage defaultTab={authTab} />
-        </DialogContent>
-      </Dialog>
     </div>);
 
 }
