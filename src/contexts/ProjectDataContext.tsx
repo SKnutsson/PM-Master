@@ -24,6 +24,7 @@ interface ProjectDataContextType {
   deleteForecastEvent: (eventId: string) => Promise<void>;
   updateProjectOrder: (orderedProjectIds: string[]) => Promise<void>;
   updateActivityOrder: (projectId: string, orderedActivityIds: string[]) => Promise<void>;
+  addCustomEvent: (params: { forecastId?: string; eventType: string; projectName: string; productName?: string; oldValue?: string; newValue?: string; details?: string; }) => Promise<void>;
 }
 
 const ProjectDataContext = createContext<ProjectDataContextType | null>(null);

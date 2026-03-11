@@ -14,10 +14,17 @@ import {
   TrendingUp,
   Activity,
   ArrowUpRight,
-  ArrowDownRight } from
+  ArrowDownRight,
+  Plus,
+  RefreshCw,
+  MessageSquare } from
 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Phase } from '@/data/projectData';
@@ -97,11 +104,28 @@ const printSection = (element: HTMLElement | null, title: string) => {
 
 export function Dashboard() {
   const {
-    projects, monthlyTotals, yearTotal, forecast, forecastEvents, deleteForecastEvent, salesTargets
+    projects, monthlyTotals, yearTotal, forecast, forecastEvents, deleteForecastEvent, salesTargets, addCustomEvent
   } = useProjectDataContext();
+  const { user } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
   const [chartPeriod, setChartPeriod] = useState<'2026' | '2027' | 'rolling'>('2026');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [newEventProject, setNewEventProject] = useState('');
+  const [newEventDetails, setNewEventDetails] = useState('');
+
+  // Check admin status
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
 
   const allActivities = projects.flatMap((p) => p.activities);
   const inProgressActivities = allActivities.filter((a) => a.status === 'Pågår').length;
@@ -299,10 +323,26 @@ export function Dashboard() {
                           padding: '10px 14px'
                         }}
                         labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: 13 }}
-                        formatter={(value: number, name: string) => [
-                          `${value.toFixed(2)} MSEK`,
-                          name === 'tagen' ? 'Tagen' : 'Prognos'
-                        ]}
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload || payload.length === 0) return null;
+                          const tagen = (payload.find(p => p.dataKey === 'tagen')?.value as number) || 0;
+                          const prognos = (payload.find(p => p.dataKey === 'prognos')?.value as number) || 0;
+                          const total = tagen + prognos;
+                          return (
+                            <div style={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '10px',
+                              boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+                              padding: '10px 14px'
+                            }}>
+                              <p style={{ fontWeight: 600, fontSize: 13, color: 'hsl(var(--foreground))' }}>{label}</p>
+                              <p style={{ color: 'hsl(var(--primary))', fontSize: 12, marginTop: 4 }}>Tagen : {tagen.toFixed(2)} MSEK</p>
+                              <p style={{ color: 'hsl(var(--primary) / 0.6)', fontSize: 12 }}>Prognos : {prognos.toFixed(2)} MSEK</p>
+                              <p style={{ fontWeight: 700, fontSize: 12, marginTop: 4, borderTop: '1px solid hsl(var(--border))', paddingTop: 4, color: 'hsl(var(--foreground))' }}>Totalt : {total.toFixed(2)} MSEK</p>
+                            </div>
+                          );
+                        }}
                         cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
                       <Legend formatter={(value: string) => value === 'tagen' ? 'Tagen' : 'Prognos'} wrapperStyle={{ fontSize: 12 }} />
                       <Bar dataKey="tagen" stackId="a" name="tagen" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
@@ -495,11 +535,21 @@ export function Dashboard() {
         <motion.div variants={itemVariants}>
           <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Activity className="h-4 w-4 text-primary" />
-                Senaste händelser
-              </CardTitle>
-              <CardDescription className="text-xs">Ändringar i försäljningsprognosen</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-primary" />
+                    Senaste händelser
+                  </CardTitle>
+                  <CardDescription className="text-xs">Ändringar i projekt och prognos</CardDescription>
+                </div>
+                {isAdmin && (
+                  <Button variant="outline" size="sm" onClick={() => setShowAddEvent(true)} className="gap-1 print:hidden">
+                    <Plus className="h-3.5 w-3.5" />
+                    Lägg till
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-auto">
               {forecastEvents.length === 0 ?
@@ -553,6 +603,24 @@ export function Dashboard() {
                         badgeCls = 'bg-status-delayed/15 text-status-delayed';
                         EventIcon = ArrowDownRight;
                         break;
+                      case 'phase_started':
+                        description = evt.details || 'Fas startad';
+                        badgeText = 'Fas';
+                        badgeCls = 'bg-primary/10 text-primary';
+                        EventIcon = RefreshCw;
+                        break;
+                      case 'phase_ended':
+                        description = evt.details || 'Fas avslutad';
+                        badgeText = 'Fas';
+                        badgeCls = 'bg-status-completed/15 text-status-completed';
+                        EventIcon = Check;
+                        break;
+                      case 'custom':
+                        description = evt.details || 'Egen händelse';
+                        badgeText = 'Info';
+                        badgeCls = 'bg-muted text-muted-foreground';
+                        EventIcon = MessageSquare;
+                        break;
                       default:
                         description = evt.details || 'Ändring';
                         badgeText = 'Ändrad';
@@ -598,6 +666,39 @@ export function Dashboard() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Admin: Add custom event dialog */}
+      <Dialog open={showAddEvent} onOpenChange={setShowAddEvent}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Lägg till händelse</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Projekt / Rubrik</label>
+              <Input value={newEventProject} onChange={(e) => setNewEventProject(e.target.value)} placeholder="T.ex. projektnamn eller rubrik" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Beskrivning</label>
+              <Input value={newEventDetails} onChange={(e) => setNewEventDetails(e.target.value)} placeholder="Vad hände?" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddEvent(false)}>Avbryt</Button>
+            <Button onClick={async () => {
+              if (!newEventProject.trim()) return;
+              await addCustomEvent({
+                eventType: 'custom',
+                projectName: newEventProject.trim(),
+                details: newEventDetails.trim() || undefined,
+              });
+              setNewEventProject('');
+              setNewEventDetails('');
+              setShowAddEvent(false);
+            }}>Spara</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>);
 
 }

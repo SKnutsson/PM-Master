@@ -117,24 +117,26 @@ export function MyTasksView() {
     [docItems, selectedUser, selectedDisplayName, statusFilter]
   );
 
-  // Counts for badges
+  // Counts for badges — exclude completed/submitted items from total
   const actCounts = useMemo(() => {
     const userFiltered = filterByUser(activities);
+    const nonCompleted = userFiltered.filter((a) => !EXCLUDED_STATUSES.includes(a.status));
     return {
-      total: userFiltered.length,
-      notStarted: userFiltered.filter((a) => a.status === 'Ej påbörjad').length,
-      inProgress: userFiltered.filter((a) => a.status === 'Pågår').length,
-      delayed: userFiltered.filter((a) => a.status === 'Försenad').length,
+      total: nonCompleted.length,
+      notStarted: nonCompleted.filter((a) => a.status === 'Ej påbörjad').length,
+      inProgress: nonCompleted.filter((a) => a.status === 'Pågår').length,
+      delayed: nonCompleted.filter((a) => a.status === 'Försenad').length,
     };
   }, [activities, selectedUser, selectedDisplayName]);
 
   const docCounts = useMemo(() => {
     const userFiltered = filterByUser(docItems);
+    const nonCompleted = userFiltered.filter((d) => !EXCLUDED_STATUSES.includes(d.status));
     return {
-      total: userFiltered.length,
-      notStarted: userFiltered.filter((d) => d.status === 'Ej påbörjad').length,
-      inProgress: userFiltered.filter((d) => d.status === 'Pågår').length,
-      delayed: userFiltered.filter((d) => d.status === 'Försenad').length,
+      total: nonCompleted.length,
+      notStarted: nonCompleted.filter((d) => d.status === 'Ej påbörjad').length,
+      inProgress: nonCompleted.filter((d) => d.status === 'Pågår').length,
+      delayed: nonCompleted.filter((d) => d.status === 'Försenad').length,
     };
   }, [docItems, selectedUser, selectedDisplayName]);
 
