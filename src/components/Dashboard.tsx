@@ -104,11 +104,28 @@ const printSection = (element: HTMLElement | null, title: string) => {
 
 export function Dashboard() {
   const {
-    projects, monthlyTotals, yearTotal, forecast, forecastEvents, deleteForecastEvent, salesTargets
+    projects, monthlyTotals, yearTotal, forecast, forecastEvents, deleteForecastEvent, salesTargets, addCustomEvent
   } = useProjectDataContext();
+  const { user } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
   const [chartPeriod, setChartPeriod] = useState<'2026' | '2027' | 'rolling'>('2026');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAddEvent, setShowAddEvent] = useState(false);
+  const [newEventProject, setNewEventProject] = useState('');
+  const [newEventDetails, setNewEventDetails] = useState('');
+
+  // Check admin status
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
 
   const allActivities = projects.flatMap((p) => p.activities);
   const inProgressActivities = allActivities.filter((a) => a.status === 'Pågår').length;
