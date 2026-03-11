@@ -299,10 +299,26 @@ export function Dashboard() {
                           padding: '10px 14px'
                         }}
                         labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: 13 }}
-                        formatter={(value: number, name: string) => [
-                          `${value.toFixed(2)} MSEK`,
-                          name === 'tagen' ? 'Tagen' : 'Prognos'
-                        ]}
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload || payload.length === 0) return null;
+                          const tagen = (payload.find(p => p.dataKey === 'tagen')?.value as number) || 0;
+                          const prognos = (payload.find(p => p.dataKey === 'prognos')?.value as number) || 0;
+                          const total = tagen + prognos;
+                          return (
+                            <div style={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '10px',
+                              boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+                              padding: '10px 14px'
+                            }}>
+                              <p style={{ fontWeight: 600, fontSize: 13, color: 'hsl(var(--foreground))' }}>{label}</p>
+                              <p style={{ color: 'hsl(var(--primary))', fontSize: 12, marginTop: 4 }}>Tagen : {tagen.toFixed(2)} MSEK</p>
+                              <p style={{ color: 'hsl(var(--primary) / 0.6)', fontSize: 12 }}>Prognos : {prognos.toFixed(2)} MSEK</p>
+                              <p style={{ fontWeight: 700, fontSize: 12, marginTop: 4, borderTop: '1px solid hsl(var(--border))', paddingTop: 4, color: 'hsl(var(--foreground))' }}>Totalt : {total.toFixed(2)} MSEK</p>
+                            </div>
+                          );
+                        }}
                         cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
                       <Legend formatter={(value: string) => value === 'tagen' ? 'Tagen' : 'Prognos'} wrapperStyle={{ fontSize: 12 }} />
                       <Bar dataKey="tagen" stackId="a" name="tagen" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
