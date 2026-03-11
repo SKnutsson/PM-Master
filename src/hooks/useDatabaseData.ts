@@ -782,5 +782,6 @@ export function useDatabaseData() {
     deleteForecastEvent,
     updateProjectOrder,
     updateActivityOrder,
+    addCustomEvent: logForecastEvent,
   };
 }
