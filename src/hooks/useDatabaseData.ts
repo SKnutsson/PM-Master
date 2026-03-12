@@ -667,6 +667,9 @@ export function useDatabaseData() {
       .eq('id', forecastId);
 
     if (error) console.error('Error updating forecast:', error);
+
+    // Immediately reload to update UI
+    await loadForecasts();
   }, [forecast]);
 
   const deleteForecast = useCallback(async (forecastId: string) => {
