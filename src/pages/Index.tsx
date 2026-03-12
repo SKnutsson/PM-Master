@@ -20,7 +20,7 @@ const Index = () => {
   }
 
   if (!isAuthenticated) {
-    return <LandingPage />;
+    return <AuthPage />;
   }
 
   return <MainLayout />;
