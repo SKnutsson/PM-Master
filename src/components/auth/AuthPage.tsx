@@ -120,7 +120,7 @@ export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 's
           >
             {[
               'Överblick och kontroll i realtid',
-              'Samarbete och resursplanering',
+              'Aktivitets- och resursplanering',
               'Visuella Ganttscheman och prognoser',
             ].map((text, i) => (
               <motion.div
