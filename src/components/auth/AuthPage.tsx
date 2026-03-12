@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Loader2, Mail, KeyRound, UserPlus, LogIn, ArrowRight, Shield, BarChart3, CalendarRange, FolderOpen } from 'lucide-react';
+import { AlertCircle, Loader2, Mail, KeyRound, ArrowRight } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
@@ -13,12 +13,6 @@ const authSchema = z.object({
   password: z.string().min(6, 'Lösenord måste vara minst 6 tecken'),
 });
 
-const floatingFeatures = [
-  { icon: FolderOpen, label: 'Projekthantering', x: '55%', y: '18%', delay: 0 },
-  { icon: BarChart3, label: 'Prognoser', x: '60%', y: '52%', delay: 0.2 },
-  { icon: CalendarRange, label: 'Ganttschema', x: '50%', y: '82%', delay: 0.4 },
-  { icon: Shield, label: 'Säker data', x: '58%', y: '38%', delay: 0.6 },
-];
 
 export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 'signup' }) {
   const [email, setEmail] = useState('');
@@ -102,22 +96,6 @@ export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 's
           }} />
         </div>
 
-        {/* Floating feature badges */}
-        {floatingFeatures.map((feat, i) => (
-          <motion.div
-            key={feat.label}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ delay: 0.6 + feat.delay, duration: 0.6, type: 'spring' }}
-            className="absolute hidden xl:flex items-center gap-2.5 rounded-xl bg-white/[0.07] backdrop-blur-md border border-white/[0.08] px-4 py-2.5 text-white/70"
-            style={{ left: feat.x, top: feat.y }}
-          >
-            <div className="rounded-lg p-1.5 bg-[hsl(160_55%_36%/0.2)]">
-              <feat.icon className="h-4 w-4 text-[hsl(160_55%_50%)]" />
-            </div>
-            <span className="text-sm font-medium">{feat.label}</span>
-          </motion.div>
-        ))}
 
         {/* Main content */}
         <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
