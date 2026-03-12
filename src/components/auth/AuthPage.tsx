@@ -182,7 +182,7 @@ export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 's
                 transition={{ duration: 0.2 }}
               >
                 <h2 className="text-2xl font-bold text-foreground">
-                  {mode === 'signin' ? 'Välkommen tillbaka' : 'Skapa konto'}
+                  {mode === 'signin' ? 'Välkommen' : 'Skapa konto'}
                 </h2>
                 <p className="mt-1.5 text-sm text-muted-foreground">
                   {mode === 'signin'
