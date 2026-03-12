@@ -564,6 +564,9 @@ export function useDatabaseData() {
       details: `${totalAmount.toFixed(2)} MSEK`,
     });
 
+    // Immediately reload to update UI
+    await loadForecasts();
+
     return { ...item, id: newForecast.id } as ExtendedSalesForecast;
   }, []);
 
@@ -664,6 +667,9 @@ export function useDatabaseData() {
       .eq('id', forecastId);
 
     if (error) console.error('Error updating forecast:', error);
+
+    // Immediately reload to update UI
+    await loadForecasts();
   }, [forecast]);
 
   const deleteForecast = useCallback(async (forecastId: string) => {
@@ -683,6 +689,9 @@ export function useDatabaseData() {
       .eq('id', forecastId);
 
     if (error) console.error('Error deleting forecast:', error);
+
+    // Immediately reload to update UI
+    await loadForecasts();
   }, [forecast]);
 
   // Calculate totals - EXCLUDING lost deals
