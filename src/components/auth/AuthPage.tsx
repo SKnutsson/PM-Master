@@ -96,22 +96,6 @@ export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 's
           }} />
         </div>
 
-        {/* Floating feature badges */}
-        {floatingFeatures.map((feat, i) => (
-          <motion.div
-            key={feat.label}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ delay: 0.6 + feat.delay, duration: 0.6, type: 'spring' }}
-            className="absolute hidden xl:flex items-center gap-2.5 rounded-xl bg-white/[0.07] backdrop-blur-md border border-white/[0.08] px-4 py-2.5 text-white/70"
-            style={{ left: feat.x, top: feat.y }}
-          >
-            <div className="rounded-lg p-1.5 bg-[hsl(160_55%_36%/0.2)]">
-              <feat.icon className="h-4 w-4 text-[hsl(160_55%_50%)]" />
-            </div>
-            <span className="text-sm font-medium">{feat.label}</span>
-          </motion.div>
-        ))}
 
         {/* Main content */}
         <div className="relative z-10 flex flex-col justify-center px-16 xl:px-20">
