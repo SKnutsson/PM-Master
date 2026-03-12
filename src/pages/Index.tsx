@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { LandingPage } from '@/components/LandingPage';
+import { AuthPage } from '@/components/auth/AuthPage';
 import { MfaVerification } from '@/components/auth/MfaVerification';
 import { MainLayout } from '@/components/MainLayout';
 import { Loader2 } from 'lucide-react';
@@ -20,7 +20,7 @@ const Index = () => {
   }
 
   if (!isAuthenticated) {
-    return <LandingPage />;
+    return <AuthPage />;
   }
 
   return <MainLayout />;
