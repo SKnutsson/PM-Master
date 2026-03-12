@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Loader2, Mail, KeyRound, UserPlus, LogIn, ArrowRight, Shield, BarChart3, CalendarRange, FolderOpen } from 'lucide-react';
+import { AlertCircle, Loader2, Mail, KeyRound, ArrowRight } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
