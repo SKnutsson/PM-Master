@@ -564,6 +564,9 @@ export function useDatabaseData() {
       details: `${totalAmount.toFixed(2)} MSEK`,
     });
 
+    // Immediately reload to update UI
+    await loadForecasts();
+
     return { ...item, id: newForecast.id } as ExtendedSalesForecast;
   }, []);
 
