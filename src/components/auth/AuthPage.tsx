@@ -13,12 +13,6 @@ const authSchema = z.object({
   password: z.string().min(6, 'Lösenord måste vara minst 6 tecken'),
 });
 
-const floatingFeatures = [
-  { icon: FolderOpen, label: 'Projekthantering', x: '55%', y: '18%', delay: 0 },
-  { icon: BarChart3, label: 'Prognoser', x: '60%', y: '52%', delay: 0.2 },
-  { icon: CalendarRange, label: 'Ganttschema', x: '50%', y: '82%', delay: 0.4 },
-  { icon: Shield, label: 'Säker data', x: '58%', y: '38%', delay: 0.6 },
-];
 
 export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 'signup' }) {
   const [email, setEmail] = useState('');
