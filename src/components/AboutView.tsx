@@ -242,7 +242,7 @@ interface NodeProps {
 }
 
 /* ─── Phase ─── */
-function PhaseNode({ node, index, editingNodeId, editingNodeName, onStartEdit, onSaveEdit, onCancelEdit, onDelete, addingItemNodeId, onStartAddItem, newItemText, onNewItemTextChange, onAddItem, onCancelAddItem, editingItemId, editingItemText, onStartEditItem, onSaveEditItem, onCancelEditItem, onDeleteItem, onEditItemTextChange }: NodeProps) {
+function PhaseNode({ node, index, editingNodeId, editingNodeName, onStartEdit, onSaveEdit, onCancelEdit, onDelete, onNodeNameChange, addingItemNodeId, onStartAddItem, newItemText, onNewItemTextChange, onAddItem, onCancelAddItem, editingItemId, editingItemText, onStartEditItem, onSaveEditItem, onCancelEditItem, onDeleteItem, onEditItemTextChange }: NodeProps) {
   const isEditing = editingNodeId === node.id;
 
   return (
