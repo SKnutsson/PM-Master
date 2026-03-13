@@ -44,6 +44,7 @@ const mainItems = [
 ];
 
 const bottomNavItems = [
+  { id: 'about' as View, label: 'Om projektet', icon: Info },
   { id: 'profile' as View, label: 'Profil', icon: UserCircle },
 ];
 

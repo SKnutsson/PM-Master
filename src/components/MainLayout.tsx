@@ -33,6 +33,8 @@ export function MainLayout() {
         return <DocumentationPlanView />;
       case 'my-tasks':
         return <MyTasksView />;
+      case 'about':
+        return <AboutView />;
       case 'profile':
         return <ProfileView />;
       default:
