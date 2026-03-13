@@ -108,7 +108,7 @@ export function AboutView() {
                       onSaveEdit={handleSaveNodeName}
                       onCancelEdit={() => setEditingNodeId(null)}
                       onDelete={deleteNode}
-                      addingItemNodeId={addingItemNodeId}
+                      onNodeNameChange={setEditingNodeName}
                       onStartAddItem={setAddingItemNodeId}
                       newItemText={newItemText}
                       onNewItemTextChange={setNewItemText}
