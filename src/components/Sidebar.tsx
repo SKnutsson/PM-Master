@@ -17,7 +17,8 @@ import {
   Sun,
   Moon,
   UserCircle,
-  ListChecks } from
+  ListChecks,
+  Info } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
