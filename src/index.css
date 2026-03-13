@@ -241,3 +241,7 @@
     width: 100% !important;
   }
 }
+
+.clip-phase {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%);
+}

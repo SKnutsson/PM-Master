@@ -17,12 +17,13 @@ import {
   Sun,
   Moon,
   UserCircle,
-  ListChecks } from
+  ListChecks,
+  Info } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks';
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'about';
 
 interface SidebarProps {
   currentView: View;
@@ -43,6 +44,7 @@ const mainItems = [
 ];
 
 const bottomNavItems = [
+  { id: 'about' as View, label: 'Om projektet', icon: Info },
   { id: 'profile' as View, label: 'Profil', icon: UserCircle },
 ];
 
