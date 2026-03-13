@@ -303,7 +303,7 @@ function MilestoneNode({ node, index, editingNodeId, editingNodeName, onStartEdi
 }
 
 /* ─── Items list (shared) ─── */
-function ItemsList({ node, addingItemNodeId, onStartAddItem, newItemText, onNewItemTextChange, onAddItem, onCancelAddItem, editingItemId, editingItemText, onStartEditItem, onSaveEditItem, onCancelEditItem, onDeleteItem, onEditItemTextChange }: Omit<NodeProps, 'index' | 'editingNodeId' | 'editingNodeName' | 'onStartEdit' | 'onSaveEdit' | 'onCancelEdit' | 'onDelete'>) {
+function ItemsList({ node, addingItemNodeId, onStartAddItem, newItemText, onNewItemTextChange, onAddItem, onCancelAddItem, editingItemId, editingItemText, onStartEditItem, onSaveEditItem, onCancelEditItem, onDeleteItem, onEditItemTextChange }: Omit<NodeProps, 'index' | 'editingNodeId' | 'editingNodeName' | 'onStartEdit' | 'onSaveEdit' | 'onCancelEdit' | 'onDelete' | 'onNodeNameChange'>) {
   return (
     <div className="mt-2 w-full space-y-0.5">
       {node.items.map((item) => (
