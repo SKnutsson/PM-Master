@@ -259,7 +259,7 @@ function PhaseNode({ node, index, editingNodeId, editingNodeName, onStartEdit, o
       <div className="mt-1.5 text-center px-1">
         {isEditing ? (
           <div className="flex items-center gap-0.5">
-            <Input value={editingNodeName} onChange={(e) => onEditItemTextChange(e.target.value)} className="h-6 text-[10px]" onKeyDown={(e) => { if (e.key === 'Enter') onSaveEdit(node.id); }} autoFocus />
+            <Input value={editingNodeName} onChange={(e) => onNodeNameChange(e.target.value)} className="h-6 text-[10px]" onKeyDown={(e) => { if (e.key === 'Enter') onSaveEdit(node.id); }} autoFocus />
             <button onClick={() => onSaveEdit(node.id)} className="text-primary"><Check className="h-3 w-3" /></button>
             <button onClick={onCancelEdit} className="text-muted-foreground"><X className="h-3 w-3" /></button>
           </div>
