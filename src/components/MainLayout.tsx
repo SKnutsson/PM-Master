@@ -9,6 +9,7 @@ import { ResourceAnalyticsView } from './ResourceAnalyticsView';
 import { DocumentationPlanView } from './DocumentationPlanView';
 import { ProfileView } from './ProfileView';
 import { MyTasksView } from './MyTasksView';
+import { AboutView } from './AboutView';
 import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 
 export function MainLayout() {
