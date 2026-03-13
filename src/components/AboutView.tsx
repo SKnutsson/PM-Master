@@ -222,6 +222,7 @@ interface NodeProps {
   onSaveEdit: (id: string) => void;
   onCancelEdit: () => void;
   onDelete: (id: string) => void;
+  onNodeNameChange: (name: string) => void;
   addingItemNodeId: string | null;
   onStartAddItem: (id: string) => void;
   newItemText: string;
