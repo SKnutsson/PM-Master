@@ -42,12 +42,12 @@ const itemVariants = {
 
 const getStatusColor = (status: DealStatus) => {
   switch (status) {
-    case 'Ny affär':
+    case 'Offert':
       return 'text-blue-400 bg-blue-400/10';
-    case 'Tagen':
+    case 'Order':
       return 'text-status-completed bg-status-completed/10';
-    case 'Flyttad':
-      return 'text-yellow-400 bg-yellow-400/10';
+    case 'Fakturerad':
+      return 'text-emerald-400 bg-emerald-400/10';
     case 'Förlorad':
       return 'text-red-400 bg-red-400/10';
     default:
