@@ -58,14 +58,14 @@ const getStatusColor = (status: DealStatus) => {
 // Get cell background + text styling based on deal status (for cells with values)
 const getCellStatusStyle = (status: DealStatus) => {
   switch (status) {
-    case 'Ny affär':
+    case 'Offert':
       return 'bg-blue-600 text-white font-medium';
-    case 'Tagen':
+    case 'Order':
+      return 'bg-emerald-600 text-white font-medium';
+    case 'Fakturerad':
       return 'bg-emerald-600 text-white font-medium';
     case 'Förlorad':
       return 'bg-red-600 text-white font-medium line-through';
-    case 'Flyttad':
-      return 'bg-yellow-400 text-black font-medium';
     default:
       return 'text-foreground font-medium';
   }
