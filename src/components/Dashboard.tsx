@@ -286,11 +286,11 @@ export function Dashboard() {
               <CardHeader className="pb-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-lg">
+                     <CardTitle className="flex items-center gap-2 text-lg">
                       <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
-                      Orderstock & Prognos
+                      Försäljningsöversikt
                     </CardTitle>
-                    <CardDescription className="text-xs">Tagna affärer vs prognos per månad (MSEK)</CardDescription>
+                    <CardDescription className="text-xs">Fakturerad, Order, Budget & Offert per månad (MSEK)</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex rounded-lg border border-border overflow-hidden text-xs">
