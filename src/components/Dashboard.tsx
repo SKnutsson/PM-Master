@@ -187,7 +187,7 @@ export function Dashboard() {
   const targetYear = chartPeriod === 'rolling' ? currentYear : parseInt(chartPeriod);
   const salesTarget = salesTargets[targetYear] || 0;
 
-  const takenTotal = chartData.reduce((s, d) => s + d.tagen, 0);
+  const takenTotal = chartData.reduce((s, d) => s + d.fakturerad + d.order, 0);
   const pct = salesTarget > 0 ? Math.min(takenTotal / salesTarget * 100, 100) : 0;
 
   const periodLabel = chartPeriod === 'rolling' ? 'Rullande 12 mån' : chartPeriod;
