@@ -331,9 +331,11 @@ export function Dashboard() {
                         labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: 13 }}
                         content={({ active, payload, label }) => {
                           if (!active || !payload || payload.length === 0) return null;
-                          const tagen = (payload.find(p => p.dataKey === 'tagen')?.value as number) || 0;
-                          const prognos = (payload.find(p => p.dataKey === 'prognos')?.value as number) || 0;
-                          const total = tagen + prognos;
+                          const fakturerad = (payload.find(p => p.dataKey === 'fakturerad')?.value as number) || 0;
+                          const order = (payload.find(p => p.dataKey === 'order')?.value as number) || 0;
+                          const budget = (payload.find(p => p.dataKey === 'budget')?.value as number) || 0;
+                          const offert = (payload.find(p => p.dataKey === 'offert')?.value as number) || 0;
+                          const total = fakturerad + order + budget + offert;
                           return (
                             <div style={{
                               backgroundColor: 'hsl(var(--card))',
@@ -343,16 +345,23 @@ export function Dashboard() {
                               padding: '10px 14px'
                             }}>
                               <p style={{ fontWeight: 600, fontSize: 13, color: 'hsl(var(--foreground))' }}>{label}</p>
-                              <p style={{ color: 'hsl(var(--primary))', fontSize: 12, marginTop: 4 }}>Tagen : {tagen.toFixed(2)} MSEK</p>
-                              <p style={{ color: 'hsl(var(--primary) / 0.6)', fontSize: 12 }}>Prognos : {prognos.toFixed(2)} MSEK</p>
-                              <p style={{ fontWeight: 700, fontSize: 12, marginTop: 4, borderTop: '1px solid hsl(var(--border))', paddingTop: 4, color: 'hsl(var(--foreground))' }}>Totalt : {total.toFixed(2)} MSEK</p>
+                              <p style={{ color: '#059669', fontSize: 12, marginTop: 4 }}>Fakturerad: {fakturerad.toFixed(2)} MSEK</p>
+                              <p style={{ color: 'hsl(var(--primary))', fontSize: 12 }}>Order: {order.toFixed(2)} MSEK</p>
+                              <p style={{ color: 'hsl(var(--primary) / 0.6)', fontSize: 12 }}>Budget: {budget.toFixed(2)} MSEK</p>
+                              <p style={{ color: '#3b82f6', fontSize: 12 }}>Offert: {offert.toFixed(2)} MSEK</p>
+                              <p style={{ fontWeight: 700, fontSize: 12, marginTop: 4, borderTop: '1px solid hsl(var(--border))', paddingTop: 4, color: 'hsl(var(--foreground))' }}>Totalt: {total.toFixed(2)} MSEK</p>
                             </div>
                           );
                         }}
                         cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
-                      <Legend formatter={(value: string) => value === 'tagen' ? 'Tagen' : 'Prognos'} wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="tagen" stackId="a" name="tagen" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="prognos" stackId="a" name="prognos" fill="hsl(var(--primary) / 0.35)" radius={[4, 4, 0, 0]} />
+                      <Legend formatter={(value: string) => {
+                        const labels: Record<string, string> = { fakturerad: 'Fakturerad', order: 'Order', budget: 'Budget', offert: 'Offert' };
+                        return labels[value] || value;
+                      }} wrapperStyle={{ fontSize: 12 }} />
+                      <Bar dataKey="fakturerad" stackId="a" name="fakturerad" fill="#059669" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="order" stackId="a" name="order" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="budget" stackId="a" name="budget" fill="hsl(var(--primary) / 0.35)" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="offert" stackId="a" name="offert" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
