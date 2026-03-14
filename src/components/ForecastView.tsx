@@ -476,8 +476,8 @@ export function ForecastView() {
                               </TableCell>);
 
                           })}
-                          <TableCell className="text-xs text-muted-foreground py-0 px-2">
-                            {item.notes || '-'}
+                          <TableCell className="text-xs text-muted-foreground py-0 px-2 max-w-[120px]">
+                            <span className="block truncate">{item.notes || '-'}</span>
                           </TableCell>
                           <TableCell className="py-0 px-1">
                             <EditForecastDialog forecast={item} />
