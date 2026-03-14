@@ -85,7 +85,7 @@ export function AddForecastDialog() {
     setMonth('Jan');
     setYear(new Date().getFullYear());
     setAmount('');
-    setDealStatus('Prognos');
+    setDealStatus('Budget');
     setNotes('');
     setSalesPerson('');
   };
