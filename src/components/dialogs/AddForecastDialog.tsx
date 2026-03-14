@@ -47,7 +47,7 @@ const productTypes = [
   'Övrigt'
 ];
 
-const dealStatuses: DealStatus[] = ['Prognos', 'Ny affär', 'Tagen', 'Flyttad', 'Förlorad'];
+const dealStatuses: DealStatus[] = ['Budget', 'Offert', 'Order', 'Fakturerad', 'Förlorad'];
 
 export function AddForecastDialog() {
   const [open, setOpen] = useState(false);
@@ -56,7 +56,7 @@ export function AddForecastDialog() {
   const [month, setMonth] = useState('Jan');
   const [year, setYear] = useState(new Date().getFullYear());
   const [amount, setAmount] = useState('');
-  const [dealStatus, setDealStatus] = useState<DealStatus>('Prognos');
+  const [dealStatus, setDealStatus] = useState<DealStatus>('Budget');
   const [notes, setNotes] = useState('');
   const [salesPerson, setSalesPerson] = useState('');
   const { addForecast } = useProjectDataContext();
@@ -85,7 +85,7 @@ export function AddForecastDialog() {
     setMonth('Jan');
     setYear(new Date().getFullYear());
     setAmount('');
-    setDealStatus('Prognos');
+    setDealStatus('Budget');
     setNotes('');
     setSalesPerson('');
   };

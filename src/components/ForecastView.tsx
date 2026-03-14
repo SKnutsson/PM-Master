@@ -42,12 +42,12 @@ const itemVariants = {
 
 const getStatusColor = (status: DealStatus) => {
   switch (status) {
-    case 'Ny affär':
+    case 'Offert':
       return 'text-blue-400 bg-blue-400/10';
-    case 'Tagen':
+    case 'Order':
       return 'text-status-completed bg-status-completed/10';
-    case 'Flyttad':
-      return 'text-yellow-400 bg-yellow-400/10';
+    case 'Fakturerad':
+      return 'text-emerald-400 bg-emerald-400/10';
     case 'Förlorad':
       return 'text-red-400 bg-red-400/10';
     default:
@@ -58,14 +58,14 @@ const getStatusColor = (status: DealStatus) => {
 // Get cell background + text styling based on deal status (for cells with values)
 const getCellStatusStyle = (status: DealStatus) => {
   switch (status) {
-    case 'Ny affär':
+    case 'Offert':
       return 'bg-blue-600 text-white font-medium';
-    case 'Tagen':
+    case 'Order':
+      return 'bg-emerald-600 text-white font-medium';
+    case 'Fakturerad':
       return 'bg-emerald-600 text-white font-medium';
     case 'Förlorad':
       return 'bg-red-600 text-white font-medium line-through';
-    case 'Flyttad':
-      return 'bg-yellow-400 text-black font-medium';
     default:
       return 'text-foreground font-medium';
   }
@@ -373,11 +373,12 @@ export function ForecastView() {
       <motion.div variants={itemVariants}>
         <StatusLegend
           items={[
-          { color: 'bg-blue-600', label: 'Ny affär' },
-          { color: 'bg-emerald-600', label: 'Tagen' },
+          { color: 'bg-blue-600', label: 'Offert' },
+          { color: 'bg-emerald-600', label: 'Order' },
+          { color: 'bg-emerald-600', label: 'Fakturerad' },
           { color: 'bg-yellow-400', label: 'Flyttad' },
           { color: 'bg-red-600', label: 'Förlorad' },
-          { color: 'bg-foreground/50', label: 'Prognos' }]
+          { color: 'bg-foreground/50', label: 'Budget' }]
           } />
 
       </motion.div>

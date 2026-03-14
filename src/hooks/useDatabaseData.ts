@@ -10,7 +10,7 @@ import {
   Phase
 } from '@/data/projectData';
 
-export type DealStatus = 'Tagen' | 'Flyttad' | 'Förlorad' | 'Prognos' | 'Ny affär';
+export type DealStatus = 'Budget' | 'Offert' | 'Order' | 'Fakturerad' | 'Förlorad';
 
 export interface ScheduleChange {
   id: string;
@@ -352,7 +352,7 @@ export function useDatabaseData() {
         .insert({
           project: item.project,
           product: item.product,
-          deal_status: 'Prognos',
+          deal_status: 'Budget',
           notes: item.notes || null,
         })
         .select()

@@ -159,29 +159,35 @@ export function Dashboard() {
   })();
 
   const chartData = chartLabels.map(({ month, year }) => {
-    let tagen = 0;
-    let prognos = 0;
+    let fakturerad = 0;
+    let order = 0;
+    let budget = 0;
+    let offert = 0;
     forecast.forEach((f) => {
       if (f.dealStatus === 'Förlorad') return;
       const entries = (f.monthEntries || []).filter((e) => e.year === year && e.month === month);
       const sum = entries.reduce((s, e) => s + e.amount, 0);
-      if (f.dealStatus === 'Tagen') {
-        tagen += sum;
-      } else {
-        prognos += sum;
+      if (f.dealStatus === 'Fakturerad') {
+        fakturerad += sum;
+      } else if (f.dealStatus === 'Order') {
+        order += sum;
+      } else if (f.dealStatus === 'Budget') {
+        budget += sum;
+      } else if (f.dealStatus === 'Offert') {
+        offert += sum;
       }
     });
     const label = chartPeriod === 'rolling' ? `${month} ${String(year).slice(2)}` : month;
-    return { month: label, tagen, prognos };
+    return { month: label, fakturerad, order, budget, offert };
   });
 
-  const chartYearTotal = chartData.reduce((s, d) => s + d.tagen + d.prognos, 0);
+  const chartYearTotal = chartData.reduce((s, d) => s + d.fakturerad + d.order + d.budget + d.offert, 0);
 
   // Target uses selected year (or current year for rolling)
   const targetYear = chartPeriod === 'rolling' ? currentYear : parseInt(chartPeriod);
   const salesTarget = salesTargets[targetYear] || 0;
 
-  const takenTotal = chartData.reduce((s, d) => s + d.tagen, 0);
+  const takenTotal = chartData.reduce((s, d) => s + d.fakturerad + d.order, 0);
   const pct = salesTarget > 0 ? Math.min(takenTotal / salesTarget * 100, 100) : 0;
 
   const periodLabel = chartPeriod === 'rolling' ? 'Rullande 12 mån' : chartPeriod;
@@ -280,11 +286,11 @@ export function Dashboard() {
               <CardHeader className="pb-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-lg">
+                     <CardTitle className="flex items-center gap-2 text-lg">
                       <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
-                      Orderstock & Prognos
+                      Försäljningsöversikt
                     </CardTitle>
-                    <CardDescription className="text-xs">Tagna affärer vs prognos per månad (MSEK)</CardDescription>
+                    <CardDescription className="text-xs">Fakturerad, Order, Budget & Offert per månad (MSEK)</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex rounded-lg border border-border overflow-hidden text-xs">
@@ -325,9 +331,11 @@ export function Dashboard() {
                         labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: 13 }}
                         content={({ active, payload, label }) => {
                           if (!active || !payload || payload.length === 0) return null;
-                          const tagen = (payload.find(p => p.dataKey === 'tagen')?.value as number) || 0;
-                          const prognos = (payload.find(p => p.dataKey === 'prognos')?.value as number) || 0;
-                          const total = tagen + prognos;
+                          const fakturerad = (payload.find(p => p.dataKey === 'fakturerad')?.value as number) || 0;
+                          const order = (payload.find(p => p.dataKey === 'order')?.value as number) || 0;
+                          const budget = (payload.find(p => p.dataKey === 'budget')?.value as number) || 0;
+                          const offert = (payload.find(p => p.dataKey === 'offert')?.value as number) || 0;
+                          const total = fakturerad + order + budget + offert;
                           return (
                             <div style={{
                               backgroundColor: 'hsl(var(--card))',
@@ -337,16 +345,23 @@ export function Dashboard() {
                               padding: '10px 14px'
                             }}>
                               <p style={{ fontWeight: 600, fontSize: 13, color: 'hsl(var(--foreground))' }}>{label}</p>
-                              <p style={{ color: 'hsl(var(--primary))', fontSize: 12, marginTop: 4 }}>Tagen : {tagen.toFixed(2)} MSEK</p>
-                              <p style={{ color: 'hsl(var(--primary) / 0.6)', fontSize: 12 }}>Prognos : {prognos.toFixed(2)} MSEK</p>
-                              <p style={{ fontWeight: 700, fontSize: 12, marginTop: 4, borderTop: '1px solid hsl(var(--border))', paddingTop: 4, color: 'hsl(var(--foreground))' }}>Totalt : {total.toFixed(2)} MSEK</p>
+                              <p style={{ color: '#059669', fontSize: 12, marginTop: 4 }}>Fakturerad: {fakturerad.toFixed(2)} MSEK</p>
+                              <p style={{ color: 'hsl(var(--primary))', fontSize: 12 }}>Order: {order.toFixed(2)} MSEK</p>
+                              <p style={{ color: 'hsl(var(--primary) / 0.6)', fontSize: 12 }}>Budget: {budget.toFixed(2)} MSEK</p>
+                              <p style={{ color: '#3b82f6', fontSize: 12 }}>Offert: {offert.toFixed(2)} MSEK</p>
+                              <p style={{ fontWeight: 700, fontSize: 12, marginTop: 4, borderTop: '1px solid hsl(var(--border))', paddingTop: 4, color: 'hsl(var(--foreground))' }}>Totalt: {total.toFixed(2)} MSEK</p>
                             </div>
                           );
                         }}
                         cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
-                      <Legend formatter={(value: string) => value === 'tagen' ? 'Tagen' : 'Prognos'} wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="tagen" stackId="a" name="tagen" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="prognos" stackId="a" name="prognos" fill="hsl(var(--primary) / 0.35)" radius={[4, 4, 0, 0]} />
+                      <Legend formatter={(value: string) => {
+                        const labels: Record<string, string> = { fakturerad: 'Fakturerad', order: 'Order', budget: 'Budget', offert: 'Offert' };
+                        return labels[value] || value;
+                      }} wrapperStyle={{ fontSize: 12 }} />
+                      <Bar dataKey="fakturerad" stackId="a" name="fakturerad" fill="#059669" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="order" stackId="a" name="order" fill="hsl(var(--primary))" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="budget" stackId="a" name="budget" fill="hsl(var(--primary) / 0.35)" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="offert" stackId="a" name="offert" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -363,7 +378,7 @@ export function Dashboard() {
                 <TrendingUp className="h-4 w-4 text-primary" />
                 Måluppfyllnad
               </CardTitle>
-              <CardDescription className="text-xs">Tagna affärer vs mål {periodLabel}</CardDescription>
+              <CardDescription className="text-xs">Order & Fakturerad vs mål {periodLabel}</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center py-4">
               {salesTarget > 0 ?

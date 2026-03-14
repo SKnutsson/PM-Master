@@ -326,6 +326,68 @@ export type Database = {
         }
         Relationships: []
       }
+      lifecycle_items: {
+        Row: {
+          created_at: string
+          id: string
+          node_id: string
+          sort_order: number
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          node_id: string
+          sort_order?: number
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          node_id?: string
+          sort_order?: number
+          text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifecycle_items_node_id_fkey"
+            columns: ["node_id"]
+            isOneToOne: false
+            referencedRelation: "lifecycle_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lifecycle_nodes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          node_type: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          node_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          node_type?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_color: string | null
@@ -640,7 +702,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      deal_status: "Prognos" | "Tagen" | "Flyttad" | "Förlorad" | "Ny affär"
+      deal_status: "Budget" | "Offert" | "Order" | "Fakturerad" | "Förlorad"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -769,7 +831,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      deal_status: ["Prognos", "Tagen", "Flyttad", "Förlorad", "Ny affär"],
+      deal_status: ["Budget", "Offert", "Order", "Fakturerad", "Förlorad"],
     },
   },
 } as const
