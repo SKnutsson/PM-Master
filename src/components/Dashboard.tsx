@@ -378,7 +378,7 @@ export function Dashboard() {
                 <TrendingUp className="h-4 w-4 text-primary" />
                 Måluppfyllnad
               </CardTitle>
-              <CardDescription className="text-xs">Tagna affärer vs mål {periodLabel}</CardDescription>
+              <CardDescription className="text-xs">Order & Fakturerad vs mål {periodLabel}</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col items-center justify-center py-4">
               {salesTarget > 0 ?
