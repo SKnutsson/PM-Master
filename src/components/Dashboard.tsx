@@ -159,20 +159,26 @@ export function Dashboard() {
   })();
 
   const chartData = chartLabels.map(({ month, year }) => {
-    let tagen = 0;
-    let prognos = 0;
+    let fakturerad = 0;
+    let order = 0;
+    let budget = 0;
+    let offert = 0;
     forecast.forEach((f) => {
       if (f.dealStatus === 'Förlorad') return;
       const entries = (f.monthEntries || []).filter((e) => e.year === year && e.month === month);
       const sum = entries.reduce((s, e) => s + e.amount, 0);
-      if (f.dealStatus === 'Tagen') {
-        tagen += sum;
-      } else {
-        prognos += sum;
+      if (f.dealStatus === 'Fakturerad') {
+        fakturerad += sum;
+      } else if (f.dealStatus === 'Order') {
+        order += sum;
+      } else if (f.dealStatus === 'Budget') {
+        budget += sum;
+      } else if (f.dealStatus === 'Offert') {
+        offert += sum;
       }
     });
     const label = chartPeriod === 'rolling' ? `${month} ${String(year).slice(2)}` : month;
-    return { month: label, tagen, prognos };
+    return { month: label, fakturerad, order, budget, offert };
   });
 
   const chartYearTotal = chartData.reduce((s, d) => s + d.tagen + d.prognos, 0);
