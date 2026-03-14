@@ -181,7 +181,7 @@ export function Dashboard() {
     return { month: label, fakturerad, order, budget, offert };
   });
 
-  const chartYearTotal = chartData.reduce((s, d) => s + d.tagen + d.prognos, 0);
+  const chartYearTotal = chartData.reduce((s, d) => s + d.fakturerad + d.order + d.budget + d.offert, 0);
 
   // Target uses selected year (or current year for rolling)
   const targetYear = chartPeriod === 'rolling' ? currentYear : parseInt(chartPeriod);
