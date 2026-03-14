@@ -373,11 +373,12 @@ export function ForecastView() {
       <motion.div variants={itemVariants}>
         <StatusLegend
           items={[
-          { color: 'bg-blue-600', label: 'Ny affär' },
-          { color: 'bg-emerald-600', label: 'Tagen' },
+          { color: 'bg-blue-600', label: 'Offert' },
+          { color: 'bg-emerald-600', label: 'Order' },
+          { color: 'bg-emerald-600', label: 'Fakturerad' },
           { color: 'bg-yellow-400', label: 'Flyttad' },
           { color: 'bg-red-600', label: 'Förlorad' },
-          { color: 'bg-foreground/50', label: 'Prognos' }]
+          { color: 'bg-foreground/50', label: 'Budget' }]
           } />
 
       </motion.div>

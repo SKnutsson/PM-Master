@@ -56,7 +56,7 @@ export function AddForecastDialog() {
   const [month, setMonth] = useState('Jan');
   const [year, setYear] = useState(new Date().getFullYear());
   const [amount, setAmount] = useState('');
-  const [dealStatus, setDealStatus] = useState<DealStatus>('Prognos');
+  const [dealStatus, setDealStatus] = useState<DealStatus>('Budget');
   const [notes, setNotes] = useState('');
   const [salesPerson, setSalesPerson] = useState('');
   const { addForecast } = useProjectDataContext();

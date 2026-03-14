@@ -352,7 +352,7 @@ export function useDatabaseData() {
         .insert({
           project: item.project,
           product: item.product,
-          deal_status: 'Prognos',
+          deal_status: 'Budget',
           notes: item.notes || null,
         })
         .select()

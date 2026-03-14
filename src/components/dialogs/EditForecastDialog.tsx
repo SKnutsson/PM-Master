@@ -47,7 +47,7 @@ const productTypes = [
   'Övrigt'
 ];
 
-const dealStatuses: DealStatus[] = ['Prognos', 'Ny affär', 'Tagen', 'Flyttad', 'Förlorad'];
+const dealStatuses: DealStatus[] = ['Budget', 'Offert', 'Order', 'Fakturerad', 'Förlorad'];
 
 interface EditForecastDialogProps {
   forecast: ExtendedSalesForecast;
