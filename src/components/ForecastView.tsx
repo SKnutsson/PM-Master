@@ -485,7 +485,18 @@ export function ForecastView() {
 
                           })}
                           <TableCell className="text-xs text-muted-foreground py-0 px-2 max-w-[120px]">
-                            <span className="block truncate">{item.notes || '-'}</span>
+                            {item.notes ? (
+                              <UITooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="block truncate cursor-default">{item.notes}</span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-[300px] whitespace-normal">
+                                  <p>{item.notes}</p>
+                                </TooltipContent>
+                              </UITooltip>
+                            ) : (
+                              <span className="block truncate">-</span>
+                            )}
                           </TableCell>
                           <TableCell className="py-0 px-1">
                             <EditForecastDialog forecast={item} />
