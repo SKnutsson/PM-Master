@@ -520,7 +520,7 @@ export function ForecastView() {
                          <span className="text-xs font-normal text-muted-foreground ml-2">(exkl. förlorade)</span>
                        </TableCell>
                        {displayMonths.map((dm, i) =>
-                    <TableCell key={`total-${dm.month}-${dm.year}-${i}`} className="text-center text-primary py-0 px-1 text-xs">
+                    <TableCell key={`total-${dm.month}-${dm.year}-${i}`} className="text-center text-primary py-0 px-1 text-xs w-[60px] min-w-[60px] max-w-[60px]">
                            {(filteredMonthlyTotals[dm.month] || 0).toFixed(1)}
                          </TableCell>
                     )}
