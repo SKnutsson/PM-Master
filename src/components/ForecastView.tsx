@@ -414,7 +414,7 @@ export function ForecastView() {
                      <TableHead className="font-semibold py-1 px-2 text-xs">Produkt</TableHead>
                      <TableHead className="font-semibold py-1 px-2 text-xs">Status</TableHead>
                      {displayMonths.map((dm, i) =>
-                    <TableHead key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1 px-1 text-xs w-[60px] min-w-[60px] max-w-[60px]">
+                    <TableHead key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px]">
                          {dm.month}
                          {selectedPeriod === 'rolling12' && <span className="block text-[9px] text-muted-foreground">{dm.year}</span>}
                        </TableHead>
