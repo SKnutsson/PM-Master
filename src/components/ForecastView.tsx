@@ -135,9 +135,17 @@ export function ForecastView() {
     });
 
     // Only include forecasts that have at least one entry in the selected period
-    const forecastsInPeriod = filteredForecast.filter((f) => {
-      return Object.values(f.months).some((v) => v > 0);
-    });
+    const monthOrder = months.reduce((acc, m, i) => ({ ...acc, [m]: i }), {} as Record<string, number>);
+    const forecastsInPeriod = filteredForecast
+      .filter((f) => Object.values(f.months).some((v) => v > 0))
+      .sort((a, b) => {
+        const getEarliest = (f: typeof a) => {
+          const entries = (f.monthEntries || []).filter(e => e.amount > 0);
+          if (entries.length === 0) return Infinity;
+          return Math.min(...entries.map(e => e.year * 12 + (monthOrder[e.month] ?? 12)));
+        };
+        return getEarliest(a) - getEarliest(b);
+      });
     const activeForecast = forecastsInPeriod.filter((f) => f.dealStatus !== 'Förlorad');
     const filteredMonthlyTotals: {[key: string]: number;} = {};
     for (const dm of displayMonths) {
