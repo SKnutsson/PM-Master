@@ -453,7 +453,7 @@ export function ForecastView() {
                               <TableCell
                                 key={`${dm.month}-${dm.year}-${i}`}
                                 className={cn(
-                                  "text-center relative py-0 px-1 text-xs w-[60px] min-w-[60px] max-w-[60px]",
+                                  "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px]",
                                   hasValue && getCellStatusStyle(item.dealStatus),
                                   movedFrom && !hasValue && "bg-yellow-400/20"
                                 )}>
