@@ -461,6 +461,9 @@ export function useDatabaseData() {
       return null;
     }
 
+    // Immediately reload to update UI
+    await loadProjects();
+
     return { ...activity, id: data.id } as Activity;
   }, []);
 
