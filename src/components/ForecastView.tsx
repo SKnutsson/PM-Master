@@ -414,12 +414,12 @@ export function ForecastView() {
                      <TableHead className="font-semibold py-1 px-2 text-xs">Produkt</TableHead>
                      <TableHead className="font-semibold py-1 px-2 text-xs">Status</TableHead>
                      {displayMonths.map((dm, i) =>
-                    <TableHead key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1 px-1 text-xs">
+                    <TableHead key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1 px-1 text-xs w-[60px] min-w-[60px] max-w-[60px]">
                          {dm.month}
                          {selectedPeriod === 'rolling12' && <span className="block text-[9px] text-muted-foreground">{dm.year}</span>}
                        </TableHead>
                     )}
-                     <TableHead className="font-semibold py-1 px-2 text-xs">Not</TableHead>
+                     <TableHead className="font-semibold py-1 px-2 text-xs">Notering</TableHead>
                      <TableHead className="w-8 py-1 px-1"></TableHead>
                    </TableRow>
                 </TableHeader>
@@ -453,7 +453,7 @@ export function ForecastView() {
                               <TableCell
                                 key={`${dm.month}-${dm.year}-${i}`}
                                 className={cn(
-                                  "text-center relative py-0 px-1 text-xs",
+                                  "text-center relative py-0 px-1 text-xs w-[60px] min-w-[60px] max-w-[60px]",
                                   hasValue && getCellStatusStyle(item.dealStatus),
                                   movedFrom && !hasValue && "bg-yellow-400/20"
                                 )}>
@@ -520,7 +520,7 @@ export function ForecastView() {
                          <span className="text-xs font-normal text-muted-foreground ml-2">(exkl. förlorade)</span>
                        </TableCell>
                        {displayMonths.map((dm, i) =>
-                    <TableCell key={`total-${dm.month}-${dm.year}-${i}`} className="text-center text-primary py-0 px-1 text-xs">
+                    <TableCell key={`total-${dm.month}-${dm.year}-${i}`} className="text-center text-primary py-0 px-1 text-xs w-[60px] min-w-[60px] max-w-[60px]">
                            {(filteredMonthlyTotals[dm.month] || 0).toFixed(1)}
                          </TableCell>
                     )}
