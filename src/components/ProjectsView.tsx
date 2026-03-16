@@ -245,6 +245,7 @@ export function ProjectsView() {
             <TableHead className="font-semibold text-xs py-1.5 px-2">Kund</TableHead>
             <TableHead className="font-semibold text-xs py-1.5 px-2">Produkt</TableHead>
             <TableHead className="font-semibold text-xs py-1.5 px-2">Projektledare</TableHead>
+            <TableHead className="font-semibold text-xs py-1.5 px-2">Ansvarig säljare</TableHead>
             <TableHead className="font-semibold text-xs py-1.5 px-2 text-right"></TableHead>
           </TableRow>
         </TableHeader>
