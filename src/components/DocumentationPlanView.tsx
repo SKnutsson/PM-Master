@@ -102,12 +102,15 @@ export function DocumentationPlanView() {
     setIsLoading(false);
   };
 
-  const activeProjects = useMemo(() => {
-    const active = projects.filter(p => p.status !== 'Avslutat');
-    if (!showArchived) return active;
-    const archived = projects.filter(p => p.status === 'Avslutat');
-    return [...active, ...archived];
-  }, [projects, showArchived]);
+  const activeProjects = useMemo(() => 
+    projects.filter(p => p.status !== 'Avslutat'),
+    [projects]
+  );
+
+  const archivedProjects = useMemo(() => 
+    projects.filter(p => p.status === 'Avslutat'),
+    [projects]
+  );
 
   const archivedProjectIds = useMemo(() => 
     new Set(projects.filter(p => p.status === 'Avslutat').map(p => p.id)),

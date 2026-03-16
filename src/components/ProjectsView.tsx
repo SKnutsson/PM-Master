@@ -265,7 +265,7 @@ export function ProjectsView() {
           </AnimatePresence>
           {projectList.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground text-sm border-0">
+              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm border-0">
                 {isArchived ? 'Inga arkiverade projekt ännu.' : 'Inga aktiva projekt. Klicka på "Nytt projekt" för att börja.'}
               </TableCell>
             </TableRow>
