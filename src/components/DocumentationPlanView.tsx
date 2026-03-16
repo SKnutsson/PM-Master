@@ -112,10 +112,6 @@ export function DocumentationPlanView() {
     [projects]
   );
 
-  const archivedProjectIds = useMemo(() => 
-    new Set(projects.filter(p => p.status === 'Avslutat').map(p => p.id)),
-    [projects]
-  );
 
   const filteredItems = useMemo(() => {
     if (statusFilter === 'all') return items;
