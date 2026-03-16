@@ -393,8 +393,8 @@ export function ForecastView() {
 
       {/* Forecast Table */}
       <motion.div variants={itemVariants}>
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader>
+        <Card className="border-border/50 bg-card/80 overflow-hidden">
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Detaljerad prognos</CardTitle>
@@ -405,63 +405,70 @@ export function ForecastView() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-0 pb-0">
             <div ref={forecastTableRef} className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                    <TableRow className="border-border/50 hover:bg-transparent">
-                     <TableHead className="font-semibold py-1 px-2 text-xs">Projekt</TableHead>
-                     <TableHead className="font-semibold py-1 px-2 text-xs">Produkt</TableHead>
-                     <TableHead className="font-semibold py-1 px-2 text-xs">Status</TableHead>
-                     {displayMonths.map((dm, i) =>
-                    <TableHead key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px]">
-                         {dm.month}
-                         {selectedPeriod === 'rolling12' && <span className="block text-[9px] text-muted-foreground">{dm.year}</span>}
-                       </TableHead>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-sidebar-accent text-primary-foreground">
+                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Projekt</th>
+                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Produkt</th>
+                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Status</th>
+                    {displayMonths.map((dm, i) =>
+                      <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-2.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide">
+                        {dm.month}
+                        {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
+                      </th>
                     )}
-                     <TableHead className="font-semibold py-1 px-2 text-xs">Notering</TableHead>
-                     <TableHead className="w-8 py-1 px-1"></TableHead>
-                   </TableRow>
-                </TableHeader>
-                <TableBody>
+                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Notering</th>
+                    <th className="w-8 py-2.5 px-1"></th>
+                  </tr>
+                </thead>
+                <tbody>
                   <TooltipProvider>
-                    {filteredForecast.map((item) => {
+                    {filteredForecast.map((item, rowIdx) => {
                       const isLost = item.dealStatus === 'Förlorad';
+                      const rowTotal = Object.values(item.months).reduce((s, v) => s + v, 0);
 
                       return (
-                        <TableRow
+                        <tr
                           key={item.id}
-                          className="border-border/30 h-7">
-
-                          <TableCell className={cn("font-medium py-0 px-2 text-xs", isLost && "line-through opacity-70")}>
-                            {item.project}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground py-0 px-2 text-xs">{item.product}</TableCell>
-                          <TableCell className="py-0 px-2">
-                            <span className={cn("inline-flex items-center rounded-full text-xs leading-none ml-0 font-medium px-[15px] py-[7px] text-center",
-
-                            getStatusColor(item.dealStatus)
+                          className={cn(
+                            "group transition-all duration-150 hover:bg-primary/[0.04]",
+                            rowIdx % 2 === 0 ? "bg-background" : "bg-muted/20",
+                            isLost && "opacity-50"
+                          )}
+                        >
+                          <td className={cn("py-2 px-3 text-xs font-medium border-b border-border/20", isLost && "line-through")}>
+                            <div className="flex items-center gap-1.5">
+                              <span>{item.project}</span>
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-xs text-muted-foreground border-b border-border/20">{item.product}</td>
+                          <td className="py-2 px-3 border-b border-border/20">
+                            <span className={cn(
+                              "inline-flex items-center rounded-full text-[10px] leading-none font-medium px-2.5 py-1 whitespace-nowrap",
+                              getStatusColor(item.dealStatus)
                             )}>
                               {item.dealStatus}
                             </span>
-                          </TableCell>
+                          </td>
                           {displayMonths.map((dm, i) => {
                             const movedFrom = getMovedFromMonth(item.scheduleHistory, dm.month);
                             const hasValue = item.months[dm.month] && item.months[dm.month] > 0;
 
                             return (
-                              <TableCell
+                              <td
                                 key={`${dm.month}-${dm.year}-${i}`}
                                 className={cn(
-                                  "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px]",
-                                  hasValue && getCellStatusStyle(item.dealStatus),
-                                  movedFrom && !hasValue && "bg-yellow-400/20"
-                                )}>
-
+                                  "text-center relative py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/20 transition-colors",
+                                  hasValue && "font-semibold",
+                                  movedFrom && !hasValue && "bg-yellow-400/10"
+                                )}
+                              >
                                 {movedFrom && !hasValue &&
-                                <UITooltip>
+                                  <UITooltip>
                                     <TooltipTrigger asChild>
-                                      <span className="text-yellow-500 font-medium cursor-help">
+                                      <span className="text-yellow-500 font-medium cursor-help text-[9px]">
                                         ({movedFrom.originalAmount.toFixed(2)})
                                       </span>
                                     </TooltipTrigger>
@@ -474,17 +481,20 @@ export function ForecastView() {
                                   </UITooltip>
                                 }
                                 {hasValue &&
-                                <span>
+                                  <span className={cn(
+                                    "inline-flex items-center justify-center rounded px-1 py-0.5 min-w-[30px]",
+                                    getCellStatusStyle(item.dealStatus)
+                                  )}>
                                     {item.months[dm.month].toFixed(2)}
                                   </span>
                                 }
                                 {!movedFrom && !hasValue &&
-                                <span className="text-muted-foreground/30"></span>
+                                  <span className="text-muted-foreground/20">–</span>
                                 }
-                              </TableCell>);
-
+                              </td>
+                            );
                           })}
-                          <TableCell className="text-xs text-muted-foreground py-0 px-2 max-w-[120px]">
+                          <td className="text-xs text-muted-foreground py-2 px-3 max-w-[120px] border-b border-border/20">
                             {item.notes ? (
                               <UITooltip>
                                 <TooltipTrigger asChild>
@@ -495,41 +505,43 @@ export function ForecastView() {
                                 </TooltipContent>
                               </UITooltip>
                             ) : (
-                              <span className="block truncate">-</span>
+                              <span className="text-muted-foreground/30">–</span>
                             )}
-                          </TableCell>
-                          <TableCell className="py-0 px-1">
-                            <EditForecastDialog forecast={item} />
-                          </TableCell>
-                        </TableRow>);
-
+                          </td>
+                          <td className="py-2 px-1 border-b border-border/20">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <EditForecastDialog forecast={item} />
+                            </div>
+                          </td>
+                        </tr>
+                      );
                     })}
                   </TooltipProvider>
                   {filteredForecast.length === 0 &&
-                  <TableRow>
-                      <TableCell colSpan={16} className="text-center py-6 text-muted-foreground text-xs">
+                    <tr>
+                      <td colSpan={16} className="text-center py-10 text-muted-foreground text-sm">
                         Inga affärer ännu. Klicka på "Ny affär" för att börja.
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   }
                   {/* Totals row */}
                   {filteredForecast.length > 0 &&
-                  <TableRow className="border-t-2 border-border bg-muted/30 font-bold h-7">
-                       <TableCell colSpan={3} className="py-0 px-2 text-xs">
-                         Summa per månad
-                         <span className="text-xs font-normal text-muted-foreground ml-2">(exkl. förlorade)</span>
-                       </TableCell>
-                       {displayMonths.map((dm, i) =>
-                    <TableCell key={`total-${dm.month}-${dm.year}-${i}`} className="text-center text-primary py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px]">
-                           {(filteredMonthlyTotals[dm.month] || 0).toFixed(1)}
-                         </TableCell>
-                    )}
-                       <TableCell className="py-0 px-2"></TableCell>
-                       <TableCell className="py-0 px-1"></TableCell>
-                     </TableRow>
+                    <tr className="bg-sidebar-accent/80 text-primary-foreground font-bold">
+                      <td colSpan={3} className="py-2.5 px-3 text-xs">
+                        Summa per månad
+                        <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
+                      </td>
+                      {displayMonths.map((dm, i) =>
+                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-2.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold">
+                          {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
+                        </td>
+                      )}
+                      <td className="py-2.5 px-3"></td>
+                      <td className="py-2.5 px-1"></td>
+                    </tr>
                   }
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
