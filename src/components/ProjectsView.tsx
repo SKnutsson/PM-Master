@@ -82,151 +82,102 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
   };
 
   return (
-    <motion.tr
-      variants={itemVariants}
-      className={cn(
-        "group cursor-pointer transition-colors border-b border-border/30",
-        isArchived ? "opacity-60" : "hover:bg-primary/[0.04]"
-      )}
-    >
-      <TableCell colSpan={6} className="p-0 border-0">
-        {/* Main row */}
-        <div
-          className="flex items-center w-full"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          <div className="flex items-center gap-1.5 px-2 py-1.5 w-[40px] shrink-0">
-            <span className="text-primary/70">
-              {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-            </span>
-          </div>
-          <div className="flex-1 grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr] items-center gap-2 py-1.5 pr-2 min-w-0">
-            <span className="font-semibold text-sm truncate">
-              {project.code} – {project.name}
-            </span>
-            <span className="text-xs text-muted-foreground truncate">
-              {project.customer || '–'}
-            </span>
-            <span className="text-xs text-muted-foreground truncate">
-              {project.product || '–'}
-            </span>
-            <span className="text-xs text-muted-foreground truncate">
-              {project.projectManager || '–'}
-            </span>
-            <div className="flex items-center justify-end gap-0.5">
-              {isArchived && (
-                <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded mr-1">
-                  <Archive className="h-2.5 w-2.5" />
-                  Avslutat
-                </span>
-              )}
-              {!isArchived && (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
-                  onClick={handleStartEdit}
-                  title="Redigera"
-                >
-                  <Pencil className="h-3 w-3" />
-                </Button>
-              )}
-              {isArchived ? (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
-                  onClick={handleRestore}
-                  title="Återställ"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                </Button>
-              ) : (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary"
-                  onClick={handleArchive}
-                  title="Arkivera"
-                >
-                  <Archive className="h-3 w-3" />
-                </Button>
-              )}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                onClick={handleDeleteProject}
-                title="Ta bort"
-              >
-                <Trash2 className="h-3 w-3" />
+    <>
+      <motion.tr
+        variants={itemVariants}
+        className={cn(
+          "group cursor-pointer transition-colors",
+          isArchived ? "opacity-60" : "hover:bg-primary/[0.04]"
+        )}
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <TableCell className="py-1.5 px-2 w-[40px] border-0">
+          <span className="text-primary/70">
+            {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          </span>
+        </TableCell>
+        <TableCell className="py-1.5 px-2 border-0">
+          <span className="font-semibold text-sm truncate">
+            {project.code} – {project.name}
+          </span>
+        </TableCell>
+        <TableCell className="py-1.5 px-2 border-0">
+          <span className="text-xs text-muted-foreground truncate">{project.customer || '–'}</span>
+        </TableCell>
+        <TableCell className="py-1.5 px-2 border-0">
+          <span className="text-xs text-muted-foreground truncate">{project.product || '–'}</span>
+        </TableCell>
+        <TableCell className="py-1.5 px-2 border-0">
+          <span className="text-xs text-muted-foreground truncate">{project.projectManager || '–'}</span>
+        </TableCell>
+        <TableCell className="py-1.5 px-2 border-0">
+          <span className="text-xs text-muted-foreground truncate">{project.salesPerson || '–'}</span>
+        </TableCell>
+        <TableCell className="py-1.5 px-2 border-0 text-right">
+          <div className="flex items-center justify-end gap-0.5">
+            {isArchived && (
+              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded mr-1">
+                <Archive className="h-2.5 w-2.5" />
+                Avslutat
+              </span>
+            )}
+            {!isArchived && (
+              <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleStartEdit} title="Redigera">
+                <Pencil className="h-3 w-3" />
               </Button>
-            </div>
+            )}
+            {isArchived ? (
+              <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleRestore} title="Återställ">
+                <RotateCcw className="h-3 w-3" />
+              </Button>
+            ) : (
+              <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleArchive} title="Arkivera">
+                <Archive className="h-3 w-3" />
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleDeleteProject} title="Ta bort">
+              <Trash2 className="h-3 w-3" />
+            </Button>
           </div>
-        </div>
+        </TableCell>
+      </motion.tr>
 
-        {/* Expanded detail */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
+      {/* Expanded detail */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.tr
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <TableCell colSpan={7} className="p-0 border-0">
               <div className="border-t border-border/30 bg-muted/30 px-10 py-3">
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Kund</label>
-                        <Input
-                          className="h-8 text-sm"
-                          value={editData.customer}
-                          onChange={(e) => setEditData((prev) => ({ ...prev, customer: e.target.value }))}
-                          placeholder="Kundnamn"
-                        />
+                        <Input className="h-8 text-sm" value={editData.customer} onChange={(e) => setEditData((prev) => ({ ...prev, customer: e.target.value }))} placeholder="Kundnamn" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Projektledare</label>
-                        <Input
-                          className="h-8 text-sm"
-                          value={editData.projectManager}
-                          onChange={(e) => setEditData((prev) => ({ ...prev, projectManager: e.target.value }))}
-                          placeholder="Namn"
-                        />
+                        <Input className="h-8 text-sm" value={editData.projectManager} onChange={(e) => setEditData((prev) => ({ ...prev, projectManager: e.target.value }))} placeholder="Namn" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Ansvarig säljare</label>
-                        <Input
-                          className="h-8 text-sm"
-                          value={editData.salesPerson}
-                          onChange={(e) => setEditData((prev) => ({ ...prev, salesPerson: e.target.value }))}
-                          placeholder="Namn"
-                        />
+                        <Input className="h-8 text-sm" value={editData.salesPerson} onChange={(e) => setEditData((prev) => ({ ...prev, salesPerson: e.target.value }))} placeholder="Namn" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Såld produkt</label>
-                        <Input
-                          className="h-8 text-sm"
-                          value={editData.product}
-                          onChange={(e) => setEditData((prev) => ({ ...prev, product: e.target.value }))}
-                          placeholder="t.ex. Teleskopläktare"
-                        />
+                        <Input className="h-8 text-sm" value={editData.product} onChange={(e) => setEditData((prev) => ({ ...prev, product: e.target.value }))} placeholder="t.ex. Teleskopläktare" />
                       </div>
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground">Noteringar</label>
-                      <Textarea
-                        className="text-sm"
-                        value={editData.notes}
-                        onChange={(e) => setEditData((prev) => ({ ...prev, notes: e.target.value }))}
-                        placeholder="Övrig information..."
-                        rows={2}
-                      />
+                      <Textarea className="text-sm" value={editData.notes} onChange={(e) => setEditData((prev) => ({ ...prev, notes: e.target.value }))} placeholder="Övrig information..." rows={2} />
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsEditing(false)}>Avbryt</Button>
@@ -262,11 +213,11 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                   </div>
                 )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </TableCell>
-    </motion.tr>
+            </TableCell>
+          </motion.tr>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
