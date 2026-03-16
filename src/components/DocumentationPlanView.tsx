@@ -102,17 +102,16 @@ export function DocumentationPlanView() {
     setIsLoading(false);
   };
 
-  const activeProjects = useMemo(() => {
-    const active = projects.filter(p => p.status !== 'Avslutat');
-    if (!showArchived) return active;
-    const archived = projects.filter(p => p.status === 'Avslutat');
-    return [...active, ...archived];
-  }, [projects, showArchived]);
-
-  const archivedProjectIds = useMemo(() => 
-    new Set(projects.filter(p => p.status === 'Avslutat').map(p => p.id)),
+  const activeProjects = useMemo(() => 
+    projects.filter(p => p.status !== 'Avslutat'),
     [projects]
   );
+
+  const archivedProjects = useMemo(() => 
+    projects.filter(p => p.status === 'Avslutat'),
+    [projects]
+  );
+
 
   const filteredItems = useMemo(() => {
     if (statusFilter === 'all') return items;
@@ -199,6 +198,124 @@ export function DocumentationPlanView() {
     [items]
   );
 
+  const renderProjectList = (projectList: typeof projects, isArchivedSection: boolean) => (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+      {projectList.map(project => {
+        const projectItems = filteredItems.filter(i => i.project_id === project.id);
+        const allProjectItems = items.filter(i => i.project_id === project.id);
+        const isExpanded = expandedProjects.has(project.id);
+        const hasOverdue = allProjectItems.some(i => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad');
+
+        return (
+          <Card key={project.id} className={cn("transition-colors", hasOverdue && "border-destructive/30", isArchivedSection && "opacity-70")}>
+            <CardHeader className="py-3 px-4 cursor-pointer" onClick={() => toggleProject(project.id)}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                  <CardTitle className="text-sm font-semibold">
+                    {project.code && <span className="text-muted-foreground font-normal mr-1.5">{project.code}</span>}
+                    {project.name}
+                    {isArchivedSection && <Badge variant="secondary" className="ml-2 text-[10px] py-0">Arkiverad</Badge>}
+                  </CardTitle>
+                  {hasOverdue && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{allProjectItems.length} dok</span>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); openAddDialog(project.id); }}>
+                    <Plus className="h-3.5 w-3.5 mr-1" />Lägg till
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                  <CardContent className="pt-0 px-4 pb-3">
+                    {projectItems.length === 0 ? (
+                      <p className="text-xs text-muted-foreground py-2 text-center">
+                        {statusFilter !== 'all' ? 'Inga dokument matchar filtret' : 'Inga dokument tillagda ännu'}
+                      </p>
+                    ) : (
+                      <div className="border rounded-md overflow-hidden">
+                        <table className="w-full text-sm table-fixed">
+                          <thead>
+                            <tr className="bg-muted/50 text-muted-foreground text-xs">
+                              <th className="text-left py-2 px-3 font-medium w-[20%]">Dokumenttyp</th>
+                              <th className="text-left py-2 px-3 font-medium w-[10%]">Ansvarig</th>
+                              <th className="text-left py-2 px-3 font-medium w-[10%]">Deadline</th>
+                              <th className="text-left py-2 px-3 font-medium w-[10%]">Status</th>
+                              <th className="text-left py-2 px-3 font-medium w-[12%] hidden md:table-cell">Inlämnat</th>
+                              <th className="text-left py-2 px-3 font-medium w-[12%] hidden md:table-cell">Inlämnat till</th>
+                              <th className="text-left py-2 px-3 font-medium w-[18%] hidden lg:table-cell">Kommentar</th>
+                              <th className="py-2 px-3 w-[8%]"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {projectItems.map(item => {
+                              const isOverdue = item.deadline && isPast(new Date(item.deadline)) && !isToday(new Date(item.deadline)) && item.status !== 'Inlämnad';
+                              return (
+                                <tr key={item.id} className={cn("border-t transition-colors hover:bg-muted/30", isOverdue && "bg-destructive/5")}>
+                                  <td className="py-2 px-3 font-medium flex items-center gap-1.5">
+                                    <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                    {item.document_type}
+                                  </td>
+                                  <td className="py-2 px-3 text-muted-foreground">
+                                    {(() => {
+                                      const matchedProfile = profiles.find(p => getDisplayName(p) === item.responsible);
+                                      if (matchedProfile) {
+                                        return (
+                                          <div className="flex items-center gap-1.5">
+                                            <UserAvatar profile={matchedProfile} size="xs" />
+                                            <span className="truncate text-xs">{item.responsible}</span>
+                                          </div>
+                                        );
+                                      }
+                                      return item.responsible || '—';
+                                    })()}
+                                  </td>
+                                  <td className={cn("py-2 px-3", isOverdue && "text-destructive font-medium")}>
+                                    {item.deadline ? format(new Date(item.deadline), 'd MMM yyyy', { locale: sv }) : '—'}
+                                  </td>
+                                  <td className="py-2 px-3">{getStatusBadge(item.status, item.deadline)}</td>
+                                  <td className="py-2 px-3 hidden md:table-cell text-muted-foreground">
+                                    {item.submitted_date ? format(new Date(item.submitted_date), 'd MMM yyyy', { locale: sv }) : '—'}
+                                  </td>
+                                  <td className="py-2 px-3 hidden md:table-cell text-muted-foreground">{item.submitted_to || '—'}</td>
+                                  <td className="py-2 px-3 hidden lg:table-cell text-muted-foreground truncate max-w-[200px]">
+                                    {item.notes ? (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild><span className="cursor-default">{item.notes}</span></TooltipTrigger>
+                                        <TooltipContent className="max-w-xs"><p>{item.notes}</p></TooltipContent>
+                                      </Tooltip>
+                                    ) : '—'}
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <div className="flex items-center gap-1 justify-end">
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(item)}>
+                                        <Pencil className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </CardContent>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
+        );
+      })}
+    </motion.div>
+  );
+
   if (isLoading) {
     return <div className="p-6 text-muted-foreground">Laddar dokumentationsplan...</div>;
   }
@@ -247,121 +364,18 @@ export function DocumentationPlanView() {
       </div>
 
       {/* Project sections */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-        {activeProjects.map(project => {
-          const projectItems = filteredItems.filter(i => i.project_id === project.id);
-          const allProjectItems = items.filter(i => i.project_id === project.id);
-          const isExpanded = expandedProjects.has(project.id);
-          const hasOverdue = allProjectItems.some(i => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad');
+      {renderProjectList(activeProjects, false)}
 
-          return (
-            <Card key={project.id} className={cn("transition-colors", hasOverdue && "border-destructive/30")}>
-              <CardHeader className="py-3 px-4 cursor-pointer" onClick={() => toggleProject(project.id)}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                    <CardTitle className="text-sm font-semibold">
-                      {project.code && <span className="text-muted-foreground font-normal mr-1.5">{project.code}</span>}
-                      {project.name}
-                      {archivedProjectIds.has(project.id) && <Badge variant="secondary" className="ml-2 text-[10px] py-0">Arkiverad</Badge>}
-                    </CardTitle>
-                    {hasOverdue && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{allProjectItems.length} dok</span>
-                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); openAddDialog(project.id); }}>
-                      <Plus className="h-3.5 w-3.5 mr-1" />Lägg till
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                    <CardContent className="pt-0 px-4 pb-3">
-                      {projectItems.length === 0 ? (
-                        <p className="text-xs text-muted-foreground py-2 text-center">
-                          {statusFilter !== 'all' ? 'Inga dokument matchar filtret' : 'Inga dokument tillagda ännu'}
-                        </p>
-                      ) : (
-                        <div className="border rounded-md overflow-hidden">
-                          <table className="w-full text-sm table-fixed">
-                            <thead>
-                              <tr className="bg-muted/50 text-muted-foreground text-xs">
-                                <th className="text-left py-2 px-3 font-medium w-[20%]">Dokumenttyp</th>
-                                <th className="text-left py-2 px-3 font-medium w-[10%]">Ansvarig</th>
-                                <th className="text-left py-2 px-3 font-medium w-[10%]">Deadline</th>
-                                <th className="text-left py-2 px-3 font-medium w-[10%]">Status</th>
-                                <th className="text-left py-2 px-3 font-medium w-[12%] hidden md:table-cell">Inlämnat</th>
-                                <th className="text-left py-2 px-3 font-medium w-[12%] hidden md:table-cell">Inlämnat till</th>
-                                <th className="text-left py-2 px-3 font-medium w-[18%] hidden lg:table-cell">Kommentar</th>
-                                <th className="py-2 px-3 w-[8%]"></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {projectItems.map(item => {
-                                const isOverdue = item.deadline && isPast(new Date(item.deadline)) && !isToday(new Date(item.deadline)) && item.status !== 'Inlämnad';
-                                return (
-                                  <tr key={item.id} className={cn("border-t transition-colors hover:bg-muted/30", isOverdue && "bg-destructive/5")}>
-                                    <td className="py-2 px-3 font-medium flex items-center gap-1.5">
-                                      <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                                      {item.document_type}
-                                    </td>
-                                    <td className="py-2 px-3 text-muted-foreground">
-                                      {(() => {
-                                        const matchedProfile = profiles.find(p => getDisplayName(p) === item.responsible);
-                                        if (matchedProfile) {
-                                          return (
-                                            <div className="flex items-center gap-1.5">
-                                              <UserAvatar profile={matchedProfile} size="xs" />
-                                              <span className="truncate text-xs">{item.responsible}</span>
-                                            </div>
-                                          );
-                                        }
-                                        return item.responsible || '—';
-                                      })()}
-                                    </td>
-                                    <td className={cn("py-2 px-3", isOverdue && "text-destructive font-medium")}>
-                                      {item.deadline ? format(new Date(item.deadline), 'd MMM yyyy', { locale: sv }) : '—'}
-                                    </td>
-                                    <td className="py-2 px-3">{getStatusBadge(item.status, item.deadline)}</td>
-                                    <td className="py-2 px-3 hidden md:table-cell text-muted-foreground">
-                                      {item.submitted_date ? format(new Date(item.submitted_date), 'd MMM yyyy', { locale: sv }) : '—'}
-                                    </td>
-                                    <td className="py-2 px-3 hidden md:table-cell text-muted-foreground">{item.submitted_to || '—'}</td>
-                                    <td className="py-2 px-3 hidden lg:table-cell text-muted-foreground truncate max-w-[200px]">
-                                      {item.notes ? (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild><span className="cursor-default">{item.notes}</span></TooltipTrigger>
-                                          <TooltipContent className="max-w-xs"><p>{item.notes}</p></TooltipContent>
-                                        </Tooltip>
-                                      ) : '—'}
-                                    </td>
-                                    <td className="py-2 px-3">
-                                      <div className="flex items-center gap-1 justify-end">
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(item)}>
-                                          <Pencil className="h-3.5 w-3.5" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
-                                          <Trash2 className="h-3.5 w-3.5" />
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </CardContent>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </Card>
-          );
-        })}
-      </motion.div>
+      {/* Archived projects section */}
+      {showArchived && archivedProjects.length > 0 && (
+        <div className="space-y-3 mt-6">
+          <h2 className="text-lg font-semibold text-muted-foreground flex items-center gap-2">
+            <Archive className="h-4 w-4" />
+            Arkiverade projekt
+          </h2>
+          {renderProjectList(archivedProjects, true)}
+        </div>
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
