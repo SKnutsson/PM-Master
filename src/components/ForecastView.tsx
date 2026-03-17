@@ -14,6 +14,7 @@ import { StatusLegend } from './StatusLegend';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthShortLabels: {[key: string]: string} = { May: 'Maj' };
 const monthLabels: {[key: string]: string;} = {
   Jan: 'Januari',
   Feb: 'Februari',
@@ -373,11 +374,11 @@ export function ForecastView() {
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Status</th>
                     {displayMonths.map((dm, i) =>
                       <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/40">
-                        {dm.month}
+                        {monthShortLabels[dm.month] || dm.month}
                         {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
                       </th>
                     )}
-                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Notering</th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide border-l border-white/40">Notering</th>
                     <th className="w-8 py-1.5 px-1"></th>
                   </tr>
                 </thead>
@@ -452,7 +453,7 @@ export function ForecastView() {
                               </td>
                             );
                           })}
-                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40">
+                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40 border-l border-l-border/50">
                             {item.notes ? (
                               <UITooltip>
                                 <TooltipTrigger asChild>
