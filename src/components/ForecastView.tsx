@@ -14,7 +14,7 @@ import { StatusLegend } from './StatusLegend';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const monthShortLabels: {[key: string]: string} = { May: 'Maj' };
+const monthShortLabels: {[key: string]: string;} = { May: 'Maj' };
 const monthLabels: {[key: string]: string;} = {
   Jan: 'Januari',
   Feb: 'Februari',
@@ -136,16 +136,16 @@ export function ForecastView() {
 
     // Only include forecasts that have at least one entry in the selected period
     const monthOrder = months.reduce((acc, m, i) => ({ ...acc, [m]: i }), {} as Record<string, number>);
-    const forecastsInPeriod = filteredForecast
-      .filter((f) => Object.values(f.months).some((v) => v > 0))
-      .sort((a, b) => {
-        const getEarliest = (f: typeof a) => {
-          const entries = (f.monthEntries || []).filter(e => e.amount > 0);
-          if (entries.length === 0) return Infinity;
-          return Math.min(...entries.map(e => e.year * 12 + (monthOrder[e.month] ?? 12)));
-        };
-        return getEarliest(a) - getEarliest(b);
-      });
+    const forecastsInPeriod = filteredForecast.
+    filter((f) => Object.values(f.months).some((v) => v > 0)).
+    sort((a, b) => {
+      const getEarliest = (f: typeof a) => {
+        const entries = (f.monthEntries || []).filter((e) => e.amount > 0);
+        if (entries.length === 0) return Infinity;
+        return Math.min(...entries.map((e) => e.year * 12 + (monthOrder[e.month] ?? 12)));
+      };
+      return getEarliest(a) - getEarliest(b);
+    });
     const activeForecast = forecastsInPeriod.filter((f) => f.dealStatus !== 'Förlorad');
     const filteredMonthlyTotals: {[key: string]: number;} = {};
     for (const dm of displayMonths) {
@@ -275,7 +275,7 @@ export function ForecastView() {
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Total prognos</p>
+                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Total budget</p>
                 <p className="text-3xl font-bold text-white mt-1">{filteredYearTotal.toFixed(1)} MSEK</p>
                 <p className="text-xs text-white/40 mt-1">Exkl. förlorade affärer</p>
               </div>
@@ -373,7 +373,7 @@ export function ForecastView() {
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Produkt</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Status</th>
                     {displayMonths.map((dm, i) =>
-                      <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/40">
+                    <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/40">
                         {monthShortLabels[dm.month] || dm.month}
                         {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
                       </th>
@@ -395,8 +395,8 @@ export function ForecastView() {
                             "group transition-all duration-150 hover:bg-primary/[0.04]",
                             rowIdx % 2 === 0 ? "bg-background" : "bg-muted/20",
                             isLost && "opacity-50"
-                          )}
-                        >
+                          )}>
+                          
                           <td className={cn("py-0 px-3 text-xs font-medium border-b border-border/40", isLost && "line-through")}>
                             <div className="flex items-center gap-1.5">
                               <span>{item.project}</span>
@@ -422,10 +422,10 @@ export function ForecastView() {
                                   "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/40 border-l border-l-border/50 transition-colors",
                                   hasValue && "font-semibold",
                                   movedFrom && !hasValue && "bg-yellow-400/10"
-                                )}
-                              >
+                                )}>
+                                
                                 {movedFrom && !hasValue &&
-                                  <UITooltip>
+                                <UITooltip>
                                     <TooltipTrigger asChild>
                                       <span className="text-yellow-500 font-medium cursor-help text-[9px]">
                                         ({movedFrom.originalAmount.toFixed(2)})
@@ -440,44 +440,44 @@ export function ForecastView() {
                                   </UITooltip>
                                 }
                                 {hasValue &&
-                                  <span className={cn(
-                                    "inline-flex items-center justify-center rounded px-1 py-0.5 min-w-[30px]",
-                                    getCellStatusStyle(item.dealStatus)
-                                  )}>
+                                <span className={cn(
+                                  "inline-flex items-center justify-center rounded px-1 py-0.5 min-w-[30px]",
+                                  getCellStatusStyle(item.dealStatus)
+                                )}>
                                     {item.months[dm.month].toFixed(2)}
                                   </span>
                                 }
                                 {!movedFrom && !hasValue &&
-                                  <span className="text-muted-foreground/20">–</span>
+                                <span className="text-muted-foreground/20">–</span>
                                 }
-                              </td>
-                            );
+                              </td>);
+
                           })}
                           <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40 border-l border-l-border/50">
-                            {item.notes ? (
-                              <UITooltip>
+                            {item.notes ?
+                            <UITooltip>
                                 <TooltipTrigger asChild>
                                   <span className="block truncate cursor-default">{item.notes}</span>
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="max-w-[300px] whitespace-normal">
                                   <p>{item.notes}</p>
                                 </TooltipContent>
-                              </UITooltip>
-                            ) : (
-                              <span className="text-muted-foreground/30">–</span>
-                            )}
+                              </UITooltip> :
+
+                            <span className="text-muted-foreground/30">–</span>
+                            }
                           </td>
                           <td className="py-0 px-1 border-b border-border/40">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <EditForecastDialog forecast={item} />
                             </div>
                           </td>
-                        </tr>
-                      );
+                        </tr>);
+
                     })}
                   </TooltipProvider>
                   {filteredForecast.length === 0 &&
-                    <tr>
+                  <tr>
                       <td colSpan={16} className="text-center py-10 text-muted-foreground text-sm">
                         Inga affärer ännu. Klicka på "Ny affär" för att börja.
                       </td>
@@ -485,16 +485,16 @@ export function ForecastView() {
                   }
                   {/* Totals row */}
                   {filteredForecast.length > 0 &&
-                    <tr className="bg-sidebar-accent/80 text-primary-foreground font-bold">
+                  <tr className="bg-sidebar-accent/80 text-primary-foreground font-bold">
                       <td colSpan={3} className="py-1.5 px-3 text-xs">
                         Summa per månad
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
                       {displayMonths.map((dm, i) =>
-                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold border-l border-white/40">
+                    <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold border-l border-white/40">
                           {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
                         </td>
-                      )}
+                    )}
                       <td className="py-1.5 px-3"></td>
                       <td className="py-1.5 px-1"></td>
                     </tr>
