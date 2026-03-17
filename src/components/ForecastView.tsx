@@ -486,17 +486,17 @@ export function ForecastView() {
                   {/* Totals row */}
                   {filteredForecast.length > 0 &&
                     <tr className="bg-sidebar-accent/80 text-primary-foreground font-bold">
-                      <td colSpan={3} className="py-2.5 px-3 text-xs">
+                      <td colSpan={3} className="py-1.5 px-3 text-xs">
                         Summa per månad
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
                       {displayMonths.map((dm, i) =>
-                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-2.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold">
+                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold border-l border-white/20">
                           {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
                         </td>
                       )}
-                      <td className="py-2.5 px-3"></td>
-                      <td className="py-2.5 px-1"></td>
+                      <td className="py-1.5 px-3"></td>
+                      <td className="py-1.5 px-1"></td>
                     </tr>
                   }
                 </tbody>
