@@ -466,7 +466,7 @@ export function ForecastView() {
                               <span className="text-muted-foreground/30">–</span>
                             )}
                           </td>
-                          <td className="py-1 px-1 border-b border-border/20">
+                          <td className="py-0 px-1 border-b border-border/40">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <EditForecastDialog forecast={item} />
                             </div>
