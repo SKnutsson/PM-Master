@@ -34,7 +34,7 @@ const topItems = [
 ];
 
 const mainItems = [
-  { id: 'forecast' as View, label: 'Prognos', icon: BarChart3 },
+  { id: 'forecast' as View, label: 'Försäljning', icon: BarChart3 },
   { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
   { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
   { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },

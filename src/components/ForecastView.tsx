@@ -490,7 +490,7 @@ export function ForecastView() {
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
                       {displayMonths.map((dm, i) =>
-                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold border-l border-white/20">
+                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold border-l border-white/40">
                           {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
                         </td>
                       )}
