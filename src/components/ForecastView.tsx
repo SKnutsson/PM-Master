@@ -155,7 +155,7 @@ export function ForecastView() {
 
     const periodLabel = selectedPeriod === 'rolling12' ?
     'Rullande 12 månader' :
-    `Försäljningsprognos ${selectedPeriod}`;
+    `Försäljningsbudget ${selectedPeriod}`;
 
     return { filteredForecast: forecastsInPeriod, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel };
   }, [forecast, selectedPeriod]);
