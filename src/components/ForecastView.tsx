@@ -8,7 +8,7 @@ import { useProjectDataContext, DealStatus, ScheduleChange } from '@/contexts/Pr
 import { AddForecastDialog } from './dialogs/AddForecastDialog';
 import { EditForecastDialog } from './dialogs/EditForecastDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { cn } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { StatusLegend } from './StatusLegend';
