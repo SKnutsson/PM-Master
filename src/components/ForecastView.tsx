@@ -14,6 +14,7 @@ import { StatusLegend } from './StatusLegend';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const monthShortLabels: {[key: string]: string} = { May: 'Maj' };
 const monthLabels: {[key: string]: string;} = {
   Jan: 'Januari',
   Feb: 'Februari',
