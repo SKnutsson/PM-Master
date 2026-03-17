@@ -440,9 +440,9 @@ export function ForecastView() {
                                   </UITooltip>
                                 }
                                 {hasValue &&
-                                <span className={cn(
-                                  "inline-flex items-center justify-center rounded px-1 py-0.5 min-w-[30px]",
-                                  getCellStatusStyle(item.dealStatus)
+                                <span className={cn("inline-flex items-center justify-center rounded px-1 min-w-[30px] py-[5px]",
+
+                                getCellStatusStyle(item.dealStatus)
                                 )}>
                                     {item.months[dm.month].toFixed(2)}
                                   </span>
