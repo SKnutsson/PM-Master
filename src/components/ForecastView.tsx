@@ -453,7 +453,7 @@ export function ForecastView() {
                               </td>
                             );
                           })}
-                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40">
+                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40 border-l border-l-border/50">
                             {item.notes ? (
                               <UITooltip>
                                 <TooltipTrigger asChild>
