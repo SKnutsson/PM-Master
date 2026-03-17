@@ -358,7 +358,7 @@ export function ForecastView() {
                 <CardTitle>Detaljerad budget</CardTitle>
                 <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsprognos`)} className="print:hidden h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
                 <Printer className="h-4 w-4" />
               </Button>
             </div>
