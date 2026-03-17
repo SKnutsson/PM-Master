@@ -355,7 +355,7 @@ export function ForecastView() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Detaljerad prognos</CardTitle>
+                <CardTitle>Detaljerad budget</CardTitle>
                 <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
               <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsprognos`)} className="print:hidden h-8 w-8">
