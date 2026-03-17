@@ -427,7 +427,7 @@ export function ForecastView() {
                                 {movedFrom && !hasValue &&
                                 <UITooltip>
                                     <TooltipTrigger asChild>
-                                      <span className="text-yellow-500 font-medium cursor-help text-[9px]">
+                                      <span className="text-yellow-500 cursor-help text-xs font-semibold">
                                         ({movedFrom.originalAmount.toFixed(2)})
                                       </span>
                                     </TooltipTrigger>
@@ -440,7 +440,7 @@ export function ForecastView() {
                                   </UITooltip>
                                 }
                                 {hasValue &&
-                                <span className={cn("inline-flex items-center justify-center rounded px-1 min-w-[30px] py-[5px] font-extrabold",
+                                <span className={cn("inline-flex items-center justify-center rounded px-1 min-w-[30px] py-[5px] text-xs font-semibold",
 
                                 getCellStatusStyle(item.dealStatus)
                                 )}>
@@ -453,7 +453,7 @@ export function ForecastView() {
                               </td>);
 
                           })}
-                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40 border-l border-l-border/50">
+                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40 border-l border-l-border/50 bg-inherit">
                             {item.notes ?
                             <UITooltip>
                                 <TooltipTrigger asChild>
