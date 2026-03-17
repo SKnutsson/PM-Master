@@ -440,7 +440,7 @@ export function ForecastView() {
                                   </UITooltip>
                                 }
                                 {hasValue &&
-                                <span className={cn("inline-flex items-center justify-center rounded px-1 min-w-[30px] py-[5px]",
+                                <span className={cn("inline-flex items-center justify-center rounded px-1 min-w-[30px] py-[5px] font-extrabold",
 
                                 getCellStatusStyle(item.dealStatus)
                                 )}>
