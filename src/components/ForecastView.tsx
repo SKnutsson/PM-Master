@@ -8,7 +8,6 @@ import { useProjectDataContext, DealStatus, ScheduleChange } from '@/contexts/Pr
 import { AddForecastDialog } from './dialogs/AddForecastDialog';
 import { EditForecastDialog } from './dialogs/EditForecastDialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { cn } from '@/lib/utils';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { StatusLegend } from './StatusLegend';
@@ -336,47 +335,6 @@ export function ForecastView() {
         </motion.div>
       </div>
 
-      {/* Chart */}
-      <motion.div variants={itemVariants}>
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader>
-            <CardTitle>Månatlig och kumulativ prognos</CardTitle>
-            <CardDescription>Försäljning i MSEK per månad (exkl. förlorade affärer)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={cumulativeData}>
-                  <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorCumulative" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }} />
-
-                  <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorValue)" name="Månad (MSEK)" />
-                  <Area type="monotone" dataKey="cumulative" stroke="hsl(var(--chart-2))" fillOpacity={1} fill="url(#colorCumulative)" name="Kumulativt (MSEK)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
       {/* Legend */}
       <motion.div variants={itemVariants}>
         <StatusLegend
@@ -410,17 +368,17 @@ export function ForecastView() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-sidebar-accent text-primary-foreground">
-                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Projekt</th>
-                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Produkt</th>
-                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Status</th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Projekt</th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Produkt</th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Status</th>
                     {displayMonths.map((dm, i) =>
-                      <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-2.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide">
+                      <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/20">
                         {dm.month}
                         {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
                       </th>
                     )}
-                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Notering</th>
-                    <th className="w-8 py-2.5 px-1"></th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Notering</th>
+                    <th className="w-8 py-1.5 px-1"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -438,15 +396,15 @@ export function ForecastView() {
                             isLost && "opacity-50"
                           )}
                         >
-                          <td className={cn("py-2 px-3 text-xs font-medium border-b border-border/20", isLost && "line-through")}>
+                          <td className={cn("py-1 px-3 text-xs font-medium border-b border-border/20", isLost && "line-through")}>
                             <div className="flex items-center gap-1.5">
                               <span>{item.project}</span>
                             </div>
                           </td>
-                          <td className="py-2 px-3 text-xs text-muted-foreground border-b border-border/20">{item.product}</td>
-                          <td className="py-2 px-3 border-b border-border/20">
+                          <td className="py-1 px-3 text-xs text-muted-foreground border-b border-border/20">{item.product}</td>
+                          <td className="py-1 px-3 border-b border-border/20">
                             <span className={cn(
-                              "inline-flex items-center rounded-full text-[10px] leading-none font-medium px-2.5 py-1 whitespace-nowrap",
+                              "inline-flex items-center rounded-full text-[10px] leading-none font-medium px-2.5 py-0.5 whitespace-nowrap",
                               getStatusColor(item.dealStatus)
                             )}>
                               {item.dealStatus}
@@ -460,7 +418,7 @@ export function ForecastView() {
                               <td
                                 key={`${dm.month}-${dm.year}-${i}`}
                                 className={cn(
-                                  "text-center relative py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/20 transition-colors",
+                                  "text-center relative py-0.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/20 border-l border-l-border/30 transition-colors",
                                   hasValue && "font-semibold",
                                   movedFrom && !hasValue && "bg-yellow-400/10"
                                 )}
@@ -494,7 +452,7 @@ export function ForecastView() {
                               </td>
                             );
                           })}
-                          <td className="text-xs text-muted-foreground py-2 px-3 max-w-[120px] border-b border-border/20">
+                          <td className="text-xs text-muted-foreground py-1 px-3 max-w-[120px] border-b border-border/20">
                             {item.notes ? (
                               <UITooltip>
                                 <TooltipTrigger asChild>
@@ -508,7 +466,7 @@ export function ForecastView() {
                               <span className="text-muted-foreground/30">–</span>
                             )}
                           </td>
-                          <td className="py-2 px-1 border-b border-border/20">
+                          <td className="py-1 px-1 border-b border-border/20">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <EditForecastDialog forecast={item} />
                             </div>
@@ -527,17 +485,17 @@ export function ForecastView() {
                   {/* Totals row */}
                   {filteredForecast.length > 0 &&
                     <tr className="bg-sidebar-accent/80 text-primary-foreground font-bold">
-                      <td colSpan={3} className="py-2.5 px-3 text-xs">
+                      <td colSpan={3} className="py-1.5 px-3 text-xs">
                         Summa per månad
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
                       {displayMonths.map((dm, i) =>
-                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-2.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold">
+                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold border-l border-white/20">
                           {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
                         </td>
                       )}
-                      <td className="py-2.5 px-3"></td>
-                      <td className="py-2.5 px-1"></td>
+                      <td className="py-1.5 px-3"></td>
+                      <td className="py-1.5 px-1"></td>
                     </tr>
                   }
                 </tbody>

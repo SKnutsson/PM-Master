@@ -27,6 +27,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaEnrolled, setMfaEnrolled] = useState(false);
 
+  // Sign out when the browser window/tab is closed
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Use sendBeacon to reliably sign out on close
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/logout`;
+      const token = session?.access_token;
+      if (token) {
+        navigator.sendBeacon(url, '');
+        // Also clear local storage to prevent session restoration
+        localStorage.removeItem('sb-intivrekbnnevtrjhqzp-auth-token');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [session]);
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
