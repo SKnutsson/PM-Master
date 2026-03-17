@@ -453,7 +453,7 @@ export function ForecastView() {
                               </td>
                             );
                           })}
-                          <td className="text-xs text-muted-foreground py-2 px-3 max-w-[120px] border-b border-border/20">
+                          <td className="text-xs text-muted-foreground py-1 px-3 max-w-[120px] border-b border-border/20">
                             {item.notes ? (
                               <UITooltip>
                                 <TooltipTrigger asChild>
@@ -467,7 +467,7 @@ export function ForecastView() {
                               <span className="text-muted-foreground/30">–</span>
                             )}
                           </td>
-                          <td className="py-2 px-1 border-b border-border/20">
+                          <td className="py-1 px-1 border-b border-border/20">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <EditForecastDialog forecast={item} />
                             </div>
