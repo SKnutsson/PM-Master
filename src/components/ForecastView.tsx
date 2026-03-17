@@ -378,7 +378,7 @@ export function ForecastView() {
                         {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
                       </th>
                     )}
-                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Notering</th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide border-l border-white/40">Notering</th>
                     <th className="w-8 py-1.5 px-1"></th>
                   </tr>
                 </thead>
