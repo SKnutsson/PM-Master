@@ -397,12 +397,12 @@ export function ForecastView() {
                             isLost && "opacity-50"
                           )}
                         >
-                          <td className={cn("py-2 px-3 text-xs font-medium border-b border-border/20", isLost && "line-through")}>
+                          <td className={cn("py-1 px-3 text-xs font-medium border-b border-border/20", isLost && "line-through")}>
                             <div className="flex items-center gap-1.5">
                               <span>{item.project}</span>
                             </div>
                           </td>
-                          <td className="py-2 px-3 text-xs text-muted-foreground border-b border-border/20">{item.product}</td>
+                          <td className="py-1 px-3 text-xs text-muted-foreground border-b border-border/20">{item.product}</td>
                           <td className="py-2 px-3 border-b border-border/20">
                             <span className={cn(
                               "inline-flex items-center rounded-full text-[10px] leading-none font-medium px-2.5 py-1 whitespace-nowrap",
