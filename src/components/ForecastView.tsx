@@ -155,7 +155,7 @@ export function ForecastView() {
 
     const periodLabel = selectedPeriod === 'rolling12' ?
     'Rullande 12 månader' :
-    `Försäljningsprognos ${selectedPeriod}`;
+    `Försäljningsbudget ${selectedPeriod}`;
 
     return { filteredForecast: forecastsInPeriod, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel };
   }, [forecast, selectedPeriod]);
@@ -355,10 +355,10 @@ export function ForecastView() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Detaljerad prognos</CardTitle>
+                <CardTitle>Detaljerad budget</CardTitle>
                 <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsprognos`)} className="print:hidden h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
                 <Printer className="h-4 w-4" />
               </Button>
             </div>
@@ -372,7 +372,7 @@ export function ForecastView() {
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Produkt</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Status</th>
                     {displayMonths.map((dm, i) =>
-                      <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/20">
+                      <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/40">
                         {dm.month}
                         {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
                       </th>
@@ -396,13 +396,13 @@ export function ForecastView() {
                             isLost && "opacity-50"
                           )}
                         >
-                          <td className={cn("py-1 px-3 text-xs font-medium border-b border-border/20", isLost && "line-through")}>
+                          <td className={cn("py-0 px-3 text-xs font-medium border-b border-border/40", isLost && "line-through")}>
                             <div className="flex items-center gap-1.5">
                               <span>{item.project}</span>
                             </div>
                           </td>
-                          <td className="py-1 px-3 text-xs text-muted-foreground border-b border-border/20">{item.product}</td>
-                          <td className="py-1 px-3 border-b border-border/20">
+                          <td className="py-0 px-3 text-xs text-muted-foreground border-b border-border/40">{item.product}</td>
+                          <td className="py-0 px-3 border-b border-border/40">
                             <span className={cn(
                               "inline-flex items-center rounded-full text-[10px] leading-none font-medium px-2.5 py-0.5 whitespace-nowrap",
                               getStatusColor(item.dealStatus)
@@ -418,7 +418,7 @@ export function ForecastView() {
                               <td
                                 key={`${dm.month}-${dm.year}-${i}`}
                                 className={cn(
-                                  "text-center relative py-0.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/20 border-l border-l-border/30 transition-colors",
+                                  "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/40 border-l border-l-border/50 transition-colors",
                                   hasValue && "font-semibold",
                                   movedFrom && !hasValue && "bg-yellow-400/10"
                                 )}
@@ -452,7 +452,7 @@ export function ForecastView() {
                               </td>
                             );
                           })}
-                          <td className="text-xs text-muted-foreground py-1 px-3 max-w-[120px] border-b border-border/20">
+                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40">
                             {item.notes ? (
                               <UITooltip>
                                 <TooltipTrigger asChild>
@@ -466,7 +466,7 @@ export function ForecastView() {
                               <span className="text-muted-foreground/30">–</span>
                             )}
                           </td>
-                          <td className="py-1 px-1 border-b border-border/20">
+                          <td className="py-0 px-1 border-b border-border/40">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <EditForecastDialog forecast={item} />
                             </div>
@@ -490,7 +490,7 @@ export function ForecastView() {
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
                       {displayMonths.map((dm, i) =>
-                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold border-l border-white/20">
+                        <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] font-bold border-l border-white/40">
                           {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
                         </td>
                       )}
