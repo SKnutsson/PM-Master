@@ -418,7 +418,7 @@ export function ForecastView() {
                               <td
                                 key={`${dm.month}-${dm.year}-${i}`}
                                 className={cn(
-                                  "text-center relative py-0.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/20 border-l border-l-border/30 transition-colors",
+                                  "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/40 border-l border-l-border/50 transition-colors",
                                   hasValue && "font-semibold",
                                   movedFrom && !hasValue && "bg-yellow-400/10"
                                 )}
