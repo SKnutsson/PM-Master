@@ -194,7 +194,7 @@ export function ForecastView() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{periodLabel}</h1>
           <p className="text-muted-foreground">
-            Översikt av prognostiserad försäljning per månad
+            Översikt av budgeterad försäljning per månad
             
           </p>
         </div>
