@@ -369,17 +369,17 @@ export function ForecastView() {
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-sidebar-accent text-primary-foreground">
-                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Projekt</th>
-                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Produkt</th>
-                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Status</th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Projekt</th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Produkt</th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Status</th>
                     {displayMonths.map((dm, i) =>
-                      <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-2.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide">
+                      <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/20">
                         {dm.month}
                         {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
                       </th>
                     )}
-                    <th className="text-left font-semibold py-2.5 px-3 text-xs tracking-wide">Notering</th>
-                    <th className="w-8 py-2.5 px-1"></th>
+                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Notering</th>
+                    <th className="w-8 py-1.5 px-1"></th>
                   </tr>
                 </thead>
                 <tbody>
