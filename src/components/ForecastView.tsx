@@ -377,7 +377,7 @@ export function ForecastView() {
                 <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                {salesPersons.length > 0 &&
+                {(salesPersons.list.length > 0 || salesPersons.hasMissing) &&
                 <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
                     <SelectTrigger className="w-[180px] h-8 text-xs">
                       <Filter className="h-3 w-3 mr-1" />
@@ -385,9 +385,10 @@ export function ForecastView() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Alla säljare</SelectItem>
-                      {salesPersons.map((sp) =>
+                      {salesPersons.list.map((sp) =>
                     <SelectItem key={sp} value={sp}>{sp}</SelectItem>
-                    )}
+                      )}
+                      {salesPersons.hasMissing && <SelectItem value="_missing">Saknar säljare</SelectItem>}
                     </SelectContent>
                   </Select>
                 }
