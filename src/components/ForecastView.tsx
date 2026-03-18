@@ -373,25 +373,63 @@ export function ForecastView() {
                 <CardTitle>Detaljerad budget</CardTitle>
                 <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
-                <Printer className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                {salesPersons.length > 0 && (
+                  <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
+                    <SelectTrigger className="w-[180px] h-8 text-xs">
+                      <Filter className="h-3 w-3 mr-1" />
+                      <SelectValue placeholder="Filtrera säljare" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alla säljare</SelectItem>
+                      {salesPersons.map((sp) => (
+                        <SelectItem key={sp} value={sp}>{sp}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="px-0 pb-0">
             <div ref={forecastTableRef} className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
+                  {/* Quarter header row */}
+                  {selectedPeriod !== 'rolling12' && (
+                    <tr className="bg-sidebar-accent/60">
+                      <th colSpan={3} className="py-0.5 px-3"></th>
+                      {[1, 2, 3, 4].map((q) => (
+                        <th
+                          key={q}
+                          colSpan={3}
+                          className="text-center text-[10px] font-bold uppercase tracking-widest text-primary-foreground/70 py-0.5 border-l border-white/30"
+                        >
+                          Q{q}
+                        </th>
+                      ))}
+                      <th colSpan={2} className="py-0.5 border-l border-white/30"></th>
+                    </tr>
+                  )}
                   <tr className="bg-sidebar-accent text-primary-foreground">
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Projekt</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Produkt</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Status</th>
-                    {displayMonths.map((dm, i) =>
-                    <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/40 text-xs">
-                        {monthShortLabels[dm.month] || dm.month}
-                        {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
-                      </th>
-                    )}
+                    {displayMonths.map((dm, i) => {
+                      const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
+                      return (
+                        <th key={`${dm.month}-${dm.year}-${i}`} className={cn(
+                          "text-center font-semibold py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l text-xs",
+                          isQuarterStart ? "border-l-white/60" : "border-l-white/30"
+                        )}>
+                          {monthShortLabels[dm.month] || dm.month}
+                          {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
+                        </th>
+                      );
+                    })}
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide border-l border-white/40">Notering</th>
                     <th className="w-8 py-1.5 px-1"></th>
                   </tr>
