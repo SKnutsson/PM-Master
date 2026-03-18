@@ -401,17 +401,17 @@ export function ForecastView() {
                   {/* Quarter header row */}
                   {selectedPeriod !== 'rolling12' &&
                   <tr className="bg-sidebar-accent/60">
-                      <th colSpan={3} className="py-0.5 px-3"></th>
+                      <th colSpan={3} className="py-0.5 px-3 bg-secondary-foreground"></th>
                       {[1, 2, 3, 4].map((q) =>
                     <th
                       key={q}
                       colSpan={3}
-                      className="text-center text-[10px] font-bold uppercase tracking-widest py-0.5 border-l border-white/30 text-primary-foreground">
+                      className="text-center font-bold uppercase tracking-widest py-0.5 border-l border-white/30 text-primary-foreground text-sm bg-secondary-foreground">
                       
                           Q{q}
                         </th>
                     )}
-                      <th colSpan={2} className="py-0.5 border-l border-white/30"></th>
+                      <th colSpan={2} className="py-0.5 border-l border-white/30 bg-secondary-foreground"></th>
                     </tr>
                   }
                   <tr className="bg-sidebar-accent text-primary-foreground">
