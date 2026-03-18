@@ -37,15 +37,6 @@ const monthLabels: { [key: string]: string } = {
   Dec: 'December'
 };
 
-const productTypes = [
-  'Teleskopläktare',
-  'Kalle',
-  'Stadium Comfort',
-  'Abacus/plast stol',
-  'Egen tillverkning/inköp',
-  'Montage fasta stolar',
-  'Övrigt'
-];
 
 const dealStatuses: DealStatus[] = ['Budget', 'Offert', 'Order', 'Fakturerad', 'Förlorad'];
 
