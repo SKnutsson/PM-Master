@@ -62,6 +62,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
       setProduct(forecast.product);
       setDealStatus(forecast.dealStatus);
       setNotes(forecast.notes || '');
+      setSalesPerson(forecast.salesPerson || '');
       
       // Determine initial year from monthEntries
       const years = (forecast.monthEntries || []).map(e => e.year);
