@@ -160,16 +160,20 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
 
             <div className="grid gap-2">
               <Label>Produkttyp</Label>
-              <Select value={product} onValueChange={setProduct}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {productTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={product}
+                onChange={(e) => setProduct(e.target.value)}
+                placeholder="t.ex. Teleskopläktare"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Ansvarig säljare</Label>
+              <Input
+                value={salesPerson}
+                onChange={(e) => setSalesPerson(e.target.value)}
+                placeholder="t.ex. Johan Andersson"
+              />
             </div>
 
             <div className="grid gap-2">
