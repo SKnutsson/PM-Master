@@ -208,7 +208,7 @@ export function AddForecastDialog() {
             </Button>
             <Button 
               type="submit" 
-              disabled={!project.trim() || !product.trim() || !amount}
+              disabled={!project.trim() || !product.trim() || !amount || !salesPerson.trim()}
             >
               Lägg till
             </Button>
