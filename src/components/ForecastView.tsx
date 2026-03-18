@@ -544,11 +544,17 @@ export function ForecastView() {
                         Summa per månad
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
-                      {displayMonths.map((dm, i) =>
-                    <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] border-l border-white/40 text-xs font-semibold">
-                          {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
-                        </td>
-                    )}
+                      {displayMonths.map((dm, i) => {
+                        const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
+                        return (
+                          <td key={`total-${dm.month}-${dm.year}-${i}`} className={cn(
+                            "text-center py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] border-l text-xs font-semibold",
+                            isQuarterStart ? "border-l-white/60" : "border-l-white/30"
+                          )}>
+                            {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
+                          </td>
+                        );
+                      })}
                       <td className="py-1.5 px-3"></td>
                       <td className="py-1.5 px-1"></td>
                     </tr>
