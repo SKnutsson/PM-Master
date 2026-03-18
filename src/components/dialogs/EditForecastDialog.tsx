@@ -114,6 +114,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
         monthEntries: allEntries,
         dealStatus,
         notes: notes.trim() || undefined,
+        salesPerson: salesPerson.trim() || undefined,
       });
       setOpen(false);
     }
