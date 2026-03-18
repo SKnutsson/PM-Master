@@ -229,9 +229,9 @@ export function ForecastView() {
         </div>
       </div>
 
-      {/* Sales Target Input */}
-      {selectedPeriod !== 'rolling12' && (() => {
-        const yr = parseInt(selectedPeriod);
+      {/* Sales Target Input — always visible */}
+      {(() => {
+        const yr = selectedPeriod === 'rolling12' ? new Date().getFullYear() : parseInt(selectedPeriod);
         const currentTarget = salesTargets[yr] || 0;
         return (
           <div className="flex items-center gap-3">
@@ -249,7 +249,6 @@ export function ForecastView() {
                 onChange={(e) => setTargetInput(e.target.value)}
                 placeholder="MSEK"
                 className="w-28 h-8 text-sm" />
-              
                 <span className="text-sm text-muted-foreground">MSEK</span>
                 <Button
                 variant="ghost"
@@ -262,11 +261,9 @@ export function ForecastView() {
                   }
                   setEditingTarget(false);
                 }}>
-                
                   <CheckIcon className="h-4 w-4" />
                 </Button>
               </div> :
-
             <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">{currentTarget > 0 ? `${currentTarget.toFixed(1)} MSEK` : 'Ej satt'}</span>
                 <Button
@@ -277,13 +274,11 @@ export function ForecastView() {
                   setTargetInput(currentTarget > 0 ? String(currentTarget) : '');
                   setEditingTarget(true);
                 }}>
-                
                   <Pencil className="h-3 w-3" />
                 </Button>
               </div>
             }
           </div>);
-
       })()}
 
       {/* Summary Cards — Dashboard-style gradient hero cards */}
