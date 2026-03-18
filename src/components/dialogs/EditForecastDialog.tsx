@@ -37,15 +37,6 @@ const monthLabels: { [key: string]: string } = {
   Dec: 'December'
 };
 
-const productTypes = [
-  'Teleskopläktare',
-  'Kalle',
-  'Stadium Comfort',
-  'Abacus/plast stol',
-  'Egen tillverkning/inköp',
-  'Montage fasta stolar',
-  'Övrigt'
-];
 
 const dealStatuses: DealStatus[] = ['Budget', 'Offert', 'Order', 'Fakturerad', 'Förlorad'];
 
@@ -62,6 +53,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
   const [monthAmounts, setMonthAmounts] = useState<{ [key: string]: string }>({});
   const [dealStatus, setDealStatus] = useState<DealStatus>(forecast.dealStatus);
   const [notes, setNotes] = useState(forecast.notes || '');
+  const [salesPerson, setSalesPerson] = useState(forecast.salesPerson || '');
   const { updateForecast, deleteForecast } = useProjectDataContext();
 
   useEffect(() => {
@@ -70,6 +62,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
       setProduct(forecast.product);
       setDealStatus(forecast.dealStatus);
       setNotes(forecast.notes || '');
+      setSalesPerson(forecast.salesPerson || '');
       
       // Determine initial year from monthEntries
       const years = (forecast.monthEntries || []).map(e => e.year);
@@ -121,6 +114,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
         monthEntries: allEntries,
         dealStatus,
         notes: notes.trim() || undefined,
+        salesPerson: salesPerson.trim() || undefined,
       });
       setOpen(false);
     }
@@ -166,16 +160,20 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
 
             <div className="grid gap-2">
               <Label>Produkttyp</Label>
-              <Select value={product} onValueChange={setProduct}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {productTypes.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={product}
+                onChange={(e) => setProduct(e.target.value)}
+                placeholder="t.ex. Teleskopläktare"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Ansvarig säljare</Label>
+              <Input
+                value={salesPerson}
+                onChange={(e) => setSalesPerson(e.target.value)}
+                placeholder="t.ex. Johan Andersson"
+              />
             </div>
 
             <div className="grid gap-2">
