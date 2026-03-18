@@ -103,13 +103,18 @@ export function ForecastView() {
   const [targetInput, setTargetInput] = useState('');
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
 
-  // Get unique sales persons
+  // Get unique sales persons dynamically from current forecast data
   const salesPersons = useMemo(() => {
     const persons = new Set<string>();
+    let hasMissing = false;
     forecast.forEach((f) => {
-      if (f.salesPerson) persons.add(f.salesPerson);
+      if (f.salesPerson && f.salesPerson.trim()) {
+        persons.add(f.salesPerson);
+      } else {
+        hasMissing = true;
+      }
     });
-    return Array.from(persons).sort();
+    return { list: Array.from(persons).sort(), hasMissing };
   }, [forecast]);
 
   // Filter forecast data based on selected period
