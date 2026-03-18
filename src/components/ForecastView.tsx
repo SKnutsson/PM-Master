@@ -103,13 +103,18 @@ export function ForecastView() {
   const [targetInput, setTargetInput] = useState('');
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
 
-  // Get unique sales persons
+  // Get unique sales persons dynamically from current forecast data
   const salesPersons = useMemo(() => {
     const persons = new Set<string>();
+    let hasMissing = false;
     forecast.forEach((f) => {
-      if (f.salesPerson) persons.add(f.salesPerson);
+      if (f.salesPerson && f.salesPerson.trim()) {
+        persons.add(f.salesPerson);
+      } else {
+        hasMissing = true;
+      }
     });
-    return Array.from(persons).sort();
+    return { list: Array.from(persons).sort(), hasMissing };
   }, [forecast]);
 
   // Filter forecast data based on selected period
@@ -157,11 +162,9 @@ export function ForecastView() {
       return getEarliest(a) - getEarliest(b);
     });
 
-    if (selectedSalesPerson !== 'all') {
-      forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
-    }
-
-    if (selectedSalesPerson !== 'all') {
+    if (selectedSalesPerson === '_missing') {
+      forecastsInPeriod = forecastsInPeriod.filter((f) => !f.salesPerson || !f.salesPerson.trim());
+    } else if (selectedSalesPerson !== 'all') {
       forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
     }
 
@@ -374,7 +377,7 @@ export function ForecastView() {
                 <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                {salesPersons.length > 0 &&
+                {(salesPersons.list.length > 0 || salesPersons.hasMissing) &&
                 <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
                     <SelectTrigger className="w-[180px] h-8 text-xs">
                       <Filter className="h-3 w-3 mr-1" />
@@ -382,9 +385,10 @@ export function ForecastView() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Alla säljare</SelectItem>
-                      {salesPersons.map((sp) =>
+                      {salesPersons.list.map((sp) =>
                     <SelectItem key={sp} value={sp}>{sp}</SelectItem>
-                    )}
+                      )}
+                      {salesPersons.hasMissing && <SelectItem value="_missing">Saknar säljare</SelectItem>}
                     </SelectContent>
                   </Select>
                 }
