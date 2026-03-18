@@ -101,6 +101,16 @@ export function ForecastView() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodView>('2026');
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetInput, setTargetInput] = useState('');
+  const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
+
+  // Get unique sales persons
+  const salesPersons = useMemo(() => {
+    const persons = new Set<string>();
+    forecast.forEach((f) => {
+      if (f.salesPerson) persons.add(f.salesPerson);
+    });
+    return Array.from(persons).sort();
+  }, [forecast]);
 
   // Filter forecast data based on selected period
   const { filteredForecast, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel } = useMemo(() => {
