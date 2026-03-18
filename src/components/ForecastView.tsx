@@ -466,12 +466,14 @@ export function ForecastView() {
                           {displayMonths.map((dm, i) => {
                             const movedFrom = getMovedFromMonth(item.scheduleHistory, dm.month);
                             const hasValue = item.months[dm.month] && item.months[dm.month] > 0;
+                            const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
 
                             return (
                               <td
                                 key={`${dm.month}-${dm.year}-${i}`}
                                 className={cn(
-                                  "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/40 border-l border-l-border/50 transition-colors",
+                                  "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/40 border-l transition-colors",
+                                  isQuarterStart ? "border-l-border" : "border-l-border/50",
                                   hasValue && "font-semibold",
                                   movedFrom && !hasValue && "bg-yellow-400/10"
                                 )}>
