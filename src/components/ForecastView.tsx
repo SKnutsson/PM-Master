@@ -162,11 +162,9 @@ export function ForecastView() {
       return getEarliest(a) - getEarliest(b);
     });
 
-    if (selectedSalesPerson !== 'all') {
-      forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
-    }
-
-    if (selectedSalesPerson !== 'all') {
+    if (selectedSalesPerson === '_missing') {
+      forecastsInPeriod = forecastsInPeriod.filter((f) => !f.salesPerson || !f.salesPerson.trim());
+    } else if (selectedSalesPerson !== 'all') {
       forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
     }
 
