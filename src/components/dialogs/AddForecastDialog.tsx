@@ -183,12 +183,13 @@ export function AddForecastDialog() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="sales-person">Ansvarig säljare</Label>
+              <Label htmlFor="sales-person">Ansvarig säljare <span className="text-destructive">*</span></Label>
               <Input
                 id="sales-person"
                 value={salesPerson}
                 onChange={(e) => setSalesPerson(e.target.value)}
                 placeholder="t.ex. Johan Andersson"
+                required
               />
             </div>
 
@@ -208,7 +209,7 @@ export function AddForecastDialog() {
             </Button>
             <Button 
               type="submit" 
-              disabled={!project.trim() || !product.trim() || !amount}
+              disabled={!project.trim() || !product.trim() || !amount || !salesPerson.trim()}
             >
               Lägg till
             </Button>

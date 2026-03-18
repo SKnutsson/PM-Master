@@ -1,13 +1,13 @@
 import { useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Package, AlertTriangle, Loader2, Printer, ChartNoAxesColumnIncreasing, Trophy, Target, Pencil, Check as CheckIcon } from 'lucide-react';
+import { Package, AlertTriangle, Loader2, Printer, ChartNoAxesColumnIncreasing, Trophy, Target, Pencil, Check as CheckIcon, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useProjectDataContext, DealStatus, ScheduleChange } from '@/contexts/ProjectDataContext';
 import { AddForecastDialog } from './dialogs/AddForecastDialog';
 import { EditForecastDialog } from './dialogs/EditForecastDialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { StatusLegend } from './StatusLegend';
@@ -101,6 +101,16 @@ export function ForecastView() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodView>('2026');
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetInput, setTargetInput] = useState('');
+  const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
+
+  // Get unique sales persons
+  const salesPersons = useMemo(() => {
+    const persons = new Set<string>();
+    forecast.forEach((f) => {
+      if (f.salesPerson) persons.add(f.salesPerson);
+    });
+    return Array.from(persons).sort();
+  }, [forecast]);
 
   // Filter forecast data based on selected period
   const { filteredForecast, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel } = useMemo(() => {
@@ -136,7 +146,7 @@ export function ForecastView() {
 
     // Only include forecasts that have at least one entry in the selected period
     const monthOrder = months.reduce((acc, m, i) => ({ ...acc, [m]: i }), {} as Record<string, number>);
-    const forecastsInPeriod = filteredForecast.
+    let forecastsInPeriod = filteredForecast.
     filter((f) => Object.values(f.months).some((v) => v > 0)).
     sort((a, b) => {
       const getEarliest = (f: typeof a) => {
@@ -146,6 +156,15 @@ export function ForecastView() {
       };
       return getEarliest(a) - getEarliest(b);
     });
+
+    if (selectedSalesPerson !== 'all') {
+      forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
+    }
+
+    if (selectedSalesPerson !== 'all') {
+      forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
+    }
+
     const activeForecast = forecastsInPeriod.filter((f) => f.dealStatus !== 'Förlorad');
     const filteredMonthlyTotals: {[key: string]: number;} = {};
     for (const dm of displayMonths) {
@@ -159,7 +178,7 @@ export function ForecastView() {
     `Försäljningsbudget ${selectedPeriod}`;
 
     return { filteredForecast: forecastsInPeriod, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel };
-  }, [forecast, selectedPeriod]);
+  }, [forecast, selectedPeriod, selectedSalesPerson]);
 
   const chartData = displayMonths.map((dm) => ({
     month: monthLabels[dm.month] || dm.month,
@@ -210,9 +229,9 @@ export function ForecastView() {
         </div>
       </div>
 
-      {/* Sales Target Input */}
-      {selectedPeriod !== 'rolling12' && (() => {
-        const yr = parseInt(selectedPeriod);
+      {/* Sales Target Input — always visible */}
+      {(() => {
+        const yr = selectedPeriod === 'rolling12' ? new Date().getFullYear() : parseInt(selectedPeriod);
         const currentTarget = salesTargets[yr] || 0;
         return (
           <div className="flex items-center gap-3">
@@ -230,7 +249,6 @@ export function ForecastView() {
                 onChange={(e) => setTargetInput(e.target.value)}
                 placeholder="MSEK"
                 className="w-28 h-8 text-sm" />
-              
                 <span className="text-sm text-muted-foreground">MSEK</span>
                 <Button
                 variant="ghost"
@@ -243,11 +261,9 @@ export function ForecastView() {
                   }
                   setEditingTarget(false);
                 }}>
-                
                   <CheckIcon className="h-4 w-4" />
                 </Button>
               </div> :
-
             <div className="flex items-center gap-2">
                 <span className="text-sm font-bold">{currentTarget > 0 ? `${currentTarget.toFixed(1)} MSEK` : 'Ej satt'}</span>
                 <Button
@@ -258,13 +274,11 @@ export function ForecastView() {
                   setTargetInput(currentTarget > 0 ? String(currentTarget) : '');
                   setEditingTarget(true);
                 }}>
-                
                   <Pencil className="h-3 w-3" />
                 </Button>
               </div>
             }
           </div>);
-
       })()}
 
       {/* Summary Cards — Dashboard-style gradient hero cards */}
@@ -359,25 +373,63 @@ export function ForecastView() {
                 <CardTitle>Detaljerad budget</CardTitle>
                 <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
-                <Printer className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                {salesPersons.length > 0 && (
+                  <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
+                    <SelectTrigger className="w-[180px] h-8 text-xs">
+                      <Filter className="h-3 w-3 mr-1" />
+                      <SelectValue placeholder="Filtrera säljare" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alla säljare</SelectItem>
+                      {salesPersons.map((sp) => (
+                        <SelectItem key={sp} value={sp}>{sp}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="px-0 pb-0">
             <div ref={forecastTableRef} className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
+                  {/* Quarter header row */}
+                  {selectedPeriod !== 'rolling12' && (
+                    <tr className="bg-sidebar-accent/60">
+                      <th colSpan={3} className="py-0.5 px-3"></th>
+                      {[1, 2, 3, 4].map((q) => (
+                        <th
+                          key={q}
+                          colSpan={3}
+                          className="text-center text-[10px] font-bold uppercase tracking-widest text-primary-foreground/70 py-0.5 border-l border-white/30"
+                        >
+                          Q{q}
+                        </th>
+                      ))}
+                      <th colSpan={2} className="py-0.5 border-l border-white/30"></th>
+                    </tr>
+                  )}
                   <tr className="bg-sidebar-accent text-primary-foreground">
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Projekt</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Produkt</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Status</th>
-                    {displayMonths.map((dm, i) =>
-                    <th key={`${dm.month}-${dm.year}-${i}`} className="text-center font-semibold py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l border-white/40 text-xs">
-                        {monthShortLabels[dm.month] || dm.month}
-                        {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
-                      </th>
-                    )}
+                    {displayMonths.map((dm, i) => {
+                      const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
+                      return (
+                        <th key={`${dm.month}-${dm.year}-${i}`} className={cn(
+                          "text-center font-semibold py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] tracking-wide border-l text-xs",
+                          isQuarterStart ? "border-l-white/60" : "border-l-white/30"
+                        )}>
+                          {monthShortLabels[dm.month] || dm.month}
+                          {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
+                        </th>
+                      );
+                    })}
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide border-l border-white/40">Notering</th>
                     <th className="w-8 py-1.5 px-1"></th>
                   </tr>
@@ -414,12 +466,14 @@ export function ForecastView() {
                           {displayMonths.map((dm, i) => {
                             const movedFrom = getMovedFromMonth(item.scheduleHistory, dm.month);
                             const hasValue = item.months[dm.month] && item.months[dm.month] > 0;
+                            const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
 
                             return (
                               <td
                                 key={`${dm.month}-${dm.year}-${i}`}
                                 className={cn(
-                                  "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/40 border-l border-l-border/50 transition-colors",
+                                  "text-center relative py-0 px-0 text-[10px] w-[36px] min-w-[36px] max-w-[36px] border-b border-border/40 border-l transition-colors",
+                                  isQuarterStart ? "border-l-border" : "border-l-border/50",
                                   hasValue && "font-semibold",
                                   movedFrom && !hasValue && "bg-yellow-400/10"
                                 )}>
@@ -490,11 +544,17 @@ export function ForecastView() {
                         Summa per månad
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
-                      {displayMonths.map((dm, i) =>
-                    <td key={`total-${dm.month}-${dm.year}-${i}`} className="text-center py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] border-l border-white/40 text-xs font-semibold">
-                          {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
-                        </td>
-                    )}
+                      {displayMonths.map((dm, i) => {
+                        const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
+                        return (
+                          <td key={`total-${dm.month}-${dm.year}-${i}`} className={cn(
+                            "text-center py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] border-l text-xs font-semibold",
+                            isQuarterStart ? "border-l-white/60" : "border-l-white/30"
+                          )}>
+                            {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
+                          </td>
+                        );
+                      })}
                       <td className="py-1.5 px-3"></td>
                       <td className="py-1.5 px-1"></td>
                     </tr>
