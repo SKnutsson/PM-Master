@@ -53,6 +53,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
   const [monthAmounts, setMonthAmounts] = useState<{ [key: string]: string }>({});
   const [dealStatus, setDealStatus] = useState<DealStatus>(forecast.dealStatus);
   const [notes, setNotes] = useState(forecast.notes || '');
+  const [salesPerson, setSalesPerson] = useState(forecast.salesPerson || '');
   const { updateForecast, deleteForecast } = useProjectDataContext();
 
   useEffect(() => {
