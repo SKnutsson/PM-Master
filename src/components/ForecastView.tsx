@@ -374,20 +374,20 @@ export function ForecastView() {
                 <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                {salesPersons.length > 0 && (
-                  <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
+                {salesPersons.length > 0 &&
+                <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
                     <SelectTrigger className="w-[180px] h-8 text-xs">
                       <Filter className="h-3 w-3 mr-1" />
                       <SelectValue placeholder="Filtrera säljare" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Alla säljare</SelectItem>
-                      {salesPersons.map((sp) => (
-                        <SelectItem key={sp} value={sp}>{sp}</SelectItem>
-                      ))}
+                      {salesPersons.map((sp) =>
+                    <SelectItem key={sp} value={sp}>{sp}</SelectItem>
+                    )}
                     </SelectContent>
                   </Select>
-                )}
+                }
                 <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
                   <Printer className="h-4 w-4" />
                 </Button>
@@ -399,21 +399,21 @@ export function ForecastView() {
               <table className="w-full border-collapse">
                 <thead>
                   {/* Quarter header row */}
-                  {selectedPeriod !== 'rolling12' && (
-                    <tr className="bg-sidebar-accent/60">
+                  {selectedPeriod !== 'rolling12' &&
+                  <tr className="bg-sidebar-accent/60">
                       <th colSpan={3} className="py-0.5 px-3"></th>
-                      {[1, 2, 3, 4].map((q) => (
-                        <th
-                          key={q}
-                          colSpan={3}
-                          className="text-center text-[10px] font-bold uppercase tracking-widest text-primary-foreground/70 py-0.5 border-l border-white/30"
-                        >
+                      {[1, 2, 3, 4].map((q) =>
+                    <th
+                      key={q}
+                      colSpan={3}
+                      className="text-center text-[10px] font-bold uppercase tracking-widest py-0.5 border-l border-white/30 text-primary-foreground">
+                      
                           Q{q}
                         </th>
-                      ))}
+                    )}
                       <th colSpan={2} className="py-0.5 border-l border-white/30"></th>
                     </tr>
-                  )}
+                  }
                   <tr className="bg-sidebar-accent text-primary-foreground">
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Projekt</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Produkt</th>
@@ -427,8 +427,8 @@ export function ForecastView() {
                         )}>
                           {monthShortLabels[dm.month] || dm.month}
                           {selectedPeriod === 'rolling12' && <span className="block text-[9px] opacity-60">{dm.year}</span>}
-                        </th>
-                      );
+                        </th>);
+
                     })}
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide border-l border-white/40">Notering</th>
                     <th className="w-8 py-1.5 px-1"></th>
@@ -545,16 +545,16 @@ export function ForecastView() {
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
                       {displayMonths.map((dm, i) => {
-                        const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
-                        return (
-                          <td key={`total-${dm.month}-${dm.year}-${i}`} className={cn(
-                            "text-center py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] border-l text-xs font-semibold",
-                            isQuarterStart ? "border-l-white/60" : "border-l-white/30"
-                          )}>
+                      const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
+                      return (
+                        <td key={`total-${dm.month}-${dm.year}-${i}`} className={cn(
+                          "text-center py-1.5 px-0 w-[36px] min-w-[36px] max-w-[36px] border-l text-xs font-semibold",
+                          isQuarterStart ? "border-l-white/60" : "border-l-white/30"
+                        )}>
                             {(filteredMonthlyTotals[dm.month] || 0) > 0 ? (filteredMonthlyTotals[dm.month] || 0).toFixed(1) : '–'}
-                          </td>
-                        );
-                      })}
+                          </td>);
+
+                    })}
                       <td className="py-1.5 px-3"></td>
                       <td className="py-1.5 px-1"></td>
                     </tr>
