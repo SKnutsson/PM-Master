@@ -156,6 +156,22 @@ export function ForecastView() {
       };
       return getEarliest(a) - getEarliest(b);
     });
+    // Apply sales person filter
+    let forecastsInPeriod = filteredForecast.
+    filter((f) => Object.values(f.months).some((v) => v > 0)).
+    sort((a, b) => {
+      const getEarliest = (f: typeof a) => {
+        const entries = (f.monthEntries || []).filter((e) => e.amount > 0);
+        if (entries.length === 0) return Infinity;
+        return Math.min(...entries.map((e) => e.year * 12 + (monthOrder[e.month] ?? 12)));
+      };
+      return getEarliest(a) - getEarliest(b);
+    });
+
+    if (selectedSalesPerson !== 'all') {
+      forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
+    }
+
     const activeForecast = forecastsInPeriod.filter((f) => f.dealStatus !== 'Förlorad');
     const filteredMonthlyTotals: {[key: string]: number;} = {};
     for (const dm of displayMonths) {
@@ -169,7 +185,7 @@ export function ForecastView() {
     `Försäljningsbudget ${selectedPeriod}`;
 
     return { filteredForecast: forecastsInPeriod, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel };
-  }, [forecast, selectedPeriod]);
+  }, [forecast, selectedPeriod, selectedSalesPerson]);
 
   const chartData = displayMonths.map((dm) => ({
     month: monthLabels[dm.month] || dm.month,
