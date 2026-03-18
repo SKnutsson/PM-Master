@@ -146,17 +146,6 @@ export function ForecastView() {
 
     // Only include forecasts that have at least one entry in the selected period
     const monthOrder = months.reduce((acc, m, i) => ({ ...acc, [m]: i }), {} as Record<string, number>);
-    const forecastsInPeriod = filteredForecast.
-    filter((f) => Object.values(f.months).some((v) => v > 0)).
-    sort((a, b) => {
-      const getEarliest = (f: typeof a) => {
-        const entries = (f.monthEntries || []).filter((e) => e.amount > 0);
-        if (entries.length === 0) return Infinity;
-        return Math.min(...entries.map((e) => e.year * 12 + (monthOrder[e.month] ?? 12)));
-      };
-      return getEarliest(a) - getEarliest(b);
-    });
-    // Apply sales person filter
     let forecastsInPeriod = filteredForecast.
     filter((f) => Object.values(f.months).some((v) => v > 0)).
     sort((a, b) => {
@@ -167,6 +156,10 @@ export function ForecastView() {
       };
       return getEarliest(a) - getEarliest(b);
     });
+
+    if (selectedSalesPerson !== 'all') {
+      forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
+    }
 
     if (selectedSalesPerson !== 'all') {
       forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
