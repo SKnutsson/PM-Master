@@ -658,15 +658,18 @@ export function useDatabaseData() {
     }
 
     // Update the forecast record
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updates.project !== undefined) updateData.project = updates.project;
+    if (updates.product !== undefined) updateData.product = updates.product;
+    if (updates.dealStatus !== undefined) updateData.deal_status = updates.dealStatus;
+    if (updates.notes !== undefined) updateData.notes = updates.notes || null;
+    if (updates.salesPerson !== undefined) updateData.sales_person = updates.salesPerson || null;
+
     const { error } = await supabase
       .from('forecasts')
-      .update({
-        project: updates.project,
-        product: updates.product,
-        deal_status: updates.dealStatus,
-        notes: updates.notes || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', forecastId);
 
     if (error) console.error('Error updating forecast:', error);
