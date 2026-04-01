@@ -1,6 +1,7 @@
 import { useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Package, AlertTriangle, Loader2, Printer, ChartNoAxesColumnIncreasing, Trophy, Target, Pencil, Check as CheckIcon, Filter } from 'lucide-react';
+import { YearNavigator } from './YearNavigator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { StatusLegend } from './StatusLegend';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthShortLabels: {[key: string]: string;} = { May: 'Maj' };
@@ -221,14 +222,11 @@ export function ForecastView() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Tabs value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as PeriodView)}>
-            <TabsList>
-              {[2026, 2027, 2028, 2029, 2030].map((yr) => (
-                <TabsTrigger key={yr} value={String(yr)}>{yr}</TabsTrigger>
-              ))}
-              <TabsTrigger value="rolling12">Rullande 12 mån</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <YearNavigator
+            value={selectedPeriod}
+            onChange={(v) => setSelectedPeriod((v === 'rolling' ? 'rolling12' : v) as PeriodView)}
+            includeRolling
+          />
           <AddForecastDialog />
         </div>
       </div>

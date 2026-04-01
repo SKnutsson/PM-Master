@@ -17,8 +17,10 @@ import {
   ArrowDownRight,
   Plus,
   RefreshCw,
-  MessageSquare } from
+  MessageSquare,
+  Users } from
 'lucide-react';
+import { YearNavigator } from './YearNavigator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -114,8 +116,11 @@ export function Dashboard() {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEventProject, setNewEventProject] = useState('');
   const [newEventDetails, setNewEventDetails] = useState('');
+  const [resourceSummary, setResourceSummary] = useState<{totalInstallers: number; activeThisWeek: number; weekHours: number; vacantSlots: number}>({
+    totalInstallers: 0, activeThisWeek: 0, weekHours: 0, vacantSlots: 0
+  });
 
-  // Check admin status
+  // Check admin status + load resource summary
   useEffect(() => {
     if (!user) return;
     supabase
@@ -125,6 +130,38 @@ export function Dashboard() {
       .eq('role', 'admin')
       .maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
+
+    // Load resource summary
+    const loadResourceSummary = async () => {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+      const mondayStr = monday.toISOString().split('T')[0];
+      const fridayStr = friday.toISOString().split('T')[0];
+
+      const [installersRes, entriesRes, vacantRes] = await Promise.all([
+        supabase.from('installers').select('id', { count: 'exact', head: true }),
+        supabase.from('daily_resource_entries').select('installer_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
+        supabase.from('project_installers').select('id', { count: 'exact', head: true }).eq('is_vacant', true),
+      ]);
+
+      const totalInstallers = installersRes.count || 0;
+      const entries = entriesRes.data || [];
+      const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
+      const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
+      const vacantSlots = vacantRes.count || 0;
+
+      setResourceSummary({
+        totalInstallers,
+        activeThisWeek: activeIds.size,
+        weekHours: Math.round(weekHours),
+        vacantSlots,
+      });
+    };
+    loadResourceSummary();
   }, [user]);
 
   const allActivities = projects.flatMap((p) => p.activities);
@@ -213,10 +250,10 @@ export function Dashboard() {
       </div>
 
       {/* ── ROW 1: Hero Stat Cards ── */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         {/* Aktiva projekt — dark petrol */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10 flex items-center justify-between">
@@ -233,9 +270,37 @@ export function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Resursöversikt — teal */}
+        <motion.div variants={itemVariants}>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
+                  <p className="text-4xl font-bold text-white mt-1">
+                    <AnimatedNumber value={resourceSummary.activeThisWeek} />
+                    <span className="text-lg text-white/50 ml-1">/ {resourceSummary.totalInstallers}</span>
+                  </p>
+                </div>
+                <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
+                  <Users className="h-7 w-7 text-white/80" />
+                </div>
+              </div>
+              <div className="mt-3 flex gap-4 text-xs text-white/60">
+                <span>{resourceSummary.weekHours}h planerat</span>
+                {resourceSummary.vacantSlots > 0 && (
+                  <span className="text-red-300">{resourceSummary.vacantSlots} vakanta</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Försenade — red (with list if any) */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg min-h-[140px]">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10">
@@ -251,10 +316,10 @@ export function Dashboard() {
                 </div>
               </div>
               {delayedActivities > 0 && (
-                <div className="mt-3 space-y-1">
+                <div className="mt-3 space-y-0.5">
                   {allActivities
                     .filter((a) => a.status === 'Försenad')
-                    .slice(0, 5)
+                    .slice(0, 3)
                     .map((a, i) => {
                       const project = projects.find((p) => p.activities.some((act) => act.id === a.id));
                       return (
@@ -263,15 +328,14 @@ export function Dashboard() {
                         </p>
                       );
                     })}
-                  {delayedActivities > 5 && (
-                    <p className="text-xs text-white/50">+{delayedActivities - 5} till...</p>
+                  {delayedActivities > 3 && (
+                    <p className="text-xs text-white/50">+{delayedActivities - 3} till...</p>
                   )}
                 </div>
               )}
             </div>
           </div>
         </motion.div>
-
       </div>
 
       {/* ── ROW 2: Chart + Target ── */}
@@ -289,18 +353,8 @@ export function Dashboard() {
                     </CardTitle>
                     <CardDescription className="text-xs">Fakturerad, Order, Budget & Offert per månad (MSEK)</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex rounded-lg border border-border overflow-hidden text-xs">
-                      {['2026', '2027', '2028', '2029', '2030', 'rolling'].map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => setChartPeriod(p)}
-                          className={`px-3 py-1.5 transition-colors ${chartPeriod === p ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'}`}
-                        >
-                          {p === 'rolling' ? 'Rullande 12m' : p}
-                        </button>
-                      ))}
-                    </div>
+                   <div className="flex items-center gap-2">
+                    <YearNavigator value={chartPeriod} onChange={setChartPeriod} />
                     <div className="text-right ml-2">
                       <p className="text-3xl font-bold text-primary">
                         <AnimatedNumber value={chartYearTotal} decimals={1} duration={1200} />
