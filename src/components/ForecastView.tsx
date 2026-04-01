@@ -93,7 +93,7 @@ const printSection = (element: HTMLElement | null, title: string) => {
   printWindow.onload = () => {printWindow.print();printWindow.close();};
 };
 
-type PeriodView = '2026' | '2027' | 'rolling12';
+type PeriodView = '2026' | '2027' | '2028' | '2029' | '2030' | 'rolling12';
 
 export function ForecastView() {
   const { forecast, isLoading, salesTargets, setSalesTarget } = useProjectDataContext();
@@ -223,8 +223,9 @@ export function ForecastView() {
         <div className="flex items-center gap-3">
           <Tabs value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as PeriodView)}>
             <TabsList>
-              <TabsTrigger value="2026">2026</TabsTrigger>
-              <TabsTrigger value="2027">2027</TabsTrigger>
+              {[2026, 2027, 2028, 2029, 2030].map((yr) => (
+                <TabsTrigger key={yr} value={String(yr)}>{yr}</TabsTrigger>
+              ))}
               <TabsTrigger value="rolling12">Rullande 12 mån</TabsTrigger>
             </TabsList>
           </Tabs>
