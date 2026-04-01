@@ -116,8 +116,11 @@ export function Dashboard() {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEventProject, setNewEventProject] = useState('');
   const [newEventDetails, setNewEventDetails] = useState('');
+  const [resourceSummary, setResourceSummary] = useState<{totalInstallers: number; activeThisWeek: number; weekHours: number; vacantSlots: number}>({
+    totalInstallers: 0, activeThisWeek: 0, weekHours: 0, vacantSlots: 0
+  });
 
-  // Check admin status
+  // Check admin status + load resource summary
   useEffect(() => {
     if (!user) return;
     supabase
@@ -127,6 +130,38 @@ export function Dashboard() {
       .eq('role', 'admin')
       .maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
+
+    // Load resource summary
+    const loadResourceSummary = async () => {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const friday = new Date(monday);
+      friday.setDate(monday.getDate() + 4);
+      const mondayStr = monday.toISOString().split('T')[0];
+      const fridayStr = friday.toISOString().split('T')[0];
+
+      const [installersRes, entriesRes, vacantRes] = await Promise.all([
+        supabase.from('installers').select('id', { count: 'exact', head: true }),
+        supabase.from('daily_resource_entries').select('installer_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
+        supabase.from('project_installers').select('id', { count: 'exact', head: true }).eq('is_vacant', true),
+      ]);
+
+      const totalInstallers = installersRes.count || 0;
+      const entries = entriesRes.data || [];
+      const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
+      const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
+      const vacantSlots = vacantRes.count || 0;
+
+      setResourceSummary({
+        totalInstallers,
+        activeThisWeek: activeIds.size,
+        weekHours: Math.round(weekHours),
+        vacantSlots,
+      });
+    };
+    loadResourceSummary();
   }, [user]);
 
   const allActivities = projects.flatMap((p) => p.activities);
