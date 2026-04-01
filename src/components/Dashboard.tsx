@@ -250,10 +250,10 @@ export function Dashboard() {
       </div>
 
       {/* ── ROW 1: Hero Stat Cards ── */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         {/* Aktiva projekt — dark petrol */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10 flex items-center justify-between">
@@ -270,9 +270,37 @@ export function Dashboard() {
           </div>
         </motion.div>
 
+        {/* Resursöversikt — teal */}
+        <motion.div variants={itemVariants}>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
+                  <p className="text-4xl font-bold text-white mt-1">
+                    <AnimatedNumber value={resourceSummary.activeThisWeek} />
+                    <span className="text-lg text-white/50 ml-1">/ {resourceSummary.totalInstallers}</span>
+                  </p>
+                </div>
+                <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
+                  <Users className="h-7 w-7 text-white/80" />
+                </div>
+              </div>
+              <div className="mt-3 flex gap-4 text-xs text-white/60">
+                <span>{resourceSummary.weekHours}h planerat</span>
+                {resourceSummary.vacantSlots > 0 && (
+                  <span className="text-red-300">{resourceSummary.vacantSlots} vakanta</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Försenade — red (with list if any) */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg min-h-[140px]">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10">
@@ -288,10 +316,10 @@ export function Dashboard() {
                 </div>
               </div>
               {delayedActivities > 0 && (
-                <div className="mt-3 space-y-1">
+                <div className="mt-3 space-y-0.5">
                   {allActivities
                     .filter((a) => a.status === 'Försenad')
-                    .slice(0, 5)
+                    .slice(0, 3)
                     .map((a, i) => {
                       const project = projects.find((p) => p.activities.some((act) => act.id === a.id));
                       return (
@@ -300,15 +328,14 @@ export function Dashboard() {
                         </p>
                       );
                     })}
-                  {delayedActivities > 5 && (
-                    <p className="text-xs text-white/50">+{delayedActivities - 5} till...</p>
+                  {delayedActivities > 3 && (
+                    <p className="text-xs text-white/50">+{delayedActivities - 3} till...</p>
                   )}
                 </div>
               )}
             </div>
           </div>
         </motion.div>
-
       </div>
 
       {/* ── ROW 2: Chart + Target ── */}
