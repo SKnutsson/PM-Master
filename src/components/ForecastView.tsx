@@ -1,6 +1,7 @@
 import { useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Package, AlertTriangle, Loader2, Printer, ChartNoAxesColumnIncreasing, Trophy, Target, Pencil, Check as CheckIcon, Filter } from 'lucide-react';
+import { YearNavigator } from './YearNavigator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
