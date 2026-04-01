@@ -135,9 +135,9 @@ export function AddForecastDialog() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2026">2026</SelectItem>
-                    <SelectItem value="2027">2027</SelectItem>
-                    <SelectItem value="2028">2028</SelectItem>
+                    {[2026, 2027, 2028, 2029, 2030].map((yr) => (
+                      <SelectItem key={yr} value={String(yr)}>{yr}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

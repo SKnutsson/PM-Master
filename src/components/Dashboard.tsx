@@ -272,29 +272,6 @@ export function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Försenade — red */}
-        <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Försenade aktiviteter </p>
-                <p className="text-5xl font-bold text-white mt-1">
-                  <AnimatedNumber value={delayedActivities} />
-                </p>
-                {delayedActivities > 0 &&
-                <p className="text-xs text-white/50 mt-1 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" /> Kräver uppmärksamhet
-                  </p>
-                }
-              </div>
-              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-                <AlertTriangle className="h-7 w-7 text-white/80" />
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </div>
 
       {/* ── ROW 2: Chart + Target ── */}

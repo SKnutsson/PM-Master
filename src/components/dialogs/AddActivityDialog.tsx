@@ -112,28 +112,13 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="responsible">Ansvarig</Label>
-                <UserSelect
-                  profiles={profiles}
-                  value={responsible || 'none'}
-                  onValueChange={(v) => setResponsible(v === 'none' ? '' : v)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Avdelning</Label>
-                <Select value={department} onValueChange={(v) => setDepartment(v as Department)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dep) => (
-                      <SelectItem key={dep} value={dep}>{dep}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="responsible">Ansvarig</Label>
+              <UserSelect
+                profiles={profiles}
+                value={responsible || 'none'}
+                onValueChange={(v) => setResponsible(v === 'none' ? '' : v)}
+              />
             </div>
 
             <div className="grid gap-2">
