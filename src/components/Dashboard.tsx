@@ -212,8 +212,8 @@ export function Dashboard() {
         </Button>
       </div>
 
-      {/* ── ROW 1: Hero Stat Cards with brand gradients ── */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+      {/* ── ROW 1: Hero Stat Cards ── */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         {/* Aktiva projekt — dark petrol */}
         <motion.div variants={itemVariants}>
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
