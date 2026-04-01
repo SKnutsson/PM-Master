@@ -93,7 +93,7 @@ const printSection = (element: HTMLElement | null, title: string) => {
   printWindow.onload = () => {printWindow.print();printWindow.close();};
 };
 
-type PeriodView = '2026' | '2027' | 'rolling12';
+type PeriodView = '2026' | '2027' | '2028' | '2029' | '2030' | 'rolling12';
 
 export function ForecastView() {
   const { forecast, isLoading, salesTargets, setSalesTarget } = useProjectDataContext();
