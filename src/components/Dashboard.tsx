@@ -135,7 +135,7 @@ export function Dashboard() {
   const projectsByPhase = (['Konstruktion', 'Produktion', 'Montage'] as Phase[]).map((phase) => ({
     phase,
     projects: projects.filter(
-      (p) => p.status !== 'Avslutat' && p.activities.some((a) => a.phase === phase && a.status === 'Pågår')
+      (p) => p.status !== 'Avslutat' && p.activities.some((a) => a.phase === phase && (a.status === 'Pågår' || a.status === 'Försenad'))
     )
   }));
 
