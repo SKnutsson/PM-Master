@@ -222,14 +222,11 @@ export function ForecastView() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Tabs value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as PeriodView)}>
-            <TabsList>
-              {[2026, 2027, 2028, 2029, 2030].map((yr) => (
-                <TabsTrigger key={yr} value={String(yr)}>{yr}</TabsTrigger>
-              ))}
-              <TabsTrigger value="rolling12">Rullande 12 mån</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <YearNavigator
+            value={selectedPeriod}
+            onChange={(v) => setSelectedPeriod((v === 'rolling' ? 'rolling12' : v) as PeriodView)}
+            includeRolling
+          />
           <AddForecastDialog />
         </div>
       </div>

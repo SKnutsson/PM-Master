@@ -291,18 +291,8 @@ export function Dashboard() {
                     </CardTitle>
                     <CardDescription className="text-xs">Fakturerad, Order, Budget & Offert per månad (MSEK)</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex rounded-lg border border-border overflow-hidden text-xs">
-                      {['2026', '2027', '2028', '2029', '2030', 'rolling'].map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => setChartPeriod(p)}
-                          className={`px-3 py-1.5 transition-colors ${chartPeriod === p ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'}`}
-                        >
-                          {p === 'rolling' ? 'Rullande 12m' : p}
-                        </button>
-                      ))}
-                    </div>
+                   <div className="flex items-center gap-2">
+                    <YearNavigator value={chartPeriod} onChange={setChartPeriod} />
                     <div className="text-right ml-2">
                       <p className="text-3xl font-bold text-primary">
                         <AnimatedNumber value={chartYearTotal} decimals={1} duration={1200} />
