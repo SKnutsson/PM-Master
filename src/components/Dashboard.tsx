@@ -109,7 +109,7 @@ export function Dashboard() {
   const { user } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
   const forecastRef = useRef<HTMLDivElement>(null);
-  const [chartPeriod, setChartPeriod] = useState<'2026' | '2027' | 'rolling'>('2026');
+  const [chartPeriod, setChartPeriod] = useState<string>('2026');
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEventProject, setNewEventProject] = useState('');
