@@ -291,7 +291,7 @@ export function Dashboard() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex rounded-lg border border-border overflow-hidden text-xs">
-                      {(['2026', '2027', 'rolling'] as const).map((p) => (
+                      {['2026', '2027', '2028', '2029', '2030', 'rolling'].map((p) => (
                         <button
                           key={p}
                           onClick={() => setChartPeriod(p)}
