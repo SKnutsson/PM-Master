@@ -116,8 +116,8 @@ export function Dashboard() {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEventProject, setNewEventProject] = useState('');
   const [newEventDetails, setNewEventDetails] = useState('');
-  const [resourceSummary, setResourceSummary] = useState<{totalInstallers: number; activeThisWeek: number; weekHours: number; vacantSlots: number}>({
-    totalInstallers: 0, activeThisWeek: 0, weekHours: 0, vacantSlots: 0
+  const [resourceSummary, setResourceSummary] = useState<{totalInstallers: number; activeThisWeek: number; weekHours: number; activeInstallerNames: string[]}>({
+    totalInstallers: 0, activeThisWeek: 0, weekHours: 0, activeInstallerNames: []
   });
 
   // Check admin status + load resource summary
