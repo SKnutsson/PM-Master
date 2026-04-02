@@ -291,12 +291,19 @@ export function Dashboard() {
                   <Users className="h-7 w-7 text-white/80" />
                 </div>
               </div>
-              <div className="mt-3 flex gap-4 text-xs text-white/60">
-                <span>{resourceSummary.weekHours}h planerat</span>
-                {resourceSummary.vacantSlots > 0 && (
-                  <span className="text-red-300">{resourceSummary.vacantSlots} vakanta</span>
-                )}
-              </div>
+              {resourceSummary.activeInstallerNames.length > 0 ? (
+                <div className="mt-3 space-y-0.5">
+                  <p className="text-xs text-white/50 uppercase tracking-wider mb-1">Ute på montage:</p>
+                  {resourceSummary.activeInstallerNames.slice(0, 4).map((name, i) => (
+                    <p key={i} className="text-xs text-white/70 truncate">• {name}</p>
+                  ))}
+                  {resourceSummary.activeInstallerNames.length > 4 && (
+                    <p className="text-xs text-white/50">+{resourceSummary.activeInstallerNames.length - 4} till...</p>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-white/50">Inga montörer planerade denna vecka</p>
+              )}
             </div>
           </div>
         </motion.div>
