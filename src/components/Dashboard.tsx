@@ -116,7 +116,7 @@ export function Dashboard() {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEventProject, setNewEventProject] = useState('');
   const [newEventDetails, setNewEventDetails] = useState('');
-  const [resourceSummary, setResourceSummary] = useState<{activeThisWeek: number; weekHours: number; activeInstallers: {name: string; company: string}[]}>({
+  const [resourceSummary, setResourceSummary] = useState<{activeThisWeek: number; weekHours: number; activeInstallers: {name: string; company: string; projects: string[]}[]}>({
     activeThisWeek: 0, weekHours: 0, activeInstallers: []
   });
   const [showResourceList, setShowResourceList] = useState(false);
