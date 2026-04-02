@@ -143,18 +143,31 @@ export function Dashboard() {
       const mondayStr = monday.toISOString().split('T')[0];
       const fridayStr = friday.toISOString().split('T')[0];
 
-      const [installersRes, entriesRes] = await Promise.all([
+      const [installersRes, entriesRes, projectsRes] = await Promise.all([
         supabase.from('installers').select('id, name, company'),
-        supabase.from('daily_resource_entries').select('installer_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
+        supabase.from('daily_resource_entries').select('installer_id, project_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
+        supabase.from('projects').select('id, name, code'),
       ]);
 
       const allInstallers = installersRes.data || [];
       const entries = entriesRes.data || [];
+      const allProjects = projectsRes.data || [];
+      const projectMap = new Map(allProjects.map(p => [p.id, p.code || p.name]));
       const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
       const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
+      
+      // Build installer -> projects mapping
+      const installerProjects = new Map<string, Set<string>>();
+      entries.forEach(e => {
+        if (!e.installer_id) return;
+        if (!installerProjects.has(e.installer_id)) installerProjects.set(e.installer_id, new Set());
+        const pName = projectMap.get(e.project_id);
+        if (pName) installerProjects.get(e.installer_id)!.add(pName);
+      });
+
       const activeInstallers = allInstallers
         .filter(i => activeIds.has(i.id))
-        .map(i => ({ name: i.name, company: i.company }))
+        .map(i => ({ name: i.name, company: i.company, projects: Array.from(installerProjects.get(i.id) || []) }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
       setResourceSummary({
