@@ -119,6 +119,7 @@ export function Dashboard() {
   const [resourceSummary, setResourceSummary] = useState<{activeThisWeek: number; weekHours: number; activeInstallers: {name: string; company: string}[]}>({
     activeThisWeek: 0, weekHours: 0, activeInstallers: []
   });
+  const [showResourceList, setShowResourceList] = useState(false);
 
   // Check admin status + load resource summary
   useEffect(() => {
@@ -276,37 +277,45 @@ export function Dashboard() {
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
-                  <p className="text-2xl font-bold text-white mt-1">
-                    <AnimatedNumber value={resourceSummary.activeThisWeek} /> bokade
-                  </p>
-                </div>
-                <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-                  <Users className="h-7 w-7 text-white/80" />
-                </div>
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
+                <p className="text-5xl font-bold text-white mt-1">
+                  <AnimatedNumber value={resourceSummary.activeThisWeek} />
+                  <span className="text-lg font-normal text-white/50 ml-1.5">bokade</span>
+                </p>
               </div>
-              {resourceSummary.activeInstallers.length > 0 ? (
-                <div className="space-y-1">
-                  <p className="text-xs text-white/50 uppercase tracking-wider mb-1.5">Ute på montage:</p>
-                  {resourceSummary.activeInstallers.slice(0, 6).map((inst, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs">
-                      <span className="text-white/80 truncate">• {inst.name}</span>
-                      <span className="text-white/50 ml-2 shrink-0">{inst.company}</span>
-                    </div>
-                  ))}
-                  {resourceSummary.activeInstallers.length > 6 && (
-                    <p className="text-xs text-white/50">+{resourceSummary.activeInstallers.length - 6} till...</p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-white/50">Inga montörer planerade denna vecka</p>
-              )}
+              <button
+                onClick={() => setShowResourceList(true)}
+                className="rounded-xl p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors cursor-pointer"
+                title="Visa resurser"
+              >
+                <Users className="h-7 w-7 text-white/80" />
+              </button>
             </div>
           </div>
         </motion.div>
+        
+        {/* Resource list dialog */}
+        <Dialog open={showResourceList} onOpenChange={setShowResourceList}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Ute på montage denna vecka</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
+              {resourceSummary.activeInstallers.length > 0 ? (
+                resourceSummary.activeInstallers.map((inst, i) => (
+                  <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/50 text-sm">
+                    <span className="font-medium">{inst.name}</span>
+                    <span className="text-muted-foreground text-xs">{inst.company}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">Inga montörer planerade denna vecka</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Försenade — red (with list if any) */}
         <motion.div variants={itemVariants}>
