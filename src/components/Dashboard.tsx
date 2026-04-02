@@ -143,25 +143,23 @@ export function Dashboard() {
       const fridayStr = friday.toISOString().split('T')[0];
 
       const [installersRes, entriesRes] = await Promise.all([
-        supabase.from('installers').select('id, name'),
+        supabase.from('installers').select('id, name, company'),
         supabase.from('daily_resource_entries').select('installer_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
       ]);
 
       const allInstallers = installersRes.data || [];
-      const totalInstallers = allInstallers.length;
       const entries = entriesRes.data || [];
       const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
       const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
-      const activeInstallerNames = allInstallers
+      const activeInstallers = allInstallers
         .filter(i => activeIds.has(i.id))
-        .map(i => i.name)
-        .sort();
+        .map(i => ({ name: i.name, company: i.company }))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
       setResourceSummary({
-        totalInstallers,
         activeThisWeek: activeIds.size,
         weekHours: Math.round(weekHours),
-        activeInstallerNames,
+        activeInstallers,
       });
     };
     loadResourceSummary();
