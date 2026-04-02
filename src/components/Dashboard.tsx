@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FolderKanban,
+  ChevronDown,
   Clock,
   AlertTriangle,
   Printer,
