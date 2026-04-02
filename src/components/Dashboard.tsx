@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FolderKanban,
+  ChevronDown,
   Clock,
   AlertTriangle,
   Printer,
@@ -116,7 +117,7 @@ export function Dashboard() {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEventProject, setNewEventProject] = useState('');
   const [newEventDetails, setNewEventDetails] = useState('');
-  const [resourceSummary, setResourceSummary] = useState<{activeThisWeek: number; weekHours: number; activeInstallers: {name: string; company: string}[]}>({
+  const [resourceSummary, setResourceSummary] = useState<{activeThisWeek: number; weekHours: number; activeInstallers: {name: string; company: string; projects: string[]}[]}>({
     activeThisWeek: 0, weekHours: 0, activeInstallers: []
   });
   const [showResourceList, setShowResourceList] = useState(false);
@@ -143,18 +144,31 @@ export function Dashboard() {
       const mondayStr = monday.toISOString().split('T')[0];
       const fridayStr = friday.toISOString().split('T')[0];
 
-      const [installersRes, entriesRes] = await Promise.all([
+      const [installersRes, entriesRes, projectsRes] = await Promise.all([
         supabase.from('installers').select('id, name, company'),
-        supabase.from('daily_resource_entries').select('installer_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
+        supabase.from('daily_resource_entries').select('installer_id, project_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
+        supabase.from('projects').select('id, name, code'),
       ]);
 
       const allInstallers = installersRes.data || [];
       const entries = entriesRes.data || [];
+      const allProjects = projectsRes.data || [];
+      const projectMap = new Map(allProjects.map(p => [p.id, p.code || p.name]));
       const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
       const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
+      
+      // Build installer -> projects mapping
+      const installerProjects = new Map<string, Set<string>>();
+      entries.forEach(e => {
+        if (!e.installer_id) return;
+        if (!installerProjects.has(e.installer_id)) installerProjects.set(e.installer_id, new Set());
+        const pName = projectMap.get(e.project_id);
+        if (pName) installerProjects.get(e.installer_id)!.add(pName);
+      });
+
       const activeInstallers = allInstallers
         .filter(i => activeIds.has(i.id))
-        .map(i => ({ name: i.name, company: i.company }))
+        .map(i => ({ name: i.name, company: i.company, projects: Array.from(installerProjects.get(i.id) || []) }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
       setResourceSummary({
@@ -272,50 +286,59 @@ export function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Resursöversikt — teal */}
+        {/* Resursöversikt — teal, expandable */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
-                <p className="text-5xl font-bold text-white mt-1">
-                  <AnimatedNumber value={resourceSummary.activeThisWeek} />
-                  <span className="text-lg font-normal text-white/50 ml-1.5">bokade</span>
-                </p>
+            <div className="relative z-10 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
+                  <p className="text-5xl font-bold text-white mt-1">
+                    <AnimatedNumber value={resourceSummary.activeThisWeek} />
+                    <span className="text-lg font-normal text-white/50 ml-1.5">bokade</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowResourceList(!showResourceList)}
+                  className="rounded-xl p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors cursor-pointer"
+                  title={showResourceList ? 'Dölj lista' : 'Visa resurser'}
+                >
+                  <ChevronDown className={`h-7 w-7 text-white/80 transition-transform duration-200 ${showResourceList ? 'rotate-180' : ''}`} />
+                </button>
               </div>
-              <button
-                onClick={() => setShowResourceList(true)}
-                className="rounded-xl p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors cursor-pointer"
-                title="Visa resurser"
-              >
-                <Users className="h-7 w-7 text-white/80" />
-              </button>
             </div>
+            <AnimatePresence>
+              {showResourceList && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden relative z-10"
+                >
+                  <div className="px-6 pb-4 space-y-1">
+                    {resourceSummary.activeInstallers.length > 0 ? (
+                      resourceSummary.activeInstallers.map((inst, i) => (
+                        <div key={i} className="flex items-center justify-between py-1 px-2 rounded-md hover:bg-white/10 text-xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="font-semibold text-white truncate">{inst.name}</span>
+                            <span className="text-white/40">·</span>
+                            <span className="text-white/50 truncate">{inst.company}</span>
+                          </div>
+                          <span className="text-white/60 text-[11px] ml-2 shrink-0 text-right truncate max-w-[140px]">{inst.projects.join(', ') || '–'}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-white/50 py-2 text-center">Inga montörer planerade denna vecka</p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
-        
-        {/* Resource list dialog */}
-        <Dialog open={showResourceList} onOpenChange={setShowResourceList}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Ute på montage denna vecka</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
-              {resourceSummary.activeInstallers.length > 0 ? (
-                resourceSummary.activeInstallers.map((inst, i) => (
-                  <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/50 text-sm">
-                    <span className="font-medium">{inst.name}</span>
-                    <span className="text-muted-foreground text-xs">{inst.company}</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">Inga montörer planerade denna vecka</p>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
 
         {/* Försenade — red (with list if any) */}
         <motion.div variants={itemVariants}>
