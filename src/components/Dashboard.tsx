@@ -119,6 +119,7 @@ export function Dashboard() {
   const [resourceSummary, setResourceSummary] = useState<{activeThisWeek: number; weekHours: number; activeInstallers: {name: string; company: string}[]}>({
     activeThisWeek: 0, weekHours: 0, activeInstallers: []
   });
+  const [showResourceList, setShowResourceList] = useState(false);
 
   // Check admin status + load resource summary
   useEffect(() => {
