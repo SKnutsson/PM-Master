@@ -142,23 +142,26 @@ export function Dashboard() {
       const mondayStr = monday.toISOString().split('T')[0];
       const fridayStr = friday.toISOString().split('T')[0];
 
-      const [installersRes, entriesRes, vacantRes] = await Promise.all([
-        supabase.from('installers').select('id', { count: 'exact', head: true }),
+      const [installersRes, entriesRes] = await Promise.all([
+        supabase.from('installers').select('id, name'),
         supabase.from('daily_resource_entries').select('installer_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
-        supabase.from('project_installers').select('id', { count: 'exact', head: true }).eq('is_vacant', true),
       ]);
 
-      const totalInstallers = installersRes.count || 0;
+      const allInstallers = installersRes.data || [];
+      const totalInstallers = allInstallers.length;
       const entries = entriesRes.data || [];
       const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
       const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
-      const vacantSlots = vacantRes.count || 0;
+      const activeInstallerNames = allInstallers
+        .filter(i => activeIds.has(i.id))
+        .map(i => i.name)
+        .sort();
 
       setResourceSummary({
         totalInstallers,
         activeThisWeek: activeIds.size,
         weekHours: Math.round(weekHours),
-        vacantSlots,
+        activeInstallerNames,
       });
     };
     loadResourceSummary();
