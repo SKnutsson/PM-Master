@@ -116,8 +116,8 @@ export function Dashboard() {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [newEventProject, setNewEventProject] = useState('');
   const [newEventDetails, setNewEventDetails] = useState('');
-  const [resourceSummary, setResourceSummary] = useState<{totalInstallers: number; activeThisWeek: number; weekHours: number; vacantSlots: number}>({
-    totalInstallers: 0, activeThisWeek: 0, weekHours: 0, vacantSlots: 0
+  const [resourceSummary, setResourceSummary] = useState<{totalInstallers: number; activeThisWeek: number; weekHours: number; activeInstallerNames: string[]}>({
+    totalInstallers: 0, activeThisWeek: 0, weekHours: 0, activeInstallerNames: []
   });
 
   // Check admin status + load resource summary
@@ -142,23 +142,26 @@ export function Dashboard() {
       const mondayStr = monday.toISOString().split('T')[0];
       const fridayStr = friday.toISOString().split('T')[0];
 
-      const [installersRes, entriesRes, vacantRes] = await Promise.all([
-        supabase.from('installers').select('id', { count: 'exact', head: true }),
+      const [installersRes, entriesRes] = await Promise.all([
+        supabase.from('installers').select('id, name'),
         supabase.from('daily_resource_entries').select('installer_id, planned_work_hours').gte('date', mondayStr).lte('date', fridayStr),
-        supabase.from('project_installers').select('id', { count: 'exact', head: true }).eq('is_vacant', true),
       ]);
 
-      const totalInstallers = installersRes.count || 0;
+      const allInstallers = installersRes.data || [];
+      const totalInstallers = allInstallers.length;
       const entries = entriesRes.data || [];
       const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
       const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
-      const vacantSlots = vacantRes.count || 0;
+      const activeInstallerNames = allInstallers
+        .filter(i => activeIds.has(i.id))
+        .map(i => i.name)
+        .sort();
 
       setResourceSummary({
         totalInstallers,
         activeThisWeek: activeIds.size,
         weekHours: Math.round(weekHours),
-        vacantSlots,
+        activeInstallerNames,
       });
     };
     loadResourceSummary();
@@ -288,12 +291,19 @@ export function Dashboard() {
                   <Users className="h-7 w-7 text-white/80" />
                 </div>
               </div>
-              <div className="mt-3 flex gap-4 text-xs text-white/60">
-                <span>{resourceSummary.weekHours}h planerat</span>
-                {resourceSummary.vacantSlots > 0 && (
-                  <span className="text-red-300">{resourceSummary.vacantSlots} vakanta</span>
-                )}
-              </div>
+              {resourceSummary.activeInstallerNames.length > 0 ? (
+                <div className="mt-3 space-y-0.5">
+                  <p className="text-xs text-white/50 uppercase tracking-wider mb-1">Ute på montage:</p>
+                  {resourceSummary.activeInstallerNames.slice(0, 4).map((name, i) => (
+                    <p key={i} className="text-xs text-white/70 truncate">• {name}</p>
+                  ))}
+                  {resourceSummary.activeInstallerNames.length > 4 && (
+                    <p className="text-xs text-white/50">+{resourceSummary.activeInstallerNames.length - 4} till...</p>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-white/50">Inga montörer planerade denna vecka</p>
+              )}
             </div>
           </div>
         </motion.div>
