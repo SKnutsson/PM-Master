@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarRange } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const years = [2026, 2027, 2028, 2029, 2030];
@@ -10,17 +10,12 @@ interface YearNavigatorProps {
 }
 
 export function YearNavigator({ value, onChange, includeRolling = true }: YearNavigatorProps) {
-  const options = [...years.map(String), ...(includeRolling ? ['rolling'] : [])];
-  const currentIdx = options.indexOf(value);
-
-  const canPrev = currentIdx > 0;
-  const canNext = currentIdx < options.length - 1;
-
-  const displayLabel = value === 'rolling' || value === 'rolling12' ? 'Rullande 12m' : value;
-
-  // Normalize rolling variants
-  const normalizedValue = value === 'rolling12' ? 'rolling' : value;
-  const normalizedIdx = options.indexOf(normalizedValue);
+  const isRolling = value === 'rolling' || value === 'rolling12';
+  
+  // For year navigation, only use year options
+  const yearOptions = years.map(String);
+  const currentYearValue = isRolling ? yearOptions[0] : value;
+  const currentIdx = yearOptions.indexOf(currentYearValue);
 
   return (
     <div className="flex items-center gap-1">
@@ -28,29 +23,49 @@ export function YearNavigator({ value, onChange, includeRolling = true }: YearNa
         variant="ghost"
         size="icon"
         className="h-8 w-8"
-        disabled={normalizedIdx <= 0}
+        disabled={isRolling || currentIdx <= 0}
         onClick={() => {
-          const prev = options[normalizedIdx - 1];
-          onChange(prev === 'rolling' && value.includes('12') ? 'rolling12' : prev);
+          const prev = yearOptions[currentIdx - 1];
+          onChange(prev);
         }}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
-      <span className="min-w-[100px] text-center text-sm font-semibold select-none">
-        {value === 'rolling12' ? 'Rullande 12m' : displayLabel}
+      <span
+        className={`min-w-[60px] text-center text-sm font-semibold select-none ${isRolling ? 'text-muted-foreground' : ''}`}
+      >
+        {isRolling ? '–' : currentYearValue}
       </span>
       <Button
         variant="ghost"
         size="icon"
         className="h-8 w-8"
-        disabled={normalizedIdx >= options.length - 1 || normalizedIdx === -1}
+        disabled={isRolling || currentIdx >= yearOptions.length - 1 || currentIdx === -1}
         onClick={() => {
-          const next = options[normalizedIdx + 1];
-          onChange(next === 'rolling' && value.includes('12') ? 'rolling12' : next);
+          const next = yearOptions[currentIdx + 1];
+          onChange(next);
         }}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
+      {includeRolling && (
+        <Button
+          variant={isRolling ? 'default' : 'outline'}
+          size="sm"
+          className="ml-1 h-8 text-xs gap-1"
+          onClick={() => {
+            if (isRolling) {
+              // Go back to first year
+              onChange(yearOptions[0]);
+            } else {
+              onChange('rolling');
+            }
+          }}
+        >
+          <CalendarRange className="h-3.5 w-3.5" />
+          Rullande 12m
+        </Button>
+      )}
     </div>
   );
 }
