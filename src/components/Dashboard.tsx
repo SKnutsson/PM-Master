@@ -277,30 +277,32 @@ export function Dashboard() {
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
-                  <p className="text-4xl font-bold text-white mt-1">
-                    <AnimatedNumber value={resourceSummary.activeThisWeek} />
-                    <span className="text-lg text-white/50 ml-1">/ {resourceSummary.totalInstallers}</span>
+                  <p className="text-2xl font-bold text-white mt-1">
+                    <AnimatedNumber value={resourceSummary.activeThisWeek} /> bokade
                   </p>
                 </div>
                 <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
                   <Users className="h-7 w-7 text-white/80" />
                 </div>
               </div>
-              {resourceSummary.activeInstallerNames.length > 0 ? (
-                <div className="mt-3 space-y-0.5">
-                  <p className="text-xs text-white/50 uppercase tracking-wider mb-1">Ute på montage:</p>
-                  {resourceSummary.activeInstallerNames.slice(0, 4).map((name, i) => (
-                    <p key={i} className="text-xs text-white/70 truncate">• {name}</p>
+              {resourceSummary.activeInstallers.length > 0 ? (
+                <div className="space-y-1">
+                  <p className="text-xs text-white/50 uppercase tracking-wider mb-1.5">Ute på montage:</p>
+                  {resourceSummary.activeInstallers.slice(0, 6).map((inst, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="text-white/80 truncate">• {inst.name}</span>
+                      <span className="text-white/50 ml-2 shrink-0">{inst.company}</span>
+                    </div>
                   ))}
-                  {resourceSummary.activeInstallerNames.length > 4 && (
-                    <p className="text-xs text-white/50">+{resourceSummary.activeInstallerNames.length - 4} till...</p>
+                  {resourceSummary.activeInstallers.length > 6 && (
+                    <p className="text-xs text-white/50">+{resourceSummary.activeInstallers.length - 6} till...</p>
                   )}
                 </div>
               ) : (
-                <p className="mt-3 text-xs text-white/50">Inga montörer planerade denna vecka</p>
+                <p className="text-xs text-white/50">Inga montörer planerade denna vecka</p>
               )}
             </div>
           </div>
