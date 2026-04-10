@@ -26,6 +26,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
@@ -288,7 +289,10 @@ export function Dashboard() {
 
         {/* Resursöversikt — teal, expandable */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg">
+          <div
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
+            onClick={() => setShowResourceList(!showResourceList)}
+          >
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
             <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
             <div className="relative z-10 p-6">
@@ -300,13 +304,9 @@ export function Dashboard() {
                     <span className="text-lg font-normal text-white/50 ml-1.5">bokade</span>
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowResourceList(!showResourceList)}
-                  className="rounded-xl p-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors cursor-pointer"
-                  title={showResourceList ? 'Dölj lista' : 'Visa resurser'}
-                >
+                <div className={`rounded-xl p-3 bg-white/10 backdrop-blur-sm transition-all duration-200 ${showResourceList ? 'bg-white/20' : ''}`}>
                   <ChevronDown className={`h-7 w-7 text-white/80 transition-transform duration-200 ${showResourceList ? 'rotate-180' : ''}`} />
-                </button>
+                </div>
               </div>
             </div>
             <AnimatePresence>
@@ -348,7 +348,7 @@ export function Dashboard() {
             <div className="relative z-10">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Försenade aktiviteter</p>
+                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Försenade projekt</p>
                   <p className="text-5xl font-bold text-white mt-1">
                     <AnimatedNumber value={delayedActivities} />
                   </p>
@@ -553,18 +553,25 @@ export function Dashboard() {
                   <p className="text-sm text-muted-foreground py-3 text-center italic">Inga pågående projekt</p> :
 
                   <div className="space-y-1">
-                      {phaseProjects.map((p, i) =>
-                    <motion.div
-                      key={p.id}
-                      initial={{ opacity: 0, x: -6 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      className="rounded-lg px-3 py-2 text-sm cursor-default transition-all hover:bg-muted/50 border border-transparent hover:border-border/40">
-                      
-                          <span className="font-semibold text-foreground/60">{p.code}</span>
-                          <span className="text-muted-foreground mx-2">–</span>
-                          <span className="font-semibold text-secondary-foreground">{p.name}</span>
-                        </motion.div>
+                    {phaseProjects.map((p, i) =>
+                    <Tooltip key={p.id} delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          initial={{ opacity: 0, x: -6 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="rounded-lg px-3 py-2 text-sm cursor-default transition-all hover:bg-muted/50 border border-transparent hover:border-border/40">
+                          
+                              <span className="font-semibold text-foreground/60">{p.code}</span>
+                              <span className="text-muted-foreground mx-2">–</span>
+                              <span className="font-semibold text-secondary-foreground">{p.name}</span>
+                            </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="font-medium">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.customer}</p>
+                      </TooltipContent>
+                    </Tooltip>
                     )}
                     </div>
                   }

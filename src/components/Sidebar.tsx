@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from 'next-themes';
+import { supabase } from '@/integrations/supabase/client';
 import alfingLogo from '@/assets/alfing-seating-logo-green.png';
 import {
   LayoutDashboard,
@@ -17,12 +18,13 @@ import {
   Sun,
   Moon,
   UserCircle,
-  ListChecks } from
+  ListChecks,
+  Wallet } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks';
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'finance';
 
 interface SidebarProps {
   currentView: View;
@@ -49,10 +51,21 @@ const bottomNavItems = [
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { signOut, user } = useAuth();
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
   const isResourcesSection = currentView === 'resources' || currentView === 'resources-analytics';
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
+      .then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
+
+  const adminItems = isAdmin ? [
+    { id: 'finance' as View, label: 'Ekonomi', icon: Wallet },
+  ] : [];
 
   const renderNavItem = (item: typeof topItems[0]) => {
     const isActive = item.id === 'resources' ? isResourcesSection : currentView === item.id;
@@ -151,6 +164,16 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
         {/* Main project items */}
         {renderNavItems(mainItems)}
+
+        {/* Admin items */}
+        {adminItems.length > 0 && (
+          <>
+            <div className="py-1.5">
+              <div className="h-px bg-sidebar-border" />
+            </div>
+            {renderNavItems(adminItems)}
+          </>
+        )}
 
         {/* Separator */}
         <div className="py-1.5">
