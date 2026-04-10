@@ -569,7 +569,7 @@ export function Dashboard() {
                       </TooltipTrigger>
                       <TooltipContent side="top">
                         <p className="font-medium">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">{p.customer} · {p.department}</p>
+                        <p className="text-xs text-muted-foreground">{p.customer}</p>
                       </TooltipContent>
                     </Tooltip>
                     )}
