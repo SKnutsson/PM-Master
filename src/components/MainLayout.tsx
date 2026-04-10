@@ -9,6 +9,7 @@ import { ResourceAnalyticsView } from './ResourceAnalyticsView';
 import { DocumentationPlanView } from './DocumentationPlanView';
 import { ProfileView } from './ProfileView';
 import { MyTasksView } from './MyTasksView';
+import { FinanceView } from './FinanceView';
 import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 
 export function MainLayout() {
@@ -34,6 +35,8 @@ export function MainLayout() {
         return <MyTasksView />;
       case 'profile':
         return <ProfileView />;
+      case 'finance':
+        return <FinanceView />;
       default:
         return <Dashboard />;
     }
