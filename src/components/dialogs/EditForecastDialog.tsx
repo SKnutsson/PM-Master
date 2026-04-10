@@ -113,7 +113,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
         months: newMonths,
         monthEntries: allEntries,
         dealStatus,
-        notes: notes.trim() || undefined,
+        notes: notes.trim() || '',
         salesPerson: salesPerson.trim() || undefined,
       });
       setOpen(false);
