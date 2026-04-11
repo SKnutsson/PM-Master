@@ -181,6 +181,65 @@ export type Database = {
           },
         ]
       }
+      finance_template_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_type: string
+          name: string
+          sort_order: number
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_type?: string
+          name: string
+          sort_order?: number
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_type?: string
+          name?: string
+          sort_order?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "finance_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       forecast_events: {
         Row: {
           changed_by: string | null
@@ -427,6 +486,87 @@ export type Database = {
         }
         Relationships: []
       }
+      project_accounting: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_accounting_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_accounting_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "finance_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_budget_lines: {
+        Row: {
+          budgeted_amount: number
+          created_at: string
+          id: string
+          project_accounting_id: string
+          template_item_id: string
+          updated_at: string
+        }
+        Insert: {
+          budgeted_amount?: number
+          created_at?: string
+          id?: string
+          project_accounting_id: string
+          template_item_id: string
+          updated_at?: string
+        }
+        Update: {
+          budgeted_amount?: number
+          created_at?: string
+          id?: string
+          project_accounting_id?: string
+          template_item_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budget_lines_project_accounting_id_fkey"
+            columns: ["project_accounting_id"]
+            isOneToOne: false
+            referencedRelation: "project_accounting"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_budget_lines_template_item_id_fkey"
+            columns: ["template_item_id"]
+            isOneToOne: false
+            referencedRelation: "finance_template_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_finances: {
         Row: {
           amount: number
@@ -554,6 +694,41 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_transactions: {
+        Row: {
+          amount: number
+          budget_line_id: string
+          created_at: string
+          date: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          amount?: number
+          budget_line_id: string
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          amount?: number
+          budget_line_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_transactions_budget_line_id_fkey"
+            columns: ["budget_line_id"]
+            isOneToOne: false
+            referencedRelation: "project_budget_lines"
             referencedColumns: ["id"]
           },
         ]
