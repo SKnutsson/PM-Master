@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import {
   Plus, Trash2, Download, Archive, ChevronDown, ChevronRight,
-  Settings2, ArrowLeft, Pencil, FileText, ChevronUp
+  Settings2, ArrowLeft, Pencil, FileText, ChevronUp, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 interface Project {
@@ -64,6 +64,11 @@ export function FinanceView() {
   const [editingBudget, setEditingBudget] = useState<string | null>(null);
   const [budgetValue, setBudgetValue] = useState('');
 
+  // Add custom line dialog
+  const [showAddLineDialog, setShowAddLineDialog] = useState(false);
+  const [newLineName, setNewLineName] = useState('');
+  const [newLineType, setNewLineType] = useState('Kostnad');
+
   const loadProjects = useCallback(async () => {
     const { data } = await supabase.from('projects').select('id, name, code, customer, status').order('sort_order');
     setProjects(data || []);
@@ -85,7 +90,6 @@ export function FinanceView() {
       const { data: blData } = await supabase.from('project_budget_lines').select('*').eq('project_accounting_id', acct.id);
       const lines = blData || [];
       setBudgetLines(lines);
-      // Load all transactions for these lines
       if (lines.length > 0) {
         const { data: txData } = await supabase.from('project_transactions')
           .select('*')
@@ -132,6 +136,14 @@ export function FinanceView() {
     setShowTemplateDialog(true);
   };
 
+  const moveTemplateItem = (idx: number, dir: -1 | 1) => {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= editTemplateItems.length) return;
+    const updated = [...editTemplateItems];
+    [updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]];
+    setEditTemplateItems(updated);
+  };
+
   const saveTemplate = async () => {
     if (!templateName.trim()) return;
     const validItems = editTemplateItems.filter(i => i.name.trim());
@@ -165,13 +177,11 @@ export function FinanceView() {
   // --- Assign template to project ---
   const assignTemplate = async (templateId: string) => {
     if (!selectedProject) return;
-    // Create project_accounting
     const { data: acct } = await supabase.from('project_accounting').insert({
       project_id: selectedProject.id, template_id: templateId,
     }).select().single();
     if (!acct) return;
 
-    // Create budget lines for each template item
     const items = templateItems.filter(i => i.template_id === templateId);
     if (items.length > 0) {
       await supabase.from('project_budget_lines').insert(
@@ -207,6 +217,44 @@ export function FinanceView() {
     if (selectedProject) loadProjectAccounting(selectedProject.id);
   };
 
+  // --- Add custom line to project ---
+  const addCustomLine = async () => {
+    if (!projectAccounting || !newLineName.trim()) return;
+    // Create a new template_item under the project's template
+    const existingItems = templateItems.filter(i => i.template_id === projectAccounting.template_id);
+    const maxSort = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.sort_order)) + 1 : 0;
+
+    const { data: newItem } = await supabase.from('finance_template_items').insert({
+      template_id: projectAccounting.template_id,
+      name: newLineName.trim(),
+      item_type: newLineType,
+      sort_order: maxSort,
+    }).select().single();
+
+    if (newItem) {
+      // Create budget line for this project
+      await supabase.from('project_budget_lines').insert({
+        project_accounting_id: projectAccounting.id,
+        template_item_id: newItem.id,
+        budgeted_amount: 0,
+      });
+    }
+
+    toast({ title: 'Post tillagd' });
+    setShowAddLineDialog(false);
+    setNewLineName('');
+    setNewLineType('Kostnad');
+    await loadTemplates();
+    if (selectedProject) loadProjectAccounting(selectedProject.id);
+  };
+
+  // --- Remove line from project ---
+  const removeLine = async (lineId: string) => {
+    await supabase.from('project_budget_lines').delete().eq('id', lineId);
+    toast({ title: 'Post borttagen' });
+    if (selectedProject) loadProjectAccounting(selectedProject.id);
+  };
+
   // --- Export ---
   const exportProject = () => {
     if (!selectedProject || !projectAccounting) return;
@@ -219,7 +267,12 @@ export function FinanceView() {
 
     let totalBudgetCost = 0, totalBudgetIncome = 0, totalActualCost = 0, totalActualIncome = 0;
 
-    items.forEach(item => {
+    // Income first, then costs
+    const incomeItemsExport = items.filter(i => i.item_type === 'Intäkt');
+    const costItemsExport = items.filter(i => i.item_type === 'Kostnad');
+    const orderedItems = [...incomeItemsExport, ...costItemsExport];
+
+    orderedItems.forEach(item => {
       const line = budgetLines.find(l => l.template_item_id === item.id);
       if (!line) return;
       const budget = line.budgeted_amount;
@@ -234,10 +287,9 @@ export function FinanceView() {
     csv += `Totalt intäkter;;${totalBudgetIncome};${totalActualIncome};${totalBudgetIncome - totalActualIncome}\n`;
     csv += `Netto;;${totalBudgetIncome - totalBudgetCost};${totalActualIncome - totalActualCost};${(totalBudgetIncome - totalBudgetCost) - (totalActualIncome - totalActualCost)}\n`;
 
-    // Transaction details
     csv += `\n\nTransaktionsdetaljer\n`;
     csv += `Post;Datum;Belopp;Notering\n`;
-    items.forEach(item => {
+    orderedItems.forEach(item => {
       const line = budgetLines.find(l => l.template_item_id === item.id);
       if (!line) return;
       const txs = transactions.filter(t => t.budget_line_id === line.id);
@@ -272,8 +324,12 @@ export function FinanceView() {
 
   // ===== PROJECT DETAIL VIEW =====
   if (selectedProject) {
+    // Only show items that have a budget line for this project
     const acctItems = projectAccounting
-      ? templateItems.filter(i => i.template_id === projectAccounting.template_id).sort((a, b) => a.sort_order - b.sort_order)
+      ? templateItems
+          .filter(i => i.template_id === projectAccounting.template_id)
+          .filter(i => budgetLines.some(l => l.template_item_id === i.id))
+          .sort((a, b) => a.sort_order - b.sort_order)
       : [];
 
     const costItems = acctItems.filter(i => i.item_type === 'Kostnad');
@@ -306,6 +362,7 @@ export function FinanceView() {
           const diff = line.budgeted_amount - actual;
           const txs = getLineTxs(line.id);
           const isExpanded = expandedLine === line.id;
+          const hasTxs = txs.length > 0;
 
           return (
             <Card key={line.id} className="border-border/40 overflow-hidden">
@@ -352,6 +409,13 @@ export function FinanceView() {
                         {diff.toLocaleString('sv-SE')}
                       </p>
                     </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); if (!hasTxs) removeLine(line.id); else toast({ title: 'Ta bort transaktionerna först', variant: 'destructive' }); }}
+                      className="p-1 rounded hover:bg-destructive/10 opacity-50 hover:opacity-100"
+                      title="Ta bort post"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                    </button>
                   </div>
                 </div>
               </button>
@@ -416,6 +480,9 @@ export function FinanceView() {
           </div>
           {projectAccounting && (
             <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowAddLineDialog(true)} className="gap-1.5">
+                <Plus className="h-4 w-4" /> Lägg till post
+              </Button>
               <Button variant="outline" size="sm" onClick={exportProject} className="gap-1.5">
                 <Download className="h-4 w-4" /> Exportera
               </Button>
@@ -455,16 +522,16 @@ export function FinanceView() {
             {/* Summary */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <Card className="border-border/40"><CardContent className="p-3">
+                <p className="text-[10px] text-muted-foreground uppercase">Budget intäkt</p>
+                <p className="text-lg font-bold">{totalBudgetIncome.toLocaleString('sv-SE')}</p>
+              </CardContent></Card>
+              <Card className="border-border/40"><CardContent className="p-3">
                 <p className="text-[10px] text-muted-foreground uppercase">Budget kostn.</p>
                 <p className="text-lg font-bold">{totalBudgetCost.toLocaleString('sv-SE')}</p>
               </CardContent></Card>
               <Card className="border-border/40"><CardContent className="p-3">
                 <p className="text-[10px] text-muted-foreground uppercase">Utfall kostn.</p>
                 <p className="text-lg font-bold">{totalActualCost.toLocaleString('sv-SE')}</p>
-              </CardContent></Card>
-              <Card className="border-border/40"><CardContent className="p-3">
-                <p className="text-[10px] text-muted-foreground uppercase">Budget intäkt</p>
-                <p className="text-lg font-bold">{totalBudgetIncome.toLocaleString('sv-SE')}</p>
               </CardContent></Card>
               <Card className="border-border/40"><CardContent className="p-3">
                 <p className="text-[10px] text-muted-foreground uppercase">Netto utfall</p>
@@ -474,9 +541,9 @@ export function FinanceView() {
               </CardContent></Card>
             </div>
 
-            {/* Cost items */}
-            {costItems.length > 0 && renderLineGroup('Kostnader', costItems, 'Kostnad')}
+            {/* Income first, then costs */}
             {incomeItems.length > 0 && renderLineGroup('Intäkter', incomeItems, 'Intäkt')}
+            {costItems.length > 0 && renderLineGroup('Kostnader', costItems, 'Kostnad')}
           </div>
         )}
 
@@ -503,6 +570,33 @@ export function FinanceView() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowTxDialog(false)}>Avbryt</Button>
               <Button onClick={addTransaction}>Lägg till</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add custom line dialog */}
+        <Dialog open={showAddLineDialog} onOpenChange={setShowAddLineDialog}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader><DialogTitle>Lägg till post</DialogTitle></DialogHeader>
+            <div className="space-y-3 py-2">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Namn</label>
+                <Input value={newLineName} onChange={e => setNewLineName(e.target.value)} placeholder="T.ex. Konsultkostnad" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Typ</label>
+                <Select value={newLineType} onValueChange={setNewLineType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Intäkt">Intäkt</SelectItem>
+                    <SelectItem value="Kostnad">Kostnad</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowAddLineDialog(false)}>Avbryt</Button>
+              <Button onClick={addCustomLine}>Lägg till</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -534,7 +628,7 @@ export function FinanceView() {
         </div>
       </div>
 
-      {/* Template list (if any) */}
+      {/* Template list */}
       {templates.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {templates.map(t => (
@@ -591,6 +685,22 @@ export function FinanceView() {
               <div className="space-y-2">
                 {editTemplateItems.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2">
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        onClick={() => moveTemplateItem(idx, -1)}
+                        disabled={idx === 0}
+                        className="p-0.5 rounded hover:bg-muted disabled:opacity-20"
+                      >
+                        <ArrowUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={() => moveTemplateItem(idx, 1)}
+                        disabled={idx === editTemplateItems.length - 1}
+                        className="p-0.5 rounded hover:bg-muted disabled:opacity-20"
+                      >
+                        <ArrowDown className="h-3 w-3" />
+                      </button>
+                    </div>
                     <Input
                       value={item.name}
                       onChange={e => {
