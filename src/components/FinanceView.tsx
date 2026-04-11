@@ -82,12 +82,8 @@ export function FinanceView() {
     const { data: acct } = await supabase.from('project_accounting').select('*').eq('project_id', projectId).maybeSingle();
     setProjectAccounting(acct);
     if (acct) {
-      const [blRes, txRes] = await Promise.all([
-        supabase.from('project_budget_lines').select('*').eq('project_accounting_id', acct.id),
-        supabase.from('project_transactions').select('*').eq('budget_line_id', 'placeholder-to-get-schema'),
-      ]);
-      // Load budget lines
-      const lines = blRes.data || [];
+      const { data: blData } = await supabase.from('project_budget_lines').select('*').eq('project_accounting_id', acct.id);
+      const lines = blData || [];
       setBudgetLines(lines);
       // Load all transactions for these lines
       if (lines.length > 0) {
