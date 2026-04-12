@@ -530,24 +530,33 @@ export type Database = {
           budgeted_amount: number
           created_at: string
           id: string
+          item_type: string
+          name: string
           project_accounting_id: string
-          template_item_id: string
+          sort_order: number
+          template_item_id: string | null
           updated_at: string
         }
         Insert: {
           budgeted_amount?: number
           created_at?: string
           id?: string
+          item_type?: string
+          name?: string
           project_accounting_id: string
-          template_item_id: string
+          sort_order?: number
+          template_item_id?: string | null
           updated_at?: string
         }
         Update: {
           budgeted_amount?: number
           created_at?: string
           id?: string
+          item_type?: string
+          name?: string
           project_accounting_id?: string
-          template_item_id?: string
+          sort_order?: number
+          template_item_id?: string | null
           updated_at?: string
         }
         Relationships: [
