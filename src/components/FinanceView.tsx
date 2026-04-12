@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
 import {
   Plus, Trash2, Download, Archive, ChevronDown, ChevronRight,
-  Settings2, ArrowLeft, Pencil, FileText, ChevronUp, ArrowUp, ArrowDown
+  Settings2, ArrowLeft, Pencil, FileText, ArrowUp, ArrowDown
 } from 'lucide-react';
 
 interface Project {
@@ -27,7 +29,8 @@ interface ProjectAccounting {
   id: string; project_id: string; template_id: string;
 }
 interface BudgetLine {
-  id: string; project_accounting_id: string; template_item_id: string; budgeted_amount: number;
+  id: string; project_accounting_id: string; template_item_id: string | null; budgeted_amount: number;
+  name: string; item_type: string; sort_order: number;
 }
 interface Transaction {
   id: string; budget_line_id: string; amount: number; date: string; note: string | null; created_at: string;
@@ -39,35 +42,35 @@ export function FinanceView() {
   const [showArchived, setShowArchived] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  // Template management
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templateItems, setTemplateItems] = useState<TemplateItem[]>([]);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [templateName, setTemplateName] = useState('');
-  const [editTemplateItems, setEditTemplateItems] = useState<{ name: string; item_type: string }[]>([]);
+  const [editTemplateItems, setEditTemplateItems] = useState<{ id?: string; name: string; item_type: string }[]>([]);
 
-  // Project accounting
   const [projectAccounting, setProjectAccounting] = useState<ProjectAccounting | null>(null);
   const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [expandedLine, setExpandedLine] = useState<string | null>(null);
 
-  // Transaction dialog
   const [showTxDialog, setShowTxDialog] = useState(false);
   const [txBudgetLineId, setTxBudgetLineId] = useState('');
   const [txAmount, setTxAmount] = useState('');
   const [txDate, setTxDate] = useState(new Date().toISOString().split('T')[0]);
   const [txNote, setTxNote] = useState('');
 
-  // Budget edit
   const [editingBudget, setEditingBudget] = useState<string | null>(null);
   const [budgetValue, setBudgetValue] = useState('');
 
-  // Add custom line dialog
   const [showAddLineDialog, setShowAddLineDialog] = useState(false);
   const [newLineName, setNewLineName] = useState('');
   const [newLineType, setNewLineType] = useState('Kostnad');
+
+  // Confirmation dialogs
+  const [deleteLineConfirm, setDeleteLineConfirm] = useState<{ id: string; name: string; hasTxs: boolean } | null>(null);
+  const [deleteTemplateConfirm, setDeleteTemplateConfirm] = useState<{ id: string; name: string } | null>(null);
+  const [deleteTemplateItemConfirm, setDeleteTemplateItemConfirm] = useState<number | null>(null);
 
   const loadProjects = useCallback(async () => {
     const { data } = await supabase.from('projects').select('id, name, code, customer, status').order('sort_order');
@@ -87,8 +90,8 @@ export function FinanceView() {
     const { data: acct } = await supabase.from('project_accounting').select('*').eq('project_id', projectId).maybeSingle();
     setProjectAccounting(acct);
     if (acct) {
-      const { data: blData } = await supabase.from('project_budget_lines').select('*').eq('project_accounting_id', acct.id);
-      const lines = blData || [];
+      const { data: blData } = await supabase.from('project_budget_lines').select('*').eq('project_accounting_id', acct.id).order('sort_order');
+      const lines = (blData || []) as BudgetLine[];
       setBudgetLines(lines);
       if (lines.length > 0) {
         const { data: txData } = await supabase.from('project_transactions')
@@ -105,16 +108,8 @@ export function FinanceView() {
     }
   }, []);
 
-  useEffect(() => {
-    loadProjects();
-    loadTemplates();
-  }, [loadProjects, loadTemplates]);
-
-  useEffect(() => {
-    if (selectedProject) {
-      loadProjectAccounting(selectedProject.id);
-    }
-  }, [selectedProject, loadProjectAccounting]);
+  useEffect(() => { loadProjects(); loadTemplates(); }, [loadProjects, loadTemplates]);
+  useEffect(() => { if (selectedProject) loadProjectAccounting(selectedProject.id); }, [selectedProject, loadProjectAccounting]);
 
   const filteredProjects = projects.filter(p =>
     showArchived ? p.status === 'Avslutat' : p.status !== 'Avslutat'
@@ -132,7 +127,7 @@ export function FinanceView() {
     setEditingTemplate(t);
     setTemplateName(t.name);
     const items = templateItems.filter(i => i.template_id === t.id).sort((a, b) => a.sort_order - b.sort_order);
-    setEditTemplateItems(items.map(i => ({ name: i.name, item_type: i.item_type })));
+    setEditTemplateItems(items.map(i => ({ id: i.id, name: i.name, item_type: i.item_type })));
     setShowTemplateDialog(true);
   };
 
@@ -144,6 +139,14 @@ export function FinanceView() {
     setEditTemplateItems(updated);
   };
 
+  const confirmRemoveTemplateItem = (idx: number) => {
+    if (editTemplateItems[idx].name.trim()) {
+      setDeleteTemplateItemConfirm(idx);
+    } else {
+      setEditTemplateItems(editTemplateItems.filter((_, i) => i !== idx));
+    }
+  };
+
   const saveTemplate = async () => {
     if (!templateName.trim()) return;
     const validItems = editTemplateItems.filter(i => i.name.trim());
@@ -151,10 +154,23 @@ export function FinanceView() {
 
     if (editingTemplate) {
       await supabase.from('finance_templates').update({ name: templateName.trim() }).eq('id', editingTemplate.id);
-      await supabase.from('finance_template_items').delete().eq('template_id', editingTemplate.id);
-      await supabase.from('finance_template_items').insert(
-        validItems.map((item, i) => ({ template_id: editingTemplate.id, name: item.name.trim(), item_type: item.item_type, sort_order: i }))
-      );
+      // Smart diff: update existing, add new, delete removed (template items only - won't affect project budget lines)
+      const existingIds = validItems.filter(i => i.id).map(i => i.id!);
+      // Delete items removed from template
+      const currentItems = templateItems.filter(i => i.template_id === editingTemplate.id);
+      const toDelete = currentItems.filter(i => !existingIds.includes(i.id));
+      for (const item of toDelete) {
+        await supabase.from('finance_template_items').delete().eq('id', item.id);
+      }
+      // Update/insert
+      for (let i = 0; i < validItems.length; i++) {
+        const item = validItems[i];
+        if (item.id) {
+          await supabase.from('finance_template_items').update({ name: item.name.trim(), item_type: item.item_type, sort_order: i }).eq('id', item.id);
+        } else {
+          await supabase.from('finance_template_items').insert({ template_id: editingTemplate.id, name: item.name.trim(), item_type: item.item_type, sort_order: i });
+        }
+      }
     } else {
       const { data: newTemplate } = await supabase.from('finance_templates').insert({ name: templateName.trim(), created_by: user?.id }).select().single();
       if (newTemplate) {
@@ -169,8 +185,10 @@ export function FinanceView() {
   };
 
   const deleteTemplate = async (id: string) => {
+    await supabase.from('finance_template_items').delete().eq('template_id', id);
     await supabase.from('finance_templates').delete().eq('id', id);
     toast({ title: 'Mall borttagen' });
+    setDeleteTemplateConfirm(null);
     loadTemplates();
   };
 
@@ -182,10 +200,17 @@ export function FinanceView() {
     }).select().single();
     if (!acct) return;
 
-    const items = templateItems.filter(i => i.template_id === templateId);
+    const items = templateItems.filter(i => i.template_id === templateId).sort((a, b) => a.sort_order - b.sort_order);
     if (items.length > 0) {
       await supabase.from('project_budget_lines').insert(
-        items.map(item => ({ project_accounting_id: acct.id, template_item_id: item.id, budgeted_amount: 0 }))
+        items.map((item, idx) => ({
+          project_accounting_id: acct.id,
+          template_item_id: item.id,
+          budgeted_amount: 0,
+          name: item.name,
+          item_type: item.item_type,
+          sort_order: idx,
+        }))
       );
     }
     toast({ title: 'Mall tilldelad' });
@@ -220,45 +245,38 @@ export function FinanceView() {
   // --- Add custom line to project ---
   const addCustomLine = async () => {
     if (!projectAccounting || !newLineName.trim()) return;
-    // Create a new template_item under the project's template
-    const existingItems = templateItems.filter(i => i.template_id === projectAccounting.template_id);
-    const maxSort = existingItems.length > 0 ? Math.max(...existingItems.map(i => i.sort_order)) + 1 : 0;
-
-    const { data: newItem } = await supabase.from('finance_template_items').insert({
-      template_id: projectAccounting.template_id,
+    const maxSort = budgetLines.length > 0 ? Math.max(...budgetLines.map(l => l.sort_order)) + 1 : 0;
+    await supabase.from('project_budget_lines').insert({
+      project_accounting_id: projectAccounting.id,
+      template_item_id: null,
       name: newLineName.trim(),
       item_type: newLineType,
       sort_order: maxSort,
-    }).select().single();
-
-    if (newItem) {
-      // Create budget line for this project
-      await supabase.from('project_budget_lines').insert({
-        project_accounting_id: projectAccounting.id,
-        template_item_id: newItem.id,
-        budgeted_amount: 0,
-      });
-    }
-
+      budgeted_amount: 0,
+    });
     toast({ title: 'Post tillagd' });
     setShowAddLineDialog(false);
     setNewLineName('');
     setNewLineType('Kostnad');
-    await loadTemplates();
     if (selectedProject) loadProjectAccounting(selectedProject.id);
   };
 
   // --- Remove line from project ---
   const removeLine = async (lineId: string) => {
+    // Delete associated transactions first
+    await supabase.from('project_transactions').delete().eq('budget_line_id', lineId);
     await supabase.from('project_budget_lines').delete().eq('id', lineId);
     toast({ title: 'Post borttagen' });
+    setDeleteLineConfirm(null);
     if (selectedProject) loadProjectAccounting(selectedProject.id);
   };
 
   // --- Export ---
   const exportProject = () => {
     if (!selectedProject || !projectAccounting) return;
-    const items = templateItems.filter(i => i.template_id === projectAccounting.template_id).sort((a, b) => a.sort_order - b.sort_order);
+    const incomeLines = budgetLines.filter(l => l.item_type === 'Intäkt').sort((a, b) => a.sort_order - b.sort_order);
+    const costLines = budgetLines.filter(l => l.item_type === 'Kostnad').sort((a, b) => a.sort_order - b.sort_order);
+    const allLines = [...incomeLines, ...costLines];
 
     let csv = '\uFEFF';
     csv += `Projektredovisning - ${selectedProject.code || ''} ${selectedProject.name}\n`;
@@ -267,20 +285,12 @@ export function FinanceView() {
 
     let totalBudgetCost = 0, totalBudgetIncome = 0, totalActualCost = 0, totalActualIncome = 0;
 
-    // Income first, then costs
-    const incomeItemsExport = items.filter(i => i.item_type === 'Intäkt');
-    const costItemsExport = items.filter(i => i.item_type === 'Kostnad');
-    const orderedItems = [...incomeItemsExport, ...costItemsExport];
-
-    orderedItems.forEach(item => {
-      const line = budgetLines.find(l => l.template_item_id === item.id);
-      if (!line) return;
-      const budget = line.budgeted_amount;
-      const actual = transactions.filter(t => t.budget_line_id === line.id).reduce((s, t) => s + t.amount, 0);
-      const diff = budget - actual;
-      csv += `${item.name};${item.item_type};${budget};${actual};${diff}\n`;
-      if (item.item_type === 'Kostnad') { totalBudgetCost += budget; totalActualCost += actual; }
-      else { totalBudgetIncome += budget; totalActualIncome += actual; }
+    allLines.forEach(line => {
+      const actual = getLineActual(line.id);
+      const diff = line.budgeted_amount - actual;
+      csv += `${line.name};${line.item_type};${line.budgeted_amount};${actual};${diff}\n`;
+      if (line.item_type === 'Kostnad') { totalBudgetCost += line.budgeted_amount; totalActualCost += actual; }
+      else { totalBudgetIncome += line.budgeted_amount; totalActualIncome += actual; }
     });
 
     csv += `\nTotalt kostnader;;${totalBudgetCost};${totalActualCost};${totalBudgetCost - totalActualCost}\n`;
@@ -289,12 +299,10 @@ export function FinanceView() {
 
     csv += `\n\nTransaktionsdetaljer\n`;
     csv += `Post;Datum;Belopp;Notering\n`;
-    orderedItems.forEach(item => {
-      const line = budgetLines.find(l => l.template_item_id === item.id);
-      if (!line) return;
-      const txs = transactions.filter(t => t.budget_line_id === line.id);
+    allLines.forEach(line => {
+      const txs = getLineTxs(line.id);
       txs.forEach(tx => {
-        csv += `${item.name};${tx.date};${tx.amount};${tx.note || ''}\n`;
+        csv += `${line.name};${tx.date};${tx.amount};${tx.note || ''}\n`;
       });
     });
 
@@ -307,7 +315,6 @@ export function FinanceView() {
     URL.revokeObjectURL(url);
   };
 
-  // --- Detach template ---
   const detachTemplate = async () => {
     if (!projectAccounting) return;
     await supabase.from('project_accounting').delete().eq('id', projectAccounting.id);
@@ -315,179 +322,173 @@ export function FinanceView() {
     if (selectedProject) loadProjectAccounting(selectedProject.id);
   };
 
-  // --- Render helpers ---
   const getLineActual = (lineId: string) =>
     transactions.filter(t => t.budget_line_id === lineId).reduce((s, t) => s + t.amount, 0);
 
   const getLineTxs = (lineId: string) =>
     transactions.filter(t => t.budget_line_id === lineId).sort((a, b) => b.date.localeCompare(a.date));
 
+  const fmt = (n: number) => n.toLocaleString('sv-SE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
   // ===== PROJECT DETAIL VIEW =====
   if (selectedProject) {
-    // Only show items that have a budget line for this project
-    const acctItems = projectAccounting
-      ? templateItems
-          .filter(i => i.template_id === projectAccounting.template_id)
-          .filter(i => budgetLines.some(l => l.template_item_id === i.id))
-          .sort((a, b) => a.sort_order - b.sort_order)
-      : [];
+    const incomeLines = budgetLines.filter(l => l.item_type === 'Intäkt').sort((a, b) => a.sort_order - b.sort_order);
+    const costLines = budgetLines.filter(l => l.item_type === 'Kostnad').sort((a, b) => a.sort_order - b.sort_order);
 
-    const costItems = acctItems.filter(i => i.item_type === 'Kostnad');
-    const incomeItems = acctItems.filter(i => i.item_type === 'Intäkt');
+    const sumBudget = (lines: BudgetLine[]) => lines.reduce((s, l) => s + l.budgeted_amount, 0);
+    const sumActual = (lines: BudgetLine[]) => lines.reduce((s, l) => s + getLineActual(l.id), 0);
 
-    const totalBudgetCost = costItems.reduce((s, i) => {
-      const line = budgetLines.find(l => l.template_item_id === i.id);
-      return s + (line?.budgeted_amount || 0);
-    }, 0);
-    const totalActualCost = costItems.reduce((s, i) => {
-      const line = budgetLines.find(l => l.template_item_id === i.id);
-      return s + (line ? getLineActual(line.id) : 0);
-    }, 0);
-    const totalBudgetIncome = incomeItems.reduce((s, i) => {
-      const line = budgetLines.find(l => l.template_item_id === i.id);
-      return s + (line?.budgeted_amount || 0);
-    }, 0);
-    const totalActualIncome = incomeItems.reduce((s, i) => {
-      const line = budgetLines.find(l => l.template_item_id === i.id);
-      return s + (line ? getLineActual(line.id) : 0);
-    }, 0);
+    const totalBudgetIncome = sumBudget(incomeLines);
+    const totalActualIncome = sumActual(incomeLines);
+    const totalBudgetCost = sumBudget(costLines);
+    const totalActualCost = sumActual(costLines);
 
-    const renderLineGroup = (label: string, items: TemplateItem[], type: string) => (
-      <div className="space-y-1">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">{label}</h3>
-        {items.map(item => {
-          const line = budgetLines.find(l => l.template_item_id === item.id);
-          if (!line) return null;
+    const renderTableSection = (label: string, lines: BudgetLine[], type: string) => (
+      <>
+        <TableRow className="bg-muted/40 hover:bg-muted/40">
+          <TableCell colSpan={5} className="font-semibold text-xs uppercase tracking-wider py-1.5 pl-3 text-muted-foreground border-b border-border">
+            {label}
+          </TableCell>
+        </TableRow>
+        {lines.map(line => {
           const actual = getLineActual(line.id);
           const diff = line.budgeted_amount - actual;
           const txs = getLineTxs(line.id);
           const isExpanded = expandedLine === line.id;
-          const hasTxs = txs.length > 0;
 
           return (
-            <Card key={line.id} className="border-border/40 overflow-hidden">
-              <button
+            <React.Fragment key={line.id}>
+              <TableRow
+                className="cursor-pointer hover:bg-muted/30 transition-colors group"
                 onClick={() => setExpandedLine(isExpanded ? null : line.id)}
-                className="w-full text-left"
               >
-                <div className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-2">
-                    {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
-                    <span className="font-medium text-sm">{item.name}</span>
-                    {txs.length > 0 && <span className="text-xs text-muted-foreground">({txs.length})</span>}
+                <TableCell className="py-1.5 pl-3 pr-2 w-[40%]">
+                  <div className="flex items-center gap-1.5">
+                    {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
+                    <span className="text-sm font-medium truncate">{line.name}</span>
+                    {txs.length > 0 && <span className="text-[10px] text-muted-foreground">({txs.length})</span>}
                   </div>
-                  <div className="flex items-center gap-6 text-sm">
-                    <div className="text-right w-24">
-                      <p className="text-[10px] text-muted-foreground">Budget</p>
-                      {editingBudget === line.id ? (
-                        <Input
-                          type="number"
-                          value={budgetValue}
-                          onChange={e => setBudgetValue(e.target.value)}
-                          onBlur={() => saveBudget(line.id)}
-                          onKeyDown={e => e.key === 'Enter' && saveBudget(line.id)}
-                          onClick={e => e.stopPropagation()}
-                          className="h-6 text-xs w-24"
-                          autoFocus
-                        />
-                      ) : (
-                        <p
-                          className="font-semibold cursor-pointer hover:text-primary"
-                          onClick={e => { e.stopPropagation(); setEditingBudget(line.id); setBudgetValue(String(line.budgeted_amount)); }}
-                        >
-                          {line.budgeted_amount.toLocaleString('sv-SE')}
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right w-24">
-                      <p className="text-[10px] text-muted-foreground">Utfall</p>
-                      <p className="font-semibold">{actual.toLocaleString('sv-SE')}</p>
-                    </div>
-                    <div className="text-right w-24">
-                      <p className="text-[10px] text-muted-foreground">Avvikelse</p>
-                      <p className={`font-semibold ${type === 'Kostnad' ? (diff >= 0 ? 'text-primary' : 'text-destructive') : (diff <= 0 ? 'text-primary' : 'text-destructive')}`}>
-                        {diff.toLocaleString('sv-SE')}
-                      </p>
-                    </div>
-                    <button
-                      onClick={e => { e.stopPropagation(); if (!hasTxs) removeLine(line.id); else toast({ title: 'Ta bort transaktionerna först', variant: 'destructive' }); }}
-                      className="p-1 rounded hover:bg-destructive/10 opacity-50 hover:opacity-100"
-                      title="Ta bort post"
+                </TableCell>
+                <TableCell className="py-1.5 text-right font-mono text-sm tabular-nums w-[18%]">
+                  {editingBudget === line.id ? (
+                    <Input
+                      type="number"
+                      value={budgetValue}
+                      onChange={e => setBudgetValue(e.target.value)}
+                      onBlur={() => saveBudget(line.id)}
+                      onKeyDown={e => e.key === 'Enter' && saveBudget(line.id)}
+                      onClick={e => e.stopPropagation()}
+                      className="h-6 text-xs w-24 ml-auto text-right"
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="cursor-pointer hover:text-primary"
+                      onClick={e => { e.stopPropagation(); setEditingBudget(line.id); setBudgetValue(String(line.budgeted_amount)); }}
                     >
-                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                    </button>
-                  </div>
-                </div>
-              </button>
+                      {fmt(line.budgeted_amount)}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="py-1.5 text-right font-mono text-sm tabular-nums w-[18%]">
+                  {fmt(actual)}
+                </TableCell>
+                <TableCell className={`py-1.5 text-right font-mono text-sm tabular-nums w-[18%] font-semibold ${type === 'Kostnad' ? (diff >= 0 ? 'text-primary' : 'text-destructive') : (diff <= 0 ? 'text-primary' : 'text-destructive')}`}>
+                  {fmt(diff)}
+                </TableCell>
+                <TableCell className="py-1.5 w-8 text-center">
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      setDeleteLineConfirm({ id: line.id, name: line.name, hasTxs: txs.length > 0 });
+                    }}
+                    className="p-0.5 rounded hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                  </button>
+                </TableCell>
+              </TableRow>
               <AnimatePresence>
                 {isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="overflow-hidden border-t border-border/30"
-                  >
-                    <div className="p-3 space-y-2">
-                      <div className="flex justify-end">
-                        <Button size="sm" variant="outline" onClick={() => { setTxBudgetLineId(line.id); setShowTxDialog(true); }} className="gap-1.5 h-7 text-xs">
-                          <Plus className="h-3 w-3" /> Lägg till
-                        </Button>
-                      </div>
-                      {txs.length === 0 ? (
-                        <p className="text-xs text-muted-foreground text-center py-2 italic">Inga transaktioner</p>
-                      ) : (
-                        <div className="rounded border border-border/30 overflow-hidden">
-                          <div className="grid grid-cols-[90px_1fr_100px_32px] gap-2 px-3 py-1.5 text-[10px] text-muted-foreground font-medium uppercase bg-muted/30">
-                            <span>Datum</span><span>Notering</span><span className="text-right">Belopp</span><span></span>
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={5} className="p-0">
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-8 py-2 space-y-1.5 bg-muted/10 border-t border-border/30">
+                          <div className="flex justify-end">
+                            <Button size="sm" variant="outline" onClick={() => { setTxBudgetLineId(line.id); setShowTxDialog(true); }} className="gap-1 h-6 text-[11px]">
+                              <Plus className="h-3 w-3" /> Lägg till
+                            </Button>
                           </div>
-                          {txs.map(tx => (
-                            <div key={tx.id} className="grid grid-cols-[90px_1fr_100px_32px] gap-2 px-3 py-1.5 text-xs items-center border-t border-border/20 hover:bg-muted/20 group">
-                              <span className="text-muted-foreground">{tx.date}</span>
-                              <span className="truncate">{tx.note || '—'}</span>
-                              <span className="text-right font-semibold">{tx.amount.toLocaleString('sv-SE')}</span>
-                              <button onClick={() => deleteTransaction(tx.id)} className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-destructive/10">
-                                <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-                              </button>
+                          {txs.length === 0 ? (
+                            <p className="text-xs text-muted-foreground text-center py-1 italic">Inga transaktioner</p>
+                          ) : (
+                            <div className="rounded border border-border/30 overflow-hidden text-xs">
+                              <div className="grid grid-cols-[80px_1fr_90px_28px] gap-1 px-2 py-1 text-[10px] text-muted-foreground font-medium uppercase bg-muted/30">
+                                <span>Datum</span><span>Notering</span><span className="text-right">Belopp</span><span></span>
+                              </div>
+                              {txs.map(tx => (
+                                <div key={tx.id} className="grid grid-cols-[80px_1fr_90px_28px] gap-1 px-2 py-1 items-center border-t border-border/20 hover:bg-muted/20 group/tx">
+                                  <span className="text-muted-foreground">{tx.date}</span>
+                                  <span className="truncate">{tx.note || '—'}</span>
+                                  <span className="text-right font-mono tabular-nums">{fmt(tx.amount)}</span>
+                                  <button onClick={() => deleteTransaction(tx.id)} className="opacity-0 group-hover/tx:opacity-100 p-0.5 rounded hover:bg-destructive/10">
+                                    <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                                  </button>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </motion.div>
+                      </motion.div>
+                    </TableCell>
+                  </TableRow>
                 )}
               </AnimatePresence>
-            </Card>
+            </React.Fragment>
           );
         })}
-      </div>
+        {/* Section total */}
+        <TableRow className="bg-muted/20 hover:bg-muted/20 border-t-2 border-border">
+          <TableCell className="py-1.5 pl-3 font-semibold text-sm">Summa {label.toLowerCase()}</TableCell>
+          <TableCell className="py-1.5 text-right font-mono text-sm font-semibold tabular-nums">{fmt(sumBudget(lines))}</TableCell>
+          <TableCell className="py-1.5 text-right font-mono text-sm font-semibold tabular-nums">{fmt(sumActual(lines))}</TableCell>
+          <TableCell className="py-1.5 text-right font-mono text-sm font-semibold tabular-nums">{fmt(sumBudget(lines) - sumActual(lines))}</TableCell>
+          <TableCell className="w-8"></TableCell>
+        </TableRow>
+      </>
     );
 
     return (
-      <div className="p-6 space-y-5">
+      <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => { setSelectedProject(null); setProjectAccounting(null); }}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">
+              <h1 className="text-xl font-bold tracking-tight">
                 {selectedProject.code && <span className="text-muted-foreground mr-2">{selectedProject.code}</span>}
                 {selectedProject.name}
               </h1>
-              <p className="text-sm text-muted-foreground">{selectedProject.customer} · Projektredovisning</p>
+              <p className="text-xs text-muted-foreground">{selectedProject.customer} · Projektredovisning</p>
             </div>
           </div>
           {projectAccounting && (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setShowAddLineDialog(true)} className="gap-1.5">
-                <Plus className="h-4 w-4" /> Lägg till post
+              <Button variant="outline" size="sm" onClick={() => setShowAddLineDialog(true)} className="gap-1.5 h-8 text-xs">
+                <Plus className="h-3.5 w-3.5" /> Post
               </Button>
-              <Button variant="outline" size="sm" onClick={exportProject} className="gap-1.5">
-                <Download className="h-4 w-4" /> Exportera
+              <Button variant="outline" size="sm" onClick={exportProject} className="gap-1.5 h-8 text-xs">
+                <Download className="h-3.5 w-3.5" /> Export
               </Button>
-              <Button variant="ghost" size="sm" onClick={detachTemplate} className="gap-1.5 text-destructive hover:text-destructive">
-                <Trash2 className="h-4 w-4" /> Ta bort mall
+              <Button variant="ghost" size="sm" onClick={detachTemplate} className="gap-1.5 h-8 text-xs text-destructive hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           )}
@@ -504,48 +505,65 @@ export function FinanceView() {
               {templates.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Skapa en mall först via "Hantera mallar"</p>
               ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <Select onValueChange={assignTemplate}>
-                    <SelectTrigger className="w-64"><SelectValue placeholder="Välj mall..." /></SelectTrigger>
-                    <SelectContent>
-                      {templates.map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select onValueChange={assignTemplate}>
+                  <SelectTrigger className="w-64 mx-auto"><SelectValue placeholder="Välj mall..." /></SelectTrigger>
+                  <SelectContent>
+                    {templates.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            {/* Summary */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Card className="border-border/40"><CardContent className="p-3">
-                <p className="text-[10px] text-muted-foreground uppercase">Budget intäkt</p>
-                <p className="text-lg font-bold">{totalBudgetIncome.toLocaleString('sv-SE')}</p>
-              </CardContent></Card>
-              <Card className="border-border/40"><CardContent className="p-3">
-                <p className="text-[10px] text-muted-foreground uppercase">Budget kostn.</p>
-                <p className="text-lg font-bold">{totalBudgetCost.toLocaleString('sv-SE')}</p>
-              </CardContent></Card>
-              <Card className="border-border/40"><CardContent className="p-3">
-                <p className="text-[10px] text-muted-foreground uppercase">Utfall kostn.</p>
-                <p className="text-lg font-bold">{totalActualCost.toLocaleString('sv-SE')}</p>
-              </CardContent></Card>
-              <Card className="border-border/40"><CardContent className="p-3">
-                <p className="text-[10px] text-muted-foreground uppercase">Netto utfall</p>
-                <p className={`text-lg font-bold ${totalActualIncome - totalActualCost >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                  {(totalActualIncome - totalActualCost).toLocaleString('sv-SE')}
-                </p>
-              </CardContent></Card>
-            </div>
-
-            {/* Income first, then costs */}
-            {incomeItems.length > 0 && renderLineGroup('Intäkter', incomeItems, 'Intäkt')}
-            {costItems.length > 0 && renderLineGroup('Kostnader', costItems, 'Kostnad')}
+          <div className="border border-border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%]">Post</TableHead>
+                  <TableHead className="text-right w-[18%]">Budget</TableHead>
+                  <TableHead className="text-right w-[18%]">Utfall</TableHead>
+                  <TableHead className="text-right w-[18%]">Avvikelse</TableHead>
+                  <TableHead className="w-8"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {incomeLines.length > 0 && renderTableSection('Intäkter', incomeLines, 'Intäkt')}
+                {costLines.length > 0 && renderTableSection('Kostnader', costLines, 'Kostnad')}
+                {/* Net total */}
+                <TableRow className="bg-muted/40 hover:bg-muted/40 border-t-2 border-border font-bold">
+                  <TableCell className="py-2 pl-3 text-sm font-bold">Netto</TableCell>
+                  <TableCell className="py-2 text-right font-mono text-sm font-bold tabular-nums">{fmt(totalBudgetIncome - totalBudgetCost)}</TableCell>
+                  <TableCell className="py-2 text-right font-mono text-sm font-bold tabular-nums">{fmt(totalActualIncome - totalActualCost)}</TableCell>
+                  <TableCell className={`py-2 text-right font-mono text-sm font-bold tabular-nums ${(totalActualIncome - totalActualCost) >= (totalBudgetIncome - totalBudgetCost) ? 'text-primary' : 'text-destructive'}`}>
+                    {fmt((totalBudgetIncome - totalBudgetCost) - (totalActualIncome - totalActualCost))}
+                  </TableCell>
+                  <TableCell className="w-8"></TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </div>
         )}
+
+        {/* Delete line confirmation */}
+        <AlertDialog open={!!deleteLineConfirm} onOpenChange={() => setDeleteLineConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Ta bort post</AlertDialogTitle>
+              <AlertDialogDescription>
+                Är du säker på att du vill ta bort "{deleteLineConfirm?.name}"?
+                {deleteLineConfirm?.hasTxs && ' Alla tillhörande transaktioner kommer också att tas bort.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Avbryt</AlertDialogCancel>
+              <AlertDialogAction onClick={() => deleteLineConfirm && removeLine(deleteLineConfirm.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Ta bort
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Transaction dialog */}
         <Dialog open={showTxDialog} onOpenChange={setShowTxDialog}>
@@ -628,7 +646,6 @@ export function FinanceView() {
         </div>
       </div>
 
-      {/* Template list */}
       {templates.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {templates.map(t => (
@@ -637,13 +654,12 @@ export function FinanceView() {
               <span>{t.name}</span>
               <span className="text-muted-foreground">({templateItems.filter(i => i.template_id === t.id).length} poster)</span>
               <button onClick={() => openEditTemplate(t)} className="ml-1 hover:text-primary"><Pencil className="h-3 w-3" /></button>
-              <button onClick={() => deleteTemplate(t.id)} className="hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+              <button onClick={() => setDeleteTemplateConfirm({ id: t.id, name: t.name })} className="hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Project list */}
       <div className="space-y-1.5">
         {filteredProjects.length === 0 ? (
           <Card className="border-border/50">
@@ -669,6 +685,47 @@ export function FinanceView() {
         )}
       </div>
 
+      {/* Delete template confirmation */}
+      <AlertDialog open={!!deleteTemplateConfirm} onOpenChange={() => setDeleteTemplateConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort mall</AlertDialogTitle>
+            <AlertDialogDescription>
+              Är du säker på att du vill ta bort mallen "{deleteTemplateConfirm?.name}"? Befintliga projektredovisningar påverkas inte.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteTemplateConfirm && deleteTemplate(deleteTemplateConfirm.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Ta bort
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete template item confirmation */}
+      <AlertDialog open={deleteTemplateItemConfirm !== null} onOpenChange={() => setDeleteTemplateItemConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort post från mall</AlertDialogTitle>
+            <AlertDialogDescription>
+              Är du säker på att du vill ta bort denna post? Befintliga projektredovisningar påverkas inte.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (deleteTemplateItemConfirm !== null) {
+                setEditTemplateItems(editTemplateItems.filter((_, i) => i !== deleteTemplateItemConfirm));
+                setDeleteTemplateItemConfirm(null);
+              }
+            }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Ta bort
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Template dialog */}
       <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
         <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
@@ -686,18 +743,10 @@ export function FinanceView() {
                 {editTemplateItems.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <div className="flex flex-col gap-0.5">
-                      <button
-                        onClick={() => moveTemplateItem(idx, -1)}
-                        disabled={idx === 0}
-                        className="p-0.5 rounded hover:bg-muted disabled:opacity-20"
-                      >
+                      <button onClick={() => moveTemplateItem(idx, -1)} disabled={idx === 0} className="p-0.5 rounded hover:bg-muted disabled:opacity-20">
                         <ArrowUp className="h-3 w-3" />
                       </button>
-                      <button
-                        onClick={() => moveTemplateItem(idx, 1)}
-                        disabled={idx === editTemplateItems.length - 1}
-                        className="p-0.5 rounded hover:bg-muted disabled:opacity-20"
-                      >
+                      <button onClick={() => moveTemplateItem(idx, 1)} disabled={idx === editTemplateItems.length - 1} className="p-0.5 rounded hover:bg-muted disabled:opacity-20">
                         <ArrowDown className="h-3 w-3" />
                       </button>
                     </div>
@@ -725,7 +774,7 @@ export function FinanceView() {
                         <SelectItem value="Intäkt">Intäkt</SelectItem>
                       </SelectContent>
                     </Select>
-                    <button onClick={() => setEditTemplateItems(editTemplateItems.filter((_, i) => i !== idx))} className="p-1 hover:text-destructive">
+                    <button onClick={() => confirmRemoveTemplateItem(idx)} className="p-1 hover:text-destructive">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
