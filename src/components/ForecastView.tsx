@@ -398,9 +398,9 @@ export function ForecastView() {
             </div>
           </CardHeader>
           <CardContent className="px-0 pb-0">
-            <div ref={forecastTableRef} className="overflow-x-auto">
+            <div ref={forecastTableRef} className="overflow-x-auto max-h-[calc(100vh-280px)]">
               <table className="w-full border-collapse">
-                <thead>
+                <thead className="sticky top-0 z-10">
                   {/* Quarter header row */}
                   {selectedPeriod !== 'rolling12' &&
                   <tr className="bg-sidebar-accent/60">
