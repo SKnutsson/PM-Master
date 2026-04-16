@@ -893,6 +893,53 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          comment: string | null
+          created_at: string
+          created_by: string | null
+          deadline: string | null
+          id: string
+          name: string
+          project_id: string | null
+          responsible: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          id?: string
+          name: string
+          project_id?: string | null
+          responsible?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline?: string | null
+          id?: string
+          name?: string
+          project_id?: string | null
+          responsible?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

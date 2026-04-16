@@ -104,7 +104,7 @@ export function ResourcePlanningView() {
     upsertDailyEntry
   } = useResourceData();
 
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('days');
   const [showArchived, setShowArchived] = useState(false);
   const [filterInstaller, setFilterInstaller] = useState('all');
@@ -172,10 +172,17 @@ export function ResourcePlanningView() {
     return result;
   }, [displayProjects, filterInstaller, filterCompany, filterOverloaded, filterNoResources, projectInstallers, installers, dailyEntries, estimations]);
 
+  // Auto-expand all projects on first load
+  useEffect(() => {
+    if (expandedProjects === null && filteredProjects.length > 0) {
+      setExpandedProjects(new Set(filteredProjects.map((p) => p.id)));
+    }
+  }, [expandedProjects, filteredProjects]);
+
   const toggleProject = (id: string) => {
     setExpandedProjects((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);else next.add(id);
+      const next = new Set(prev ?? []);
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   };
@@ -587,7 +594,7 @@ export function ResourcePlanningView() {
                   </div>
 
                   {filteredProjects.map((project) => {
-                    const isExpanded = expandedProjects.has(project.id);
+                    const isExpanded = expandedProjects?.has(project.id) ?? false;
                     const pInstallers = getProjectInstallers(project.id);
                     const resourceStatus = getResourceStatus(project.id);
                     const isArchived = project.status === 'Avslutat';

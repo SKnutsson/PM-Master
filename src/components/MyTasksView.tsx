@@ -3,153 +3,172 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfiles, getDisplayName, UserProfile } from '@/hooks/useProfiles';
 import { UserAvatar } from '@/components/UserAvatar';
+import { UserSelect } from '@/components/UserSelect';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, ClipboardList, Filter, Layers, Clock, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { CalendarDays, ClipboardList, Filter, Layers, Clock, AlertTriangle, Plus, CalendarIcon, Trash2, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useProjectDataContext } from '@/contexts/ProjectDataContext';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 import type { Status } from '@/data/projectData';
 
 type StatusFilter = 'all' | 'Ej påbörjad' | 'Pågår' | 'Försenad';
-const EXCLUDED_STATUSES = ['Slutförd', 'Avslutat', 'Klar', 'Inlämnad'];
+const EXCLUDED_STATUSES = ['Slutförd'];
+const TASK_STATUSES = ['Ej påbörjad', 'Pågår', 'Slutförd', 'Försenad'] as const;
 
-interface ActivityWithProject {
+interface Task {
   id: string;
   name: string;
-  status: string;
   responsible: string;
-  start_date: string | null;
-  end_date: string | null;
-  phase: string | null;
-  notes: string | null;
-  project_id: string;
-  project_name?: string;
-}
-
-interface DocItemWithProject {
-  id: string;
-  document_type: string;
-  status: string;
-  responsible: string | null;
   deadline: string | null;
-  notes: string | null;
-  project_id: string;
+  project_id: string | null;
+  comment: string | null;
+  status: string;
+  created_by: string | null;
+  created_at: string;
   project_name?: string;
 }
 
 export function MyTasksView() {
   const { user } = useAuth();
   const { profiles } = useProfiles();
+  const { projects } = useProjectDataContext();
+  const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState<string>('me');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
-  // Determine the current user's display name
   const currentProfile = useMemo(
     () => profiles.find((p) => p.user_id === user?.id),
     [profiles, user]
   );
 
   const selectedDisplayName = useMemo(() => {
-    if (selectedUser === 'me') {
-      return currentProfile ? getDisplayName(currentProfile) : '';
-    }
+    if (selectedUser === 'me') return currentProfile ? getDisplayName(currentProfile) : '';
     if (selectedUser === 'all') return '';
     const p = profiles.find((pr) => pr.user_id === selectedUser);
     return p ? getDisplayName(p) : '';
   }, [selectedUser, profiles, currentProfile]);
 
-  // Fetch activities
-  const { data: activities = [] } = useQuery({
-    queryKey: ['my-activities'],
+  // Fetch tasks
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['my-tasks'],
     queryFn: async () => {
-      const { data: acts } = await supabase
-        .from('activities')
-        .select('id, name, status, responsible, start_date, end_date, phase, notes, project_id');
-      const { data: projects } = await supabase.from('projects').select('id, name');
-      const projectMap = new Map((projects || []).map((p) => [p.id, p.name]));
-      return (acts || []).map((a) => ({
-        ...a,
-        project_name: projectMap.get(a.project_id) || 'Okänt projekt',
-      })) as ActivityWithProject[];
+      const { data: tasksData } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      const projectMap = new Map(projects.map((p) => [p.id, p.name]));
+      return (tasksData || []).map((t: any) => ({
+        ...t,
+        project_name: t.project_id ? projectMap.get(t.project_id) || 'Okänt projekt' : null,
+      })) as Task[];
+    },
+    enabled: !!user,
+  });
+
+  // Mutations
+  const addTask = useMutation({
+    mutationFn: async (task: { name: string; responsible: string; deadline?: string; project_id?: string; comment?: string; status: string }) => {
+      const { error } = await supabase.from('tasks').insert({
+        name: task.name,
+        responsible: task.responsible,
+        deadline: task.deadline || null,
+        project_id: task.project_id || null,
+        comment: task.comment || null,
+        status: task.status,
+        created_by: user?.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      toast.success('Uppgift skapad');
     },
   });
 
-  // Fetch documentation items
-  const { data: docItems = [] } = useQuery({
-    queryKey: ['my-doc-items'],
-    queryFn: async () => {
-      const { data: docs } = await supabase
-        .from('documentation_items')
-        .select('id, document_type, status, responsible, deadline, notes, project_id');
-      const { data: projects } = await supabase.from('projects').select('id, name');
-      const projectMap = new Map((projects || []).map((p) => [p.id, p.name]));
-      return (docs || []).map((d) => ({
-        ...d,
-        project_name: projectMap.get(d.project_id) || 'Okänt projekt',
-      })) as DocItemWithProject[];
+  const updateTaskStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from('tasks').update({ status }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-tasks'] }),
+  });
+
+  const deleteTask = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('tasks').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      toast.success('Uppgift borttagen');
     },
   });
 
-  // Filter logic
-  const filterByUser = <T extends { responsible: string | null }>(items: T[]) => {
+  // Filters
+  const filterByUser = (items: Task[]) => {
     if (selectedUser === 'all') return items;
     const name = selectedDisplayName;
     if (!name) return [];
     return items.filter((item) => item.responsible === name);
   };
 
-  const filterByStatus = <T extends { status: string }>(items: T[]) => {
+  const filterByStatus = (items: Task[]) => {
     const nonCompleted = items.filter((item) => !EXCLUDED_STATUSES.includes(item.status));
     if (statusFilter === 'all') return nonCompleted;
     return nonCompleted.filter((item) => item.status === statusFilter);
   };
 
-  const filteredActivities = useMemo(
-    () => filterByStatus(filterByUser(activities)),
-    [activities, selectedUser, selectedDisplayName, statusFilter]
+  const filteredTasks = useMemo(
+    () => filterByStatus(filterByUser(tasks)),
+    [tasks, selectedUser, selectedDisplayName, statusFilter]
   );
 
-  const filteredDocs = useMemo(
-    () => filterByStatus(filterByUser(docItems)),
-    [docItems, selectedUser, selectedDisplayName, statusFilter]
-  );
-
-  // Counts for badges — exclude completed/submitted items from total
-  const actCounts = useMemo(() => {
-    const userFiltered = filterByUser(activities);
-    const nonCompleted = userFiltered.filter((a) => !EXCLUDED_STATUSES.includes(a.status));
+  const counts = useMemo(() => {
+    const userFiltered = filterByUser(tasks);
+    const nonCompleted = userFiltered.filter((t) => !EXCLUDED_STATUSES.includes(t.status));
     return {
       total: nonCompleted.length,
-      notStarted: nonCompleted.filter((a) => a.status === 'Ej påbörjad').length,
-      inProgress: nonCompleted.filter((a) => a.status === 'Pågår').length,
-      delayed: nonCompleted.filter((a) => a.status === 'Försenad').length,
+      notStarted: nonCompleted.filter((t) => t.status === 'Ej påbörjad').length,
+      inProgress: nonCompleted.filter((t) => t.status === 'Pågår').length,
+      delayed: nonCompleted.filter((t) => t.status === 'Försenad').length,
     };
-  }, [activities, selectedUser, selectedDisplayName]);
+  }, [tasks, selectedUser, selectedDisplayName]);
 
-  const docCounts = useMemo(() => {
-    const userFiltered = filterByUser(docItems);
-    const nonCompleted = userFiltered.filter((d) => !EXCLUDED_STATUSES.includes(d.status));
-    return {
-      total: nonCompleted.length,
-      notStarted: nonCompleted.filter((d) => d.status === 'Ej påbörjad').length,
-      inProgress: nonCompleted.filter((d) => d.status === 'Pågår').length,
-      delayed: nonCompleted.filter((d) => d.status === 'Försenad').length,
-    };
-  }, [docItems, selectedUser, selectedDisplayName]);
-
-  const selectedProfile = useMemo(() => {
-    if (selectedUser === 'me') return currentProfile;
-    if (selectedUser === 'all') return null;
-    return profiles.find((p) => p.user_id === selectedUser) || null;
-  }, [selectedUser, profiles, currentProfile]);
+  const handleComplete = (task: Task) => {
+    const newStatus = task.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd';
+    updateTaskStatus.mutate({ id: task.id, status: newStatus });
+  };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Mina uppgifter</h1>
+        <Button size="sm" onClick={() => setAddDialogOpen(true)}>
+          <Plus className="mr-1 h-4 w-4" />
+          Ny uppgift
+        </Button>
       </div>
 
       {/* Filters */}
@@ -207,107 +226,201 @@ export function MyTasksView() {
           className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168,30%,16%)] to-[hsl(168,40%,10%)] p-5 shadow-md">
           <Layers className="absolute top-3 right-3 h-8 w-8 text-white/10" />
           <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Totalt</p>
-          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.total + docCounts.total} /></p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={counts.total} /></p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
           className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(217,70%,55%)] to-[hsl(217,70%,40%)] p-5 shadow-md">
           <ClipboardList className="absolute top-3 right-3 h-8 w-8 text-white/10" />
           <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Ej påbörjad</p>
-          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.notStarted + docCounts.notStarted} /></p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={counts.notStarted} /></p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(25,95%,53%)] to-[hsl(25,90%,42%)] p-5 shadow-md">
           <Clock className="absolute top-3 right-3 h-8 w-8 text-white/10" />
           <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Pågår</p>
-          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.inProgress + docCounts.inProgress} /></p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={counts.inProgress} /></p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0,45%,45%)] to-[hsl(0,40%,35%)] p-5 shadow-md">
           <AlertTriangle className="absolute top-3 right-3 h-8 w-8 text-white/10" />
           <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Försenad</p>
-          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={actCounts.delayed + docCounts.delayed} /></p>
+          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={counts.delayed} /></p>
         </motion.div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="activities" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="activities" className="gap-2">
-            <CalendarDays className="h-4 w-4" />
-            Aktiviteter
-            <Badge variant="secondary" className="ml-1">{filteredActivities.length}</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="docs" className="gap-2">
-            <ClipboardList className="h-4 w-4" />
-            Dokumentation
-            <Badge variant="secondary" className="ml-1">{filteredDocs.length}</Badge>
-          </TabsTrigger>
-        </TabsList>
+      {/* Task list */}
+      {filteredTasks.length === 0 ? (
+        <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+          Inga uppgifter matchar filtret.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredTasks.map((task) => (
+            <Card key={task.id} className="hover:bg-muted/30 transition-colors">
+              <CardContent className="flex items-center gap-4 py-3 px-4">
+                <Checkbox
+                  checked={task.status === 'Slutförd'}
+                  onCheckedChange={() => handleComplete(task)}
+                  className="shrink-0"
+                />
+                {selectedUser === 'all' && (
+                  <ResponsibleAvatar name={task.responsible} profiles={profiles} />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-sm font-medium truncate", task.status === 'Slutförd' && "line-through text-muted-foreground")}>{task.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {task.project_name || 'Ingen projektkoppling'}
+                    {task.comment ? ` · ${task.comment}` : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  {task.deadline && (
+                    <span className="text-xs text-muted-foreground hidden sm:inline">
+                      Deadline: {task.deadline}
+                    </span>
+                  )}
+                  <StatusBadge status={task.status as Status} size="sm" />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => setDeleteTaskId(task.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-        <TabsContent value="activities">
-          {filteredActivities.length === 0 ? (
-            <EmptyState message="Inga aktiviteter matchar filtret." />
-          ) : (
-            <div className="space-y-2">
-              {filteredActivities.map((a) => (
-                <Card key={a.id} className="hover:bg-muted/30 transition-colors">
-                  <CardContent className="flex items-center gap-4 py-3 px-4">
-                    {selectedUser === 'all' && (
-                      <ResponsibleAvatar name={a.responsible} profiles={profiles} />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{a.name}</p>
-                      <p className="text-xs text-muted-foreground">{a.project_name} {a.phase ? `· ${a.phase}` : ''}</p>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {a.start_date && (
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                          {a.start_date}{a.end_date ? ` → ${a.end_date}` : ''}
-                        </span>
-                      )}
-                      <StatusBadge status={a.status as Status} size="sm" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+      {/* Add task dialog */}
+      <AddTaskDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        profiles={profiles}
+        projects={projects}
+        onAdd={(task) => addTask.mutate(task)}
+      />
 
-        <TabsContent value="docs">
-          {filteredDocs.length === 0 ? (
-            <EmptyState message="Inga dokumentationsuppgifter matchar filtret." />
-          ) : (
-            <div className="space-y-2">
-              {filteredDocs.map((d) => (
-                <Card key={d.id} className="hover:bg-muted/30 transition-colors">
-                  <CardContent className="flex items-center gap-4 py-3 px-4">
-                    {selectedUser === 'all' && d.responsible && (
-                      <ResponsibleAvatar name={d.responsible} profiles={profiles} />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{d.document_type}</p>
-                      <p className="text-xs text-muted-foreground">{d.project_name}</p>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {d.deadline && (
-                        <span className="text-xs text-muted-foreground hidden sm:inline">
-                          Deadline: {d.deadline}
-                        </span>
-                      )}
-                      <StatusBadge status={d.status as Status} size="sm" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteTaskId} onOpenChange={(open) => !open && setDeleteTaskId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ta bort uppgift?</AlertDialogTitle>
+            <AlertDialogDescription>Är du säker på att du vill ta bort denna uppgift?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { if (deleteTaskId) { deleteTask.mutate(deleteTaskId); setDeleteTaskId(null); } }}>
+              Ta bort
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
+// --- Add Task Dialog ---
+function AddTaskDialog({
+  open, onOpenChange, profiles, projects, onAdd,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  profiles: UserProfile[];
+  projects: Array<{ id: string; name: string }>;
+  onAdd: (task: { name: string; responsible: string; deadline?: string; project_id?: string; comment?: string; status: string }) => void;
+}) {
+  const [name, setName] = useState('');
+  const [responsible, setResponsible] = useState('');
+  const [deadline, setDeadline] = useState<Date | undefined>();
+  const [projectId, setProjectId] = useState('');
+  const [comment, setComment] = useState('');
+  const [status, setStatus] = useState('Ej påbörjad');
+
+  const resetForm = () => {
+    setName(''); setResponsible(''); setDeadline(undefined); setProjectId(''); setComment(''); setStatus('Ej påbörjad');
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !responsible.trim()) return;
+    onAdd({
+      name: name.trim(),
+      responsible: responsible.trim(),
+      deadline: deadline ? format(deadline, 'yyyy-MM-dd') : undefined,
+      project_id: projectId || undefined,
+      comment: comment.trim() || undefined,
+      status,
+    });
+    resetForm();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Ny uppgift</DialogTitle>
+            <DialogDescription>Skapa en ny uppgift.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Uppgiftsnamn</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="t.ex. Boka hotell" />
+            </div>
+            <div className="grid gap-2">
+              <Label>Ansvarig</Label>
+              <UserSelect profiles={profiles} value={responsible || 'none'} onValueChange={(v) => setResponsible(v === 'none' ? '' : v)} />
+            </div>
+            <div className="grid gap-2">
+              <Label>Status</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {TASK_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Projekt (valfritt)</Label>
+              <Select value={projectId || 'none'} onValueChange={(v) => setProjectId(v === 'none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Inget projekt" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Inget projekt</SelectItem>
+                  {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label>Deadline (valfritt)</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("justify-start text-left font-normal", !deadline && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {deadline ? format(deadline, 'yyyy-MM-dd') : 'Välj datum'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="grid gap-2">
+              <Label>Kommentar (valfritt)</Label>
+              <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Skriv en kommentar..." rows={3} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
+            <Button type="submit" disabled={!name.trim() || !responsible.trim()}>Skapa</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// --- Helper components ---
 function ResponsibleAvatar({ name, profiles }: { name: string; profiles: UserProfile[] }) {
   const profile = profiles.find((p) => getDisplayName(p) === name);
   if (profile) return <UserAvatar profile={profile} size="sm" />;
@@ -334,12 +447,4 @@ function AnimatedNumber({ value, duration = 800 }: { value: number; duration?: n
     return () => cancelAnimationFrame(raf);
   }, [value, duration]);
   return <>{display}</>;
-}
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-      {message}
-    </div>
-  );
 }

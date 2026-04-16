@@ -146,7 +146,7 @@ export function TimelineView() {
     return allProjects.filter((p) => p.status !== 'Avslutat');
   }, [allProjects, showArchived]);
   const { profiles } = useProfiles();
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
 
   // Determine year range from activity data
@@ -202,9 +202,8 @@ export function TimelineView() {
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects((prev) => {
-      const next = new Set(prev);
-      if (next.has(projectId)) next.delete(projectId);else
-      next.add(projectId);
+      const next = new Set(prev ?? []);
+      if (next.has(projectId)) next.delete(projectId); else next.add(projectId);
       return next;
     });
   };
@@ -230,6 +229,13 @@ export function TimelineView() {
     const map = new Map(timelineProjects.map((p) => [p.id, p]));
     return localProjectOrder.map((id) => map.get(id)).filter(Boolean) as typeof timelineProjects;
   }, [localProjectOrder, timelineProjects]);
+
+  // Auto-expand all projects on first load
+  useEffect(() => {
+    if (expandedProjects === null && orderedProjects.length > 0) {
+      setExpandedProjects(new Set(orderedProjects.map((p) => p.id)));
+    }
+  }, [expandedProjects, orderedProjects]);
 
   const handleDragStart = useCallback((e: React.DragEvent, projectId: string) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -686,7 +692,7 @@ export function TimelineView() {
                   </div>
 
                   {orderedProjects.map((project) => {
-                    const isExpanded = expandedProjects.has(project.id);
+                    const isExpanded = expandedProjects?.has(project.id) ?? false;
                     const { startIdx, endIdx } = getProjectWeekRange(project.id);
                     const { startDay, endDay } = getProjectDayRange(project.id);
                     const activityCount = project.activities.length;
