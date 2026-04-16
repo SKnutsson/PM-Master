@@ -594,7 +594,7 @@ export function ResourcePlanningView() {
                   </div>
 
                   {filteredProjects.map((project) => {
-                    const isExpanded = expandedProjects.has(project.id);
+                    const isExpanded = expandedProjects?.has(project.id) ?? false;
                     const pInstallers = getProjectInstallers(project.id);
                     const resourceStatus = getResourceStatus(project.id);
                     const isArchived = project.status === 'Avslutat';

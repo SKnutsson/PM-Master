@@ -693,7 +693,7 @@ export function TimelineView() {
                   </div>
 
                   {orderedProjects.map((project) => {
-                    const isExpanded = expandedProjects.has(project.id);
+                    const isExpanded = expandedProjects?.has(project.id) ?? false;
                     const { startIdx, endIdx } = getProjectWeekRange(project.id);
                     const { startDay, endDay } = getProjectDayRange(project.id);
                     const activityCount = project.activities.length;
