@@ -104,7 +104,7 @@ export function ResourcePlanningView() {
     upsertDailyEntry
   } = useResourceData();
 
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('days');
   const [showArchived, setShowArchived] = useState(false);
   const [filterInstaller, setFilterInstaller] = useState('all');

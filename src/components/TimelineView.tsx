@@ -146,7 +146,7 @@ export function TimelineView() {
     return allProjects.filter((p) => p.status !== 'Avslutat');
   }, [allProjects, showArchived]);
   const { profiles } = useProfiles();
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('weeks');
 
   // Determine year range from activity data
