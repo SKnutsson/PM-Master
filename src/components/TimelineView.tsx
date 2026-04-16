@@ -231,6 +231,13 @@ export function TimelineView() {
     return localProjectOrder.map((id) => map.get(id)).filter(Boolean) as typeof timelineProjects;
   }, [localProjectOrder, timelineProjects]);
 
+  // Auto-expand all projects on first load
+  useEffect(() => {
+    if (expandedProjects === null && orderedProjects.length > 0) {
+      setExpandedProjects(new Set(orderedProjects.map((p) => p.id)));
+    }
+  }, [expandedProjects, orderedProjects]);
+
   const handleDragStart = useCallback((e: React.DragEvent, projectId: string) => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', projectId);

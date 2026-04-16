@@ -172,6 +172,13 @@ export function ResourcePlanningView() {
     return result;
   }, [displayProjects, filterInstaller, filterCompany, filterOverloaded, filterNoResources, projectInstallers, installers, dailyEntries, estimations]);
 
+  // Auto-expand all projects on first load
+  useEffect(() => {
+    if (expandedProjects === null && filteredProjects.length > 0) {
+      setExpandedProjects(new Set(filteredProjects.map((p) => p.id)));
+    }
+  }, [expandedProjects, filteredProjects]);
+
   const toggleProject = (id: string) => {
     setExpandedProjects((prev) => {
       const next = new Set(prev);
