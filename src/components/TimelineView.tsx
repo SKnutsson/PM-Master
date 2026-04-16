@@ -202,9 +202,8 @@ export function TimelineView() {
 
   const toggleProject = (projectId: string) => {
     setExpandedProjects((prev) => {
-      const next = new Set(prev);
-      if (next.has(projectId)) next.delete(projectId);else
-      next.add(projectId);
+      const next = new Set(prev ?? []);
+      if (next.has(projectId)) next.delete(projectId); else next.add(projectId);
       return next;
     });
   };
