@@ -212,19 +212,29 @@ export function ResourceAnalyticsView() {
           <h1 className="text-2xl font-bold tracking-tight">Resursanalys</h1>
           <p className="text-sm text-muted-foreground">Jämför kalkyl mot utfall per projekt</p>
         </div>
-        <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-          <SelectTrigger className="w-[280px] h-9">
-            <SelectValue placeholder="Välj ett projekt…" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72">
-            {sortedProjects.map(p => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.code ? `${p.code} – ` : ''}{p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+            <SelectTrigger className="w-[280px] h-9">
+              <SelectValue placeholder="Välj ett projekt…" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              {sortedProjects.map(p => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.code ? `${p.code} – ` : ''}{p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedProjectId && (
+            <Button variant="outline" size="sm" onClick={printReport} className="h-9">
+              <Printer className="h-4 w-4 mr-1.5" /> Rapport
+            </Button>
+          )}
+        </div>
       </div>
+
+      {selectedProjectId && (
+        <div ref={reportRef} className="space-y-5">
 
       {!selectedProjectId && (
         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-2">
