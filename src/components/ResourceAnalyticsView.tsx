@@ -1,15 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { useResourceData } from '@/hooks/useResourceData';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Legend,
 } from 'recharts';
-import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car } from 'lucide-react';
+import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, Printer, Save } from 'lucide-react';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -85,6 +91,67 @@ export function ResourceAnalyticsView() {
   const { estimations, dailyEntries, isLoading } = useResourceData();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  // KPI state
+  const [ftr, setFtr] = useState<string>('');
+  const [missing, setMissing] = useState<string>('');
+  const [remarks, setRemarks] = useState<string>('');
+  const [kpiNotes, setKpiNotes] = useState<string>('');
+  const [savingKpi, setSavingKpi] = useState(false);
+
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setFtr(''); setMissing(''); setRemarks(''); setKpiNotes('');
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('project_kpi_metrics' as any)
+        .select('*')
+        .eq('project_id', selectedProjectId)
+        .maybeSingle();
+      const d: any = data || {};
+      setFtr(d.first_time_right_percent != null ? String(d.first_time_right_percent) : '');
+      setMissing(d.delivery_precision_missing != null ? String(d.delivery_precision_missing) : '');
+      setRemarks(d.inspection_remarks != null ? String(d.inspection_remarks) : '');
+      setKpiNotes(d.notes ?? '');
+    })();
+  }, [selectedProjectId]);
+
+  const saveKpi = async () => {
+    if (!selectedProjectId) return;
+    setSavingKpi(true);
+    const payload: any = {
+      project_id: selectedProjectId,
+      first_time_right_percent: ftr === '' ? null : parseFloat(ftr),
+      delivery_precision_missing: missing === '' ? null : parseInt(missing),
+      inspection_remarks: remarks === '' ? null : parseInt(remarks),
+      notes: kpiNotes || null,
+    };
+    const { error } = await supabase.from('project_kpi_metrics' as any).upsert(payload, { onConflict: 'project_id' });
+    setSavingKpi(false);
+    if (error) toast.error('Kunde inte spara KPI:er');
+    else toast.success('KPI:er sparade');
+  };
+
+  const printReport = () => {
+    const el = reportRef.current;
+    if (!el) return;
+    const w = window.open('', '_blank');
+    if (!w) return;
+    const styles = Array.from(document.styleSheets).map(s => {
+      try { return Array.from(s.cssRules).map(r => r.cssText).join('\n'); } catch { return ''; }
+    }).join('\n');
+    const project = sortedProjects.find(p => p.id === selectedProjectId);
+    const title = `Projektrapport – ${project?.code ? project.code + ' ' : ''}${project?.name ?? ''}`;
+    w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>${styles}
+      body { background: white !important; color: black !important; padding: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @media print { body { padding: 0; } }
+    </style></head><body><h1 style="margin-bottom:16px">${title}</h1>${el.innerHTML}</body></html>`);
+    w.document.close();
+    w.onload = () => { w.print(); w.close(); };
+  };
 
   const sortedProjects = useMemo(() =>
     [...allProjects].sort((a, b) => (a.code || '').localeCompare(b.code || '')),
@@ -145,18 +212,25 @@ export function ResourceAnalyticsView() {
           <h1 className="text-2xl font-bold tracking-tight">Resursanalys</h1>
           <p className="text-sm text-muted-foreground">Jämför kalkyl mot utfall per projekt</p>
         </div>
-        <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-          <SelectTrigger className="w-[280px] h-9">
-            <SelectValue placeholder="Välj ett projekt…" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72">
-            {sortedProjects.map(p => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.code ? `${p.code} – ` : ''}{p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+            <SelectTrigger className="w-[280px] h-9">
+              <SelectValue placeholder="Välj ett projekt…" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              {sortedProjects.map(p => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.code ? `${p.code} – ` : ''}{p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedProjectId && (
+            <Button variant="outline" size="sm" onClick={printReport} className="h-9">
+              <Printer className="h-4 w-4 mr-1.5" /> Rapport
+            </Button>
+          )}
+        </div>
       </div>
 
       {!selectedProjectId && (
@@ -174,8 +248,10 @@ export function ResourceAnalyticsView() {
         </div>
       )}
 
-      {selectedProjectId && (hasData || isLoading) && (
-        <>
+      {selectedProjectId && (
+        <div ref={reportRef} className="space-y-5">
+          {(hasData || isLoading) && (
+            <>
           {/* Paired stat cards: Montage pair | Resa pair | Total */}
           <div className="flex flex-wrap gap-3">
             {/* Montage pair */}
@@ -302,19 +378,8 @@ export function ResourceAnalyticsView() {
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }} barCategoryGap="40%">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                    unit="h"
-                    width={36}
-                  />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} unit="h" width={36} />
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }} />
                   <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12, color: 'hsl(var(--muted-foreground))' }} />
                   <Bar dataKey="Kalkyl" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} opacity={0.55} maxBarSize={72} />
@@ -323,7 +388,74 @@ export function ResourceAnalyticsView() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        </>
+            </>
+          )}
+
+          {/* KPI / Kvalitet & leverans */}
+          <Card className="border-border/50 bg-card/80">
+            <CardHeader className="pb-2 pt-4 px-4 flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold">Kvalitet & leverans</CardTitle>
+              <Button size="sm" onClick={saveKpi} disabled={savingKpi} className="h-8 print:hidden">
+                <Save className="h-3.5 w-3.5 mr-1.5" />
+                {savingKpi ? 'Sparar…' : 'Spara'}
+              </Button>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs flex items-center gap-1.5 mb-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                    First-time-right (%)
+                  </Label>
+                  <Input type="number" min="0" max="100" step="0.1" value={ftr} onChange={e => setFtr(e.target.value)} placeholder="t.ex. 92" className="h-9" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Andel egenkontrollpunkter rätt första gången</p>
+                </div>
+                <div>
+                  <Label className="text-xs flex items-center gap-1.5 mb-1.5">
+                    <Truck className="h-3.5 w-3.5 text-blue-500" />
+                    Saknade artiklar vid leverans
+                  </Label>
+                  <Input type="number" min="0" step="1" value={missing} onChange={e => setMissing(e.target.value)} placeholder="antal" className="h-9" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Leveransprecision från produktion</p>
+                </div>
+                <div>
+                  <Label className="text-xs flex items-center gap-1.5 mb-1.5">
+                    <ClipboardCheck className="h-3.5 w-3.5 text-amber-500" />
+                    Besiktningsanmärkningar
+                  </Label>
+                  <Input type="number" min="0" step="1" value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="antal" className="h-9" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Antal anmärkningar vid besiktning</p>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs mb-1.5 block">Kommentar</Label>
+                <Textarea value={kpiNotes} onChange={e => setKpiNotes(e.target.value)} placeholder="Noteringar om kvalitet, leverans eller besiktning…" className="min-h-[70px] text-sm" />
+              </div>
+
+              {/* KPI summary tiles for report */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/50">
+                <div className="rounded-md bg-muted/40 p-2">
+                  <p className="text-[10px] text-muted-foreground">First-time-right</p>
+                  <p className="text-lg font-bold tabular-nums">{ftr ? `${ftr}%` : '–'}</p>
+                </div>
+                <div className="rounded-md bg-muted/40 p-2">
+                  <p className="text-[10px] text-muted-foreground">Saknade artiklar</p>
+                  <p className="text-lg font-bold tabular-nums">{missing || '–'}</p>
+                </div>
+                <div className="rounded-md bg-muted/40 p-2">
+                  <p className="text-[10px] text-muted-foreground">Montage avv.</p>
+                  <p className={cn('text-lg font-bold tabular-nums', hasEstimation && (workDeviation > 0 ? 'text-red-500' : 'text-emerald-500'))}>
+                    {hasEstimation ? formatDeviation(workDeviation) : '–'}
+                  </p>
+                </div>
+                <div className="rounded-md bg-muted/40 p-2">
+                  <p className="text-[10px] text-muted-foreground">Besiktn.anm.</p>
+                  <p className="text-lg font-bold tabular-nums">{remarks || '–'}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </motion.div>
   );

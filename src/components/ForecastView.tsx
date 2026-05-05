@@ -201,7 +201,12 @@ export function ForecastView() {
   );
 
   const activeDeals = filteredForecast.filter((f) => f.dealStatus !== 'Förlorad').length;
-  const lostDeals = filteredForecast.filter((f) => f.dealStatus === 'Förlorad').length;
+  const lostDealsList = filteredForecast.filter((f) => f.dealStatus === 'Förlorad');
+  const lostDeals = lostDealsList.length;
+  const lostDealsValue = lostDealsList.reduce(
+    (sum, f) => sum + Object.values(f.months).reduce((s, v) => s + v, 0),
+    0
+  );
 
   if (isLoading) {
     return (
@@ -283,70 +288,56 @@ export function ForecastView() {
           </div>);
       })()}
 
-      {/* Summary Cards — Dashboard-style gradient hero cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Summary Cards — compact */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <motion.div variants={itemVariants} className="flex">
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg w-full flex flex-col">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Total budget</p>
-                <p className="text-3xl font-bold text-white mt-1">{filteredYearTotal.toFixed(1)} MSEK</p>
-                <p className="text-xs text-white/40 mt-1">Exkl. förlorade affärer</p>
-              </div>
-              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-                <ChartNoAxesColumnIncreasing className="h-7 w-7 text-white/80" />
-              </div>
+          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Total budget</p>
+              <p className="text-xl font-bold text-white leading-tight mt-0.5">{filteredYearTotal.toFixed(1)} MSEK</p>
+              <p className="text-[10px] text-white/40">Exkl. förlorade</p>
+            </div>
+            <div className="rounded-md p-1.5 bg-white/10">
+              <ChartNoAxesColumnIncreasing className="h-4 w-4 text-white/80" />
             </div>
           </div>
         </motion.div>
 
         <motion.div variants={itemVariants} className="flex">
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_55%_26%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg w-full flex flex-col">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Bästa månad</p>
-                <p className="text-3xl font-bold text-white mt-1">{monthLabels[bestMonth.month] || '-'}</p>
-                <p className="text-xs text-white/40 mt-1">{bestMonth.value.toFixed(1)} MSEK</p>
-              </div>
-              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-                <Trophy className="h-7 w-7 text-white/80" />
-              </div>
+          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_55%_26%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Bästa månad</p>
+              <p className="text-xl font-bold text-white leading-tight mt-0.5 truncate">{monthLabels[bestMonth.month] || '-'}</p>
+              <p className="text-[10px] text-white/40">{bestMonth.value.toFixed(1)} MSEK</p>
+            </div>
+            <div className="rounded-md p-1.5 bg-white/10">
+              <Trophy className="h-4 w-4 text-white/80" />
             </div>
           </div>
         </motion.div>
 
         <motion.div variants={itemVariants} className="flex">
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_25%_50%)] to-[hsl(160_20%_38%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg w-full flex flex-col">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Aktiva affärer</p>
-                <p className="text-3xl font-bold text-white mt-1">{activeDeals}</p>
-              </div>
-              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-                <Package className="h-7 w-7 text-white/80" />
-              </div>
+          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(160_25%_50%)] to-[hsl(160_20%_38%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Aktiva affärer</p>
+              <p className="text-xl font-bold text-white leading-tight mt-0.5">{activeDeals}</p>
+              <p className="text-[10px] text-white/40">st</p>
+            </div>
+            <div className="rounded-md p-1.5 bg-white/10">
+              <Package className="h-4 w-4 text-white/80" />
             </div>
           </div>
         </motion.div>
 
         <motion.div variants={itemVariants} className="flex">
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_32%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg w-full flex flex-col">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Förlorade affärer</p>
-                <p className="text-3xl font-bold text-white mt-1">{lostDeals}</p>
-              </div>
-              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-                <AlertTriangle className="h-7 w-7 text-white/80" />
-              </div>
+          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_32%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Förlorade affärer</p>
+              <p className="text-xl font-bold text-white leading-tight mt-0.5">{lostDeals} st</p>
+              <p className="text-[10px] text-white/60">{lostDealsValue.toFixed(1)} MSEK</p>
+            </div>
+            <div className="rounded-md p-1.5 bg-white/10">
+              <AlertTriangle className="h-4 w-4 text-white/80" />
             </div>
           </div>
         </motion.div>

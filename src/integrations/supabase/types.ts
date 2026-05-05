@@ -659,6 +659,39 @@ export type Database = {
           },
         ]
       }
+      project_kpi_metrics: {
+        Row: {
+          created_at: string
+          delivery_precision_missing: number | null
+          first_time_right_percent: number | null
+          id: string
+          inspection_remarks: number | null
+          notes: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_precision_missing?: number | null
+          first_time_right_percent?: number | null
+          id?: string
+          inspection_remarks?: number | null
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_precision_missing?: number | null
+          first_time_right_percent?: number | null
+          id?: string
+          inspection_remarks?: number | null
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       project_resource_allocations: {
         Row: {
           created_at: string
