@@ -233,9 +233,6 @@ export function ResourceAnalyticsView() {
         </div>
       </div>
 
-      {selectedProjectId && (
-        <div ref={reportRef} className="space-y-5">
-
       {!selectedProjectId && (
         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-2">
           <TrendingUp className="h-10 w-10 opacity-20" />
