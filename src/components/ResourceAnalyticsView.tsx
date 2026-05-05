@@ -91,6 +91,67 @@ export function ResourceAnalyticsView() {
   const { estimations, dailyEntries, isLoading } = useResourceData();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  // KPI state
+  const [ftr, setFtr] = useState<string>('');
+  const [missing, setMissing] = useState<string>('');
+  const [remarks, setRemarks] = useState<string>('');
+  const [kpiNotes, setKpiNotes] = useState<string>('');
+  const [savingKpi, setSavingKpi] = useState(false);
+
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setFtr(''); setMissing(''); setRemarks(''); setKpiNotes('');
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('project_kpi_metrics' as any)
+        .select('*')
+        .eq('project_id', selectedProjectId)
+        .maybeSingle();
+      const d: any = data || {};
+      setFtr(d.first_time_right_percent != null ? String(d.first_time_right_percent) : '');
+      setMissing(d.delivery_precision_missing != null ? String(d.delivery_precision_missing) : '');
+      setRemarks(d.inspection_remarks != null ? String(d.inspection_remarks) : '');
+      setKpiNotes(d.notes ?? '');
+    })();
+  }, [selectedProjectId]);
+
+  const saveKpi = async () => {
+    if (!selectedProjectId) return;
+    setSavingKpi(true);
+    const payload: any = {
+      project_id: selectedProjectId,
+      first_time_right_percent: ftr === '' ? null : parseFloat(ftr),
+      delivery_precision_missing: missing === '' ? null : parseInt(missing),
+      inspection_remarks: remarks === '' ? null : parseInt(remarks),
+      notes: kpiNotes || null,
+    };
+    const { error } = await supabase.from('project_kpi_metrics' as any).upsert(payload, { onConflict: 'project_id' });
+    setSavingKpi(false);
+    if (error) toast.error('Kunde inte spara KPI:er');
+    else toast.success('KPI:er sparade');
+  };
+
+  const printReport = () => {
+    const el = reportRef.current;
+    if (!el) return;
+    const w = window.open('', '_blank');
+    if (!w) return;
+    const styles = Array.from(document.styleSheets).map(s => {
+      try { return Array.from(s.cssRules).map(r => r.cssText).join('\n'); } catch { return ''; }
+    }).join('\n');
+    const project = sortedProjects.find(p => p.id === selectedProjectId);
+    const title = `Projektrapport – ${project?.code ? project.code + ' ' : ''}${project?.name ?? ''}`;
+    w.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>${styles}
+      body { background: white !important; color: black !important; padding: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @media print { body { padding: 0; } }
+    </style></head><body><h1 style="margin-bottom:16px">${title}</h1>${el.innerHTML}</body></html>`);
+    w.document.close();
+    w.onload = () => { w.print(); w.close(); };
+  };
 
   const sortedProjects = useMemo(() =>
     [...allProjects].sort((a, b) => (a.code || '').localeCompare(b.code || '')),
