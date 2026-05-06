@@ -664,8 +664,11 @@ export type Database = {
           created_at: string
           delivery_precision_missing: number | null
           first_time_right_percent: number | null
+          ftr_details: Json
           id: string
+          inspection_remark_details: Json
           inspection_remarks: number | null
+          missing_article_details: Json
           notes: string | null
           project_id: string
           updated_at: string
@@ -674,8 +677,11 @@ export type Database = {
           created_at?: string
           delivery_precision_missing?: number | null
           first_time_right_percent?: number | null
+          ftr_details?: Json
           id?: string
+          inspection_remark_details?: Json
           inspection_remarks?: number | null
+          missing_article_details?: Json
           notes?: string | null
           project_id: string
           updated_at?: string
@@ -684,8 +690,11 @@ export type Database = {
           created_at?: string
           delivery_precision_missing?: number | null
           first_time_right_percent?: number | null
+          ftr_details?: Json
           id?: string
+          inspection_remark_details?: Json
           inspection_remarks?: number | null
+          missing_article_details?: Json
           notes?: string | null
           project_id?: string
           updated_at?: string

@@ -98,11 +98,23 @@ export function ResourceAnalyticsView() {
   const [missing, setMissing] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
   const [kpiNotes, setKpiNotes] = useState<string>('');
+  const [ftrDetails, setFtrDetails] = useState<string[]>([]);
+  const [missingDetails, setMissingDetails] = useState<string[]>([]);
+  const [remarkDetails, setRemarkDetails] = useState<string[]>([]);
   const [savingKpi, setSavingKpi] = useState(false);
+
+  // Sync detail array length to count number
+  const syncDetails = (countStr: string, current: string[]): string[] => {
+    const n = countStr === '' ? 0 : Math.max(0, parseInt(countStr) || 0);
+    if (n === current.length) return current;
+    if (n > current.length) return [...current, ...Array(n - current.length).fill('')];
+    return current.slice(0, n);
+  };
 
   useEffect(() => {
     if (!selectedProjectId) {
       setFtr(''); setMissing(''); setRemarks(''); setKpiNotes('');
+      setFtrDetails([]); setMissingDetails([]); setRemarkDetails([]);
       return;
     }
     (async () => {
@@ -116,6 +128,9 @@ export function ResourceAnalyticsView() {
       setMissing(d.delivery_precision_missing != null ? String(d.delivery_precision_missing) : '');
       setRemarks(d.inspection_remarks != null ? String(d.inspection_remarks) : '');
       setKpiNotes(d.notes ?? '');
+      setFtrDetails(Array.isArray(d.ftr_details) ? d.ftr_details : []);
+      setMissingDetails(Array.isArray(d.missing_article_details) ? d.missing_article_details : []);
+      setRemarkDetails(Array.isArray(d.inspection_remark_details) ? d.inspection_remark_details : []);
     })();
   }, [selectedProjectId]);
 
@@ -128,6 +143,9 @@ export function ResourceAnalyticsView() {
       delivery_precision_missing: missing === '' ? null : parseInt(missing),
       inspection_remarks: remarks === '' ? null : parseInt(remarks),
       notes: kpiNotes || null,
+      ftr_details: ftrDetails,
+      missing_article_details: missingDetails,
+      inspection_remark_details: remarkDetails,
     };
     const { error } = await supabase.from('project_kpi_metrics' as any).upsert(payload, { onConflict: 'project_id' });
     setSavingKpi(false);
@@ -415,7 +433,7 @@ export function ResourceAnalyticsView() {
                     <Truck className="h-3.5 w-3.5 text-blue-500" />
                     Saknade artiklar vid leverans
                   </Label>
-                  <Input type="number" min="0" step="1" value={missing} onChange={e => setMissing(e.target.value)} placeholder="antal" className="h-9" />
+                  <Input type="number" min="0" step="1" value={missing} onChange={e => { setMissing(e.target.value); setMissingDetails(syncDetails(e.target.value, missingDetails)); }} placeholder="antal" className="h-9" />
                   <p className="text-[10px] text-muted-foreground mt-1">Leveransprecision från produktion</p>
                 </div>
                 <div>
@@ -423,12 +441,39 @@ export function ResourceAnalyticsView() {
                     <ClipboardCheck className="h-3.5 w-3.5 text-amber-500" />
                     Besiktningsanmärkningar
                   </Label>
-                  <Input type="number" min="0" step="1" value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="antal" className="h-9" />
+                  <Input type="number" min="0" step="1" value={remarks} onChange={e => { setRemarks(e.target.value); setRemarkDetails(syncDetails(e.target.value, remarkDetails)); }} placeholder="antal" className="h-9" />
                   <p className="text-[10px] text-muted-foreground mt-1">Antal anmärkningar vid besiktning</p>
                 </div>
               </div>
+
+              {/* Detail lists */}
+              {[
+                { title: 'Saknade artiklar – beskrivning per artikel', icon: <Truck className="h-3.5 w-3.5 text-blue-500" />, items: missingDetails, setItems: setMissingDetails, placeholder: 'Beskriv den saknade artikeln…' },
+                { title: 'Besiktningsanmärkningar – beskrivning per anmärkning', icon: <ClipboardCheck className="h-3.5 w-3.5 text-amber-500" />, items: remarkDetails, setItems: setRemarkDetails, placeholder: 'Beskriv anmärkningen…' },
+              ].map((section) => section.items.length > 0 && (
+                <div key={section.title} className="border-t border-border/50 pt-3">
+                  <Label className="text-xs flex items-center gap-1.5 mb-2">{section.icon}{section.title}</Label>
+                  <div className="space-y-2">
+                    {section.items.map((val, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="text-[11px] text-muted-foreground font-semibold mt-2 w-5 shrink-0">#{i + 1}</span>
+                        <Textarea
+                          value={val}
+                          onChange={e => {
+                            const next = [...section.items];
+                            next[i] = e.target.value;
+                            section.setItems(next);
+                          }}
+                          placeholder={section.placeholder}
+                          className="min-h-[50px] text-sm flex-1"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
               <div>
-                <Label className="text-xs mb-1.5 block">Kommentar</Label>
+                <Label className="text-xs mb-1.5 block">Övrig kommentar</Label>
                 <Textarea value={kpiNotes} onChange={e => setKpiNotes(e.target.value)} placeholder="Noteringar om kvalitet, leverans eller besiktning…" className="min-h-[70px] text-sm" />
               </div>
 

@@ -154,7 +154,7 @@ export function Dashboard() {
       const allInstallers = installersRes.data || [];
       const entries = entriesRes.data || [];
       const allProjects = projectsRes.data || [];
-      const projectMap = new Map(allProjects.map(p => [p.id, p.code || p.name]));
+      const projectMap = new Map(allProjects.map(p => [p.id, p.code ? `${p.code} – ${p.name}` : p.name]));
       const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
       const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
       
@@ -327,7 +327,7 @@ export function Dashboard() {
                             <span className="text-white/40">·</span>
                             <span className="text-white/50 truncate">{inst.company}</span>
                           </div>
-                          <span className="text-white/60 text-[11px] ml-2 shrink-0 text-right truncate max-w-[140px]">{inst.projects.join(', ') || '–'}</span>
+                          <span className="text-white/60 text-[11px] ml-2 shrink-0 text-right truncate max-w-[260px]" title={inst.projects.join(', ')}>{inst.projects.join(', ') || '–'}</span>
                         </div>
                       ))
                     ) : (

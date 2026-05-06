@@ -649,14 +649,14 @@ export function ResourcePlanningView() {
                                         resourceStatus === 'ok' && 'bg-status-completed/20 text-status-completed',
                                         resourceStatus === 'over' && 'bg-status-delayed/20 text-status-delayed'
                                       )}>
-                                        {summary.total}h / {estTotal > 0 ? `${estTotal}h` : '–'}
+                                        {estTotal > 0 ? `${estTotal}h` : '–'} / {summary.total}h
                                       </span>
                                     </TooltipTrigger>
                                     <TooltipContent side="top" className="text-xs">
                                       <p className="font-semibold mb-1">Kalkyl vs Utfall</p>
-                                      <p>Montage: {summary.totalWork}h / {est?.estimatedInstallHours || 0}h kalkyl</p>
-                                      <p>Resa: {summary.totalTravel}h / {est?.estimatedTravelHours || 0}h kalkyl</p>
-                                      <p className="mt-1 font-medium">Totalt: {summary.total}h / {estTotal}h</p>
+                                      <p>Montage: {est?.estimatedInstallHours || 0}h kalkyl / {summary.totalWork}h utfall</p>
+                                      <p>Resa: {est?.estimatedTravelHours || 0}h kalkyl / {summary.totalTravel}h utfall</p>
+                                      <p className="mt-1 font-medium">Totalt: {estTotal}h / {summary.total}h</p>
                                     </TooltipContent>
                                   </Tooltip>);
                               })()}
