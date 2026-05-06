@@ -569,7 +569,7 @@ export function ResourcePlanningView() {
                       Projekt / Montör
                     </div>
                     <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold text-center" style={{ width: KALKYL_COL_WIDTH }}>
-                      Kalkyl
+                      Kalkyl / Utfall
                     </div>
                   </div>
                   <div className="flex">
