@@ -401,7 +401,11 @@ export function ResourceAnalyticsView() {
                   <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }} />
                   <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12, color: 'hsl(var(--muted-foreground))' }} />
                   <Bar dataKey="Kalkyl" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} opacity={0.55} maxBarSize={72} />
-                  <Bar dataKey="Utfall" fill="hsl(142 71% 45%)" radius={[3, 3, 0, 0]} maxBarSize={72} />
+                  <Bar dataKey="Utfall" radius={[3, 3, 0, 0]} maxBarSize={72}>
+                    {chartData.map((d, i) => (
+                      <Cell key={i} fill={d.Utfall > d.Kalkyl ? 'hsl(0 84% 60%)' : 'hsl(142 71% 45%)'} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
