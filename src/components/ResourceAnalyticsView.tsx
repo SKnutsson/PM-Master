@@ -433,7 +433,7 @@ export function ResourceAnalyticsView() {
                     <Truck className="h-3.5 w-3.5 text-blue-500" />
                     Saknade artiklar vid leverans
                   </Label>
-                  <Input type="number" min="0" step="1" value={missing} onChange={e => setMissing(e.target.value)} placeholder="antal" className="h-9" />
+                  <Input type="number" min="0" step="1" value={missing} onChange={e => { setMissing(e.target.value); setMissingDetails(syncDetails(e.target.value, missingDetails)); }} placeholder="antal" className="h-9" />
                   <p className="text-[10px] text-muted-foreground mt-1">Leveransprecision från produktion</p>
                 </div>
                 <div>
@@ -441,12 +441,39 @@ export function ResourceAnalyticsView() {
                     <ClipboardCheck className="h-3.5 w-3.5 text-amber-500" />
                     Besiktningsanmärkningar
                   </Label>
-                  <Input type="number" min="0" step="1" value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="antal" className="h-9" />
+                  <Input type="number" min="0" step="1" value={remarks} onChange={e => { setRemarks(e.target.value); setRemarkDetails(syncDetails(e.target.value, remarkDetails)); }} placeholder="antal" className="h-9" />
                   <p className="text-[10px] text-muted-foreground mt-1">Antal anmärkningar vid besiktning</p>
                 </div>
               </div>
+
+              {/* Detail lists */}
+              {[
+                { title: 'Saknade artiklar – beskrivning per artikel', icon: <Truck className="h-3.5 w-3.5 text-blue-500" />, items: missingDetails, setItems: setMissingDetails, placeholder: 'Beskriv den saknade artikeln…' },
+                { title: 'Besiktningsanmärkningar – beskrivning per anmärkning', icon: <ClipboardCheck className="h-3.5 w-3.5 text-amber-500" />, items: remarkDetails, setItems: setRemarkDetails, placeholder: 'Beskriv anmärkningen…' },
+              ].map((section) => section.items.length > 0 && (
+                <div key={section.title} className="border-t border-border/50 pt-3">
+                  <Label className="text-xs flex items-center gap-1.5 mb-2">{section.icon}{section.title}</Label>
+                  <div className="space-y-2">
+                    {section.items.map((val, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="text-[11px] text-muted-foreground font-semibold mt-2 w-5 shrink-0">#{i + 1}</span>
+                        <Textarea
+                          value={val}
+                          onChange={e => {
+                            const next = [...section.items];
+                            next[i] = e.target.value;
+                            section.setItems(next);
+                          }}
+                          placeholder={section.placeholder}
+                          className="min-h-[50px] text-sm flex-1"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
               <div>
-                <Label className="text-xs mb-1.5 block">Kommentar</Label>
+                <Label className="text-xs mb-1.5 block">Övrig kommentar</Label>
                 <Textarea value={kpiNotes} onChange={e => setKpiNotes(e.target.value)} placeholder="Noteringar om kvalitet, leverans eller besiktning…" className="min-h-[70px] text-sm" />
               </div>
 
