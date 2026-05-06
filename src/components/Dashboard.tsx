@@ -154,7 +154,7 @@ export function Dashboard() {
       const allInstallers = installersRes.data || [];
       const entries = entriesRes.data || [];
       const allProjects = projectsRes.data || [];
-      const projectMap = new Map(allProjects.map(p => [p.id, p.code || p.name]));
+      const projectMap = new Map(allProjects.map(p => [p.id, p.code ? `${p.code} – ${p.name}` : p.name]));
       const activeIds = new Set(entries.map(e => e.installer_id).filter(Boolean));
       const weekHours = entries.reduce((s, e) => s + (e.planned_work_hours || 0), 0);
       
