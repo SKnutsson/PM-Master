@@ -327,7 +327,7 @@ export function Dashboard() {
                             <span className="text-white/40">·</span>
                             <span className="text-white/50 truncate">{inst.company}</span>
                           </div>
-                          <span className="text-white/60 text-[11px] ml-2 shrink-0 text-right truncate max-w-[140px]">{inst.projects.join(', ') || '–'}</span>
+                          <span className="text-white/60 text-[11px] ml-2 shrink-0 text-right truncate max-w-[260px]" title={inst.projects.join(', ')}>{inst.projects.join(', ') || '–'}</span>
                         </div>
                       ))
                     ) : (
