@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
-  ResponsiveContainer, Legend,
+  ResponsiveContainer, Legend, Cell,
 } from 'recharts';
 import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, Printer, Save } from 'lucide-react';
 
