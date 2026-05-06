@@ -98,11 +98,23 @@ export function ResourceAnalyticsView() {
   const [missing, setMissing] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
   const [kpiNotes, setKpiNotes] = useState<string>('');
+  const [ftrDetails, setFtrDetails] = useState<string[]>([]);
+  const [missingDetails, setMissingDetails] = useState<string[]>([]);
+  const [remarkDetails, setRemarkDetails] = useState<string[]>([]);
   const [savingKpi, setSavingKpi] = useState(false);
+
+  // Sync detail array length to count number
+  const syncDetails = (countStr: string, current: string[]): string[] => {
+    const n = countStr === '' ? 0 : Math.max(0, parseInt(countStr) || 0);
+    if (n === current.length) return current;
+    if (n > current.length) return [...current, ...Array(n - current.length).fill('')];
+    return current.slice(0, n);
+  };
 
   useEffect(() => {
     if (!selectedProjectId) {
       setFtr(''); setMissing(''); setRemarks(''); setKpiNotes('');
+      setFtrDetails([]); setMissingDetails([]); setRemarkDetails([]);
       return;
     }
     (async () => {
@@ -116,6 +128,9 @@ export function ResourceAnalyticsView() {
       setMissing(d.delivery_precision_missing != null ? String(d.delivery_precision_missing) : '');
       setRemarks(d.inspection_remarks != null ? String(d.inspection_remarks) : '');
       setKpiNotes(d.notes ?? '');
+      setFtrDetails(Array.isArray(d.ftr_details) ? d.ftr_details : []);
+      setMissingDetails(Array.isArray(d.missing_article_details) ? d.missing_article_details : []);
+      setRemarkDetails(Array.isArray(d.inspection_remark_details) ? d.inspection_remark_details : []);
     })();
   }, [selectedProjectId]);
 
@@ -128,6 +143,9 @@ export function ResourceAnalyticsView() {
       delivery_precision_missing: missing === '' ? null : parseInt(missing),
       inspection_remarks: remarks === '' ? null : parseInt(remarks),
       notes: kpiNotes || null,
+      ftr_details: ftrDetails,
+      missing_article_details: missingDetails,
+      inspection_remark_details: remarkDetails,
     };
     const { error } = await supabase.from('project_kpi_metrics' as any).upsert(payload, { onConflict: 'project_id' });
     setSavingKpi(false);
