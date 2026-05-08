@@ -495,21 +495,61 @@ export function ResourcePlanningView() {
           <StatusLegend items={resourceLegend} showTodayMarker />
           <div className="flex-1" />
 
-          <Select value={filterInstaller} onValueChange={setFilterInstaller}>
-            <SelectTrigger className="h-7 w-[140px] text-xs"><SelectValue placeholder="Montör" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">Alla montörer</SelectItem>
-              {installers.map((i) => <SelectItem key={i.id} value={i.id} className="text-xs">{i.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs justify-between w-[160px]">
+                <span className="truncate">
+                  {filterInstallers.length === 0 ? 'Alla montörer' : `${filterInstallers.length} montör${filterInstallers.length > 1 ? 'er' : ''}`}
+                </span>
+                <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2 max-h-72 overflow-auto" align="end">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-semibold text-muted-foreground">Filtrera montörer</span>
+                {filterInstallers.length > 0 && (
+                  <button className="text-[10px] text-primary hover:underline" onClick={() => setFilterInstallers([])}>Rensa</button>
+                )}
+              </div>
+              {installers.map((i) => (
+                <label key={i.id} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-muted cursor-pointer">
+                  <Checkbox
+                    checked={filterInstallers.includes(i.id)}
+                    onCheckedChange={(v) => setFilterInstallers((prev) => v ? [...prev, i.id] : prev.filter(x => x !== i.id))}
+                  />
+                  <span className="text-xs truncate">{i.name} <span className="text-muted-foreground">({i.company})</span></span>
+                </label>
+              ))}
+            </PopoverContent>
+          </Popover>
 
-          <Select value={filterCompany} onValueChange={setFilterCompany}>
-            <SelectTrigger className="h-7 w-[130px] text-xs"><SelectValue placeholder="Företag" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">Alla företag</SelectItem>
-              {companies.map((c) => <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs justify-between w-[150px]">
+                <span className="truncate">
+                  {filterCompanies.length === 0 ? 'Alla företag' : `${filterCompanies.length} företag`}
+                </span>
+                <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2 max-h-72 overflow-auto" align="end">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-semibold text-muted-foreground">Filtrera företag</span>
+                {filterCompanies.length > 0 && (
+                  <button className="text-[10px] text-primary hover:underline" onClick={() => setFilterCompanies([])}>Rensa</button>
+                )}
+              </div>
+              {companies.map((c) => (
+                <label key={c} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-muted cursor-pointer">
+                  <Checkbox
+                    checked={filterCompanies.includes(c)}
+                    onCheckedChange={(v) => setFilterCompanies((prev) => v ? [...prev, c] : prev.filter(x => x !== c))}
+                  />
+                  <span className="text-xs truncate">{c}</span>
+                </label>
+              ))}
+            </PopoverContent>
+          </Popover>
 
           <Button variant={filterNoResources ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setFilterNoResources(!filterNoResources)}>
             Utan resurser
