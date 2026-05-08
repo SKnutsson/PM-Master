@@ -671,7 +671,7 @@ export function ResourcePlanningView() {
                                  <AssignInstallerDialog
                                 projectName={project.name}
                                 installers={installers}
-                                projectInstallers={pInstallers}
+                                projectInstallers={allPInstallers}
                                 onAssign={(installerId) => assignInstaller(project.id, installerId)}
                                 onAssignVacant={() => assignVacant(project.id)}
                                 onUnassign={unassignInstaller}
