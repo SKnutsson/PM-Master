@@ -154,14 +154,14 @@ export function ResourcePlanningView() {
 
   const filteredProjects = useMemo(() => {
     let result = displayProjects;
-    if (filterInstaller !== 'all') {
-      const projectIds = projectInstallers.filter((pi) => pi.installerId === filterInstaller).map((pi) => pi.projectId);
-      result = result.filter((p) => projectIds.includes(p.id));
+    if (filterInstallers.length > 0) {
+      const projectIds = new Set(projectInstallers.filter((pi) => pi.installerId && filterInstallers.includes(pi.installerId)).map((pi) => pi.projectId));
+      result = result.filter((p) => projectIds.has(p.id));
     }
-    if (filterCompany !== 'all') {
-      const installerIds = installers.filter((i) => i.company === filterCompany).map((i) => i.id);
-      const projectIds = projectInstallers.filter((pi) => installerIds.includes(pi.installerId)).map((pi) => pi.projectId);
-      result = result.filter((p) => projectIds.includes(p.id));
+    if (filterCompanies.length > 0) {
+      const installerIds = new Set(installers.filter((i) => filterCompanies.includes(i.company)).map((i) => i.id));
+      const projectIds = new Set(projectInstallers.filter((pi) => pi.installerId && installerIds.has(pi.installerId)).map((pi) => pi.projectId));
+      result = result.filter((p) => projectIds.has(p.id));
     }
     if (filterOverloaded) {
       result = result.filter((p) => getResourceStatus(p.id) === 'over');
@@ -170,7 +170,7 @@ export function ResourcePlanningView() {
       result = result.filter((p) => !projectInstallers.some((pi) => pi.projectId === p.id));
     }
     return result;
-  }, [displayProjects, filterInstaller, filterCompany, filterOverloaded, filterNoResources, projectInstallers, installers, dailyEntries, estimations]);
+  }, [displayProjects, filterInstallers, filterCompanies, filterOverloaded, filterNoResources, projectInstallers, installers, dailyEntries, estimations]);
 
   // Auto-expand all projects on first load
   useEffect(() => {
