@@ -57,7 +57,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const { signOut, user } = useAuth();
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
-  const isResourcesSection = currentView === 'resources' || currentView === 'resources-analytics';
+  
 
   useEffect(() => {
     if (!user) return;
