@@ -24,8 +24,8 @@ export function AssignInstallerDialog({ projectName, installers, projectInstalle
   const [selectedInstaller, setSelectedInstaller] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<ProjectInstaller | null>(null);
 
-  const assignedIds = new Set(projectInstallers.filter(pi => !pi.isVacant).map(pi => pi.installerId));
-  const available = installers.filter(i => !assignedIds.has(i.id));
+  // Allow assigning the same installer multiple times to the same project
+  const available = installers;
 
   const handleAssign = async () => {
     if (!selectedInstaller) return;

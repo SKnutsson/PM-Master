@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from 'next-themes';
@@ -19,6 +19,7 @@ import {
   Moon,
   UserCircle,
   ListChecks,
+  TrendingUp,
   Wallet } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ const mainItems = [
   { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
+  { id: 'resources-analytics' as View, label: 'Uppföljning', icon: TrendingUp },
 ];
 
 const bottomNavItems = [
@@ -55,7 +57,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const { signOut, user } = useAuth();
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
-  const isResourcesSection = currentView === 'resources' || currentView === 'resources-analytics';
+  
 
   useEffect(() => {
     if (!user) return;
@@ -68,7 +70,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   ] : [];
 
   const renderNavItem = (item: typeof topItems[0]) => {
-    const isActive = item.id === 'resources' ? isResourcesSection : currentView === item.id;
+    const isActive = currentView === item.id;
     const NavButton = (
       <Button
         key={item.id}
@@ -88,50 +90,15 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       </Button>
     );
 
-    const withTooltip = isCollapsed ? (
-      <Tooltip key={item.id} delayDuration={0}>
-        <TooltipTrigger asChild>{NavButton}</TooltipTrigger>
-        <TooltipContent side="right" className="font-medium">{item.label}</TooltipContent>
-      </Tooltip>
-    ) : NavButton;
-
-    if (item.id === 'resources') {
+    if (isCollapsed) {
       return (
-        <div key={item.id}>
-          {withTooltip}
-          <AnimatePresence>
-            {isResourcesSection && !isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden">
-                <button
-                  onClick={() => onViewChange('resources')}
-                  className={cn(
-                    'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 text-xs rounded-md transition-colors',
-                    currentView === 'resources' ? 'text-primary font-medium' : 'text-muted-foreground hover:text-sidebar-foreground'
-                  )}>
-                  <span className={cn('w-1 h-1 rounded-full shrink-0', currentView === 'resources' ? 'bg-primary' : 'bg-muted-foreground/40')} />
-                  Planering
-                </button>
-                <button
-                  onClick={() => onViewChange('resources-analytics')}
-                  className={cn(
-                    'w-full flex items-center gap-2 pl-9 pr-3 py-1.5 text-xs rounded-md transition-colors',
-                    currentView === 'resources-analytics' ? 'text-primary font-medium' : 'text-muted-foreground hover:text-sidebar-foreground'
-                  )}>
-                  <span className={cn('w-1 h-1 rounded-full shrink-0', currentView === 'resources-analytics' ? 'bg-primary' : 'bg-muted-foreground/40')} />
-                  Analys
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <Tooltip key={item.id} delayDuration={0}>
+          <TooltipTrigger asChild>{NavButton}</TooltipTrigger>
+          <TooltipContent side="right" className="font-medium">{item.label}</TooltipContent>
+        </Tooltip>
       );
     }
-
-    return withTooltip;
+    return NavButton;
   };
 
   const renderNavItems = (items: typeof topItems) => items.map(renderNavItem);

@@ -4,6 +4,8 @@ import { ChevronDown, ChevronUp, Users, Archive, UserPlus, Calculator, Trash2 } 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { StatusLegend } from './StatusLegend';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { useResourceData, ProjectInstaller } from '@/hooks/useResourceData';
@@ -107,8 +109,8 @@ export function ResourcePlanningView() {
   const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('days');
   const [showArchived, setShowArchived] = useState(false);
-  const [filterInstaller, setFilterInstaller] = useState('all');
-  const [filterCompany, setFilterCompany] = useState('all');
+  const [filterInstallers, setFilterInstallers] = useState<string[]>([]);
+  const [filterCompanies, setFilterCompanies] = useState<string[]>([]);
   const [filterOverloaded, setFilterOverloaded] = useState(false);
   const [filterNoResources, setFilterNoResources] = useState(false);
 
@@ -154,14 +156,14 @@ export function ResourcePlanningView() {
 
   const filteredProjects = useMemo(() => {
     let result = displayProjects;
-    if (filterInstaller !== 'all') {
-      const projectIds = projectInstallers.filter((pi) => pi.installerId === filterInstaller).map((pi) => pi.projectId);
-      result = result.filter((p) => projectIds.includes(p.id));
+    if (filterInstallers.length > 0) {
+      const projectIds = new Set(projectInstallers.filter((pi) => pi.installerId && filterInstallers.includes(pi.installerId)).map((pi) => pi.projectId));
+      result = result.filter((p) => projectIds.has(p.id));
     }
-    if (filterCompany !== 'all') {
-      const installerIds = installers.filter((i) => i.company === filterCompany).map((i) => i.id);
-      const projectIds = projectInstallers.filter((pi) => installerIds.includes(pi.installerId)).map((pi) => pi.projectId);
-      result = result.filter((p) => projectIds.includes(p.id));
+    if (filterCompanies.length > 0) {
+      const installerIds = new Set(installers.filter((i) => filterCompanies.includes(i.company)).map((i) => i.id));
+      const projectIds = new Set(projectInstallers.filter((pi) => pi.installerId && installerIds.has(pi.installerId)).map((pi) => pi.projectId));
+      result = result.filter((p) => projectIds.has(p.id));
     }
     if (filterOverloaded) {
       result = result.filter((p) => getResourceStatus(p.id) === 'over');
@@ -170,7 +172,7 @@ export function ResourcePlanningView() {
       result = result.filter((p) => !projectInstallers.some((pi) => pi.projectId === p.id));
     }
     return result;
-  }, [displayProjects, filterInstaller, filterCompany, filterOverloaded, filterNoResources, projectInstallers, installers, dailyEntries, estimations]);
+  }, [displayProjects, filterInstallers, filterCompanies, filterOverloaded, filterNoResources, projectInstallers, installers, dailyEntries, estimations]);
 
   // Auto-expand all projects on first load
   useEffect(() => {
@@ -495,21 +497,61 @@ export function ResourcePlanningView() {
           <StatusLegend items={resourceLegend} showTodayMarker />
           <div className="flex-1" />
 
-          <Select value={filterInstaller} onValueChange={setFilterInstaller}>
-            <SelectTrigger className="h-7 w-[140px] text-xs"><SelectValue placeholder="Montör" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">Alla montörer</SelectItem>
-              {installers.map((i) => <SelectItem key={i.id} value={i.id} className="text-xs">{i.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs justify-between w-[160px]">
+                <span className="truncate">
+                  {filterInstallers.length === 0 ? 'Alla montörer' : `${filterInstallers.length} montör${filterInstallers.length > 1 ? 'er' : ''}`}
+                </span>
+                <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2 max-h-72 overflow-auto" align="end">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-semibold text-muted-foreground">Filtrera montörer</span>
+                {filterInstallers.length > 0 && (
+                  <button className="text-[10px] text-primary hover:underline" onClick={() => setFilterInstallers([])}>Rensa</button>
+                )}
+              </div>
+              {installers.map((i) => (
+                <label key={i.id} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-muted cursor-pointer">
+                  <Checkbox
+                    checked={filterInstallers.includes(i.id)}
+                    onCheckedChange={(v) => setFilterInstallers((prev) => v ? [...prev, i.id] : prev.filter(x => x !== i.id))}
+                  />
+                  <span className="text-xs truncate">{i.name} <span className="text-muted-foreground">({i.company})</span></span>
+                </label>
+              ))}
+            </PopoverContent>
+          </Popover>
 
-          <Select value={filterCompany} onValueChange={setFilterCompany}>
-            <SelectTrigger className="h-7 w-[130px] text-xs"><SelectValue placeholder="Företag" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">Alla företag</SelectItem>
-              {companies.map((c) => <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-xs justify-between w-[150px]">
+                <span className="truncate">
+                  {filterCompanies.length === 0 ? 'Alla företag' : `${filterCompanies.length} företag`}
+                </span>
+                <ChevronDown className="h-3 w-3 ml-1 opacity-60" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-2 max-h-72 overflow-auto" align="end">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-semibold text-muted-foreground">Filtrera företag</span>
+                {filterCompanies.length > 0 && (
+                  <button className="text-[10px] text-primary hover:underline" onClick={() => setFilterCompanies([])}>Rensa</button>
+                )}
+              </div>
+              {companies.map((c) => (
+                <label key={c} className="flex items-center gap-2 px-1 py-1 rounded hover:bg-muted cursor-pointer">
+                  <Checkbox
+                    checked={filterCompanies.includes(c)}
+                    onCheckedChange={(v) => setFilterCompanies((prev) => v ? [...prev, c] : prev.filter(x => x !== c))}
+                  />
+                  <span className="text-xs truncate">{c}</span>
+                </label>
+              ))}
+            </PopoverContent>
+          </Popover>
 
           <Button variant={filterNoResources ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setFilterNoResources(!filterNoResources)}>
             Utan resurser
