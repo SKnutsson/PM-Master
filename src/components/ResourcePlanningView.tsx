@@ -107,8 +107,8 @@ export function ResourcePlanningView() {
   const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('days');
   const [showArchived, setShowArchived] = useState(false);
-  const [filterInstaller, setFilterInstaller] = useState('all');
-  const [filterCompany, setFilterCompany] = useState('all');
+  const [filterInstallers, setFilterInstallers] = useState<string[]>([]);
+  const [filterCompanies, setFilterCompanies] = useState<string[]>([]);
   const [filterOverloaded, setFilterOverloaded] = useState(false);
   const [filterNoResources, setFilterNoResources] = useState(false);
 
