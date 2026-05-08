@@ -19,6 +19,7 @@ import {
   Moon,
   UserCircle,
   ListChecks,
+  TrendingUp,
   Wallet } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
