@@ -43,6 +43,7 @@ const mainItems = [
   { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
+  { id: 'resources-analytics' as View, label: 'Uppföljning', icon: TrendingUp },
 ];
 
 const bottomNavItems = [
