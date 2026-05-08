@@ -1,0 +1,1 @@
+ALTER TABLE public.project_installers DROP CONSTRAINT IF EXISTS project_installers_project_id_installer_id_key;
