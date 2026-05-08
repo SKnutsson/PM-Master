@@ -637,7 +637,12 @@ export function ResourcePlanningView() {
 
                   {filteredProjects.map((project) => {
                     const isExpanded = expandedProjects?.has(project.id) ?? false;
-                    const pInstallers = getProjectInstallers(project.id);
+                    const allPInstallers = getProjectInstallers(project.id);
+                    const pInstallers = allPInstallers.filter((pi) => {
+                      if (filterInstallers.length > 0 && (!pi.installerId || !filterInstallers.includes(pi.installerId))) return false;
+                      if (filterCompanies.length > 0 && (!pi.installerCompany || !filterCompanies.includes(pi.installerCompany))) return false;
+                      return true;
+                    });
                     const resourceStatus = getResourceStatus(project.id);
                     const isArchived = project.status === 'Avslutat';
 
@@ -666,7 +671,7 @@ export function ResourcePlanningView() {
                                  <AssignInstallerDialog
                                 projectName={project.name}
                                 installers={installers}
-                                projectInstallers={pInstallers}
+                                projectInstallers={allPInstallers}
                                 onAssign={(installerId) => assignInstaller(project.id, installerId)}
                                 onAssignVacant={() => assignVacant(project.id)}
                                 onUnassign={unassignInstaller}
