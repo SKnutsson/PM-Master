@@ -44,6 +44,7 @@ const mainItems = [
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
   { id: 'resources-analytics' as View, label: 'Uppföljning', icon: TrendingUp },
+  { id: 'services' as View, label: 'Servicar', icon: Wrench },
 ];
 
 const bottomNavItems = [
