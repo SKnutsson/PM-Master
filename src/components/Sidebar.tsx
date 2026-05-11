@@ -54,21 +54,11 @@ const bottomNavItems = [
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const { signOut, user } = useAuth();
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
-  
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
-
-  const adminItems = isAdmin ? [
-    { id: 'finance' as View, label: 'Ekonomi', icon: Wallet },
-  ] : [];
+  const adminItems: typeof topItems = [];
 
   const renderNavItem = (item: typeof topItems[0]) => {
     const isActive = currentView === item.id;
