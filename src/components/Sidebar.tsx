@@ -20,12 +20,12 @@ import {
   UserCircle,
   ListChecks,
   TrendingUp,
-  Wallet } from
+  Wrench } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'finance';
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'services';
 
 interface SidebarProps {
   currentView: View;
