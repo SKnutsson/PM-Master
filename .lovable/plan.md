@@ -1,34 +1,66 @@
+## Mål
+Ta bort Ekonomi-fliken helt och ersätta den med en ny flik "Servicar" för hantering av återkommande service på teleskopläktare.
 
+## 1. Ta bort Ekonomi
+- Ta bort `FinanceView` från sidebaren och `MainLayout` (View-typ + route)
+- Ta bort `src/components/FinanceView.tsx`
+- Migration: droppa tabellerna `project_transactions`, `project_budget_lines`, `project_accounting`, `finance_template_items`, `finance_templates`
 
-## Vakant-platser direkt i resursplaneringen
+## 2. Datamodell – Servicar (migration)
 
-### Problem
-Just nu kraver funktionen `assignVacant` att det redan finns minst en montör i systemet, eftersom kolumnen `installer_id` i `project_installers` inte tillåter null-värden. En "placeholder"-montör används som workaround, vilket är opålitligt och förhindrar att man lägger till vakant direkt.
+**`service_contracts`** (serviceavtal)
+- customer, facility_name (läktare/anläggning), location, contract_start, contract_end
+- recurrence_months (t.ex. 12), recurrence_month (t.ex. 9 för september)
+- notes, active
 
-### Lösning
+**`services`** (enskilda serviceuppdrag)
+- contract_id (nullable – stöd även engångsservice)
+- customer, facility_name
+- planned_date, completed_date
+- assigned_technician (text – matchar montörer/profiles)
+- status: 'Planerad' | 'Bokad' | 'Utförd' | 'Försenad'
+- planned_hours, actual_hours
+- notes
 
-#### 1. Databasändring
-Gör kolumnen `installer_id` i `project_installers` nullable så att vakanta platser kan skapas utan att behöva en riktig montör som placeholder.
+**`service_checklist_items`**
+- service_id, label, checked, sort_order
 
-```sql
-ALTER TABLE public.project_installers 
-  ALTER COLUMN installer_id DROP NOT NULL;
-```
+**`service_deviations`** (avvikelser)
+- service_id, description, severity, created_task_id (nullable koppling till `tasks`)
 
-#### 2. Uppdatera `useResourceData.ts` - `assignVacant`
-Förenkla funktionen att sätta `installer_id` till `null` istället för att söka upp en placeholder-montör. Tar bort kravet på att montörer måste finnas.
+**`service_attachments`** (dokumentation – bilder/anteckningar)
+- service_id, file_url, caption, kind ('image' | 'note')
 
-#### 3. Inga begränsningar på antal vakanta
-Koden har redan ingen begränsning -- dropdown visar alltid "Vakant" som alternativ och det finns ingen unik constraint. Inga extra ändringar behövs här.
+Alla tabeller med RLS: authenticated read/write (samma mönster som övriga delade tabeller).
 
----
+Storage-bucket: `service-attachments` (publik) + RLS policies.
 
-### Teknisk sammanfattning
+## 3. UI – `ServicesView.tsx`
+Tre tabs:
+1. **Översikt** – KPI:s (kommande denna månad, försenade, utförda i år), lista med kommande servicar (sorterat efter `planned_date`), påminnelser (≤30 dagar).
+2. **Serviceavtal** – CRUD för `service_contracts`. Knapp "Generera nästa service" som skapar service-rad utifrån `recurrence_month` + `recurrence_months`.
+3. **Alla servicar** – tabell med filter (status, kund, tekniker, år). Klick öppnar detaljpanel/dialog.
 
-| Fil | Ändring |
-|-----|---------|
-| `supabase/migrations/` (ny) | `ALTER COLUMN installer_id DROP NOT NULL` |
-| `src/hooks/useResourceData.ts` | Förenkla `assignVacant` -- sätt `installer_id: null` direkt |
+**Service-detaljdialog** (delad komponent):
+- Header: kund, anläggning, status-badge, planerat/utfört datum
+- Sektioner:
+  - Grunddata (datum, tekniker, status, planerad/faktisk tid)
+  - Checklista (kryssbar, lägga till/ta bort punkter)
+  - Anteckningar (textarea, auto-save)
+  - Avvikelser (lista; per rad knapp "Skapa åtgärd" → insert i `tasks` med koppling)
+  - Dokumentation (bilduppladdning till storage + bildtexter)
+- Servicehistorik för samma läktare/kund visas i sidopanel
 
-Inga UI-ändringar behövs -- `AssignInstallerDialog` visar redan "Vakant" i listan och det finns ingen spärr mot flera vakanta poster.
+Status `Försenad` sätts automatiskt klient-side om `planned_date < today` och inte utförd.
 
+## 4. Sidebar
+Ersätt admin-only `Ekonomi` (Wallet) med `Servicar` (Wrench) – synlig för alla authenticated, inte admin-only.
+
+## Tekniska detaljer
+- Status-färger följer befintlig palett: Blå=Planerad, Orange=Bokad, Grön=Utförd, Röd=Försenad
+- Lokala datum (ingen UTC-shift), ISO-veckor där relevant
+- Auto-save på fält (debounce 500ms) som i resten av appen
+- Realtime via Supabase channel på `services` så listan uppdateras live
+
+## Vill du att jag kör?
+Säg till om något ska justeras (t.ex. extra fält, annan struktur på checklistor som mall per avtal, eller om bilduppladdning ska skippas i denna första iteration).

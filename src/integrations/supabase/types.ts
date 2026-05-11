@@ -181,65 +181,6 @@ export type Database = {
           },
         ]
       }
-      finance_template_items: {
-        Row: {
-          created_at: string
-          id: string
-          item_type: string
-          name: string
-          sort_order: number
-          template_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          item_type?: string
-          name: string
-          sort_order?: number
-          template_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          item_type?: string
-          name?: string
-          sort_order?: number
-          template_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "finance_template_items_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "finance_templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      finance_templates: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       forecast_events: {
         Row: {
           changed_by: string | null
@@ -486,140 +427,6 @@ export type Database = {
         }
         Relationships: []
       }
-      project_accounting: {
-        Row: {
-          created_at: string
-          id: string
-          project_id: string
-          template_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          project_id: string
-          template_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          project_id?: string
-          template_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_accounting_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_accounting_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "finance_templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      project_budget_lines: {
-        Row: {
-          budgeted_amount: number
-          created_at: string
-          id: string
-          item_type: string
-          name: string
-          project_accounting_id: string
-          sort_order: number
-          template_item_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          budgeted_amount?: number
-          created_at?: string
-          id?: string
-          item_type?: string
-          name?: string
-          project_accounting_id: string
-          sort_order?: number
-          template_item_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          budgeted_amount?: number
-          created_at?: string
-          id?: string
-          item_type?: string
-          name?: string
-          project_accounting_id?: string
-          sort_order?: number
-          template_item_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_budget_lines_project_accounting_id_fkey"
-            columns: ["project_accounting_id"]
-            isOneToOne: false
-            referencedRelation: "project_accounting"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_budget_lines_template_item_id_fkey"
-            columns: ["template_item_id"]
-            isOneToOne: false
-            referencedRelation: "finance_template_items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      project_finances: {
-        Row: {
-          amount: number
-          category: string
-          created_at: string
-          created_by: string | null
-          date: string
-          description: string
-          id: string
-          project_id: string
-          updated_at: string
-        }
-        Insert: {
-          amount?: number
-          category?: string
-          created_at?: string
-          created_by?: string | null
-          date?: string
-          description?: string
-          id?: string
-          project_id: string
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          category?: string
-          created_at?: string
-          created_by?: string | null
-          date?: string
-          description?: string
-          id?: string
-          project_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_finances_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       project_installers: {
         Row: {
           created_at: string
@@ -745,41 +552,6 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      project_transactions: {
-        Row: {
-          amount: number
-          budget_line_id: string
-          created_at: string
-          date: string
-          id: string
-          note: string | null
-        }
-        Insert: {
-          amount?: number
-          budget_line_id: string
-          created_at?: string
-          date?: string
-          id?: string
-          note?: string | null
-        }
-        Update: {
-          amount?: number
-          budget_line_id?: string
-          created_at?: string
-          date?: string
-          id?: string
-          note?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_transactions_budget_line_id_fkey"
-            columns: ["budget_line_id"]
-            isOneToOne: false
-            referencedRelation: "project_budget_lines"
             referencedColumns: ["id"]
           },
         ]
@@ -931,6 +703,212 @@ export type Database = {
             columns: ["forecast_id"]
             isOneToOne: false
             referencedRelation: "forecasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_attachments: {
+        Row: {
+          caption: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          kind: string
+          service_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          kind?: string
+          service_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          kind?: string
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_attachments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_checklist_items: {
+        Row: {
+          checked: boolean
+          created_at: string
+          id: string
+          label: string
+          service_id: string
+          sort_order: number
+        }
+        Insert: {
+          checked?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          service_id: string
+          sort_order?: number
+        }
+        Update: {
+          checked?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          service_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_checklist_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_contracts: {
+        Row: {
+          active: boolean
+          contract_end: string | null
+          contract_start: string | null
+          created_at: string
+          customer: string
+          facility_name: string
+          id: string
+          location: string | null
+          notes: string | null
+          recurrence_month: number
+          recurrence_months: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string
+          customer?: string
+          facility_name?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          recurrence_month?: number
+          recurrence_months?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string
+          customer?: string
+          facility_name?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          recurrence_month?: number
+          recurrence_months?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_deviations: {
+        Row: {
+          created_at: string
+          created_task_id: string | null
+          description: string
+          id: string
+          service_id: string
+          severity: string
+        }
+        Insert: {
+          created_at?: string
+          created_task_id?: string | null
+          description?: string
+          id?: string
+          service_id: string
+          severity?: string
+        }
+        Update: {
+          created_at?: string
+          created_task_id?: string | null
+          description?: string
+          id?: string
+          service_id?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_deviations_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          actual_hours: number
+          assigned_technician: string | null
+          completed_date: string | null
+          contract_id: string | null
+          created_at: string
+          customer: string
+          facility_name: string
+          id: string
+          notes: string | null
+          planned_date: string | null
+          planned_hours: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          actual_hours?: number
+          assigned_technician?: string | null
+          completed_date?: string | null
+          contract_id?: string | null
+          created_at?: string
+          customer?: string
+          facility_name?: string
+          id?: string
+          notes?: string | null
+          planned_date?: string | null
+          planned_hours?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          actual_hours?: number
+          assigned_technician?: string | null
+          completed_date?: string | null
+          contract_id?: string | null
+          created_at?: string
+          customer?: string
+          facility_name?: string
+          id?: string
+          notes?: string | null
+          planned_date?: string | null
+          planned_hours?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "service_contracts"
             referencedColumns: ["id"]
           },
         ]
