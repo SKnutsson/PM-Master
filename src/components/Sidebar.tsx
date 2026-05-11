@@ -20,12 +20,12 @@ import {
   UserCircle,
   ListChecks,
   TrendingUp,
-  Wallet } from
+  Wrench } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'finance';
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'services';
 
 interface SidebarProps {
   currentView: View;
@@ -44,6 +44,7 @@ const mainItems = [
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
   { id: 'resources-analytics' as View, label: 'Uppföljning', icon: TrendingUp },
+  { id: 'services' as View, label: 'Servicar', icon: Wrench },
 ];
 
 const bottomNavItems = [
@@ -53,21 +54,11 @@ const bottomNavItems = [
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const { signOut, user } = useAuth();
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
-  
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle()
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
-
-  const adminItems = isAdmin ? [
-    { id: 'finance' as View, label: 'Ekonomi', icon: Wallet },
-  ] : [];
+  const adminItems: typeof topItems = [];
 
   const renderNavItem = (item: typeof topItems[0]) => {
     const isActive = currentView === item.id;
