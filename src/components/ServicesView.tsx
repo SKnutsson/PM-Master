@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,13 +7,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Wrench, AlertTriangle, Image as ImageIcon, Calendar, Clock, History, Bell, FileWarning, ListChecks } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Plus, Trash2, Wrench, AlertTriangle, Image as ImageIcon, Calendar as CalendarIcon, History, Bell, FileWarning, ListChecks, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 type ServiceStatus = 'Planerad' | 'Bokad' | 'Utförd' | 'Försenad';
@@ -48,11 +51,18 @@ interface ChecklistItem { id: string; service_id: string; label: string; checked
 interface Deviation { id: string; service_id: string; description: string; severity: string; created_task_id: string | null; }
 interface Attachment { id: string; service_id: string; file_url: string; caption: string; kind: string; }
 
-const STATUS_COLORS: Record<string, string> = {
-  'Planerad': 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30',
-  'Bokad': 'bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30',
-  'Utförd': 'bg-green-500/15 text-green-700 dark:text-green-300 border-green-500/30',
-  'Försenad': 'bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30',
+const STATUS_BADGE: Record<string, string> = {
+  'Planerad': 'bg-status-not-started/15 text-status-not-started border-status-not-started/30',
+  'Bokad': 'bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30',
+  'Utförd': 'bg-status-completed/15 text-status-completed border-status-completed/30',
+  'Försenad': 'bg-status-delayed/15 text-status-delayed border-status-delayed/30',
+};
+
+const STATUS_DOT: Record<string, string> = {
+  'Planerad': 'bg-status-not-started',
+  'Bokad': 'bg-status-in-progress',
+  'Utförd': 'bg-status-completed',
+  'Försenad': 'bg-status-delayed',
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
@@ -108,41 +118,82 @@ export function ServicesView() {
 
   const openService = services.find(s => s.id === openServiceId) || null;
 
+  // Auto-fill missing next planned services from active contracts
+  const ensureUpcomingForActive = async () => {
+    const today = todayISO();
+    const inserts: any[] = [];
+    for (const c of contracts.filter(x => x.active)) {
+      const future = services.find(s =>
+        s.contract_id === c.id && s.planned_date && s.planned_date >= today && effectiveStatus(s) !== 'Utförd'
+      );
+      if (future) continue;
+      const last = services.filter(s => s.contract_id === c.id).sort((a, b) => (b.planned_date || '').localeCompare(a.planned_date || ''))[0];
+      const baseYear = last?.planned_date ? new Date(last.planned_date).getFullYear() : new Date().getFullYear() - 1;
+      const stepY = Math.max(1, Math.round(c.recurrence_months / 12));
+      let nextYear = baseYear + stepY;
+      const nowY = new Date().getFullYear();
+      if (nextYear < nowY) nextYear = nowY;
+      const planned = `${nextYear}-${String(c.recurrence_month).padStart(2, '0')}-15`;
+      inserts.push({ contract_id: c.id, customer: c.customer, facility_name: c.facility_name, planned_date: planned, status: 'Planerad' });
+    }
+    if (!inserts.length) { toast.info('Alla aktiva avtal har redan en kommande service.'); return; }
+    const { error } = await supabase.from('services').insert(inserts);
+    if (error) toast.error(error.message); else { toast.success(`Skapade ${inserts.length} kommande servicar`); loadAll(); }
+  };
+
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-5">
+      <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Wrench className="h-6 w-6 text-primary" /> Servicar</h1>
-          <p className="text-sm text-muted-foreground">Planera och följ upp service på teleskopläktare</p>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Wrench className="h-6 w-6 text-primary" /> Servicar
+          </h1>
+          <p className="text-sm text-muted-foreground">Planera, boka och följ upp service på teleskopläktare.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={ensureUpcomingForActive}>
+            <Sparkles className="h-4 w-4 mr-1.5" /> Generera kommande från aktiva avtal
+          </Button>
         </div>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="overview">Översikt</TabsTrigger>
-          <TabsTrigger value="contracts">Serviceavtal ({contracts.length})</TabsTrigger>
-          <TabsTrigger value="services">Alla servicar ({services.length})</TabsTrigger>
+          <TabsTrigger value="timeline">Tidslinje</TabsTrigger>
+          <TabsTrigger value="contracts">Avtal ({contracts.length})</TabsTrigger>
+          <TabsTrigger value="services">Servicar ({services.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
+        <TabsContent value="overview" className="space-y-4 mt-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <KpiCard label="Kommande" value={upcoming.length} icon={<Calendar className="h-4 w-4" />} />
-            <KpiCard label="Påminnelser ≤30 d" value={reminders.length} icon={<Bell className="h-4 w-4" />} />
-            <KpiCard label="Försenade" value={overdue.length} icon={<AlertTriangle className="h-4 w-4 text-red-500" />} />
-            <KpiCard label="Utförda i år" value={completedThisYear} icon={<ListChecks className="h-4 w-4 text-green-600" />} />
+            <KpiCard label="Kommande" value={upcoming.length} icon={<CalendarIcon className="h-4 w-4 text-status-not-started" />} />
+            <KpiCard label="Påminnelser ≤30 d" value={reminders.length} icon={<Bell className="h-4 w-4 text-status-in-progress" />} />
+            <KpiCard label="Försenade" value={overdue.length} icon={<AlertTriangle className="h-4 w-4 text-status-delayed" />} />
+            <KpiCard label="Utförda i år" value={completedThisYear} icon={<ListChecks className="h-4 w-4 text-status-completed" />} />
           </div>
 
-          <Card className="p-4">
-            <h3 className="font-semibold mb-2 flex items-center gap-2"><Bell className="h-4 w-4" /> Påminnelser & kommande</h3>
-            <ServiceTable services={upcoming.slice(0, 25)} onOpen={setOpenServiceId} />
+          <Card>
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Bell className="h-4 w-4" /> Påminnelser & kommande
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 pt-0">
+              <ServiceTable services={upcoming.slice(0, 30)} onOpen={setOpenServiceId} />
+            </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="contracts">
+        <TabsContent value="timeline" className="mt-4">
+          <TimelineGantt contracts={contracts} services={services} onOpen={setOpenServiceId} />
+        </TabsContent>
+
+        <TabsContent value="contracts" className="mt-4">
           <ContractsPanel contracts={contracts} onChange={loadAll} services={services} />
         </TabsContent>
 
-        <TabsContent value="services">
+        <TabsContent value="services" className="mt-4">
           <AllServicesPanel services={services} contracts={contracts} onOpen={setOpenServiceId} onChange={loadAll} />
         </TabsContent>
       </Tabs>
@@ -156,49 +207,202 @@ export function ServicesView() {
           userId={user?.id}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
 
 function KpiCard({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
   return (
     <Card className="p-4">
-      <div className="flex items-center justify-between text-muted-foreground text-xs">{label} {icon}</div>
-      <div className="text-2xl font-bold mt-1">{value}</div>
+      <div className="flex items-center justify-between text-muted-foreground text-xs font-medium">
+        <span>{label}</span>{icon}
+      </div>
+      <div className="text-2xl font-bold mt-1 tabular-nums">{value}</div>
     </Card>
   );
 }
 
 function ServiceTable({ services, onOpen }: { services: Service[]; onOpen: (id: string) => void }) {
-  if (!services.length) return <p className="text-sm text-muted-foreground">Inga servicar.</p>;
+  if (!services.length) return <p className="text-sm text-muted-foreground py-4">Inga servicar.</p>;
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Kund</TableHead>
-          <TableHead>Anläggning</TableHead>
-          <TableHead>Planerat</TableHead>
-          <TableHead>Tekniker</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {services.map(s => {
-          const st = effectiveStatus(s);
-          return (
-            <TableRow key={s.id} className="cursor-pointer" onClick={() => onOpen(s.id)}>
-              <TableCell className="font-medium">{s.customer || '—'}</TableCell>
-              <TableCell>{s.facility_name || '—'}</TableCell>
-              <TableCell>{s.planned_date || '—'}</TableCell>
-              <TableCell>{s.assigned_technician || '—'}</TableCell>
-              <TableCell><Badge variant="outline" className={STATUS_COLORS[st]}>{st}</Badge></TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+    <div className="border rounded-md overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableHead className="text-xs">Anläggning</TableHead>
+            <TableHead className="text-xs">Planerat</TableHead>
+            <TableHead className="text-xs">Tekniker</TableHead>
+            <TableHead className="text-xs">Status</TableHead>
+            <TableHead className="text-xs text-right">Om</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {services.map(s => {
+            const st = effectiveStatus(s);
+            const dl = daysUntil(s.planned_date);
+            return (
+              <TableRow key={s.id} className="cursor-pointer" onClick={() => onOpen(s.id)}>
+                <TableCell className="font-medium">{s.facility_name || s.customer || '—'}</TableCell>
+                <TableCell className="tabular-nums">{s.planned_date || '—'}</TableCell>
+                <TableCell>{s.assigned_technician || <span className="text-muted-foreground">—</span>}</TableCell>
+                <TableCell><Badge variant="outline" className={cn('text-xs', STATUS_BADGE[st])}>{st}</Badge></TableCell>
+                <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
+                  {dl === null ? '—' : dl < 0 ? `${Math.abs(dl)} d sen` : `om ${dl} d`}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
+
+/* -------------------- Timeline (Gantt-liknande) -------------------- */
+
+function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceContract[]; services: Service[]; onOpen: (id: string) => void }) {
+  const allYears = useMemo(() => {
+    const ys = new Set<number>();
+    services.forEach(s => {
+      const d = s.completed_date || s.planned_date;
+      if (d) ys.add(new Date(d).getFullYear());
+    });
+    const cur = new Date().getFullYear();
+    ys.add(cur); ys.add(cur + 1);
+    return Array.from(ys).sort((a, b) => a - b);
+  }, [services]);
+
+  const [startYear, setStartYear] = useState(() => Math.max(allYears[0] || new Date().getFullYear(), new Date().getFullYear() - 2));
+  const visibleYears = [startYear, startYear + 1, startYear + 2];
+  const minY = allYears[0] ?? new Date().getFullYear();
+  const maxY = allYears[allYears.length - 1] ?? new Date().getFullYear();
+
+  // group services by facility
+  const byFacility = useMemo(() => {
+    const map = new Map<string, Service[]>();
+    services.forEach(s => {
+      const key = s.facility_name || s.customer || '—';
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(s);
+    });
+    return map;
+  }, [services]);
+
+  // facility list = union of contracts + services, ordered by contract list
+  const facilities = useMemo(() => {
+    const set = new Set<string>();
+    contracts.forEach(c => set.add(c.facility_name));
+    Array.from(byFacility.keys()).forEach(f => set.add(f));
+    return Array.from(set);
+  }, [contracts, byFacility]);
+
+  const today = new Date();
+  const todayCol = today.getFullYear() * 12 + today.getMonth();
+  const startCol = startYear * 12;
+
+  return (
+    <Card>
+      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <CalendarIcon className="h-4 w-4" /> Tidslinje · {visibleYears[0]}–{visibleYears[2]}
+        </CardTitle>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 text-[11px] text-muted-foreground mr-3">
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-status-completed" /> Utförd</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-status-not-started" /> Planerad</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-status-in-progress" /> Bokad</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-status-delayed" /> Försenad</span>
+          </div>
+          <Button size="sm" variant="outline" className="h-7 px-2" disabled={startYear <= minY} onClick={() => setStartYear(y => y - 1)}><ChevronLeft className="h-4 w-4" /></Button>
+          <Button size="sm" variant="outline" className="h-7 px-2" disabled={startYear + 2 >= maxY + 1} onClick={() => setStartYear(y => y + 1)}><ChevronRight className="h-4 w-4" /></Button>
+        </div>
+      </CardHeader>
+      <CardContent className="px-0 pb-0">
+        <div className="overflow-x-auto">
+          <TooltipProvider delayDuration={100}>
+            <div className="min-w-[900px]">
+              {/* Header */}
+              <div className="grid sticky top-0 z-10 bg-card border-y" style={{ gridTemplateColumns: `220px repeat(36, minmax(28px,1fr))` }}>
+                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground border-r">Anläggning</div>
+                {visibleYears.map(y => (
+                  <div key={y} className="col-span-12 grid grid-cols-12 border-r last:border-r-0" style={{ gridColumn: 'span 12 / span 12' }}>
+                    <div className="col-span-12 text-center text-xs font-semibold py-1 bg-muted/40 border-b">{y}</div>
+                    {MONTHS.map((m, i) => (
+                      <div key={i} className="text-[10px] text-center text-muted-foreground py-1 border-r last:border-r-0">{m[0]}</div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Rows */}
+              {facilities.map(facility => {
+                const items = (byFacility.get(facility) || []).filter(s => {
+                  const d = s.completed_date || s.planned_date;
+                  if (!d) return false;
+                  const y = new Date(d).getFullYear();
+                  return y >= visibleYears[0] && y <= visibleYears[2];
+                });
+                const contract = contracts.find(c => c.facility_name === facility);
+                return (
+                  <div key={facility} className="grid border-b hover:bg-muted/30 transition-colors" style={{ gridTemplateColumns: `220px repeat(36, minmax(28px,1fr))` }}>
+                    <div className="px-3 py-2 border-r flex items-center gap-2 min-w-0">
+                      <span className={cn('text-sm truncate', contract?.active && 'font-semibold text-primary')}>{facility}</span>
+                      {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-4 border-primary/40 text-primary">Avtal</Badge>}
+                    </div>
+                    {/* Cells */}
+                    {Array.from({ length: 36 }).map((_, i) => {
+                      const colY = visibleYears[Math.floor(i / 12)];
+                      const colM = i % 12;
+                      const colKey = colY * 12 + colM;
+                      const isToday = colKey === todayCol;
+                      return (
+                        <div key={i} className={cn('h-9 border-r last:border-r-0 relative', isToday && 'bg-primary/5')}>
+                          {isToday && <div className="absolute inset-y-0 left-1/2 w-px bg-primary/60" />}
+                        </div>
+                      );
+                    })}
+                    {/* Markers overlaid via absolute? Simpler: place inline by mapping again over months */}
+                    {items.map(s => {
+                      const d = s.completed_date || s.planned_date!;
+                      const dt = new Date(d);
+                      const colIdx = (dt.getFullYear() - visibleYears[0]) * 12 + dt.getMonth();
+                      if (colIdx < 0 || colIdx > 35) return null;
+                      const st = effectiveStatus(s);
+                      // place via grid-column-start (1 = facility col, 2..37 = month cols)
+                      return (
+                        <Tooltip key={s.id}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => onOpen(s.id)}
+                              className={cn(
+                                'h-3.5 w-3.5 rounded-full self-center justify-self-center -mt-9 cursor-pointer ring-2 ring-background hover:scale-125 transition-transform',
+                                STATUS_DOT[st]
+                              )}
+                              style={{ gridColumnStart: colIdx + 2, gridRowStart: 1 }}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="text-xs">
+                              <div className="font-semibold">{facility}</div>
+                              <div>{d} · {st}</div>
+                              {s.assigned_technician && <div className="text-muted-foreground">{s.assigned_technician}</div>}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </TooltipProvider>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* -------------------- Avtal -------------------- */
 
 function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceContract[]; onChange: () => void; services: Service[] }) {
   const addContract = async () => {
@@ -221,29 +425,33 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
   };
 
   return (
-    <Card className="p-4">
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="font-semibold">Serviceavtal</h3>
+    <Card>
+      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-sm font-semibold">Serviceavtal & anläggningar</CardTitle>
         <Button onClick={addContract} size="sm"><Plus className="h-4 w-4 mr-1" /> Nytt avtal</Button>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Kund</TableHead>
-            <TableHead>Anläggning</TableHead>
-            <TableHead>Plats</TableHead>
-            <TableHead>Återkommer (mån)</TableHead>
-            <TableHead>Service-månad</TableHead>
-            <TableHead>Aktiv</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {contracts.map(c => (
-            <ContractRow key={c.id} contract={c} onChange={onChange} onGenerate={() => generateNext(c)} />
-          ))}
-        </TableBody>
-      </Table>
+      </CardHeader>
+      <CardContent className="px-0 pb-0">
+        <div className="border-t overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="text-xs">Anläggning</TableHead>
+                <TableHead className="text-xs">Plats</TableHead>
+                <TableHead className="text-xs">Återk. (mån)</TableHead>
+                <TableHead className="text-xs">Service-mån</TableHead>
+                <TableHead className="text-xs">Aktiv</TableHead>
+                <TableHead className="text-xs">Anteckning</TableHead>
+                <TableHead className="text-xs"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contracts.map(c => (
+                <ContractRow key={c.id} contract={c} onChange={onChange} onGenerate={() => generateNext(c)} />
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
     </Card>
   );
 }
@@ -261,9 +469,10 @@ function ContractRow({ contract, onChange, onGenerate }: { contract: ServiceCont
     onChange();
   };
   return (
-    <TableRow>
-      <TableCell><Input value={c.customer} onChange={e => setC({ ...c, customer: e.target.value })} onBlur={() => save({ customer: c.customer })} className="h-8" /></TableCell>
-      <TableCell><Input value={c.facility_name} onChange={e => setC({ ...c, facility_name: e.target.value })} onBlur={() => save({ facility_name: c.facility_name })} className="h-8" /></TableCell>
+    <TableRow className={cn(c.active && 'bg-primary/[0.03]')}>
+      <TableCell>
+        <Input value={c.facility_name} onChange={e => setC({ ...c, facility_name: e.target.value })} onBlur={() => save({ facility_name: c.facility_name, customer: c.facility_name })} className={cn('h-8', c.active && 'font-semibold text-primary')} />
+      </TableCell>
       <TableCell><Input value={c.location || ''} onChange={e => setC({ ...c, location: e.target.value })} onBlur={() => save({ location: c.location })} className="h-8" /></TableCell>
       <TableCell><Input type="number" value={c.recurrence_months} onChange={e => setC({ ...c, recurrence_months: +e.target.value })} onBlur={() => save({ recurrence_months: c.recurrence_months })} className="h-8 w-20" /></TableCell>
       <TableCell>
@@ -273,8 +482,9 @@ function ContractRow({ contract, onChange, onGenerate }: { contract: ServiceCont
         </Select>
       </TableCell>
       <TableCell><Checkbox checked={c.active} onCheckedChange={v => save({ active: !!v })} /></TableCell>
+      <TableCell><Input value={c.notes || ''} onChange={e => setC({ ...c, notes: e.target.value })} onBlur={() => save({ notes: c.notes })} className="h-8 min-w-[200px]" placeholder="t.ex. Betalas vid service 1ggr/år" /></TableCell>
       <TableCell>
-        <div className="flex gap-1">
+        <div className="flex gap-1 justify-end">
           <Button size="sm" variant="outline" onClick={onGenerate}>Generera nästa</Button>
           <Button size="sm" variant="ghost" onClick={del}><Trash2 className="h-4 w-4" /></Button>
         </div>
@@ -282,6 +492,8 @@ function ContractRow({ contract, onChange, onGenerate }: { contract: ServiceCont
     </TableRow>
   );
 }
+
+/* -------------------- Alla servicar -------------------- */
 
 function AllServicesPanel({ services, contracts, onOpen, onChange }: { services: Service[]; contracts: ServiceContract[]; onOpen: (id: string) => void; onChange: () => void }) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -301,23 +513,29 @@ function AllServicesPanel({ services, contracts, onOpen, onChange }: { services:
   };
 
   return (
-    <Card className="p-4 space-y-3">
-      <div className="flex gap-2 items-center">
-        <Input placeholder="Sök kund, anläggning, tekniker…" value={search} onChange={e => setSearch(e.target.value)} className="max-w-sm h-9" />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-9 w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alla status</SelectItem>
-            {(['Planerad', 'Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <div className="flex-1" />
-        <Button size="sm" onClick={addService}><Plus className="h-4 w-4 mr-1" /> Ny service</Button>
-      </div>
-      <ServiceTable services={filtered} onOpen={onOpen} />
+    <Card>
+      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0 gap-2">
+        <CardTitle className="text-sm font-semibold">Alla servicar</CardTitle>
+        <div className="flex gap-2 items-center">
+          <Input placeholder="Sök kund, anläggning, tekniker…" value={search} onChange={e => setSearch(e.target.value)} className="max-w-xs h-9" />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alla status</SelectItem>
+              {(['Planerad', 'Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button size="sm" onClick={addService}><Plus className="h-4 w-4 mr-1" /> Ny service</Button>
+        </div>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 pt-0">
+        <ServiceTable services={filtered} onOpen={onOpen} />
+      </CardContent>
     </Card>
   );
 }
+
+/* -------------------- Service-detalj (protokoll) -------------------- */
 
 function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }: { service: Service; allServices: Service[]; onClose: () => void; onChange: () => void; userId?: string }) {
   const [s, setS] = useState(service);
@@ -407,7 +625,7 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
   };
 
   const history = allServices.filter(x =>
-    x.id !== service.id && x.customer === s.customer && x.facility_name === s.facility_name
+    x.id !== service.id && x.facility_name === s.facility_name
   ).sort((a, b) => (b.planned_date || '').localeCompare(a.planned_date || ''));
 
   const st = effectiveStatus(s);
@@ -417,14 +635,13 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between gap-3">
-            <span>{s.customer || 'Service'} — {s.facility_name || '—'}</span>
-            <Badge variant="outline" className={STATUS_COLORS[st]}>{st}</Badge>
+            <span className="flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" />{s.facility_name || 'Service'}</span>
+            <Badge variant="outline" className={STATUS_BADGE[st]}>{st}</Badge>
           </DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-3 gap-4">
           <div className="col-span-2 space-y-4">
-            {/* Grunddata */}
             <Card className="p-3 grid grid-cols-2 gap-3">
               <div><Label>Kund</Label><Input value={s.customer} onChange={e => setS({ ...s, customer: e.target.value })} onBlur={() => save({ customer: s.customer })} /></div>
               <div><Label>Anläggning</Label><Input value={s.facility_name} onChange={e => setS({ ...s, facility_name: e.target.value })} onBlur={() => save({ facility_name: s.facility_name })} /></div>
@@ -441,9 +658,8 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
               <div><Label>Faktisk tid (h)</Label><Input type="number" step="0.5" value={s.actual_hours} onChange={e => setS({ ...s, actual_hours: +e.target.value })} onBlur={() => save({ actual_hours: s.actual_hours })} /></div>
             </Card>
 
-            {/* Checklista */}
             <Card className="p-3">
-              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><ListChecks className="h-4 w-4" /> Checklista</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><ListChecks className="h-4 w-4" /> Checklista (protokoll)</h4>
               <div className="space-y-1 mb-2">
                 {checklist.map(c => (
                   <div key={c.id} className="flex items-center gap-2">
@@ -459,15 +675,13 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
               </div>
             </Card>
 
-            {/* Anteckningar */}
             <Card className="p-3">
               <Label>Anteckningar</Label>
               <Textarea value={s.notes || ''} onChange={e => setS({ ...s, notes: e.target.value })} onBlur={() => save({ notes: s.notes })} rows={3} />
             </Card>
 
-            {/* Avvikelser */}
             <Card className="p-3">
-              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><FileWarning className="h-4 w-4 text-orange-500" /> Avvikelser / fel</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><FileWarning className="h-4 w-4 text-status-in-progress" /> Avvikelser / fel</h4>
               <div className="space-y-2 mb-2">
                 {deviations.map(d => (
                   <div key={d.id} className="flex items-center gap-2 text-sm border rounded p-2">
@@ -487,7 +701,6 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
               </div>
             </Card>
 
-            {/* Dokumentation */}
             <Card className="p-3">
               <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Dokumentation</h4>
               <div className="grid grid-cols-3 gap-2 mb-2">
@@ -506,17 +719,16 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
             </Card>
           </div>
 
-          {/* Historik */}
           <div className="space-y-3">
             <Card className="p-3">
               <h4 className="font-semibold text-sm mb-2 flex items-center gap-2"><History className="h-4 w-4" /> Servicehistorik</h4>
               {history.length === 0 ? <p className="text-xs text-muted-foreground">Ingen tidigare service.</p> : (
                 <div className="space-y-2">
                   {history.map(h => (
-                    <div key={h.id} className="text-xs border-l-2 border-primary/30 pl-2">
-                      <div className="font-medium">{h.completed_date || h.planned_date}</div>
+                    <div key={h.id} className="text-xs border-l-2 border-primary/40 pl-2">
+                      <div className="font-medium tabular-nums">{h.completed_date || h.planned_date}</div>
                       <div className="text-muted-foreground">{h.assigned_technician || '—'}</div>
-                      <Badge variant="outline" className={`${STATUS_COLORS[effectiveStatus(h)]} text-[10px]`}>{effectiveStatus(h)}</Badge>
+                      <Badge variant="outline" className={cn('text-[10px]', STATUS_BADGE[effectiveStatus(h)])}>{effectiveStatus(h)}</Badge>
                     </div>
                   ))}
                 </div>
@@ -526,7 +738,7 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
             <Card className="p-3 text-xs space-y-1">
               <div className="flex justify-between"><span className="text-muted-foreground">Planerad tid</span><span>{s.planned_hours} h</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Faktisk tid</span><span>{s.actual_hours} h</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Diff</span><span className={s.actual_hours > s.planned_hours ? 'text-red-500' : 'text-green-600'}>{(s.actual_hours - s.planned_hours).toFixed(1)} h</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Diff</span><span className={s.actual_hours > s.planned_hours ? 'text-status-delayed' : 'text-status-completed'}>{(s.actual_hours - s.planned_hours).toFixed(1)} h</span></div>
             </Card>
           </div>
         </div>
