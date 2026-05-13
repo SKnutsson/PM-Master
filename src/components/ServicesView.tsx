@@ -180,7 +180,7 @@ export function ServicesView() {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 pt-0">
-              <ServiceTable services={upcoming.slice(0, 30)} onOpen={setOpenServiceId} />
+              <ServiceTable services={upcoming.slice(0, 30)} onOpen={setOpenServiceId} onChange={loadAll} />
             </CardContent>
           </Card>
         </TabsContent>
