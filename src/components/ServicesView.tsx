@@ -546,7 +546,7 @@ function AllServicesPanel({ services, contracts, onOpen, onChange }: { services:
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-0">
-        <ServiceTable services={filtered} onOpen={onOpen} />
+        <ServiceTable services={filtered} onOpen={onOpen} onChange={onChange} />
       </CardContent>
     </Card>
   );
