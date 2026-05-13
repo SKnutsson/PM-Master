@@ -222,8 +222,19 @@ function KpiCard({ label, value, icon }: { label: string; value: number | string
   );
 }
 
-function ServiceTable({ services, onOpen }: { services: Service[]; onOpen: (id: string) => void }) {
+function ServiceTable({ services, onOpen, onChange }: { services: Service[]; onOpen: (id: string) => void; onChange?: () => void }) {
   if (!services.length) return <p className="text-sm text-muted-foreground py-4">Inga servicar.</p>;
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm('Ta bort den här servicen? Allt protokoll, avvikelser och dokumentation försvinner.')) return;
+    await Promise.all([
+      supabase.from('service_checklist_items').delete().eq('service_id', id),
+      supabase.from('service_deviations').delete().eq('service_id', id),
+      supabase.from('service_attachments').delete().eq('service_id', id),
+    ]);
+    const { error } = await supabase.from('services').delete().eq('id', id);
+    if (error) toast.error(error.message); else { toast.success('Service borttagen'); onChange?.(); }
+  };
   return (
     <div className="border rounded-md overflow-hidden">
       <Table>
@@ -234,6 +245,7 @@ function ServiceTable({ services, onOpen }: { services: Service[]; onOpen: (id: 
             <TableHead className="text-xs">Tekniker</TableHead>
             <TableHead className="text-xs">Status</TableHead>
             <TableHead className="text-xs text-right">Om</TableHead>
+            <TableHead className="text-xs w-10"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -248,6 +260,11 @@ function ServiceTable({ services, onOpen }: { services: Service[]; onOpen: (id: 
                 <TableCell><Badge variant="outline" className={cn('text-xs', STATUS_BADGE[st])}>{st}</Badge></TableCell>
                 <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
                   {dl === null ? '—' : dl < 0 ? `${Math.abs(dl)} d sen` : `om ${dl} d`}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={e => handleDelete(e, s.id)}>
+                    <Trash2 className="h-3.5 w-3.5 text-status-delayed" />
+                  </Button>
                 </TableCell>
               </TableRow>
             );
