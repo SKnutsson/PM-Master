@@ -651,9 +651,27 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between gap-3">
+          <DialogTitle className="flex items-center justify-between gap-3 pr-8">
             <span className="flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" />{s.facility_name || 'Service'}</span>
-            <Badge variant="outline" className={STATUS_BADGE[st]}>{st}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className={STATUS_BADGE[st]}>{st}</Badge>
+              <Button size="sm" variant="ghost" className="h-8 text-status-delayed hover:text-status-delayed hover:bg-status-delayed/10"
+                onClick={async () => {
+                  if (!confirm('Ta bort den här servicen? Allt protokoll, avvikelser och dokumentation försvinner.')) return;
+                  await Promise.all([
+                    supabase.from('service_checklist_items').delete().eq('service_id', service.id),
+                    supabase.from('service_deviations').delete().eq('service_id', service.id),
+                    supabase.from('service_attachments').delete().eq('service_id', service.id),
+                  ]);
+                  const { error } = await supabase.from('services').delete().eq('id', service.id);
+                  if (error) { toast.error(error.message); return; }
+                  toast.success('Service borttagen');
+                  onChange();
+                  onClose();
+                }}>
+                <Trash2 className="h-4 w-4 mr-1" /> Ta bort
+              </Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
