@@ -359,6 +359,16 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                   const y = new Date(d).getFullYear();
                   return y >= visibleYears[0] && y <= visibleYears[2];
                 });
+                // bucket by column index (year*12 + month relative to visible start)
+                const byCol = new Map<number, Service[]>();
+                items.forEach(s => {
+                  const d = s.completed_date || s.planned_date!;
+                  const dt = new Date(d);
+                  const colIdx = (dt.getFullYear() - visibleYears[0]) * 12 + dt.getMonth();
+                  if (colIdx < 0 || colIdx > 35) return;
+                  if (!byCol.has(colIdx)) byCol.set(colIdx, []);
+                  byCol.get(colIdx)!.push(s);
+                });
                 const contract = contracts.find(c => c.facility_name === facility);
                 return (
                   <div key={facility} className="grid border-b hover:bg-muted/30 transition-colors" style={{ gridTemplateColumns: `220px repeat(36, minmax(28px,1fr))` }}>
@@ -366,46 +376,49 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                       <span className={cn('text-sm truncate', contract?.active && 'font-semibold text-primary')}>{facility}</span>
                       {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-4 border-primary/40 text-primary">Avtal</Badge>}
                     </div>
-                    {/* Cells */}
                     {Array.from({ length: 36 }).map((_, i) => {
                       const colY = visibleYears[Math.floor(i / 12)];
                       const colM = i % 12;
                       const colKey = colY * 12 + colM;
                       const isToday = colKey === todayCol;
+                      const isYearBoundary = colM === 0 && i !== 0;
+                      const cellItems = byCol.get(i) || [];
                       return (
-                        <div key={i} className={cn('h-9 border-r last:border-r-0 relative', isToday && 'bg-primary/5')}>
-                          {isToday && <div className="absolute inset-y-0 left-1/2 w-px bg-primary/60" />}
-                        </div>
-                      );
-                    })}
-                    {/* Markers overlaid via absolute? Simpler: place inline by mapping again over months */}
-                    {items.map(s => {
-                      const d = s.completed_date || s.planned_date!;
-                      const dt = new Date(d);
-                      const colIdx = (dt.getFullYear() - visibleYears[0]) * 12 + dt.getMonth();
-                      if (colIdx < 0 || colIdx > 35) return null;
-                      const st = effectiveStatus(s);
-                      // place via grid-column-start (1 = facility col, 2..37 = month cols)
-                      return (
-                        <Tooltip key={s.id}>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => onOpen(s.id)}
-                              className={cn(
-                                'h-3.5 w-3.5 rounded-full self-center justify-self-center -mt-9 cursor-pointer ring-2 ring-background hover:scale-125 transition-transform',
-                                STATUS_DOT[st]
-                              )}
-                              style={{ gridColumnStart: colIdx + 2, gridRowStart: 1 }}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="text-xs">
-                              <div className="font-semibold">{facility}</div>
-                              <div>{d} · {st}</div>
-                              {s.assigned_technician && <div className="text-muted-foreground">{s.assigned_technician}</div>}
+                        <div key={i} className={cn(
+                          'h-10 border-r last:border-r-0 relative flex items-center justify-center',
+                          isToday && 'bg-primary/5',
+                          isYearBoundary && 'border-l-2 border-l-border',
+                        )}>
+                          {isToday && <div className="absolute inset-y-0 left-1/2 w-px bg-primary/60 z-0" />}
+                          {cellItems.length > 0 && (
+                            <div className="flex gap-0.5 items-center justify-center z-10">
+                              {cellItems.map(s => {
+                                const st = effectiveStatus(s);
+                                return (
+                                  <Tooltip key={s.id}>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => onOpen(s.id)}
+                                        aria-label={`${facility} ${s.planned_date || s.completed_date}`}
+                                        className={cn(
+                                          'h-3 w-3 rotate-45 ring-2 ring-background hover:scale-150 transition-transform cursor-pointer',
+                                          STATUS_DOT[st]
+                                        )}
+                                      />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <div className="text-xs">
+                                        <div className="font-semibold">{facility}</div>
+                                        <div>{s.completed_date || s.planned_date} · {st}</div>
+                                        {s.assigned_technician && <div className="text-muted-foreground">{s.assigned_technician}</div>}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })}
                             </div>
-                          </TooltipContent>
-                        </Tooltip>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
