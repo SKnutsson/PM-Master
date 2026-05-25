@@ -106,28 +106,31 @@ export function AtaView() {
   const stats = useMemo(() => {
     const inProgress = filtered.filter((i) => ['Ej skickad', 'Skickad'].includes(i.status));
     const notInvoiced = filtered.filter((i) => i.status !== 'Fakturerad' && i.status !== 'Nekad');
-    const totalValue = filtered.reduce((s, i) => s + Number(i.amount || 0) + Number(i.material_cost || 0), 0);
+    const income = filtered.filter(i => !isCostType(i.ata_type)).reduce((s, i) => s + Number(i.amount || 0) + Number(i.material_cost || 0), 0);
+    const cost = filtered.filter(i => isCostType(i.ata_type)).reduce((s, i) => s + Number(i.amount || 0) + Number(i.material_cost || 0), 0);
+    const net = income - cost;
     const totalHours = filtered.reduce((s, i) => s + Number(i.hours || 0), 0);
     const decided = filtered.filter((i) => ['Godkänd', 'Nekad', 'Fakturerad'].includes(i.status));
     const approved = filtered.filter((i) => ['Godkänd', 'Fakturerad'].includes(i.status));
     const approvalRate = decided.length > 0 ? (approved.length / decided.length) * 100 : 0;
-    return { inProgress: inProgress.length, notInvoiced: notInvoiced.length, totalValue, totalHours, approvalRate };
+    return { inProgress: inProgress.length, notInvoiced: notInvoiced.length, income, cost, net, totalHours, approvalRate };
   }, [filtered]);
 
   // Per-project summary
   const perProject = useMemo(() => {
-    const map = new Map<string, { amount: number; hours: number; count: number }>();
+    const map = new Map<string, { income: number; cost: number; hours: number; count: number }>();
     filtered.forEach((i) => {
-      const cur = map.get(i.project_id) || { amount: 0, hours: 0, count: 0 };
-      cur.amount += Number(i.amount || 0) + Number(i.material_cost || 0);
+      const cur = map.get(i.project_id) || { income: 0, cost: 0, hours: 0, count: 0 };
+      const v = Number(i.amount || 0) + Number(i.material_cost || 0);
+      if (isCostType(i.ata_type)) cur.cost += v; else cur.income += v;
       cur.hours += Number(i.hours || 0);
       cur.count += 1;
       map.set(i.project_id, cur);
     });
     return Array.from(map.entries()).map(([projectId, v]) => {
       const proj = projects.find((p) => p.id === projectId);
-      return { projectId, project: proj, ...v };
-    }).sort((a, b) => b.amount - a.amount);
+      return { projectId, project: proj, net: v.income - v.cost, ...v };
+    }).sort((a, b) => b.net - a.net);
   }, [filtered, projects]);
 
   const handleDelete = async (id: string) => {
