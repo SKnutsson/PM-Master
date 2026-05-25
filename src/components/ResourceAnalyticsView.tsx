@@ -91,6 +91,7 @@ export function ResourceAnalyticsView() {
   const { estimations, dailyEntries, isLoading } = useResourceData();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [archiveMode, setArchiveMode] = useState<'active' | 'archived'>('active');
   const reportRef = useRef<HTMLDivElement>(null);
 
   // KPI state
