@@ -173,8 +173,10 @@ export function ResourceAnalyticsView() {
   };
 
   const sortedProjects = useMemo(() =>
-    [...allProjects].sort((a, b) => (a.code || '').localeCompare(b.code || '')),
-    [allProjects]
+    [...allProjects]
+      .filter(p => archiveMode === 'archived' ? p.status === 'Avslutat' : p.status !== 'Avslutat')
+      .sort((a, b) => (a.code || '').localeCompare(b.code || '')),
+    [allProjects, archiveMode]
   );
 
   const estimation = useMemo(() =>
