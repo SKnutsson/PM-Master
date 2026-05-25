@@ -161,11 +161,12 @@ export function AtaView() {
       </div>
 
       {/* KPI dashboard */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <KpiCard label="Pågående ÄTA" value={String(stats.inProgress)} icon={<FilePlus2 className="h-4 w-4" />} accent="blue" />
-        <KpiCard label="Ej fakturerade" value={String(stats.notInvoiced)} icon={<FileCheck2 className="h-4 w-4" />} accent="amber" />
-        <KpiCard label="Totalt värde" value={`${stats.totalValue.toLocaleString('sv-SE')} kr`} sub={`${stats.totalHours} h`} icon={<Wallet className="h-4 w-4" />} accent="primary" />
-        <KpiCard label="Godkännandegrad" value={`${stats.approvalRate.toFixed(0)}%`} icon={<ListChecks className="h-4 w-4" />} accent="green" />
+        <KpiCard label="Intäkter" value={`${stats.income.toLocaleString('sv-SE')} kr`} icon={<TrendingUp className="h-4 w-4" />} accent="green" />
+        <KpiCard label="Kostnader" value={`${stats.cost.toLocaleString('sv-SE')} kr`} icon={<TrendingDown className="h-4 w-4" />} accent="red" />
+        <KpiCard label="Netto" value={`${stats.net.toLocaleString('sv-SE')} kr`} sub={`${stats.totalHours} h totalt`} icon={<Wallet className="h-4 w-4" />} accent={stats.net >= 0 ? 'primary' : 'red'} />
+        <KpiCard label="Godkännandegrad" value={`${stats.approvalRate.toFixed(0)}%`} sub={`${stats.notInvoiced} ej fakturerade`} icon={<ListChecks className="h-4 w-4" />} accent="amber" />
       </motion.div>
 
       {/* Filters */}
@@ -196,101 +197,112 @@ export function AtaView() {
         </Card>
       </motion.div>
 
-      {/* Per-project summary */}
-      {perProject.length > 0 && (
-        <motion.div variants={itemVariants}>
-          <Card className="border-border/60">
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="text-sm font-semibold">Summa per projekt</CardTitle>
-            </CardHeader>
-            <CardContent className="px-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Projekt</TableHead>
-                    <TableHead className="text-xs text-right">Antal</TableHead>
-                    <TableHead className="text-xs text-right">Timmar</TableHead>
-                    <TableHead className="text-xs text-right">Totalt belopp</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {perProject.map((row) => (
-                    <TableRow key={row.projectId}>
-                      <TableCell className="text-sm font-medium">
-                        {row.project ? `${row.project.code ? row.project.code + ' – ' : ''}${row.project.name}` : 'Okänt projekt'}
-                      </TableCell>
-                      <TableCell className="text-sm text-right tabular-nums">{row.count}</TableCell>
-                      <TableCell className="text-sm text-right tabular-nums">{row.hours}h</TableCell>
-                      <TableCell className="text-sm text-right tabular-nums font-semibold">{row.amount.toLocaleString('sv-SE')} kr</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* List */}
-      <motion.div variants={itemVariants}>
-        <Card className="border-border/60">
-          <CardHeader className="pb-2 pt-4 flex-row items-center justify-between">
-            <CardTitle className="text-sm font-semibold">ÄTA-poster ({filtered.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Projekt</TableHead>
-                  <TableHead className="text-xs">Titel</TableHead>
-                  <TableHead className="text-xs">Typ</TableHead>
-                  <TableHead className="text-xs">Datum</TableHead>
-                  <TableHead className="text-xs text-right">Timmar</TableHead>
-                  <TableHead className="text-xs text-right">Belopp</TableHead>
-                  <TableHead className="text-xs">Status</TableHead>
-                  <TableHead className="text-xs text-right"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground text-sm">Laddar…</TableCell></TableRow>
-                ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground text-sm">Inga ÄTA-poster. Klicka "Ny ÄTA" för att lägga till.</TableCell></TableRow>
-                ) : filtered.map((i) => {
-                  const proj = projects.find((p) => p.id === i.project_id);
-                  const total = Number(i.amount || 0) + Number(i.material_cost || 0);
-                  return (
-                    <TableRow key={i.id} className="group cursor-pointer" onClick={() => { setEditing(i); setDialogOpen(true); }}>
-                      <TableCell className="text-xs">{proj ? `${proj.code ? proj.code + ' – ' : ''}${proj.name}` : '–'}</TableCell>
-                      <TableCell className="text-sm font-medium">
-                        {i.title}
-                        {i.attachments?.length > 0 && (
-                          <Paperclip className="inline-block h-3 w-3 ml-1 text-muted-foreground" />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{i.ata_type || '–'}</TableCell>
-                      <TableCell className="text-xs">{i.date || '–'}</TableCell>
-                      <TableCell className="text-xs text-right tabular-nums">{i.hours || 0}h</TableCell>
-                      <TableCell className="text-xs text-right tabular-nums font-semibold">{total.toLocaleString('sv-SE')} kr</TableCell>
-                      <TableCell><span className={cn('inline-block text-[10px] font-semibold border rounded-full px-2 py-0.5', statusStyle[i.status])}>{i.status}</span></TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setEditing(i); setDialogOpen(true); }}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(i.id); }}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+      {/* Project groups with visual ÄTA cards */}
+      {loading ? (
+        <div className="text-center py-12 text-muted-foreground text-sm">Laddar…</div>
+      ) : filtered.length === 0 ? (
+        <Card className="border-dashed border-border/60">
+          <CardContent className="py-16 text-center text-muted-foreground text-sm flex flex-col items-center gap-2">
+            <FilePlus2 className="h-8 w-8 opacity-30" />
+            Inga ÄTA-poster. Klicka "Ny ÄTA" för att lägga till.
           </CardContent>
         </Card>
-      </motion.div>
+      ) : (
+        <motion.div variants={itemVariants} className="space-y-4">
+          {perProject.map((group) => {
+            const projItems = filtered.filter((i) => i.project_id === group.projectId);
+            return (
+              <Card key={group.projectId} className="border-border/60 overflow-hidden">
+                <CardHeader className="pb-3 pt-4 bg-gradient-to-r from-muted/40 to-transparent">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <CardTitle className="text-base font-semibold">
+                        {group.project ? `${group.project.code ? group.project.code + ' – ' : ''}${group.project.name}` : 'Okänt projekt'}
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground mt-0.5">{group.count} ÄTA · {group.hours}h</p>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />
+                        <span className="text-muted-foreground">Intäkt</span>
+                        <span className="font-semibold tabular-nums text-emerald-600">+{group.income.toLocaleString('sv-SE')} kr</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <ArrowDownRight className="h-3.5 w-3.5 text-red-600" />
+                        <span className="text-muted-foreground">Kostnad</span>
+                        <span className="font-semibold tabular-nums text-red-600">−{group.cost.toLocaleString('sv-SE')} kr</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 border-l pl-4">
+                        <span className="text-muted-foreground">Netto</span>
+                        <span className={cn('font-bold tabular-nums', group.net >= 0 ? 'text-emerald-600' : 'text-red-600')}>
+                          {group.net >= 0 ? '+' : '−'}{Math.abs(group.net).toLocaleString('sv-SE')} kr
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                    {projItems.map((i) => {
+                      const total = Number(i.amount || 0) + Number(i.material_cost || 0);
+                      const isCost = isCostType(i.ata_type);
+                      return (
+                        <button
+                          key={i.id}
+                          onClick={() => { setEditing(i); setDialogOpen(true); }}
+                          className={cn(
+                            'group text-left rounded-lg border bg-card hover:shadow-md transition-all p-3 flex flex-col gap-2 relative overflow-hidden',
+                            isCost ? 'border-red-500/30 hover:border-red-500/60' : 'border-emerald-500/30 hover:border-emerald-500/60'
+                          )}
+                        >
+                          <div className={cn('absolute left-0 top-0 bottom-0 w-1', isCost ? 'bg-red-500' : 'bg-emerald-500')} />
+                          <div className="flex items-start justify-between gap-2 pl-1">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                <span className={cn(
+                                  'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded',
+                                  isCost ? 'bg-red-500/15 text-red-600' : 'bg-emerald-500/15 text-emerald-600'
+                                )}>
+                                  {isCost ? <ArrowDownRight className="h-2.5 w-2.5" /> : <ArrowUpRight className="h-2.5 w-2.5" />}
+                                  {isCost ? 'Kostnad' : 'Intäkt'}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground">{i.ata_type || '–'}</span>
+                              </div>
+                              <h4 className="text-sm font-semibold truncate">{i.title}</h4>
+                              {i.description && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{i.description}</p>}
+                            </div>
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-0.5">
+                              <Button size="icon" variant="ghost" className="h-6 w-6" onClick={(e) => { e.stopPropagation(); setEditing(i); setDialogOpen(true); }}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(i.id); }}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex items-end justify-between pl-1 mt-auto">
+                            <div className="flex items-center gap-2.5 text-[11px] text-muted-foreground">
+                              {i.date && <span className="inline-flex items-center gap-1"><CalIcon className="h-3 w-3" />{i.date}</span>}
+                              {Number(i.hours) > 0 && <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{i.hours}h</span>}
+                              {i.attachments?.length > 0 && <span className="inline-flex items-center gap-1"><Paperclip className="h-3 w-3" />{i.attachments.length}</span>}
+                            </div>
+                            <div className="text-right">
+                              <div className={cn('text-base font-bold tabular-nums leading-none', isCost ? 'text-red-600' : 'text-emerald-600')}>
+                                {isCost ? '−' : '+'}{total.toLocaleString('sv-SE')} kr
+                              </div>
+                              <span className={cn('inline-block mt-1 text-[9px] font-semibold border rounded-full px-1.5 py-0.5', statusStyle[i.status])}>{i.status}</span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </motion.div>
+      )}
 
       <AtaDialog
         open={dialogOpen}
