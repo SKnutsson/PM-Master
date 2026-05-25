@@ -270,122 +270,149 @@ export function ResourceAnalyticsView() {
         <div ref={reportRef} className="space-y-5">
           {(hasData || isLoading) && (
             <>
-          {/* Paired stat cards: Montage pair | Resa pair | Total */}
-          <div className="flex flex-wrap gap-3">
-            {/* Montage pair */}
-            <div className="flex gap-3 flex-1 min-w-[300px]">
-              <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 pl-0.5">Montage</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <StatCard
-                    title="Kalkyl"
-                    value={`${estimatedWork}h`}
-                    icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
-                  />
-                  <StatCard
-                    title="Utfall"
-                    value={`${actualWork}h`}
-                    accent={hasEstimation ? (actualWork > estimatedWork ? 'red' : 'green') : 'default'}
-                    icon={<Wrench className="h-4 w-4 text-muted-foreground" />}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Resa pair */}
-            <div className="flex gap-3 flex-1 min-w-[300px]">
-              <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 pl-0.5">Resa</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <StatCard
-                    title="Kalkyl"
-                    value={`${estimatedTravel}h`}
-                    icon={<Car className="h-4 w-4 text-muted-foreground" />}
-                  />
-                  <StatCard
-                    title="Utfall"
-                    value={`${actualTravel}h`}
-                    accent={hasEstimation ? (actualTravel > estimatedTravel ? 'red' : 'green') : 'default'}
-                    icon={<Car className="h-4 w-4 text-muted-foreground" />}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Total deviation box */}
-            <div className="flex-shrink-0 min-w-[160px]">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5 pl-0.5">Totalt</p>
+          {/* Total summary — full width, prominent */}
+          {(() => {
+            const totalEst = estimatedWork + estimatedTravel;
+            const totalAct = actualWork + actualTravel;
+            const pctDev = totalEst > 0 ? ((totalAct - totalEst) / totalEst) * 100 : 0;
+            const overBudget = totalDeviation > 0;
+            return (
               <motion.div variants={cardVariants}>
                 <Card className={cn(
-                  'border bg-card/80 h-[calc(100%-24px)]',
-                  !hasEstimation ? 'border-border/50' :
-                  totalDeviation > 0 ? 'border-red-500/50 bg-red-500/5' :
-                  'border-emerald-500/50 bg-emerald-500/5'
+                  'border-2 bg-gradient-to-br',
+                  !hasEstimation ? 'border-border/50 from-card to-card/60' :
+                  overBudget ? 'border-red-500/60 from-red-500/10 to-red-500/5' :
+                  'border-emerald-500/60 from-emerald-500/10 to-emerald-500/5'
                 )}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Avvikelse</p>
-                        <p className={cn(
-                          'text-2xl font-bold tabular-nums',
-                          !hasEstimation ? 'text-foreground' :
-                          totalDeviation > 0 ? 'text-red-400' : 'text-emerald-400'
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          'rounded-lg p-2.5',
+                          !hasEstimation ? 'bg-muted/50' :
+                          overBudget ? 'bg-red-500/15' : 'bg-emerald-500/15'
                         )}>
-                          {formatDeviation(totalDeviation)}
-                        </p>
-                        {hasEstimation && (
-                          <p className="text-[10px] text-muted-foreground mt-1">
-                            {estimatedWork + estimatedTravel}h → {actualWork + actualTravel}h
-                          </p>
-                        )}
+                          {totalDeviation === 0 ? <Minus className="h-5 w-5 text-muted-foreground" /> :
+                           overBudget ? <TrendingUp className="h-5 w-5 text-red-500" /> :
+                           <TrendingDown className="h-5 w-5 text-emerald-500" />}
+                        </div>
+                        <div>
+                          <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Totalsammanfattning</p>
+                          <p className="text-sm text-muted-foreground">Kalkyl vs utfall för hela projektet</p>
+                        </div>
                       </div>
-                      <div className={cn(
-                        'shrink-0 rounded-md p-2',
-                        !hasEstimation ? 'bg-muted/50' :
-                        totalDeviation > 0 ? 'bg-red-500/10' : 'bg-emerald-500/10'
-                      )}>
-                        {totalDeviation === 0
-                          ? <Minus className="h-4 w-4 text-muted-foreground" />
-                          : totalDeviation > 0
-                          ? <TrendingUp className="h-4 w-4 text-red-400" />
-                          : <TrendingDown className="h-4 w-4 text-emerald-400" />}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                        <div>
+                          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Total kalkyl</p>
+                          <p className="text-2xl font-bold tabular-nums">{totalEst}h</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Totalt utfall</p>
+                          <p className="text-2xl font-bold tabular-nums">{totalAct}h</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Avvikelse</p>
+                          <p className={cn('text-2xl font-bold tabular-nums',
+                            !hasEstimation ? 'text-foreground' :
+                            overBudget ? 'text-red-500' : 'text-emerald-500')}>
+                            {formatDeviation(totalDeviation)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">% avvikelse</p>
+                          <p className={cn('text-2xl font-bold tabular-nums',
+                            !hasEstimation ? 'text-foreground' :
+                            overBudget ? 'text-red-500' : 'text-emerald-500')}>
+                            {hasEstimation ? `${pctDev > 0 ? '+' : ''}${pctDev.toFixed(1)}%` : '–'}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </motion.div>
-            </div>
+            );
+          })()}
+
+          {/* Montage & Resa — separate, clear blocks */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {([
+              { title: 'Montage', icon: Wrench, est: estimatedWork, act: actualWork, dev: workDeviation },
+              { title: 'Resa', icon: Car, est: estimatedTravel, act: actualTravel, dev: travelDeviation },
+            ] as const).map((block) => {
+              const over = block.dev > 0;
+              const pct = block.est > 0 ? ((block.act - block.est) / block.est) * 100 : 0;
+              const noEst = block.est === 0;
+              return (
+                <motion.div key={block.title} variants={cardVariants}>
+                  <Card className={cn(
+                    'border-2 h-full',
+                    noEst ? 'border-border/50 bg-card/80' :
+                    over ? 'border-red-500/50 bg-red-500/5' :
+                    'border-emerald-500/50 bg-emerald-500/5'
+                  )}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            'rounded-md p-2',
+                            noEst ? 'bg-muted/50' :
+                            over ? 'bg-red-500/15' : 'bg-emerald-500/15'
+                          )}>
+                            <block.icon className={cn('h-4 w-4',
+                              noEst ? 'text-muted-foreground' :
+                              over ? 'text-red-500' : 'text-emerald-500'
+                            )} />
+                          </div>
+                          <div>
+                            <CardTitle className="text-base">{block.title}</CardTitle>
+                            <p className="text-[11px] text-muted-foreground">
+                              {noEst ? 'Ingen kalkyl satt' : over ? 'Över kalkyl' : 'Inom kalkyl'}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={cn(
+                          'text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full',
+                          noEst ? 'bg-muted text-muted-foreground' :
+                          over ? 'bg-red-500/20 text-red-600' : 'bg-emerald-500/20 text-emerald-600'
+                        )}>
+                          {noEst ? '–' : over ? 'Röd' : 'Grön'}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Kalkyl</p>
+                          <p className="text-xl font-bold tabular-nums">{block.est}h</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Utfall</p>
+                          <p className="text-xl font-bold tabular-nums">{block.act}h</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase text-muted-foreground tracking-wider">Avvikelse</p>
+                          <p className={cn('text-xl font-bold tabular-nums',
+                            noEst ? 'text-foreground' :
+                            over ? 'text-red-500' : 'text-emerald-500')}>
+                            {formatDeviation(block.dev)}
+                          </p>
+                          {!noEst && (
+                            <p className={cn('text-[10px] tabular-nums',
+                              over ? 'text-red-500' : 'text-emerald-500'
+                            )}>
+                              {pct > 0 ? '+' : ''}{pct.toFixed(1)}%
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
 
-          {/* Deviation detail rows */}
-          {hasEstimation && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Card className={cn('border', workDeviation > 0 ? 'border-red-500/30 bg-red-500/5' : 'border-emerald-500/30 bg-emerald-500/5')}>
-                <CardContent className="p-3 flex items-center gap-3">
-                  <Wrench className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div className="text-xs">
-                    <span className="text-muted-foreground">Montage avvikelse: </span>
-                    <span className={cn('font-semibold', workDeviation > 0 ? 'text-red-400' : 'text-emerald-400')}>
-                      {formatDeviation(workDeviation)}
-                    </span>
-                    <span className="text-muted-foreground ml-1">({actualWork}h av {estimatedWork}h)</span>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className={cn('border', travelDeviation > 0 ? 'border-red-500/30 bg-red-500/5' : 'border-emerald-500/30 bg-emerald-500/5')}>
-                <CardContent className="p-3 flex items-center gap-3">
-                  <Car className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <div className="text-xs">
-                    <span className="text-muted-foreground">Resa avvikelse: </span>
-                    <span className={cn('font-semibold', travelDeviation > 0 ? 'text-red-400' : 'text-emerald-400')}>
-                      {formatDeviation(travelDeviation)}
-                    </span>
-                    <span className="text-muted-foreground ml-1">({actualTravel}h av {estimatedTravel}h)</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
 
           {/* Bar chart – Montage & Resa only */}
           <Card className="border-border/50 bg-card/80">
