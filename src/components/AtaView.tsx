@@ -22,6 +22,12 @@ type AtaStatus = 'Ej skickad' | 'Skickad' | 'Godkänd' | 'Nekad' | 'Fakturerad';
 const STATUSES: AtaStatus[] = ['Ej skickad', 'Skickad', 'Godkänd', 'Nekad', 'Fakturerad'];
 const ATA_TYPES = ['Tilläggsarbete', 'Ändring', 'Avgående', 'Hinder', 'Övrigt'];
 
+const isCostType = (t: string) => t === 'Avgående';
+const signedAmount = (i: { amount: number; material_cost: number; ata_type: string }) => {
+  const total = Number(i.amount || 0) + Number(i.material_cost || 0);
+  return isCostType(i.ata_type) ? -total : total;
+};
+
 const statusStyle: Record<AtaStatus, string> = {
   'Ej skickad': 'bg-muted text-foreground border-border',
   'Skickad': 'bg-blue-500/15 text-blue-600 border-blue-500/30',
