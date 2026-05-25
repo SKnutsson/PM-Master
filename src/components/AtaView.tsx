@@ -316,11 +316,12 @@ export function AtaView() {
   );
 }
 
-function KpiCard({ label, value, sub, icon, accent }: { label: string; value: string; sub?: string; icon: React.ReactNode; accent: 'blue' | 'amber' | 'green' | 'primary' }) {
+function KpiCard({ label, value, sub, icon, accent }: { label: string; value: string; sub?: string; icon: React.ReactNode; accent: 'blue' | 'amber' | 'green' | 'primary' | 'red' }) {
   const map = {
     blue: 'from-blue-500/20 to-blue-500/5 text-blue-600',
     amber: 'from-amber-500/20 to-amber-500/5 text-amber-600',
     green: 'from-emerald-500/20 to-emerald-500/5 text-emerald-600',
+    red: 'from-red-500/20 to-red-500/5 text-red-600',
     primary: 'from-primary/20 to-primary/5 text-primary',
   } as const;
   return (
