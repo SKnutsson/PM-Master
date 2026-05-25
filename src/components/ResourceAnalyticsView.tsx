@@ -235,6 +235,12 @@ export function ResourceAnalyticsView() {
           <p className="text-sm text-muted-foreground">Jämför kalkyl mot utfall per projekt</p>
         </div>
         <div className="flex items-center gap-2">
+          <Tabs value={archiveMode} onValueChange={(v) => { setArchiveMode(v as any); setSelectedProjectId(''); }}>
+            <TabsList>
+              <TabsTrigger value="active" className="gap-1.5 text-xs"><FolderOpen className="h-3.5 w-3.5" />Aktiva</TabsTrigger>
+              <TabsTrigger value="archived" className="gap-1.5 text-xs"><FolderArchive className="h-3.5 w-3.5" />Arkiverade</TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
             <SelectTrigger className="w-[280px] h-9">
               <SelectValue placeholder="Välj ett projekt…" />
