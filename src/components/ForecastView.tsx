@@ -352,7 +352,7 @@ export function ForecastView() {
 
       {/* Forecast Table */}
       <motion.div variants={itemVariants}>
-        <Card className="border-border/50 bg-card/80 overflow-hidden">
+        <Card className="border-border/50 bg-card/80" style={{ overflow: 'visible' }}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
@@ -381,10 +381,10 @@ export function ForecastView() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="px-0 pb-0">
-            <div ref={forecastTableRef} className="overflow-x-auto">
+          <CardContent className="px-0 pb-0" style={{ overflow: 'visible' }}>
+            <div ref={forecastTableRef} style={{ overflowX: 'clip', overflowY: 'visible' }}>
               <table className="w-full border-collapse">
-                <thead className="sticky top-0 z-10">
+                <thead className="sticky top-0 z-20 shadow-md">
                   {/* Quarter header row */}
                   {selectedPeriod !== 'rolling12' &&
                   <tr className="bg-sidebar-accent/60">

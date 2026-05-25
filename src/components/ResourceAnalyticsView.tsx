@@ -15,7 +15,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Legend, Cell,
 } from 'recharts';
-import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, Printer, Save } from 'lucide-react';
+import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, Printer, Save, FolderOpen, FolderArchive } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -91,6 +92,7 @@ export function ResourceAnalyticsView() {
   const { estimations, dailyEntries, isLoading } = useResourceData();
 
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [archiveMode, setArchiveMode] = useState<'active' | 'archived'>('active');
   const reportRef = useRef<HTMLDivElement>(null);
 
   // KPI state
@@ -172,8 +174,10 @@ export function ResourceAnalyticsView() {
   };
 
   const sortedProjects = useMemo(() =>
-    [...allProjects].sort((a, b) => (a.code || '').localeCompare(b.code || '')),
-    [allProjects]
+    [...allProjects]
+      .filter(p => archiveMode === 'archived' ? p.status === 'Avslutat' : p.status !== 'Avslutat')
+      .sort((a, b) => (a.code || '').localeCompare(b.code || '')),
+    [allProjects, archiveMode]
   );
 
   const estimation = useMemo(() =>
@@ -231,6 +235,12 @@ export function ResourceAnalyticsView() {
           <p className="text-sm text-muted-foreground">Jämför kalkyl mot utfall per projekt</p>
         </div>
         <div className="flex items-center gap-2">
+          <Tabs value={archiveMode} onValueChange={(v) => { setArchiveMode(v as any); setSelectedProjectId(''); }}>
+            <TabsList>
+              <TabsTrigger value="active" className="gap-1.5 text-xs"><FolderOpen className="h-3.5 w-3.5" />Aktiva</TabsTrigger>
+              <TabsTrigger value="archived" className="gap-1.5 text-xs"><FolderArchive className="h-3.5 w-3.5" />Arkiverade</TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
             <SelectTrigger className="w-[280px] h-9">
               <SelectValue placeholder="Välj ett projekt…" />
