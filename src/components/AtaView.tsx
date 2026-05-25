@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger
 } from '@/components/ui/dialog';
-import { Plus, FilePlus2, FileCheck2, Wallet, ListChecks, Trash2, Pencil, Search, Filter, FolderOpen, FolderArchive, Paperclip, Upload, X, ImageIcon } from 'lucide-react';
+import { Plus, FilePlus2, FileCheck2, Wallet, ListChecks, Trash2, Pencil, Search, Filter, FolderOpen, FolderArchive, Paperclip, Upload, X, ImageIcon, TrendingUp, TrendingDown, ArrowDownRight, ArrowUpRight, Calendar as CalIcon, Clock } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
