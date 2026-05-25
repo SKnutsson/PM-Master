@@ -20,12 +20,13 @@ import {
   UserCircle,
   ListChecks,
   TrendingUp,
-  Wrench } from
+  Wrench,
+  FileSpreadsheet } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'services';
+export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'services' | 'ata';
 
 interface SidebarProps {
   currentView: View;
@@ -45,6 +46,7 @@ const mainItems = [
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
   { id: 'resources-analytics' as View, label: 'Uppföljning', icon: TrendingUp },
   { id: 'services' as View, label: 'Servicar', icon: Wrench },
+  { id: 'ata' as View, label: 'ÄTA', icon: FileSpreadsheet },
 ];
 
 const bottomNavItems = [

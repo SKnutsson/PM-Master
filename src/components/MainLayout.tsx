@@ -10,6 +10,7 @@ import { DocumentationPlanView } from './DocumentationPlanView';
 import { ProfileView } from './ProfileView';
 import { MyTasksView } from './MyTasksView';
 import { ServicesView } from './ServicesView';
+import { AtaView } from './AtaView';
 import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 
 export function MainLayout() {
@@ -37,6 +38,8 @@ export function MainLayout() {
         return <ProfileView />;
       case 'services':
         return <ServicesView />;
+      case 'ata':
+        return <AtaView />;
       default:
         return <Dashboard />;
     }
