@@ -75,9 +75,7 @@ function Calendar({
           day_disabled: "text-muted-foreground opacity-50",
           day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
           day_hidden: "invisible",
-          head_cell_weeknumber: "w-9 font-semibold text-[0.7rem] text-muted-foreground/70",
-          cell_weeknumber: "w-9 text-[0.7rem] font-semibold text-muted-foreground/70 tabular-nums",
-          weeknumber: "flex items-center justify-center w-9 h-9 text-[0.7rem] font-semibold text-muted-foreground/70 tabular-nums",
+          weeknumber: "flex items-center justify-center w-9 h-9 text-[0.7rem] font-semibold text-muted-foreground/60 tabular-nums",
           ...classNames,
         }}
         components={{
