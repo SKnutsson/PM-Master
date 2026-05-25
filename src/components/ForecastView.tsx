@@ -221,12 +221,57 @@ export function ForecastView() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{periodLabel}</h1>
-          <p className="text-muted-foreground">
-            Översikt av budgeterad försäljning per månad
-            
-          </p>
+          <p className="text-muted-foreground">Översikt av budgeterad försäljning per månad</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {(() => {
+            const yr = selectedPeriod === 'rolling12' ? new Date().getFullYear() : parseInt(selectedPeriod);
+            const currentTarget = salesTargets[yr] || 0;
+            return (
+              <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/60 px-2.5 py-1.5">
+                <Target className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Mål {yr}:</span>
+                {editingTarget ? (
+                  <>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={targetInput}
+                      onChange={(e) => setTargetInput(e.target.value)}
+                      placeholder="MSEK"
+                      className="w-20 h-6 text-xs"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={async () => {
+                        const val = parseFloat(targetInput);
+                        if (!isNaN(val) && val >= 0) await setSalesTarget(yr, val);
+                        setEditingTarget(false);
+                      }}>
+                      <CheckIcon className="h-3 w-3" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs font-bold">{currentTarget > 0 ? `${currentTarget.toFixed(1)} MSEK` : 'Ej satt'}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => {
+                        setTargetInput(currentTarget > 0 ? String(currentTarget) : '');
+                        setEditingTarget(true);
+                      }}>
+                      <Pencil className="h-2.5 w-2.5" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            );
+          })()}
           <YearNavigator
             value={selectedPeriod}
             onChange={(v) => setSelectedPeriod((v === 'rolling' ? 'rolling12' : v) as PeriodView)}
@@ -235,58 +280,6 @@ export function ForecastView() {
           <AddForecastDialog />
         </div>
       </div>
-
-      {/* Sales Target Input — always visible */}
-      {(() => {
-        const yr = selectedPeriod === 'rolling12' ? new Date().getFullYear() : parseInt(selectedPeriod);
-        const currentTarget = salesTargets[yr] || 0;
-        return (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Försäljningsmål {yr}:</span>
-            </div>
-            {editingTarget ?
-            <div className="flex items-center gap-2">
-                <Input
-                type="number"
-                step="0.1"
-                min="0"
-                value={targetInput}
-                onChange={(e) => setTargetInput(e.target.value)}
-                placeholder="MSEK"
-                className="w-28 h-8 text-sm" />
-                <span className="text-sm text-muted-foreground">MSEK</span>
-                <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={async () => {
-                  const val = parseFloat(targetInput);
-                  if (!isNaN(val) && val >= 0) {
-                    await setSalesTarget(yr, val);
-                  }
-                  setEditingTarget(false);
-                }}>
-                  <CheckIcon className="h-4 w-4" />
-                </Button>
-              </div> :
-            <div className="flex items-center gap-2">
-                <span className="text-sm font-bold">{currentTarget > 0 ? `${currentTarget.toFixed(1)} MSEK` : 'Ej satt'}</span>
-                <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => {
-                  setTargetInput(currentTarget > 0 ? String(currentTarget) : '');
-                  setEditingTarget(true);
-                }}>
-                  <Pencil className="h-3 w-3" />
-                </Button>
-              </div>
-            }
-          </div>);
-      })()}
 
       {/* Summary Cards — compact */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
@@ -389,7 +382,7 @@ export function ForecastView() {
             </div>
           </CardHeader>
           <CardContent className="px-0 pb-0">
-            <div ref={forecastTableRef} className="overflow-x-auto max-h-[calc(100vh-280px)]">
+            <div ref={forecastTableRef} className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 z-10">
                   {/* Quarter header row */}

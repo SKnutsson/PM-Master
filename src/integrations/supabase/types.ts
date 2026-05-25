@@ -70,6 +70,81 @@ export type Database = {
           },
         ]
       }
+      ata_events: {
+        Row: {
+          ata_id: string
+          created_at: string
+          event: string
+          from_value: string | null
+          id: string
+          to_value: string | null
+        }
+        Insert: {
+          ata_id: string
+          created_at?: string
+          event: string
+          from_value?: string | null
+          id?: string
+          to_value?: string | null
+        }
+        Update: {
+          ata_id?: string
+          created_at?: string
+          event?: string
+          from_value?: string | null
+          id?: string
+          to_value?: string | null
+        }
+        Relationships: []
+      }
+      ata_items: {
+        Row: {
+          amount: number
+          ata_type: string | null
+          attachments: Json
+          created_at: string
+          date: string | null
+          description: string | null
+          hours: number
+          id: string
+          material_cost: number
+          project_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          ata_type?: string | null
+          attachments?: Json
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          hours?: number
+          id?: string
+          material_cost?: number
+          project_id: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          ata_type?: string | null
+          attachments?: Json
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          hours?: number
+          id?: string
+          material_cost?: number
+          project_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       daily_resource_entries: {
         Row: {
           created_at: string
