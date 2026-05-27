@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from 'next-themes';
-import { supabase } from '@/integrations/supabase/client';
+import { useAppMode } from '@/contexts/AppModeContext';
+import { ModeSwitcher } from './ModeSwitcher';
 import alfingLogo from '@/assets/alfing-seating-logo-green.png';
 import {
   LayoutDashboard,
@@ -21,23 +22,27 @@ import {
   ListChecks,
   TrendingUp,
   Wrench,
-  FileSpreadsheet } from
+  FileSpreadsheet,
+  FileText,
+  Users,
+  PieChart } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-export type View = 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources' | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks' | 'services' | 'ata';
+export type View =
+  | 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources'
+  | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks'
+  | 'services' | 'ata'
+  | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats';
 
 interface SidebarProps {
   currentView: View;
   onViewChange: (view: View) => void;
 }
 
-const topItems = [
-  { id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard },
-];
-
-const mainItems = [
+const pmTopItems = [{ id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard }];
+const pmMainItems = [
   { id: 'forecast' as View, label: 'Försäljning', icon: BarChart3 },
   { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
   { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
@@ -49,20 +54,26 @@ const mainItems = [
   { id: 'ata' as View, label: 'ÄTA', icon: FileSpreadsheet },
 ];
 
-const bottomNavItems = [
-  { id: 'profile' as View, label: 'Profil', icon: UserCircle },
+const crmTopItems = [{ id: 'crm-dashboard' as View, label: 'Dashboard', icon: LayoutDashboard }];
+const crmMainItems = [
+  { id: 'crm-quotes' as View, label: 'Alla offerter', icon: FileText },
+  { id: 'crm-customers' as View, label: 'Kunder', icon: Users },
+  { id: 'crm-stats' as View, label: 'Statistik', icon: PieChart },
 ];
 
+const bottomNavItems = [{ id: 'profile' as View, label: 'Profil', icon: UserCircle }];
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { mode } = useAppMode();
   const isDark = theme === 'dark';
 
-  const adminItems: typeof topItems = [];
+  const topItems = mode === 'crm' ? crmTopItems : pmTopItems;
+  const mainItems = mode === 'crm' ? crmMainItems : pmMainItems;
 
-  const renderNavItem = (item: typeof topItems[0]) => {
+  const renderNavItem = (item: { id: View; label: string; icon: any }) => {
     const isActive = currentView === item.id;
     const NavButton = (
       <Button
@@ -94,7 +105,7 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
     return NavButton;
   };
 
-  const renderNavItems = (items: typeof topItems) => items.map(renderNavItem);
+  const renderNavItems = (items: { id: View; label: string; icon: any }[]) => items.map(renderNavItem);
 
   return (
     <motion.aside
@@ -109,38 +120,23 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
           src={alfingLogo}
           alt="Alfing Seating"
           className={cn("shrink-0 rounded object-cover", isCollapsed ? "h-9 w-9" : "h-9 w-auto max-w-[140px]")} />
+      </div>
 
+      {/* Mode switcher */}
+      <div className="px-3 pt-3">
+        <ModeSwitcher collapsed={isCollapsed} />
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1">
-        {/* Dashboard - standalone */}
         {renderNavItems(topItems)}
 
-        {/* Separator */}
-        <div className="py-1.5">
-          <div className="h-px bg-sidebar-border" />
-        </div>
+        <div className="py-1.5"><div className="h-px bg-sidebar-border" /></div>
 
-        {/* Main project items */}
         {renderNavItems(mainItems)}
 
-        {/* Admin items */}
-        {adminItems.length > 0 && (
-          <>
-            <div className="py-1.5">
-              <div className="h-px bg-sidebar-border" />
-            </div>
-            {renderNavItems(adminItems)}
-          </>
-        )}
+        <div className="py-1.5"><div className="h-px bg-sidebar-border" /></div>
 
-        {/* Separator */}
-        <div className="py-1.5">
-          <div className="h-px bg-sidebar-border" />
-        </div>
-
-        {/* Profile - standalone */}
         {renderNavItems(bottomNavItems)}
       </nav>
 
@@ -148,17 +144,11 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground">
-
-        {isCollapsed ?
-        <ChevronRight className="h-3.5 w-3.5" /> :
-
-        <ChevronLeft className="h-3.5 w-3.5" />
-        }
+        {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
       </button>
 
-      {/* Theme toggle + Logout */}
+      {/* Theme + logout */}
       <div className="border-t border-sidebar-border p-3 space-y-1">
-        {/* Theme toggle */}
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <Button
@@ -168,24 +158,16 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 'w-full justify-start gap-3 px-3 py-2.5 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-all',
                 isCollapsed && 'justify-center px-2'
               )}>
-
               <div className="relative h-5 w-5 shrink-0">
                 <Sun className={cn('absolute inset-0 h-5 w-5 transition-all duration-300', isDark ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100')} />
                 <Moon className={cn('absolute inset-0 h-5 w-5 transition-all duration-300', isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50')} />
               </div>
-              {!isCollapsed &&
-              <span className="text-sm">{isDark ? 'Mörkt läge' : 'Ljust läge'}</span>
-              }
+              {!isCollapsed && <span className="text-sm">{isDark ? 'Mörkt läge' : 'Ljust läge'}</span>}
             </Button>
           </TooltipTrigger>
-          {isCollapsed &&
-          <TooltipContent side="right" className="font-medium">
-              {isDark ? 'Byt till ljust' : 'Byt till mörkt'}
-            </TooltipContent>
-          }
+          {isCollapsed && <TooltipContent side="right" className="font-medium">{isDark ? 'Byt till ljust' : 'Byt till mörkt'}</TooltipContent>}
         </Tooltip>
 
-        {/* Logout */}
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <Button
@@ -195,25 +177,14 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
                 'w-full justify-start gap-3 px-3 py-2.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive',
                 isCollapsed && 'justify-center px-2'
               )}>
-
               <LogOut className="h-5 w-5 shrink-0" />
               {!isCollapsed && <span>Logga ut</span>}
             </Button>
           </TooltipTrigger>
-          {isCollapsed &&
-          <TooltipContent side="right" className="font-medium">
-              Logga ut
-            </TooltipContent>
-          }
+          {isCollapsed && <TooltipContent side="right" className="font-medium">Logga ut</TooltipContent>}
         </Tooltip>
       </div>
 
-      {/* Developer credit */}
-      {!isCollapsed &&
-      <p className="px-4 pb-3 text-[10px] select-none text-slate-400">
-          Developed by S. Knutsson
-        </p>
-      }
+      {!isCollapsed && <p className="px-4 pb-3 text-[10px] select-none text-slate-400">Developed by S. Knutsson</p>}
     </motion.aside>);
-
 }

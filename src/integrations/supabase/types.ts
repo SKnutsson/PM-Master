@@ -145,6 +145,183 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_contacts: {
+        Row: {
+          created_at: string
+          customer_id: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "crm_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_customers: {
+        Row: {
+          arena: string | null
+          country: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          arena?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arena?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_quote_comments: {
+        Row: {
+          author: string | null
+          body: string
+          created_at: string
+          id: string
+          quote_id: string
+        }
+        Insert: {
+          author?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          quote_id: string
+        }
+        Update: {
+          author?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_quote_comments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "crm_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_quotes: {
+        Row: {
+          amount: number
+          comment: string | null
+          country: string | null
+          created_at: string
+          customer_id: string | null
+          customer_name: string | null
+          delivery_time: string | null
+          id: string
+          next_followup: string | null
+          prescriber: boolean
+          probability: number
+          product: string | null
+          project_arena: string | null
+          quantity_spec: string | null
+          quote_date: string
+          quote_number: string
+          responsible: string | null
+          salesperson: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          comment?: string | null
+          country?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          delivery_time?: string | null
+          id?: string
+          next_followup?: string | null
+          prescriber?: boolean
+          probability?: number
+          product?: string | null
+          project_arena?: string | null
+          quantity_spec?: string | null
+          quote_date?: string
+          quote_number: string
+          responsible?: string | null
+          salesperson?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          comment?: string | null
+          country?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          delivery_time?: string | null
+          id?: string
+          next_followup?: string | null
+          prescriber?: boolean
+          probability?: number
+          product?: string | null
+          project_arena?: string | null
+          quantity_spec?: string | null
+          quote_date?: string
+          quote_number?: string
+          responsible?: string | null
+          salesperson?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "crm_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_resource_entries: {
         Row: {
           created_at: string
