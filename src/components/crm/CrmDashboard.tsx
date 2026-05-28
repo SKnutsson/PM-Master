@@ -1,16 +1,33 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCrmData } from '@/hooks/useCrmData';
-import { formatMSEK, formatSEK, statusBadgeClass } from '@/lib/crmConstants';
+import { formatMSEK, formatSEK, statusBadgeClass, SALESPEOPLE } from '@/lib/crmConstants';
 import { TrendingUp, Briefcase, CheckCircle2, Percent } from 'lucide-react';
 import { format, startOfMonth, subMonths } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { SalesOverviewPanel } from '../SalesOverviewPanel';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 export function CrmDashboard() {
-  const { quotes } = useCrmData();
+  const { quotes: allQuotes } = useCrmData();
+  const { canSeeAllSalespeople, linkedSalesperson } = usePermissions();
+  const [sellerFilter, setSellerFilter] = useState<string>('all');
+
+  useEffect(() => {
+    if (!canSeeAllSalespeople && linkedSalesperson) setSellerFilter(linkedSalesperson);
+  }, [canSeeAllSalespeople, linkedSalesperson]);
+
+  const effectiveSeller = canSeeAllSalespeople ? sellerFilter : (linkedSalesperson || '__none__');
+
+  const quotes = useMemo(() => {
+    if (effectiveSeller === 'all') return allQuotes;
+    if (effectiveSeller === '__none__') return [];
+    return allQuotes.filter((q) => q.salesperson === effectiveSeller);
+  }, [allQuotes, effectiveSeller]);
 
   const stats = useMemo(() => {
     const open = quotes.filter((q) => q.status === 'Öppen');
