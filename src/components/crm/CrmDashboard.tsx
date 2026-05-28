@@ -182,13 +182,16 @@ export function CrmDashboard() {
   );
 }
 
-function KpiCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function KpiCard({ icon: Icon, label, value, tint = 'from-primary/20 via-primary/5' }: { icon: any; label: string; value: string; tint?: string }) {
   return (
-    <Card>
-      <CardContent className="p-5">
+    <Card className="relative overflow-hidden border-border/60">
+      <div className={`absolute inset-0 bg-gradient-to-br ${tint} to-transparent pointer-events-none`} />
+      <CardContent className="p-5 relative">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
-          <Icon className="h-4 w-4 text-primary" />
+          <div className="h-8 w-8 rounded-lg bg-background/70 backdrop-blur flex items-center justify-center shadow-sm">
+            <Icon className="h-4 w-4 text-primary" />
+          </div>
         </div>
         <div className="text-3xl font-bold tabular-nums">{value}</div>
       </CardContent>
