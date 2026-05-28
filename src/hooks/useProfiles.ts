@@ -37,8 +37,7 @@ export function useProfiles() {
   return { profiles, isLoading, refetch };
 }
 
-  return { profiles, isLoading, refetch };
-}
+
 
 export function getInitials(profile: UserProfile): string {
   const f = (profile.first_name || '').trim().charAt(0).toUpperCase();
