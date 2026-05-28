@@ -272,30 +272,32 @@ export function CrmStatsView() {
         </Card>
       </div>
 
-      {/* Win rate per seller */}
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-lg">Win rate per säljare</CardTitle>
-          <CardDescription>Andel vunna affärer av avslutade offerter</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={winRatePerSeller} margin={{ top: 16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} unit="%" />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} formatter={(v: any, _n, p: any) => [`${v}% (${p.payload.wins}/${p.payload.antal})`, 'Win rate']} />
-                <Bar dataKey="winRate" name="Win rate %" radius={[6, 6, 0, 0]}>
-                  {winRatePerSeller.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Win rate per seller - only managers/admin */}
+      {canSeeAllSalespeople && (
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg">Win rate per säljare</CardTitle>
+            <CardDescription>Andel vunna affärer av avslutade offerter</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={winRatePerSeller} margin={{ top: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} unit="%" />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} formatter={(v: any, _n, p: any) => [`${v}% (${p.payload.wins}/${p.payload.antal})`, 'Win rate']} />
+                  <Bar dataKey="winRate" name="Win rate %" radius={[6, 6, 0, 0]}>
+                    {winRatePerSeller.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Detailed table */}
       <Card className="border-border/50">
