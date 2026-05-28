@@ -62,7 +62,7 @@ export function CrmDashboard() {
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">CRM Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Översikt över pipeline och uppföljningar</p>
+          <p className="text-sm text-muted-foreground">Översikt över offertstock och uppföljningar</p>
         </div>
         <div className="flex items-end gap-2 flex-wrap">
           {canSeeAllSalespeople ? (
@@ -85,10 +85,10 @@ export function CrmDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <KpiCard icon={Briefcase} label="Aktiva offerter" value={String(stats.open.length)} />
-        <KpiCard icon={TrendingUp} label="Pipeline (MSEK)" value={formatMSEK(stats.pipelineValue)} />
-        <KpiCard icon={CheckCircle2} label="Order denna månad" value={String(stats.ordersThisMonth)} />
-        <KpiCard icon={Percent} label="Win rate (12 mån)" value={`${stats.winRate.toFixed(0)}%`} />
+        <KpiCard icon={Briefcase} label="Aktiva offerter" value={String(stats.open.length)} tint="from-primary/20 via-primary/5" />
+        <KpiCard icon={TrendingUp} label="Offertstock (MSEK)" value={formatMSEK(stats.pipelineValue)} tint="from-[hsl(var(--chart-2))]/25 via-[hsl(var(--chart-2))]/5" />
+        <KpiCard icon={CheckCircle2} label="Order denna månad" value={String(stats.ordersThisMonth)} tint="from-[hsl(var(--chart-3))]/25 via-[hsl(var(--chart-3))]/5" />
+        <KpiCard icon={Percent} label="Win rate (12 mån)" value={`${stats.winRate.toFixed(0)}%`} tint="from-[hsl(var(--chart-4))]/25 via-[hsl(var(--chart-4))]/5" />
       </div>
 
       <SalesOverviewPanel salesPersonFilter={canSeeAllSalespeople ? (sellerFilter === 'all' ? null : sellerFilter) : linkedSalesperson} />
@@ -160,7 +160,7 @@ export function CrmDashboard() {
                 <tr>
                   <th className="px-4 py-2 text-left">Säljare</th>
                   <th className="px-4 py-2 text-right">Aktiva offerter</th>
-                  <th className="px-4 py-2 text-right">Pipeline-värde</th>
+                  <th className="px-4 py-2 text-right">Offertstockvärde</th>
                 </tr>
               </thead>
               <tbody>
@@ -182,13 +182,16 @@ export function CrmDashboard() {
   );
 }
 
-function KpiCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function KpiCard({ icon: Icon, label, value, tint = 'from-primary/20 via-primary/5' }: { icon: any; label: string; value: string; tint?: string }) {
   return (
-    <Card>
-      <CardContent className="p-5">
+    <Card className="relative overflow-hidden border-border/60">
+      <div className={`absolute inset-0 bg-gradient-to-br ${tint} to-transparent pointer-events-none`} />
+      <CardContent className="p-5 relative">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
-          <Icon className="h-4 w-4 text-primary" />
+          <div className="h-8 w-8 rounded-lg bg-background/70 backdrop-blur flex items-center justify-center shadow-sm">
+            <Icon className="h-4 w-4 text-primary" />
+          </div>
         </div>
         <div className="text-3xl font-bold tabular-nums">{value}</div>
       </CardContent>
