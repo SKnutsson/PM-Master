@@ -2,18 +2,28 @@ import { ClipboardList, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppMode, AppMode } from '@/contexts/AppModeContext';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useEffect } from 'react';
 
 interface Props {
   collapsed?: boolean;
 }
 
-const opts: { id: AppMode; label: string; icon: typeof ClipboardList }[] = [
+const allOpts: { id: AppMode; label: string; icon: typeof ClipboardList }[] = [
   { id: 'pm', label: 'Projektledning', icon: ClipboardList },
   { id: 'crm', label: 'CRM', icon: Briefcase },
 ];
 
 export function ModeSwitcher({ collapsed }: Props) {
   const { mode, setMode } = useAppMode();
+  const { canAccessCrm, loading } = usePermissions();
+  const opts = allOpts.filter((o) => o.id !== 'crm' || canAccessCrm);
+
+  useEffect(() => {
+    if (!loading && mode === 'crm' && !canAccessCrm) setMode('pm');
+  }, [loading, mode, canAccessCrm, setMode]);
+
+  if (opts.length <= 1) return null;
 
   if (collapsed) {
     return (
