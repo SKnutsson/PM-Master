@@ -75,11 +75,7 @@ export function SalesOverviewPanel() {
           <CardHeader className="pb-1">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
-                  Försäljningsöversikt
-                </CardTitle>
-                <CardDescription className="text-xs">Fakturerad, Order, Budget & Offert (sannolikhet 4–5) per månad (MSEK)</CardDescription>
+                <CardTitle className="text-lg">Försäljningsöversikt</CardTitle>
               </div>
               <div className="flex items-center gap-2">
                 <YearNavigator value={chartPeriod} onChange={setChartPeriod} />
