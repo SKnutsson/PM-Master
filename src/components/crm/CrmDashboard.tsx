@@ -62,7 +62,7 @@ export function CrmDashboard() {
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">CRM Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Översikt över pipeline och uppföljningar</p>
+          <p className="text-sm text-muted-foreground">Översikt över offertstock och uppföljningar</p>
         </div>
         <div className="flex items-end gap-2 flex-wrap">
           {canSeeAllSalespeople ? (
