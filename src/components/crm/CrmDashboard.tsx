@@ -160,7 +160,7 @@ export function CrmDashboard() {
                 <tr>
                   <th className="px-4 py-2 text-left">Säljare</th>
                   <th className="px-4 py-2 text-right">Aktiva offerter</th>
-                  <th className="px-4 py-2 text-right">Pipeline-värde</th>
+                  <th className="px-4 py-2 text-right">Offertstockvärde</th>
                 </tr>
               </thead>
               <tbody>
