@@ -149,33 +149,35 @@ export function CrmDashboard() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Per säljare</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-              <tr>
-                <th className="px-4 py-2 text-left">Säljare</th>
-                <th className="px-4 py-2 text-right">Aktiva offerter</th>
-                <th className="px-4 py-2 text-right">Pipeline-värde</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.perSeller.length === 0 ? (
-                <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">Ingen data ännu</td></tr>
-              ) : stats.perSeller.map((s) => (
-                <tr key={s.name} className="border-t border-border">
-                  <td className="px-4 py-2 font-medium">{s.name}</td>
-                  <td className="px-4 py-2 text-right">{s.count}</td>
-                  <td className="px-4 py-2 text-right font-mono">{formatSEK(s.value)} kr</td>
+      {canSeeAllSalespeople && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Per säljare</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2 text-left">Säljare</th>
+                  <th className="px-4 py-2 text-right">Aktiva offerter</th>
+                  <th className="px-4 py-2 text-right">Pipeline-värde</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+              </thead>
+              <tbody>
+                {stats.perSeller.length === 0 ? (
+                  <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">Ingen data ännu</td></tr>
+                ) : stats.perSeller.map((s) => (
+                  <tr key={s.name} className="border-t border-border">
+                    <td className="px-4 py-2 font-medium">{s.name}</td>
+                    <td className="px-4 py-2 text-right">{s.count}</td>
+                    <td className="px-4 py-2 text-right font-mono">{formatSEK(s.value)} kr</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
     </motion.div>
   );
 }
