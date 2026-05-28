@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCrmData } from '@/hooks/useCrmData';
@@ -7,10 +7,12 @@ import {
   PieChart, Pie, Cell, Line, ComposedChart,
 } from 'recharts';
 import { format, parseISO, subMonths, startOfMonth } from 'date-fns';
-import { formatSEK } from '@/lib/crmConstants';
+import { formatSEK, SALESPEOPLE } from '@/lib/crmConstants';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Briefcase, TrendingUp, Percent, Trophy } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const PIE_COLORS = [
   'hsl(var(--primary))',
