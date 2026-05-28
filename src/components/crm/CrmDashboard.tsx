@@ -85,10 +85,10 @@ export function CrmDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <KpiCard icon={Briefcase} label="Aktiva offerter" value={String(stats.open.length)} />
-        <KpiCard icon={TrendingUp} label="Pipeline (MSEK)" value={formatMSEK(stats.pipelineValue)} />
-        <KpiCard icon={CheckCircle2} label="Order denna månad" value={String(stats.ordersThisMonth)} />
-        <KpiCard icon={Percent} label="Win rate (12 mån)" value={`${stats.winRate.toFixed(0)}%`} />
+        <KpiCard icon={Briefcase} label="Aktiva offerter" value={String(stats.open.length)} tint="from-primary/20 via-primary/5" />
+        <KpiCard icon={TrendingUp} label="Offertstock (MSEK)" value={formatMSEK(stats.pipelineValue)} tint="from-[hsl(var(--chart-2))]/25 via-[hsl(var(--chart-2))]/5" />
+        <KpiCard icon={CheckCircle2} label="Order denna månad" value={String(stats.ordersThisMonth)} tint="from-[hsl(var(--chart-3))]/25 via-[hsl(var(--chart-3))]/5" />
+        <KpiCard icon={Percent} label="Win rate (12 mån)" value={`${stats.winRate.toFixed(0)}%`} tint="from-[hsl(var(--chart-4))]/25 via-[hsl(var(--chart-4))]/5" />
       </div>
 
       <SalesOverviewPanel salesPersonFilter={canSeeAllSalespeople ? (sellerFilter === 'all' ? null : sellerFilter) : linkedSalesperson} />
