@@ -79,7 +79,7 @@ export function SalesOverviewPanel() {
                   <ChartNoAxesColumnIncreasing className="h-5 w-5 text-primary" />
                   Försäljningsöversikt
                 </CardTitle>
-                <CardDescription className="text-xs">Fakturerad, Order, Budget & Offert per månad (MSEK)</CardDescription>
+                <CardDescription className="text-xs">Fakturerad, Order, Budget & Offert (sannolikhet 4–5) per månad (MSEK)</CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <YearNavigator value={chartPeriod} onChange={setChartPeriod} />
@@ -121,7 +121,7 @@ export function SalesOverviewPanel() {
                     cursor={{ fill: 'hsl(var(--muted) / 0.4)' }}
                   />
                   <Legend formatter={(value: string) => {
-                    const labels: Record<string, string> = { fakturerad: 'Fakturerad', order: 'Order', budget: 'Budget', offert: 'Offert' };
+                    const labels: Record<string, string> = { fakturerad: 'Fakturerad', order: 'Order', budget: 'Budget', offert: 'Offert (sannolikhet 4–5)' };
                     return labels[value] || value;
                   }} wrapperStyle={{ fontSize: 12 }} />
                   <Bar dataKey="fakturerad" stackId="a" name="fakturerad" fill="#059669" />
