@@ -186,30 +186,45 @@ export type Database = {
       crm_customers: {
         Row: {
           arena: string | null
+          city: string | null
           country: string | null
           created_at: string
           id: string
           name: string
+          next_followup: string | null
           notes: string | null
+          products: Json
+          salesperson: string | null
           updated_at: string
+          visit_date: string | null
         }
         Insert: {
           arena?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string
           id?: string
           name: string
+          next_followup?: string | null
           notes?: string | null
+          products?: Json
+          salesperson?: string | null
           updated_at?: string
+          visit_date?: string | null
         }
         Update: {
           arena?: string | null
+          city?: string | null
           country?: string | null
           created_at?: string
           id?: string
           name?: string
+          next_followup?: string | null
           notes?: string | null
+          products?: Json
+          salesperson?: string | null
           updated_at?: string
+          visit_date?: string | null
         }
         Relationships: []
       }
