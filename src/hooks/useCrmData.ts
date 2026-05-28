@@ -29,6 +29,11 @@ export interface CrmCustomer {
   name: string;
   arena: string;
   country: string;
+  city: string;
+  salesperson: string;
+  visit_date: string | null;
+  next_followup: string | null;
+  products: string[];
   notes: string;
 }
 
