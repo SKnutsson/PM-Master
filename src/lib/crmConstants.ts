@@ -3,12 +3,11 @@ export const SALESPEOPLE = ['Mikael', 'Martin', 'Bertil', 'Samuel'] as const;
 export const COUNTRIES = ['Sverige', 'Danmark', 'Norge', 'Finland', 'Övriga'] as const;
 
 export const PRODUCTS = [
-  'Teleskopsläktare',
-  'Läktarstol Abacus',
-  'Läktarstol Stadium Comfort',
-  'Kongressstol',
-  'Pressplats',
-  'Avbytarstol',
+  'Teleskopläktare',
+  'Stadium Comfort',
+  'Abacus',
+  'Kalle',
+  'Teater',
   'Övrigt',
 ] as const;
 
