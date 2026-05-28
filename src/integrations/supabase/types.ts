@@ -658,11 +658,13 @@ export type Database = {
       profiles: {
         Row: {
           avatar_color: string | null
+          can_access_crm: boolean
           created_at: string
           display_name: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          linked_salesperson: string | null
           phone: string | null
           updated_at: string
           user_id: string
@@ -670,11 +672,13 @@ export type Database = {
         }
         Insert: {
           avatar_color?: string | null
+          can_access_crm?: boolean
           created_at?: string
           display_name?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          linked_salesperson?: string | null
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -682,11 +686,13 @@ export type Database = {
         }
         Update: {
           avatar_color?: string | null
+          can_access_crm?: boolean
           created_at?: string
           display_name?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          linked_salesperson?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string
@@ -1263,7 +1269,7 @@ export type Database = {
       is_authenticated: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "sales_manager"
       deal_status: "Budget" | "Offert" | "Order" | "Fakturerad" | "Förlorad"
     }
     CompositeTypes: {
@@ -1392,7 +1398,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "sales_manager"],
       deal_status: ["Budget", "Offert", "Order", "Fakturerad", "Förlorad"],
     },
   },
