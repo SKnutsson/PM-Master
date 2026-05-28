@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useCrmData } from '@/hooks/useCrmData';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-  PieChart, Pie, Cell, LineChart, Line,
+  PieChart, Pie, Cell, Line, ComposedChart,
 } from 'recharts';
 import { format, parseISO, subMonths, startOfMonth } from 'date-fns';
 import { formatSEK } from '@/lib/crmConstants';
