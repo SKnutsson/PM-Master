@@ -43,7 +43,6 @@ interface SidebarProps {
 
 const pmTopItems = [{ id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard }];
 const pmMainItems = [
-  { id: 'forecast' as View, label: 'Försäljning', icon: BarChart3 },
   { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
   { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
   { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
@@ -58,6 +57,7 @@ const crmTopItems = [{ id: 'crm-dashboard' as View, label: 'Dashboard', icon: La
 const crmMainItems = [
   { id: 'crm-quotes' as View, label: 'Alla offerter', icon: FileText },
   { id: 'crm-customers' as View, label: 'Kunder', icon: Users },
+  { id: 'forecast' as View, label: 'Försäljningsbudget', icon: BarChart3 },
   { id: 'crm-stats' as View, label: 'Statistik', icon: PieChart },
 ];
 
