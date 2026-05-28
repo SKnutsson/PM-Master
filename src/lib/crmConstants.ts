@@ -4,7 +4,7 @@ export const COUNTRIES = ['Sverige', 'Danmark', 'Norge', 'Finland', 'Övriga'] a
 
 export const PRODUCTS = [
   'Teleskopläktare',
-  'Stadium Comfort',
+  'Stadion Comfort',
   'Abacus',
   'Kalle',
   'Teater',
