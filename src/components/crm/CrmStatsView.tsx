@@ -170,7 +170,7 @@ export function CrmStatsView() {
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar yAxisId="left" dataKey="count" name="Antal offerter" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
                 <Line yAxisId="right" type="monotone" dataKey="orderMSEK" name="Ordervärde (MSEK)" stroke="hsl(var(--chart-2))" strokeWidth={3} dot={{ r: 4, fill: 'hsl(var(--chart-2))' }} />
-              </BarChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
