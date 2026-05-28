@@ -162,7 +162,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
           </Field>
 
           <Field label="Offertbelopp (SEK)">
-            <Input type="number" value={form.amount ?? 0} onChange={(e) => upd('amount', Number(e.target.value))} />
+            <Input type="number" value={form.amount ? String(form.amount) : ''} placeholder="0" onChange={(e) => upd('amount', e.target.value === '' ? 0 : Number(e.target.value))} />
           </Field>
           <Field label="Leveranstid">
             <Input placeholder="2026 Q3 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} />
