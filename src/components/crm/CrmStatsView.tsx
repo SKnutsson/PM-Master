@@ -33,14 +33,28 @@ const tooltipStyle = {
 
 export function CrmStatsView() {
   const { quotes } = useCrmData();
+  const { canSeeAllSalespeople, linkedSalesperson } = usePermissions();
   const defaultFrom = format(subMonths(startOfMonth(new Date()), 11), 'yyyy-MM-dd');
   const defaultTo = format(new Date(), 'yyyy-MM-dd');
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
+  const [sellerFilter, setSellerFilter] = useState<string>('all');
+
+  // Enforce own-data-only for users without manager privileges
+  useEffect(() => {
+    if (!canSeeAllSalespeople && linkedSalesperson) setSellerFilter(linkedSalesperson);
+  }, [canSeeAllSalespeople, linkedSalesperson]);
+
+  const effectiveSeller = canSeeAllSalespeople ? sellerFilter : (linkedSalesperson || '__none__');
 
   const filtered = useMemo(
-    () => quotes.filter((q) => q.quote_date >= from && q.quote_date <= to),
-    [quotes, from, to]
+    () => quotes.filter((q) => {
+      if (q.quote_date < from || q.quote_date > to) return false;
+      if (effectiveSeller === 'all') return true;
+      if (effectiveSeller === '__none__') return false;
+      return q.salesperson === effectiveSeller;
+    }),
+    [quotes, from, to, effectiveSeller]
   );
 
   const kpis = useMemo(() => {
