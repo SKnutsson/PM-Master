@@ -24,7 +24,11 @@ function AnimatedNumber({ value, duration = 900, decimals = 0 }: { value: number
   return <>{decimals > 0 ? display.toFixed(decimals) : Math.round(display)}</>;
 }
 
-export function SalesOverviewPanel() {
+interface SalesOverviewPanelProps {
+  salesPersonFilter?: string | null;
+}
+
+export function SalesOverviewPanel({ salesPersonFilter = null }: SalesOverviewPanelProps = {}) {
   const { forecast, salesTargets } = useProjectDataContext();
   const [chartPeriod, setChartPeriod] = useState<string>(String(new Date().getFullYear()));
 
@@ -46,9 +50,13 @@ export function SalesOverviewPanel() {
     return months.map((m) => ({ month: m, year: yr }));
   })();
 
+  const filteredForecast = salesPersonFilter
+    ? forecast.filter((f) => (f.salesPerson || '') === salesPersonFilter)
+    : forecast;
+
   const chartData = chartLabels.map(({ month, year }) => {
     let fakturerad = 0, order = 0, budget = 0, offert = 0;
-    forecast.forEach((f) => {
+    filteredForecast.forEach((f) => {
       if (f.dealStatus === 'Förlorad') return;
       const entries = (f.monthEntries || []).filter((e) => e.year === year && e.month === month);
       const sum = entries.reduce((s, e) => s + e.amount, 0);
