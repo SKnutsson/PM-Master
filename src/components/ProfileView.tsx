@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Save, Pencil, Check, Users, Shield } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SALESPEOPLE } from '@/lib/crmConstants';
 import { useProfiles, getInitials, getDisplayName, UserProfile } from '@/hooks/useProfiles';
 import { UserAvatar } from '@/components/UserAvatar';
 
