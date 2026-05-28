@@ -7,6 +7,7 @@ import { TrendingUp, Briefcase, CheckCircle2, Percent } from 'lucide-react';
 import { format, startOfMonth, subMonths } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { SalesOverviewPanel } from '../SalesOverviewPanel';
 
 export function CrmDashboard() {
   const { quotes } = useCrmData();
@@ -52,6 +53,8 @@ export function CrmDashboard() {
         <KpiCard icon={CheckCircle2} label="Order denna månad" value={String(stats.ordersThisMonth)} />
         <KpiCard icon={Percent} label="Win rate (12 mån)" value={`${stats.winRate.toFixed(0)}%`} />
       </div>
+
+      <SalesOverviewPanel />
 
       <Card>
         <CardHeader>
