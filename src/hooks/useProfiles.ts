@@ -10,7 +10,11 @@ export interface UserProfile {
   avatar_color: string | null;
   phone: string | null;
   user_role: string | null;
+  can_access_crm?: boolean | null;
+  linked_salesperson?: string | null;
 }
+
+const SELECT_COLS = 'id, user_id, first_name, last_name, display_name, avatar_color, phone, user_role, can_access_crm, linked_salesperson';
 
 export function useProfiles() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -18,24 +22,22 @@ export function useProfiles() {
 
   useEffect(() => {
     const fetch = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, user_id, first_name, last_name, display_name, avatar_color, phone, user_role');
-      setProfiles(data || []);
+      const { data } = await supabase.from('profiles').select(SELECT_COLS);
+      setProfiles((data as any) || []);
       setIsLoading(false);
     };
     fetch();
   }, []);
 
   const refetch = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, user_id, first_name, last_name, display_name, avatar_color, phone, user_role');
-    setProfiles(data || []);
+    const { data } = await supabase.from('profiles').select(SELECT_COLS);
+    setProfiles((data as any) || []);
   };
 
   return { profiles, isLoading, refetch };
 }
+
+
 
 export function getInitials(profile: UserProfile): string {
   const f = (profile.first_name || '').trim().charAt(0).toUpperCase();

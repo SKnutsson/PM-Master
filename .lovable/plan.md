@@ -1,45 +1,86 @@
-# Plan: Flera förbättringar
+## Mål
 
-## 1. Ganttschemat – ny kalender med veckor
-- Byt ut nuvarande datumväljare i Gantt mot shadcn `Calendar` (Popover + Calendar, samma stil som bilden – månadsnavigering, "Rensa"/"I dag", svenska veckodagar må–sö).
-- Aktivera veckonummer-kolumn (`showWeekNumber`) så veckor syns i kalendern.
-- Lägg till veckorad i själva Gantt-tidslinjen (visa v.XX ovanför månader/dagar) så man kan se vilken vecka man är i.
+Adminanvändare ska kunna styra:
+1. Vem som är **admin**
+2. Vem som har tillgång till **CRM-modulen**
+3. Vem som är **försäljningschef** (får se alla säljares hitrate + filtrera per säljare)
+4. Vilken **säljare** en användare är kopplad till (för att kunna visa "egen data")
 
-## 2. Uppföljning – tydligare Montage/Resa/Totalt
-Bygg om toppen av `ResourceAnalyticsView`:
-- **Stort totalsammanfattningskort** (full bredd): Total kalkyl, Totalt utfall, Total avvikelse, % avvikelse. Färgkodning grön/röd.
-- **Två separata kort** under: 
-  - **Montage**: Kalkyl, Utfall, Avvikelse, status (Grön ≤ kalkyl, Röd > kalkyl).
-  - **Resa**: Samma upplägg.
-- Behåll diagram och kvalitet-sektion nedanför.
+Övriga regler:
+- Admin ser allt.
+- Försäljningschef ser hitrate/statistik för alla säljare och kan filtrera.
+- Vanlig CRM-användare ser bara sin egen hitrate/statistik (baserat på kopplad säljare).
+- Användare utan CRM-tillgång ser inte CRM-läget alls i sidebar/mode-switcher.
 
-## 3. Aktiva vs arkiverade projekt
-- Lägg till toggle/segmenterad kontroll i Projekt-, Uppföljning-, ÄTA-vyer: "Aktiva" / "Arkiverade".
-- Arkivering finns redan via status – använder status "Arkiverad" eller motsvarande flagga (kollar befintlig logik och återanvänder).
+---
 
-## 4. Ny flik: ÄTA-hantering
-- Ny sidebar-flik "ÄTA" (FilePlus-ikon).
-- Ny tabell `ata_items` med fält: project_id, title, description, type, amount, hours, material_cost, date, status (Ej skickad/Skickad/Godkänd/Nekad/Fakturerad), attachments (jsonb), created_at/updated_at. RLS authenticated full access.
-- Storage-bucket `ata-attachments` för filer/bilder.
-- **Vy** `AtaView.tsx`:
-  - Projektväljare + Aktiva/Arkiverade-filter.
-  - Dashboard-kort överst: Pågående ÄTA, Ej fakturerade, Totalt värde, Godkännandegrad (%).
-  - Lista per projekt med summa belopp + summa timmar.
-  - Sök/filter på status och text.
-  - Dialog för att lägga till/redigera ÄTA med filuppladdning.
-  - Historik/logg via `updated_at` + status-ändringar (enkel logg-tabell `ata_events`).
+## Databasändringar
 
-## 5. Försäljning – layout
-- Flytta "Försäljningsmål" från eget block högst upp till samma rad som rubrik (eller integrera i Total budget-kortet som sekundär rad).
-- Kompaktera så KPI-korten och tabellen flyttas upp.
-- **Detaljerad budget**: ta bort intern scroll (ingen `max-h`/`overflow-auto` på tabell-wrapper). Tabellen växer naturligt; sidan har en enda scroll.
+**1. Utöka `app_role` enum:**
+- Lägg till `sales_manager` (försäljningschef).
+- Admin finns redan.
+
+**2. Ny kolumn på `profiles`:**
+- `can_access_crm boolean default false` – styr om CRM-läget syns.
+- `linked_salesperson text` – namnet på säljaren i CRM (t.ex. "Mikael", "Martin", "Samuel"). Matchas mot `crm_quotes.salesperson`.
+
+**3. RLS på `user_roles`:**
+- Admin får full kontroll (finns redan).
+- Lägg till säkerhetsdefinierad funktion `is_admin(uuid)` om den saknas (vi har `has_role` – återanvänd).
+
+Inga grants behövs på befintliga tabeller (de finns redan).
+
+---
+
+## Frontend
+
+**Ny hook `usePermissions()`** (`src/hooks/usePermissions.ts`):
+Returnerar `{ isAdmin, isSalesManager, canAccessCrm, linkedSalesperson, canSeeAllSalespeople }`.
+- `canSeeAllSalespeople = isAdmin || isSalesManager`
+
+**`ModeSwitcher` / `Sidebar`:**
+- Dölj CRM-tabben om `!canAccessCrm && !isAdmin`.
+- Om användaren bara har CRM, dölj projektledningstabben (valfritt – kan diskuteras).
+
+**`CrmStatsView`:**
+- Lägg till säljarfilter (dropdown: Alla / Mikael / Martin / Samuel) – syns bara om `canSeeAllSalespeople`.
+- Om inte → filtrera all data till `linkedSalesperson` och dölj "Win rate per säljare"-diagrammet (eller visa endast egen stapel).
+
+**`CrmDashboard` / `SalesOverviewPanel`:**
+- Samma filtreringslogik på offert- och orderdata.
+
+**`ProfileView` – admin-sektion utökas:**
+För varje användare visa toggles/inputs:
+- Switch: **Admin**
+- Switch: **Försäljningschef**
+- Switch: **Tillgång till CRM**
+- Dropdown: **Kopplad säljare** (Mikael / Martin / Samuel / Ingen)
+
+Admin sparar via uppdatering av `profiles` + `user_roles` (insert/delete rader).
+
+---
 
 ## Teknisk översikt
-- Migration: skapa `ata_items` + `ata_events` + storage bucket `ata-attachments` + policies.
-- Filer som ändras:
-  - `src/components/TimelineView.tsx` (kalender + veckor)
-  - `src/components/ResourceAnalyticsView.tsx` (omstrukturerade kort)
-  - `src/components/ForecastView.tsx` (layout + ta bort intern scroll)
-  - `src/components/ProjectsView.tsx` (aktiva/arkiverade-toggle om saknas)
-  - `src/components/Sidebar.tsx` + `MainLayout.tsx` (ÄTA-rutt)
-  - Ny: `src/components/AtaView.tsx` + dialogs
+
+```text
+profiles
+  ├── can_access_crm  (bool)
+  └── linked_salesperson (text)
+
+user_roles  (en rad per roll per user)
+  └── role: 'admin' | 'sales_manager' | 'user'
+
+usePermissions()  →  styr UI + datafiltrering
+```
+
+Filtreringen sker **klient-sida** på redan hämtad CRM-data (RLS lämnas öppen för authenticated – samma som idag, för att inte bryta delade vyer). Om hård säkerhet på radnivå behövs senare kan vi lägga till det.
+
+---
+
+## Steg
+
+1. Migration: utöka enum, lägg till kolumner på `profiles`.
+2. Skapa `usePermissions` hook.
+3. Uppdatera `ProfileView` admin-sektion med nya toggles + säljarkoppling.
+4. Uppdatera `ModeSwitcher` / `Sidebar` att respektera `canAccessCrm`.
+5. Filtrera `CrmStatsView`, `CrmDashboard`, `SalesOverviewPanel` efter `linkedSalesperson` när chef-rätt saknas; lägg till säljarfilter för chefer/admin.

@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Save, Pencil, Check, Users, Shield } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SALESPEOPLE } from '@/lib/crmConstants';
 import { useProfiles, getInitials, getDisplayName, UserProfile } from '@/hooks/useProfiles';
 import { UserAvatar } from '@/components/UserAvatar';
 
@@ -37,6 +40,10 @@ export function ProfileView() {
   const [editPhone, setEditPhone] = useState('');
   const [editRole, setEditRole] = useState('');
   const [editColor, setEditColor] = useState('#3b82f6');
+  const [editIsAdmin, setEditIsAdmin] = useState(false);
+  const [editIsSalesManager, setEditIsSalesManager] = useState(false);
+  const [editCanAccessCrm, setEditCanAccessCrm] = useState(false);
+  const [editLinkedSalesperson, setEditLinkedSalesperson] = useState<string>('__none__');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const email = user?.email ?? '';
@@ -107,13 +114,25 @@ export function ProfileView() {
     }
   };
 
-  const openEditProfile = (profile: UserProfile) => {
+  const openEditProfile = async (profile: UserProfile) => {
     setEditingProfile(profile);
     setEditFirst(profile.first_name ?? '');
     setEditLast(profile.last_name ?? '');
     setEditPhone(profile.phone ?? '');
     setEditRole(profile.user_role ?? '');
     setEditColor(profile.avatar_color ?? '#3b82f6');
+    setEditCanAccessCrm(!!profile.can_access_crm);
+    setEditLinkedSalesperson(profile.linked_salesperson || '__none__');
+
+    // Fetch roles for this user
+    const { data: roles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', profile.user_id);
+    const roleNames = (roles || []).map((r: any) => r.role);
+    setEditIsAdmin(roleNames.includes('admin'));
+    setEditIsSalesManager(roleNames.includes('sales_manager'));
+
     setEditDialogOpen(true);
   };
 
@@ -121,7 +140,7 @@ export function ProfileView() {
     if (!editingProfile) return;
     const displayName = [editFirst.trim(), editLast.trim()].filter(Boolean).join(' ') || editingProfile.display_name || '';
 
-    const { error } = await supabase
+    const { error: profileError } = await supabase
       .from('profiles')
       .update({
         first_name: editFirst.trim() || null,
@@ -130,16 +149,40 @@ export function ProfileView() {
         user_role: editRole.trim() || null,
         avatar_color: editColor,
         display_name: displayName,
-      })
+        can_access_crm: editCanAccessCrm,
+        linked_salesperson: editLinkedSalesperson === '__none__' ? null : editLinkedSalesperson,
+      } as any)
       .eq('id', editingProfile.id);
 
-    if (error) {
+    if (profileError) {
       toast.error('Kunde inte spara profilen');
-    } else {
-      toast.success('Profilen har uppdaterats');
-      setEditDialogOpen(false);
-      refetchProfiles();
+      return;
     }
+
+    // Sync roles
+    const desired = new Set<string>(['user']);
+    if (editIsAdmin) desired.add('admin');
+    if (editIsSalesManager) desired.add('sales_manager');
+
+    const { data: currentRoles } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', editingProfile.user_id);
+    const current = new Set((currentRoles || []).map((r: any) => r.role));
+
+    const toAdd = [...desired].filter((r) => !current.has(r));
+    const toRemove = [...current].filter((r) => !desired.has(r));
+
+    for (const role of toAdd) {
+      await supabase.from('user_roles').insert({ user_id: editingProfile.user_id, role: role as any });
+    }
+    for (const role of toRemove) {
+      await supabase.from('user_roles').delete().eq('user_id', editingProfile.user_id).eq('role', role as any);
+    }
+
+    toast.success('Profilen har uppdaterats');
+    setEditDialogOpen(false);
+    refetchProfiles();
   };
 
   if (isLoading) {
@@ -314,6 +357,41 @@ export function ProfileView() {
             <div className="space-y-1.5">
               <Label>Telefon</Label>
               <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-3 border-t border-border">
+            <p className="text-sm font-semibold">Behörigheter</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm">Administratör</Label>
+                <p className="text-xs text-muted-foreground">Full åtkomst, hantera användare</p>
+              </div>
+              <Switch checked={editIsAdmin} onCheckedChange={setEditIsAdmin} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm">Försäljningschef</Label>
+                <p className="text-xs text-muted-foreground">Ser alla säljares hitrate, kan filtrera</p>
+              </div>
+              <Switch checked={editIsSalesManager} onCheckedChange={setEditIsSalesManager} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm">Tillgång till CRM</Label>
+                <p className="text-xs text-muted-foreground">Visar CRM-läget i menyn</p>
+              </div>
+              <Switch checked={editCanAccessCrm} onCheckedChange={setEditCanAccessCrm} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Kopplad säljare (för "egen data" i CRM)</Label>
+              <Select value={editLinkedSalesperson} onValueChange={setEditLinkedSalesperson}>
+                <SelectTrigger><SelectValue placeholder="Ingen" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Ingen</SelectItem>
+                  {SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

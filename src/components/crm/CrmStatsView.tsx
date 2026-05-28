@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCrmData } from '@/hooks/useCrmData';
@@ -7,10 +7,12 @@ import {
   PieChart, Pie, Cell, Line, ComposedChart,
 } from 'recharts';
 import { format, parseISO, subMonths, startOfMonth } from 'date-fns';
-import { formatSEK } from '@/lib/crmConstants';
+import { formatSEK, SALESPEOPLE } from '@/lib/crmConstants';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Briefcase, TrendingUp, Percent, Trophy } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const PIE_COLORS = [
   'hsl(var(--primary))',
@@ -31,14 +33,28 @@ const tooltipStyle = {
 
 export function CrmStatsView() {
   const { quotes } = useCrmData();
+  const { canSeeAllSalespeople, linkedSalesperson } = usePermissions();
   const defaultFrom = format(subMonths(startOfMonth(new Date()), 11), 'yyyy-MM-dd');
   const defaultTo = format(new Date(), 'yyyy-MM-dd');
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
+  const [sellerFilter, setSellerFilter] = useState<string>('all');
+
+  // Enforce own-data-only for users without manager privileges
+  useEffect(() => {
+    if (!canSeeAllSalespeople && linkedSalesperson) setSellerFilter(linkedSalesperson);
+  }, [canSeeAllSalespeople, linkedSalesperson]);
+
+  const effectiveSeller = canSeeAllSalespeople ? sellerFilter : (linkedSalesperson || '__none__');
 
   const filtered = useMemo(
-    () => quotes.filter((q) => q.quote_date >= from && q.quote_date <= to),
-    [quotes, from, to]
+    () => quotes.filter((q) => {
+      if (q.quote_date < from || q.quote_date > to) return false;
+      if (effectiveSeller === 'all') return true;
+      if (effectiveSeller === '__none__') return false;
+      return q.salesperson === effectiveSeller;
+    }),
+    [quotes, from, to, effectiveSeller]
   );
 
   const kpis = useMemo(() => {
@@ -126,7 +142,24 @@ export function CrmStatsView() {
           <h1 className="text-3xl font-bold tracking-tight">Statistik</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} offerter i vald period</p>
         </div>
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 flex-wrap">
+          {canSeeAllSalespeople && (
+            <div>
+              <Label className="text-xs">Säljare</Label>
+              <Select value={sellerFilter} onValueChange={setSellerFilter}>
+                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alla säljare</SelectItem>
+                  {SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {!canSeeAllSalespeople && linkedSalesperson && (
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs">
+              Visar endast: <span className="font-semibold">{linkedSalesperson}</span>
+            </div>
+          )}
           <div>
             <Label className="text-xs">Från</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -239,30 +272,32 @@ export function CrmStatsView() {
         </Card>
       </div>
 
-      {/* Win rate per seller */}
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-lg">Win rate per säljare</CardTitle>
-          <CardDescription>Andel vunna affärer av avslutade offerter</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={winRatePerSeller} margin={{ top: 16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} unit="%" />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} formatter={(v: any, _n, p: any) => [`${v}% (${p.payload.wins}/${p.payload.antal})`, 'Win rate']} />
-                <Bar dataKey="winRate" name="Win rate %" radius={[6, 6, 0, 0]}>
-                  {winRatePerSeller.map((_, i) => (
-                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Win rate per seller - only managers/admin */}
+      {canSeeAllSalespeople && (
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg">Win rate per säljare</CardTitle>
+            <CardDescription>Andel vunna affärer av avslutade offerter</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={winRatePerSeller} margin={{ top: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} domain={[0, 100]} unit="%" />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} formatter={(v: any, _n, p: any) => [`${v}% (${p.payload.wins}/${p.payload.antal})`, 'Win rate']} />
+                  <Bar dataKey="winRate" name="Win rate %" radius={[6, 6, 0, 0]}>
+                    {winRatePerSeller.map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Detailed table */}
       <Card className="border-border/50">

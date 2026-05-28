@@ -1,16 +1,33 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCrmData } from '@/hooks/useCrmData';
-import { formatMSEK, formatSEK, statusBadgeClass } from '@/lib/crmConstants';
+import { formatMSEK, formatSEK, statusBadgeClass, SALESPEOPLE } from '@/lib/crmConstants';
 import { TrendingUp, Briefcase, CheckCircle2, Percent } from 'lucide-react';
 import { format, startOfMonth, subMonths } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { SalesOverviewPanel } from '../SalesOverviewPanel';
+import { usePermissions } from '@/hooks/usePermissions';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 export function CrmDashboard() {
-  const { quotes } = useCrmData();
+  const { quotes: allQuotes } = useCrmData();
+  const { canSeeAllSalespeople, linkedSalesperson } = usePermissions();
+  const [sellerFilter, setSellerFilter] = useState<string>('all');
+
+  useEffect(() => {
+    if (!canSeeAllSalespeople && linkedSalesperson) setSellerFilter(linkedSalesperson);
+  }, [canSeeAllSalespeople, linkedSalesperson]);
+
+  const effectiveSeller = canSeeAllSalespeople ? sellerFilter : (linkedSalesperson || '__none__');
+
+  const quotes = useMemo(() => {
+    if (effectiveSeller === 'all') return allQuotes;
+    if (effectiveSeller === '__none__') return [];
+    return allQuotes.filter((q) => q.salesperson === effectiveSeller);
+  }, [allQuotes, effectiveSeller]);
 
   const stats = useMemo(() => {
     const open = quotes.filter((q) => q.status === 'Öppen');
@@ -42,9 +59,29 @@ export function CrmDashboard() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">CRM Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Översikt över pipeline och uppföljningar</p>
+      <div className="flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">CRM Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Översikt över pipeline och uppföljningar</p>
+        </div>
+        <div className="flex items-end gap-2 flex-wrap">
+          {canSeeAllSalespeople ? (
+            <div>
+              <Label className="text-xs">Säljare</Label>
+              <Select value={sellerFilter} onValueChange={setSellerFilter}>
+                <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alla säljare</SelectItem>
+                  {SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : linkedSalesperson ? (
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs">
+              Visar endast: <span className="font-semibold">{linkedSalesperson}</span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -54,7 +91,8 @@ export function CrmDashboard() {
         <KpiCard icon={Percent} label="Win rate (12 mån)" value={`${stats.winRate.toFixed(0)}%`} />
       </div>
 
-      <SalesOverviewPanel />
+      <SalesOverviewPanel salesPersonFilter={canSeeAllSalespeople ? (sellerFilter === 'all' ? null : sellerFilter) : linkedSalesperson} />
+
 
       <Card>
         <CardHeader>
@@ -111,33 +149,35 @@ export function CrmDashboard() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Per säljare</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
-              <tr>
-                <th className="px-4 py-2 text-left">Säljare</th>
-                <th className="px-4 py-2 text-right">Aktiva offerter</th>
-                <th className="px-4 py-2 text-right">Pipeline-värde</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.perSeller.length === 0 ? (
-                <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">Ingen data ännu</td></tr>
-              ) : stats.perSeller.map((s) => (
-                <tr key={s.name} className="border-t border-border">
-                  <td className="px-4 py-2 font-medium">{s.name}</td>
-                  <td className="px-4 py-2 text-right">{s.count}</td>
-                  <td className="px-4 py-2 text-right font-mono">{formatSEK(s.value)} kr</td>
+      {canSeeAllSalespeople && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Per säljare</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2 text-left">Säljare</th>
+                  <th className="px-4 py-2 text-right">Aktiva offerter</th>
+                  <th className="px-4 py-2 text-right">Pipeline-värde</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+              </thead>
+              <tbody>
+                {stats.perSeller.length === 0 ? (
+                  <tr><td colSpan={3} className="px-4 py-6 text-center text-muted-foreground">Ingen data ännu</td></tr>
+                ) : stats.perSeller.map((s) => (
+                  <tr key={s.name} className="border-t border-border">
+                    <td className="px-4 py-2 font-medium">{s.name}</td>
+                    <td className="px-4 py-2 text-right">{s.count}</td>
+                    <td className="px-4 py-2 text-right font-mono">{formatSEK(s.value)} kr</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      )}
     </motion.div>
   );
 }
