@@ -59,9 +59,29 @@ export function CrmDashboard() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">CRM Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Översikt över pipeline och uppföljningar</p>
+      <div className="flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">CRM Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Översikt över pipeline och uppföljningar</p>
+        </div>
+        <div className="flex items-end gap-2 flex-wrap">
+          {canSeeAllSalespeople ? (
+            <div>
+              <Label className="text-xs">Säljare</Label>
+              <Select value={sellerFilter} onValueChange={setSellerFilter}>
+                <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alla säljare</SelectItem>
+                  {SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : linkedSalesperson ? (
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs">
+              Visar endast: <span className="font-semibold">{linkedSalesperson}</span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -71,7 +91,8 @@ export function CrmDashboard() {
         <KpiCard icon={Percent} label="Win rate (12 mån)" value={`${stats.winRate.toFixed(0)}%`} />
       </div>
 
-      <SalesOverviewPanel />
+      <SalesOverviewPanel salesPersonFilter={canSeeAllSalespeople ? (sellerFilter === 'all' ? null : sellerFilter) : linkedSalesperson} />
+
 
       <Card>
         <CardHeader>
