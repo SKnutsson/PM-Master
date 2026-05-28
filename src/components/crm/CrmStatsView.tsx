@@ -179,31 +179,28 @@ export function CrmStatsView() {
         <KpiCard icon={Percent} label="Win rate" value={`${kpis.winRate.toFixed(0)}%`} accent="chart-3" />
       </div>
 
-      {/* Volume & order over time */}
+      {/* Offertvolym per månad i kronor */}
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle className="text-lg">Offertvolym & ordervärde per månad</CardTitle>
-          <CardDescription>Antal offerter (staplar) och vunnet ordervärde i MSEK (linje)</CardDescription>
+          <CardTitle className="text-lg">Offertvolym per månad</CardTitle>
+          <CardDescription>Totalt offererat värde i kronor per månad</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={byMonth}>
+              <BarChart data={byMonth}>
                 <defs>
-                  <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.55} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar yAxisId="left" dataKey="count" name="Antal offerter" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
-                <Line yAxisId="right" type="monotone" dataKey="orderMSEK" name="Ordervärde (MSEK)" stroke="hsl(var(--chart-2))" strokeWidth={3} dot={{ r: 4, fill: 'hsl(var(--chart-2))' }} />
-              </ComposedChart>
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${(v / 1_000_000).toFixed(1)} M`} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} formatter={(v: any) => [`${formatSEK(Number(v))} kr`, 'Offertvolym']} />
+                <Bar dataKey="value" name="Offertvolym (kr)" fill="url(#volGrad)" radius={[6, 6, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
