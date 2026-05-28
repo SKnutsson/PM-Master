@@ -40,6 +40,10 @@ export function ProfileView() {
   const [editPhone, setEditPhone] = useState('');
   const [editRole, setEditRole] = useState('');
   const [editColor, setEditColor] = useState('#3b82f6');
+  const [editIsAdmin, setEditIsAdmin] = useState(false);
+  const [editIsSalesManager, setEditIsSalesManager] = useState(false);
+  const [editCanAccessCrm, setEditCanAccessCrm] = useState(false);
+  const [editLinkedSalesperson, setEditLinkedSalesperson] = useState<string>('__none__');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const email = user?.email ?? '';
