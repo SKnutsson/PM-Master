@@ -142,7 +142,24 @@ export function CrmStatsView() {
           <h1 className="text-3xl font-bold tracking-tight">Statistik</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} offerter i vald period</p>
         </div>
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 flex-wrap">
+          {canSeeAllSalespeople && (
+            <div>
+              <Label className="text-xs">Säljare</Label>
+              <Select value={sellerFilter} onValueChange={setSellerFilter}>
+                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alla säljare</SelectItem>
+                  {SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {!canSeeAllSalespeople && linkedSalesperson && (
+            <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs">
+              Visar endast: <span className="font-semibold">{linkedSalesperson}</span>
+            </div>
+          )}
           <div>
             <Label className="text-xs">Från</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
