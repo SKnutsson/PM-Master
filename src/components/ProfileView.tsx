@@ -146,7 +146,6 @@ export function ProfileView() {
         avatar_color: editColor,
         display_name: displayName,
         can_access_crm: editCanAccessCrm,
-        linked_salesperson: editLinkedSalesperson === '__none__' ? null : editLinkedSalesperson,
       } as any)
       .eq('id', editingProfile.id);
 
@@ -158,7 +157,6 @@ export function ProfileView() {
     // Sync roles
     const desired = new Set<string>(['user']);
     if (editIsAdmin) desired.add('admin');
-    if (editIsSalesManager) desired.add('sales_manager');
 
     const { data: currentRoles } = await supabase
       .from('user_roles')
