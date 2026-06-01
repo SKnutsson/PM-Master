@@ -120,7 +120,6 @@ export function ProfileView() {
     setEditRole(profile.user_role ?? '');
     setEditColor(profile.avatar_color ?? '#3b82f6');
     setEditCanAccessCrm(!!profile.can_access_crm);
-    setEditLinkedSalesperson(profile.linked_salesperson || '__none__');
 
     // Fetch roles for this user
     const { data: roles } = await supabase
@@ -129,7 +128,6 @@ export function ProfileView() {
       .eq('user_id', profile.user_id);
     const roleNames = (roles || []).map((r: any) => r.role);
     setEditIsAdmin(roleNames.includes('admin'));
-    setEditIsSalesManager(roleNames.includes('sales_manager'));
 
     setEditDialogOpen(true);
   };
