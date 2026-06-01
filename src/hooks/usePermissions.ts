@@ -46,7 +46,7 @@ export function usePermissions(): Permissions {
         isAdmin,
         isSalesManager,
         canAccessCrm,
-        canSeeAllSalespeople: isAdmin || isSalesManager,
+        canSeeAllSalespeople: canAccessCrm,
         linkedSalesperson: (profileRes.data as any)?.linked_salesperson || null,
         loading: false,
       });

@@ -41,9 +41,7 @@ export function ProfileView() {
   const [editRole, setEditRole] = useState('');
   const [editColor, setEditColor] = useState('#3b82f6');
   const [editIsAdmin, setEditIsAdmin] = useState(false);
-  const [editIsSalesManager, setEditIsSalesManager] = useState(false);
   const [editCanAccessCrm, setEditCanAccessCrm] = useState(false);
-  const [editLinkedSalesperson, setEditLinkedSalesperson] = useState<string>('__none__');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const email = user?.email ?? '';
@@ -122,7 +120,6 @@ export function ProfileView() {
     setEditRole(profile.user_role ?? '');
     setEditColor(profile.avatar_color ?? '#3b82f6');
     setEditCanAccessCrm(!!profile.can_access_crm);
-    setEditLinkedSalesperson(profile.linked_salesperson || '__none__');
 
     // Fetch roles for this user
     const { data: roles } = await supabase
@@ -131,7 +128,6 @@ export function ProfileView() {
       .eq('user_id', profile.user_id);
     const roleNames = (roles || []).map((r: any) => r.role);
     setEditIsAdmin(roleNames.includes('admin'));
-    setEditIsSalesManager(roleNames.includes('sales_manager'));
 
     setEditDialogOpen(true);
   };
@@ -150,7 +146,6 @@ export function ProfileView() {
         avatar_color: editColor,
         display_name: displayName,
         can_access_crm: editCanAccessCrm,
-        linked_salesperson: editLinkedSalesperson === '__none__' ? null : editLinkedSalesperson,
       } as any)
       .eq('id', editingProfile.id);
 
@@ -162,7 +157,6 @@ export function ProfileView() {
     // Sync roles
     const desired = new Set<string>(['user']);
     if (editIsAdmin) desired.add('admin');
-    if (editIsSalesManager) desired.add('sales_manager');
 
     const { data: currentRoles } = await supabase
       .from('user_roles')
@@ -371,27 +365,10 @@ export function ProfileView() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm">Försäljningschef</Label>
-                <p className="text-xs text-muted-foreground">Ser alla säljares hitrate, kan filtrera</p>
-              </div>
-              <Switch checked={editIsSalesManager} onCheckedChange={setEditIsSalesManager} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm">Tillgång till CRM</Label>
-                <p className="text-xs text-muted-foreground">Visar CRM-läget i menyn</p>
+                <Label className="text-sm">Åtkomst CRM</Label>
+                <p className="text-xs text-muted-foreground">Ser CRM-läget och all CRM-data, men kan inte redigera andra användares behörigheter</p>
               </div>
               <Switch checked={editCanAccessCrm} onCheckedChange={setEditCanAccessCrm} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">Kopplad säljare (för "egen data" i CRM)</Label>
-              <Select value={editLinkedSalesperson} onValueChange={setEditLinkedSalesperson}>
-                <SelectTrigger><SelectValue placeholder="Ingen" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Ingen</SelectItem>
-                  {SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>
