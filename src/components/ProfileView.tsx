@@ -365,27 +365,10 @@ export function ProfileView() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm">Försäljningschef</Label>
-                <p className="text-xs text-muted-foreground">Ser alla säljares hitrate, kan filtrera</p>
-              </div>
-              <Switch checked={editIsSalesManager} onCheckedChange={setEditIsSalesManager} />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm">Tillgång till CRM</Label>
-                <p className="text-xs text-muted-foreground">Visar CRM-läget i menyn</p>
+                <Label className="text-sm">Åtkomst CRM</Label>
+                <p className="text-xs text-muted-foreground">Ser CRM-läget och all CRM-data, men kan inte redigera andra användares behörigheter</p>
               </div>
               <Switch checked={editCanAccessCrm} onCheckedChange={setEditCanAccessCrm} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">Kopplad säljare (för "egen data" i CRM)</Label>
-              <Select value={editLinkedSalesperson} onValueChange={setEditLinkedSalesperson}>
-                <SelectTrigger><SelectValue placeholder="Ingen" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">Ingen</SelectItem>
-                  {SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>
