@@ -476,7 +476,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                                     <Tooltip key={o.key}>
                                       <TooltipTrigger asChild>
                                         <button
-                                          onClick={() => bookExpected(o)}
+                                          onClick={() => setBookTarget(o)}
                                           aria-label={`Boka in service ${facility} ${o.date}`}
                                           className="h-3.5 w-3.5 rotate-45 border border-dashed border-muted-foreground/70 bg-background hover:bg-primary/15 hover:border-primary hover:scale-150 transition-all cursor-pointer"
                                         />
