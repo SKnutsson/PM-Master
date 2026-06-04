@@ -126,11 +126,13 @@ export function ServicesView() {
     const out: { contract: ServiceContract; date: string; daysLeft: number }[] = [];
     const currentY = new Date().getFullYear();
     for (const c of contracts.filter(x => x.active)) {
+      if (!c.contract_start) continue;
       // Look at current and next year occurrences
       [currentY, currentY + 1].forEach(year => {
         const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
         if ((year - currentY) % stepY !== 0 && stepY > 1) return;
         const date = `${year}-${String(c.recurrence_month).padStart(2, '0')}-15`;
+        if (date < c.contract_start!) return;
         if (date < today || date > horizonStr) return;
         // Skip if already a real service exists for this contract+year+month
         const month0 = c.recurrence_month - 1;
@@ -372,11 +374,14 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
       map.set(facility, arr);
     });
 
-    contracts.filter(c => c.active).forEach(c => {
+    contracts.filter(c => c.active && c.contract_start).forEach(c => {
+      const startYear = new Date(c.contract_start!).getFullYear();
+      if (year < startYear) return;
       const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
-      if ((year - currentYear) % stepY !== 0 && stepY > 1) return;
+      if ((year - startYear) % stepY !== 0 && stepY > 1) return;
       const month0 = (c.recurrence_month || 1) - 1;
       const date = `${year}-${String(month0 + 1).padStart(2, '0')}-15`;
+      if (date < c.contract_start!) return;
       const arr = map.get(c.facility_name) || [];
       const alreadyReal = arr.some(o => o.contract_id === c.id && new Date(o.date).getMonth() === month0);
       if (alreadyReal) return;
@@ -624,6 +629,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
   const addContract = async () => {
     const { error } = await supabase.from('service_contracts').insert({
       customer: 'Ny kund', facility_name: 'Ny anläggning', recurrence_months: 12, recurrence_month: 9,
+      contract_start: todayISO(),
     });
     if (error) toast.error(error.message); else { toast.success('Avtal skapat'); onChange(); }
   };
@@ -664,6 +670,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead className="text-xs">Anläggning</TableHead>
                 <TableHead className="text-xs">Plats</TableHead>
+                <TableHead className="text-xs">Startdatum *</TableHead>
                 <TableHead className="text-xs">Återk. (mån)</TableHead>
                 <TableHead className="text-xs">Service-mån</TableHead>
                 <TableHead className="text-xs">Aktiv</TableHead>
@@ -676,7 +683,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
                 <ContractRow key={c.id} contract={c} onChange={onChange} />
               ))}
               {visible.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">Inga avtal matchar filtret.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-6">Inga avtal matchar filtret.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -704,6 +711,16 @@ function ContractRow({ contract, onChange }: { contract: ServiceContract; onChan
         <Input value={c.facility_name} onChange={e => setC({ ...c, facility_name: e.target.value })} onBlur={() => save({ facility_name: c.facility_name, customer: c.facility_name })} className={cn('h-8', c.active && 'font-semibold text-primary')} />
       </TableCell>
       <TableCell><Input value={c.location || ''} onChange={e => setC({ ...c, location: e.target.value })} onBlur={() => save({ location: c.location })} className="h-8" /></TableCell>
+      <TableCell>
+        <Input
+          type="date"
+          value={c.contract_start || ''}
+          onChange={e => setC({ ...c, contract_start: e.target.value })}
+          onBlur={() => save({ contract_start: c.contract_start })}
+          className={cn('h-8 w-36', !c.contract_start && 'border-destructive')}
+          required
+        />
+      </TableCell>
       <TableCell><Input type="number" value={c.recurrence_months} onChange={e => setC({ ...c, recurrence_months: +e.target.value })} onBlur={() => save({ recurrence_months: c.recurrence_months })} className="h-8 w-20" /></TableCell>
       <TableCell>
         <Select value={String(c.recurrence_month)} onValueChange={v => save({ recurrence_month: +v })}>
