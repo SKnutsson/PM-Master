@@ -619,6 +619,8 @@ function BookServiceDialog({ target, onClose, onBooked }: { target: Occurrence; 
 /* -------------------- Avtal -------------------- */
 
 function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceContract[]; onChange: () => void; services: Service[] }) {
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
   const addContract = async () => {
     const { error } = await supabase.from('service_contracts').insert({
       customer: 'Ny kund', facility_name: 'Ny anläggning', recurrence_months: 12, recurrence_month: 9,
@@ -626,11 +628,31 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
     if (error) toast.error(error.message); else { toast.success('Avtal skapat'); onChange(); }
   };
 
+  const visible = useMemo(() => {
+    const filtered = contracts.filter(c =>
+      activeFilter === 'all' ? true : activeFilter === 'active' ? c.active : !c.active
+    );
+    return [...filtered].sort((a, b) => (a.facility_name || '').localeCompare(b.facility_name || '', 'sv'));
+  }, [contracts, activeFilter]);
+
+  const activeCount = contracts.filter(c => c.active).length;
+  const inactiveCount = contracts.length - activeCount;
+
   return (
     <Card>
-      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0">
+      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0 gap-2 flex-wrap">
         <CardTitle className="text-sm font-semibold">Serviceavtal & anläggningar</CardTitle>
-        <Button onClick={addContract} size="sm"><Plus className="h-4 w-4 mr-1" /> Nytt avtal</Button>
+        <div className="flex items-center gap-2">
+          <Select value={activeFilter} onValueChange={(v) => setActiveFilter(v as any)}>
+            <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alla avtal ({contracts.length})</SelectItem>
+              <SelectItem value="active">Aktiva ({activeCount})</SelectItem>
+              <SelectItem value="inactive">Inaktiva ({inactiveCount})</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={addContract} size="sm"><Plus className="h-4 w-4 mr-1" /> Nytt avtal</Button>
+        </div>
       </CardHeader>
       <CardContent className="px-0 pb-0">
         <div className="px-4 pb-3 text-xs text-muted-foreground">
@@ -650,9 +672,12 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contracts.map(c => (
+              {visible.map(c => (
                 <ContractRow key={c.id} contract={c} onChange={onChange} />
               ))}
+              {visible.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">Inga avtal matchar filtret.</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
