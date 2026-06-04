@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CalendarIcon, Pencil, Trash2, X, Diamond } from 'lucide-react';
+import { CalendarIcon, Pencil, Trash2, X, Diamond, Split, Plus } from 'lucide-react';
 import { useProfiles } from '@/hooks/useProfiles';
 import { UserSelect } from '@/components/UserSelect';
 import { format } from 'date-fns';
