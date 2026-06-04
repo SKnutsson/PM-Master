@@ -670,6 +670,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead className="text-xs">Anläggning</TableHead>
                 <TableHead className="text-xs">Plats</TableHead>
+                <TableHead className="text-xs">Startdatum *</TableHead>
                 <TableHead className="text-xs">Återk. (mån)</TableHead>
                 <TableHead className="text-xs">Service-mån</TableHead>
                 <TableHead className="text-xs">Aktiv</TableHead>
