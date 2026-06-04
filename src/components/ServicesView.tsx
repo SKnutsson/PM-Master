@@ -126,11 +126,13 @@ export function ServicesView() {
     const out: { contract: ServiceContract; date: string; daysLeft: number }[] = [];
     const currentY = new Date().getFullYear();
     for (const c of contracts.filter(x => x.active)) {
+      if (!c.contract_start) continue;
       // Look at current and next year occurrences
       [currentY, currentY + 1].forEach(year => {
         const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
         if ((year - currentY) % stepY !== 0 && stepY > 1) return;
         const date = `${year}-${String(c.recurrence_month).padStart(2, '0')}-15`;
+        if (date < c.contract_start!) return;
         if (date < today || date > horizonStr) return;
         // Skip if already a real service exists for this contract+year+month
         const month0 = c.recurrence_month - 1;
