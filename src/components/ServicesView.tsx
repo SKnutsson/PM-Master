@@ -711,6 +711,16 @@ function ContractRow({ contract, onChange }: { contract: ServiceContract; onChan
         <Input value={c.facility_name} onChange={e => setC({ ...c, facility_name: e.target.value })} onBlur={() => save({ facility_name: c.facility_name, customer: c.facility_name })} className={cn('h-8', c.active && 'font-semibold text-primary')} />
       </TableCell>
       <TableCell><Input value={c.location || ''} onChange={e => setC({ ...c, location: e.target.value })} onBlur={() => save({ location: c.location })} className="h-8" /></TableCell>
+      <TableCell>
+        <Input
+          type="date"
+          value={c.contract_start || ''}
+          onChange={e => setC({ ...c, contract_start: e.target.value })}
+          onBlur={() => save({ contract_start: c.contract_start })}
+          className={cn('h-8 w-36', !c.contract_start && 'border-destructive')}
+          required
+        />
+      </TableCell>
       <TableCell><Input type="number" value={c.recurrence_months} onChange={e => setC({ ...c, recurrence_months: +e.target.value })} onBlur={() => save({ recurrence_months: c.recurrence_months })} className="h-8 w-20" /></TableCell>
       <TableCell>
         <Select value={String(c.recurrence_month)} onValueChange={v => save({ recurrence_month: +v })}>
