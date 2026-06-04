@@ -429,18 +429,6 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
     if (error) toast.error(error.message); else { toast.success('Avtal skapat'); onChange(); }
   };
 
-  const generateNext = async (c: ServiceContract) => {
-    const last = services.filter(s => s.contract_id === c.id).sort((a, b) => (b.planned_date || '').localeCompare(a.planned_date || ''))[0];
-    const baseYear = last?.planned_date ? new Date(last.planned_date).getFullYear() : new Date().getFullYear();
-    const nextYear = baseYear + Math.max(1, Math.round(c.recurrence_months / 12));
-    const planned = `${nextYear}-${String(c.recurrence_month).padStart(2, '0')}-15`;
-    const { error } = await supabase.from('services').insert({
-      contract_id: c.id, customer: c.customer, facility_name: c.facility_name,
-      planned_date: planned, status: 'Planerad',
-    });
-    if (error) toast.error(error.message); else { toast.success('Service genererad'); onChange(); }
-  };
-
   return (
     <Card>
       <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0">
@@ -448,6 +436,9 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
         <Button onClick={addContract} size="sm"><Plus className="h-4 w-4 mr-1" /> Nytt avtal</Button>
       </CardHeader>
       <CardContent className="px-0 pb-0">
+        <div className="px-4 pb-3 text-xs text-muted-foreground">
+          Aktiva avtal genererar automatiskt återkommande servicar i tidslinjen utifrån återkommandeintervallet.
+        </div>
         <div className="border-t overflow-x-auto">
           <Table>
             <TableHeader>
@@ -463,7 +454,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
             </TableHeader>
             <TableBody>
               {contracts.map(c => (
-                <ContractRow key={c.id} contract={c} onChange={onChange} onGenerate={() => generateNext(c)} />
+                <ContractRow key={c.id} contract={c} onChange={onChange} />
               ))}
             </TableBody>
           </Table>
@@ -473,7 +464,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
   );
 }
 
-function ContractRow({ contract, onChange, onGenerate }: { contract: ServiceContract; onChange: () => void; onGenerate: () => void }) {
+function ContractRow({ contract, onChange }: { contract: ServiceContract; onChange: () => void }) {
   const [c, setC] = useState(contract);
   useEffect(() => setC(contract), [contract]);
   const save = async (patch: Partial<ServiceContract>) => {
@@ -501,14 +492,14 @@ function ContractRow({ contract, onChange, onGenerate }: { contract: ServiceCont
       <TableCell><Checkbox checked={c.active} onCheckedChange={v => save({ active: !!v })} /></TableCell>
       <TableCell><Input value={c.notes || ''} onChange={e => setC({ ...c, notes: e.target.value })} onBlur={() => save({ notes: c.notes })} className="h-8 min-w-[200px]" placeholder="t.ex. Betalas vid service 1ggr/år" /></TableCell>
       <TableCell>
-        <div className="flex gap-1 justify-end">
-          <Button size="sm" variant="outline" onClick={onGenerate}>Generera nästa</Button>
+        <div className="flex justify-end">
           <Button size="sm" variant="ghost" onClick={del}><Trash2 className="h-4 w-4" /></Button>
         </div>
       </TableCell>
     </TableRow>
   );
 }
+
 
 /* -------------------- Alla servicar -------------------- */
 
