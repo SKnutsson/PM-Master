@@ -52,6 +52,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
   const [phase, setPhase] = useState<Phase | ''>(activity.phase || '');
   const [isMilestone, setIsMilestone] = useState(activity.isMilestone || false);
   const [notes, setNotes] = useState(activity.notes || '');
+  const [segments, setSegments] = useState<ActivitySegment[]>(activity.segments || []);
   const { updateActivity, deleteActivity } = useProjectDataContext();
 
   useEffect(() => {
@@ -65,15 +66,51 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
       setPhase(activity.phase || '');
       setIsMilestone(activity.isMilestone || false);
       setNotes(activity.notes || '');
+      setSegments(activity.segments || []);
     }
   }, [open, activity]);
+
+  const addSegment = () => {
+    // Default: if there are existing segments, take last segment's end + 14d gap, +14d duration.
+    // Otherwise, seed two segments from the activity's start/end with a gap in the middle.
+    if (segments.length === 0 && startDate && endDate) {
+      const totalDays = Math.round((endDate.getTime() - startDate.getTime()) / 86400000);
+      const halfDays = Math.max(1, Math.floor(totalDays / 3));
+      const seg1End = new Date(startDate); seg1End.setDate(seg1End.getDate() + halfDays);
+      const seg2Start = new Date(seg1End); seg2Start.setDate(seg2Start.getDate() + Math.max(1, Math.floor(totalDays / 3)));
+      setSegments([
+        { start: format(startDate, 'yyyy-MM-dd'), end: format(seg1End, 'yyyy-MM-dd') },
+        { start: format(seg2Start, 'yyyy-MM-dd'), end: format(endDate, 'yyyy-MM-dd') },
+      ]);
+      return;
+    }
+    const last = segments[segments.length - 1];
+    const lastEnd = last ? new Date(last.end) : (endDate || new Date());
+    const newStart = new Date(lastEnd); newStart.setDate(newStart.getDate() + 14);
+    const newEnd = new Date(newStart); newEnd.setDate(newEnd.getDate() + 14);
+    setSegments([...segments, { start: format(newStart, 'yyyy-MM-dd'), end: format(newEnd, 'yyyy-MM-dd') }]);
+  };
+
+  const updateSegment = (idx: number, patch: Partial<ActivitySegment>) => {
+    setSegments(segments.map((s, i) => i === idx ? { ...s, ...patch } : s));
+  };
+
+  const removeSegment = (idx: number) => {
+    setSegments(segments.filter((_, i) => i !== idx));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && responsible.trim()) {
       const effectiveEndDate = isMilestone && startDate ? startDate : endDate;
-      const days = startDate && effectiveEndDate 
-        ? Math.ceil((effectiveEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      const useSegments = !isMilestone && segments.length >= 2;
+      // When using segments, sync start/end to min/max of segment dates
+      const sortedStarts = [...segments].map(s => s.start).sort();
+      const sortedEnds = [...segments].map(s => s.end).sort();
+      const finalStart = useSegments ? sortedStarts[0] : (startDate ? format(startDate, 'yyyy-MM-dd') : null);
+      const finalEnd = useSegments ? sortedEnds[sortedEnds.length - 1] : (effectiveEndDate ? format(effectiveEndDate, 'yyyy-MM-dd') : null);
+      const days = finalStart && finalEnd
+        ? Math.ceil((new Date(finalEnd).getTime() - new Date(finalStart).getTime()) / (1000 * 60 * 60 * 24)) + 1
         : undefined;
 
       await updateActivity(projectId, activity.id, {
@@ -81,13 +118,14 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
         responsible: responsible.trim(),
         department,
         status,
-        startDate: startDate ? format(startDate, 'yyyy-MM-dd') : null,
-        endDate: effectiveEndDate ? format(effectiveEndDate, 'yyyy-MM-dd') : null,
+        startDate: finalStart,
+        endDate: finalEnd,
         days,
         hasWarning: status === 'Försenad',
         phase: phase || null,
         isMilestone,
         notes: notes.trim() || null,
+        segments: useSegments ? segments : null,
       });
       setOpen(false);
     }
