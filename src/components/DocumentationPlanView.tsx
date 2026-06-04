@@ -411,7 +411,7 @@ export function DocumentationPlanView() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={formDeadline} onSelect={setFormDeadline} className="p-3 pointer-events-auto" />
+                    <Calendar mode="single" selected={formDeadline} onSelect={setFormDeadline} showWeekNumber className="p-3 pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -437,7 +437,7 @@ export function DocumentationPlanView() {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={formSubmittedDate} onSelect={setFormSubmittedDate} className="p-3 pointer-events-auto" />
+                    <Calendar mode="single" selected={formSubmittedDate} onSelect={setFormSubmittedDate} showWeekNumber className="p-3 pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
               </div>

@@ -184,6 +184,7 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
                       selected={startDate}
                       onSelect={setStartDate}
                       initialFocus
+                      showWeekNumber
                       className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>
@@ -210,6 +211,7 @@ export function AddActivityDialog({ projectId, trigger }: AddActivityDialogProps
                       selected={endDate}
                       onSelect={setEndDate}
                       initialFocus
+                      showWeekNumber
                       className="p-3 pointer-events-auto"
                     />
                   </PopoverContent>
