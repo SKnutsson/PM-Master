@@ -49,7 +49,6 @@ const pmMainItems = [
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
   { id: 'resources-analytics' as View, label: 'Uppföljning', icon: TrendingUp },
-  { id: 'services' as View, label: 'Servicar', icon: Wrench },
   { id: 'ata' as View, label: 'ÄTA', icon: FileSpreadsheet },
 ];
 
@@ -58,6 +57,7 @@ const crmMainItems = [
   { id: 'crm-quotes' as View, label: 'Alla offerter', icon: FileText },
   { id: 'crm-customers' as View, label: 'Kunder', icon: Users },
   { id: 'forecast' as View, label: 'Försäljningsbudget', icon: BarChart3 },
+  { id: 'services' as View, label: 'Servicar', icon: Wrench },
   { id: 'crm-stats' as View, label: 'Statistik', icon: PieChart },
 ];
 
