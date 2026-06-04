@@ -348,7 +348,7 @@ export function Dashboard() {
             <div className="relative z-10">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Försenade projekt</p>
+                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Försenade aktiviteter</p>
                   <p className="text-5xl font-bold text-white mt-1">
                     <AnimatedNumber value={delayedActivities} />
                   </p>
@@ -358,21 +358,17 @@ export function Dashboard() {
                 </div>
               </div>
               {delayedActivities > 0 && (
-                <div className="mt-3 space-y-0.5">
+                <div className="mt-3 space-y-0.5 max-h-64 overflow-y-auto pr-1">
                   {allActivities
                     .filter((a) => a.status === 'Försenad')
-                    .slice(0, 3)
                     .map((a, i) => {
                       const project = projects.find((p) => p.activities.some((act) => act.id === a.id));
                       return (
                         <p key={i} className="text-xs text-white/70 truncate">
-                          • {project ? `${project.code} – ` : ''}{a.name}
+                          • {a.name}{project ? ` – ${project.code} ${project.name}` : ''}
                         </p>
                       );
                     })}
-                  {delayedActivities > 3 && (
-                    <p className="text-xs text-white/50">+{delayedActivities - 3} till...</p>
-                  )}
                 </div>
               )}
             </div>
