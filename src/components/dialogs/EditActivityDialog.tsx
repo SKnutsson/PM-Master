@@ -238,6 +238,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
                         selected={startDate}
                         onSelect={setStartDate}
                         initialFocus
+                        showWeekNumber
                         className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
@@ -271,6 +272,7 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
                         selected={endDate}
                         onSelect={setEndDate}
                         initialFocus
+                        showWeekNumber
                         className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>

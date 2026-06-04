@@ -401,7 +401,7 @@ function AddTaskDialog({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus className="p-3 pointer-events-auto" />
+                  <Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus showWeekNumber className="p-3 pointer-events-auto" />
                 </PopoverContent>
               </Popover>
             </div>
