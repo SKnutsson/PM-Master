@@ -629,6 +629,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
   const addContract = async () => {
     const { error } = await supabase.from('service_contracts').insert({
       customer: 'Ny kund', facility_name: 'Ny anläggning', recurrence_months: 12, recurrence_month: 9,
+      contract_start: todayISO(),
     });
     if (error) toast.error(error.message); else { toast.success('Avtal skapat'); onChange(); }
   };
