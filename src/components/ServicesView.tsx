@@ -374,11 +374,14 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
       map.set(facility, arr);
     });
 
-    contracts.filter(c => c.active).forEach(c => {
+    contracts.filter(c => c.active && c.contract_start).forEach(c => {
+      const startYear = new Date(c.contract_start!).getFullYear();
+      if (year < startYear) return;
       const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
-      if ((year - currentYear) % stepY !== 0 && stepY > 1) return;
+      if ((year - startYear) % stepY !== 0 && stepY > 1) return;
       const month0 = (c.recurrence_month || 1) - 1;
       const date = `${year}-${String(month0 + 1).padStart(2, '0')}-15`;
+      if (date < c.contract_start!) return;
       const arr = map.get(c.facility_name) || [];
       const alreadyReal = arr.some(o => o.contract_id === c.id && new Date(o.date).getMonth() === month0);
       if (alreadyReal) return;
