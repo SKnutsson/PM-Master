@@ -114,9 +114,49 @@ export function ServicesView() {
   const reminders = upcoming.filter(s => {
     const d = daysUntil(s.planned_date); return d !== null && d >= 0 && d <= 30;
   });
+
+  // Expected (auto) occurrences from active contracts within next 30 days
+  const expectedSoon = useMemo(() => {
+    const today = todayISO();
+    const horizon = new Date(); horizon.setDate(horizon.getDate() + 30);
+    const horizonStr = toISODate(horizon);
+    const out: { contract: ServiceContract; date: string; daysLeft: number }[] = [];
+    const currentY = new Date().getFullYear();
+    for (const c of contracts.filter(x => x.active)) {
+      // Look at current and next year occurrences
+      [currentY, currentY + 1].forEach(year => {
+        const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
+        if ((year - currentY) % stepY !== 0 && stepY > 1) return;
+        const date = `${year}-${String(c.recurrence_month).padStart(2, '0')}-15`;
+        if (date < today || date > horizonStr) return;
+        // Skip if already a real service exists for this contract+year+month
+        const month0 = c.recurrence_month - 1;
+        const hasReal = services.some(s => s.contract_id === c.id && s.planned_date &&
+          new Date(s.planned_date).getFullYear() === year && new Date(s.planned_date).getMonth() === month0);
+        if (hasReal) return;
+        out.push({ contract: c, date, daysLeft: daysUntil(date)! });
+      });
+    }
+    return out.sort((a, b) => a.daysLeft - b.daysLeft);
+  }, [contracts, services]);
+
   const completedThisYear = services.filter(s => s.completed_date?.startsWith(String(new Date().getFullYear()))).length;
 
   const openService = services.find(s => s.id === openServiceId) || null;
+
+  const bookExpected = async (item: { contract: ServiceContract; date: string }) => {
+    const { data, error } = await supabase.from('services').insert({
+      contract_id: item.contract.id,
+      customer: item.contract.customer || item.contract.facility_name,
+      facility_name: item.contract.facility_name,
+      planned_date: item.date,
+      status: 'Planerad',
+    }).select().single();
+    if (error) { toast.error(error.message); return; }
+    toast.success('Service bokad');
+    if (data) setOpenServiceId(data.id);
+  };
+
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-5">
