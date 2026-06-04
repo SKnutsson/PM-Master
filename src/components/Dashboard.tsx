@@ -266,22 +266,21 @@ export function Dashboard() {
         </Button>
       </div>
 
-      {/* ── ROW 1: Hero Stat Cards ── */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+      {/* ── ROW 1: Compact Hero Stat Cards ── */}
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         {/* Aktiva projekt — dark petrol */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Aktiva projekt</p>
-                <p className="text-5xl font-bold text-white mt-1">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] px-4 py-3 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
+            <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/5 -translate-y-6 translate-x-6" />
+            <div className="relative z-10 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Aktiva projekt</p>
+                <p className="text-3xl font-bold text-white leading-tight tabular-nums">
                   <AnimatedNumber value={activeProjects.length} />
                 </p>
               </div>
-              <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-                <FolderKanban className="h-7 w-7 text-white/80" />
+              <div className="rounded-lg p-2 bg-white/10 backdrop-blur-sm shrink-0">
+                <FolderKanban className="h-5 w-5 text-white/80" />
               </div>
             </div>
           </div>
@@ -290,22 +289,21 @@ export function Dashboard() {
         {/* Resursöversikt — teal, expandable */}
         <motion.div variants={itemVariants}>
           <div
-            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer"
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer h-full"
             onClick={() => setShowResourceList(!showResourceList)}
           >
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-            <div className="relative z-10 p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
-                  <p className="text-5xl font-bold text-white mt-1">
+            <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/5 -translate-y-6 translate-x-6" />
+            <div className="relative z-10 px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
+                  <p className="text-3xl font-bold text-white leading-tight tabular-nums">
                     <AnimatedNumber value={resourceSummary.activeThisWeek} />
-                    <span className="text-lg font-normal text-white/50 ml-1.5">bokade</span>
+                    <span className="text-sm font-normal text-white/50 ml-1.5">bokade</span>
                   </p>
                 </div>
-                <div className={`rounded-xl p-3 bg-white/10 backdrop-blur-sm transition-all duration-200 ${showResourceList ? 'bg-white/20' : ''}`}>
-                  <ChevronDown className={`h-7 w-7 text-white/80 transition-transform duration-200 ${showResourceList ? 'rotate-180' : ''}`} />
+                <div className={`rounded-lg p-2 bg-white/10 backdrop-blur-sm shrink-0 transition-all ${showResourceList ? 'bg-white/20' : ''}`}>
+                  <ChevronDown className={`h-5 w-5 text-white/80 transition-transform duration-200 ${showResourceList ? 'rotate-180' : ''}`} />
                 </div>
               </div>
             </div>
@@ -318,7 +316,7 @@ export function Dashboard() {
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden relative z-10"
                 >
-                  <div className="px-6 pb-4 space-y-1">
+                  <div className="px-4 pb-3 space-y-1">
                     {resourceSummary.activeInstallers.length > 0 ? (
                       resourceSummary.activeInstallers.map((inst, i) => (
                         <div key={i} className="flex items-center justify-between py-1 px-2 rounded-md hover:bg-white/10 text-xs">
@@ -340,31 +338,30 @@ export function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Försenade — red (with list if any) */}
+        {/* Försenade — red with inline list */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] px-4 py-3 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
+            <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/5 -translate-y-6 translate-x-6" />
             <div className="relative z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white/60 uppercase tracking-wider">Försenade aktiviteter</p>
-                  <p className="text-5xl font-bold text-white mt-1">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Försenade aktiviteter</p>
+                  <p className="text-3xl font-bold text-white leading-tight tabular-nums">
                     <AnimatedNumber value={delayedActivities} />
                   </p>
                 </div>
-                <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-                  <AlertTriangle className="h-7 w-7 text-white/80" />
+                <div className="rounded-lg p-2 bg-white/10 backdrop-blur-sm shrink-0">
+                  <AlertTriangle className="h-5 w-5 text-white/80" />
                 </div>
               </div>
               {delayedActivities > 0 && (
-                <div className="mt-3 space-y-0.5 max-h-64 overflow-y-auto pr-1">
+                <div className="mt-2 space-y-0.5 max-h-28 overflow-y-auto pr-1">
                   {allActivities
                     .filter((a) => a.status === 'Försenad')
                     .map((a, i) => {
                       const project = projects.find((p) => p.activities.some((act) => act.id === a.id));
                       return (
-                        <p key={i} className="text-xs text-white/70 truncate">
+                        <p key={i} className="text-[11px] text-white/75 truncate leading-snug">
                           • {a.name}{project ? ` – ${project.code} ${project.name}` : ''}
                         </p>
                       );

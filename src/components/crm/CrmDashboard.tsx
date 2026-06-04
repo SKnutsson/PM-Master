@@ -104,7 +104,7 @@ export function CrmDashboard() {
       .filter((q) => q.next_followup && q.next_followup <= today)
       .sort((a, b) => (a.next_followup! < b.next_followup! ? -1 : 1));
 
-    const probBuckets = [5, 4, 3, 2, 1].map((n) => {
+    const probBuckets = [1, 2, 3, 4, 5].map((n) => {
       const items = open.filter((q) => q.probability === n);
       return { n, count: items.length, value: items.reduce((s, q) => s + Number(q.amount || 0), 0) };
     });
