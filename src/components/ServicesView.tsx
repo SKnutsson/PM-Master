@@ -683,7 +683,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
                 <ContractRow key={c.id} contract={c} onChange={onChange} />
               ))}
               {visible.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">Inga avtal matchar filtret.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-6">Inga avtal matchar filtret.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
