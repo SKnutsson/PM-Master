@@ -494,6 +494,24 @@ export function TimelineView() {
     });
   }, [updateActivity]);
 
+  const handleSegmentDatesChange = useCallback(async (
+    projectId: string,
+    activityId: string,
+    segmentIndex: number,
+    segments: { start: string; end: string }[],
+    newStart: string,
+    newEnd: string,
+  ) => {
+    const next = segments.map((s, i) => i === segmentIndex ? { start: newStart, end: newEnd } : s);
+    const allStarts = next.map(s => s.start).sort();
+    const allEnds = next.map(s => s.end).sort();
+    await updateActivity(projectId, activityId, {
+      segments: next,
+      startDate: allStarts[0],
+      endDate: allEnds[allEnds.length - 1],
+    });
+  }, [updateActivity]);
+
   const renderTodayMarker = () => {
     if (todayColIndex < 0 || todayColIndex >= columnCount) return null;
     const leftPx = todayColIndex * colWidth + colWidth / 2;
@@ -900,28 +918,83 @@ export function TimelineView() {
                                 <div className="flex items-center relative" style={{ width: gridWidth }}>
                                   {/* Background cells for grid lines */}
                                   {renderBackgroundCells()}
-                                  {/* Draggable bar overlay */}
-                                  {barVisible &&
-                                  <GanttBar
-                                    activityId={activity.id}
-                                    projectId={project.id}
-                                    activityName={activity.name}
-                                    startDate={activity.startDate || todayStr}
-                                    endDate={activity.endDate || todayStr}
-                                    statusColor={getStatusColor(derived)}
-                                    derivedStatus={derived}
-                                    responsible={activity.responsible}
-                                    columnCount={columnCount}
-                                    startCol={actStartCol}
-                                    endCol={actEndCol}
-                                    onDatesChange={handleDatesChange}
-                                    colToDate={colToDate}
-                                    dateToCol={dateToCol}
-                                    colWidth={colWidth}
-                                    snapCols={1}
-                                    isMilestone={activity.isMilestone} />
-
-                                  }
+                                  {/* Draggable bar overlay – segmented or single */}
+                                  {(() => {
+                                    const segs = activity.segments && activity.segments.length >= 2 ? activity.segments : null;
+                                    if (segs) {
+                                      // Render one bar per segment + dashed connector lines for pauses
+                                      const sortedSegs = [...segs].sort((a, b) => a.start.localeCompare(b.start));
+                                      const bars: JSX.Element[] = [];
+                                      sortedSegs.forEach((seg, idx) => {
+                                        const sCol = dateToCol(seg.start);
+                                        const eCol = dateToCol(seg.end);
+                                        if (sCol < 0 || sCol >= columnCount || eCol < 0) return;
+                                        bars.push(
+                                          <GanttBar
+                                            key={`${activity.id}-seg-${idx}`}
+                                            activityId={activity.id}
+                                            projectId={project.id}
+                                            activityName={`${activity.name} (del ${idx + 1}/${sortedSegs.length})`}
+                                            startDate={seg.start}
+                                            endDate={seg.end}
+                                            statusColor={getStatusColor(derived)}
+                                            derivedStatus={derived}
+                                            responsible={activity.responsible}
+                                            columnCount={columnCount}
+                                            startCol={sCol}
+                                            endCol={eCol}
+                                            onDatesChange={(pid, aid, ns, ne) =>
+                                              handleSegmentDatesChange(pid, aid, idx, sortedSegs, ns, ne)
+                                            }
+                                            colToDate={colToDate}
+                                            dateToCol={dateToCol}
+                                            colWidth={colWidth}
+                                            snapCols={1}
+                                            isMilestone={false}
+                                          />
+                                        );
+                                        // Dashed connector to the next segment
+                                        if (idx < sortedSegs.length - 1) {
+                                          const nextSeg = sortedSegs[idx + 1];
+                                          const nextStartCol = dateToCol(nextSeg.start);
+                                          const gapStartPx = (eCol + 1) * colWidth;
+                                          const gapEndPx = nextStartCol * colWidth;
+                                          if (gapEndPx > gapStartPx) {
+                                            bars.push(
+                                              <div
+                                                key={`${activity.id}-gap-${idx}`}
+                                                className="absolute top-1/2 -translate-y-1/2 border-t-2 border-dashed border-muted-foreground/40 pointer-events-none"
+                                                style={{ left: `${gapStartPx}px`, width: `${gapEndPx - gapStartPx}px` }}
+                                                title="Paus"
+                                              />
+                                            );
+                                          }
+                                        }
+                                      });
+                                      return bars;
+                                    }
+                                    return barVisible && (
+                                      <GanttBar
+                                        activityId={activity.id}
+                                        projectId={project.id}
+                                        activityName={activity.name}
+                                        startDate={activity.startDate || todayStr}
+                                        endDate={activity.endDate || todayStr}
+                                        statusColor={getStatusColor(derived)}
+                                        derivedStatus={derived}
+                                        responsible={activity.responsible}
+                                        columnCount={columnCount}
+                                        startCol={actStartCol}
+                                        endCol={actEndCol}
+                                        onDatesChange={handleDatesChange}
+                                        colToDate={colToDate}
+                                        dateToCol={dateToCol}
+                                        colWidth={colWidth}
+                                        snapCols={1}
+                                        isMilestone={activity.isMilestone}
+                                      />
+                                    );
+                                  })()}
                                 </div>
                               </motion.div>);
 

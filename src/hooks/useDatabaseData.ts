@@ -238,6 +238,7 @@ export function useDatabaseData() {
             notes: a.notes,
             phase: (a as any).phase as Phase | null,
             isMilestone: (a as any).is_milestone === true,
+            segments: Array.isArray((a as any).segments) ? (a as any).segments : null,
           }))
       }));
       setProjects(projectsWithActivities);
@@ -483,6 +484,7 @@ export function useDatabaseData() {
     if (updates.phase !== undefined) updateData.phase = updates.phase;
     if ('isMilestone' in updates) updateData.is_milestone = updates.isMilestone ?? false;
     if ('notes' in updates) updateData.notes = updates.notes ?? null;
+    if ('segments' in updates) updateData.segments = updates.segments && updates.segments.length > 0 ? updates.segments : null;
 
     const { error } = await supabase
       .from('activities')
@@ -494,21 +496,23 @@ export function useDatabaseData() {
       throw error;
     }
 
-    // Log phase change event if an activity with a phase changes to/from "Pågår"
+    // Log phase change event if an activity with a phase changes to/from "Pågår" or "Försenad"
+    // Försenad still counts as ongoing within a phase, so we don't end the phase for it.
     if (currentActivity && updates.status !== undefined && currentActivity.phase) {
-      const wasInProgress = currentActivity.status === 'Pågår';
-      const isNowInProgress = updates.status === 'Pågår';
-      if (!wasInProgress && isNowInProgress) {
+      const ongoing = (st?: string) => st === 'Pågår' || st === 'Försenad';
+      const wasOngoing = ongoing(currentActivity.status);
+      const isOngoing = ongoing(updates.status);
+      if (!wasOngoing && isOngoing) {
         await logForecastEvent({
           eventType: 'phase_started',
           projectName: project ? `${project.code} – ${project.name}` : 'Okänt projekt',
           details: `Fas "${currentActivity.phase}" startad`,
         });
-      } else if (wasInProgress && !isNowInProgress) {
+      } else if (wasOngoing && !isOngoing && updates.status === 'Slutförd') {
         await logForecastEvent({
           eventType: 'phase_ended',
           projectName: project ? `${project.code} – ${project.name}` : 'Okänt projekt',
-          details: `Fas "${currentActivity.phase}" ${updates.status === 'Slutförd' ? 'slutförd' : 'avslutad'}`,
+          details: `Fas "${currentActivity.phase}" slutförd`,
         });
       }
     }

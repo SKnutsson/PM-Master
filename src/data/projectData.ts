@@ -5,6 +5,11 @@ export type Phase = 'Konstruktion' | 'Produktion' | 'Montage';
 
 export const phases: Phase[] = ['Konstruktion', 'Produktion', 'Montage'];
 
+export interface ActivitySegment {
+  start: string;
+  end: string;
+}
+
 export interface Activity {
   id: string;
   name: string;
@@ -18,6 +23,7 @@ export interface Activity {
   phase?: Phase | null;
   isMilestone?: boolean;
   notes?: string | null;
+  segments?: ActivitySegment[] | null;
 }
 
 export type ProjectStatus = 'Aktiv' | 'Avslutat';
