@@ -238,6 +238,7 @@ export function useDatabaseData() {
             notes: a.notes,
             phase: (a as any).phase as Phase | null,
             isMilestone: (a as any).is_milestone === true,
+            segments: Array.isArray((a as any).segments) ? (a as any).segments : null,
           }))
       }));
       setProjects(projectsWithActivities);
