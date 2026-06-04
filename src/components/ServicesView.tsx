@@ -338,6 +338,7 @@ interface Occurrence {
 function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceContract[]; services: Service[]; onOpen: (id: string) => void }) {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
+  const [bookTarget, setBookTarget] = useState<Occurrence | null>(null);
 
   const yearOptions = useMemo(() => {
     const ys = new Set<number>([currentYear - 1, currentYear, currentYear + 1, currentYear + 2]);
@@ -356,7 +357,6 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
     const map = new Map<string, Occurrence[]>();
     facilities.forEach(f => map.set(f, []));
 
-    // Real services for visible year
     services.forEach(s => {
       const d = s.completed_date || s.planned_date;
       if (!d) return;
@@ -365,18 +365,13 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
       const facility = s.facility_name || s.customer || '—';
       const arr = map.get(facility) || [];
       arr.push({
-        key: s.id,
-        facility,
-        contract_id: s.contract_id,
+        key: s.id, facility, contract_id: s.contract_id,
         contract: contracts.find(c => c.id === s.contract_id),
-        date: d,
-        service: s,
-        isExpected: false,
+        date: d, service: s, isExpected: false,
       });
       map.set(facility, arr);
     });
 
-    // Expected occurrences from active contracts
     contracts.filter(c => c.active).forEach(c => {
       const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
       if ((year - currentYear) % stepY !== 0 && stepY > 1) return;
@@ -386,13 +381,8 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
       const alreadyReal = arr.some(o => o.contract_id === c.id && new Date(o.date).getMonth() === month0);
       if (alreadyReal) return;
       arr.push({
-        key: `expected-${c.id}-${year}`,
-        facility: c.facility_name,
-        contract_id: c.id,
-        contract: c,
-        date,
-        service: null,
-        isExpected: true,
+        key: `expected-${c.id}-${year}`, facility: c.facility_name,
+        contract_id: c.id, contract: c, date, service: null, isExpected: true,
       });
       map.set(c.facility_name, arr);
     });
@@ -404,34 +394,14 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
   const isCurrentYear = today.getFullYear() === year;
   const todayMonth = today.getMonth();
 
-  const sortedFacilities = useMemo(() => {
-    const list = facilities.filter(f => (occurrencesByFacility.get(f) || []).length > 0);
-    list.sort((a, b) => {
-      const oa = occurrencesByFacility.get(a)!;
-      const ob = occurrencesByFacility.get(b)!;
-      return new Date(oa[0].date).getTime() - new Date(ob[0].date).getTime() || a.localeCompare(b);
-    });
-    // append facilities with no occurrences (inactive contracts)
-    const empty = facilities.filter(f => (occurrencesByFacility.get(f) || []).length === 0).sort((a, b) => a.localeCompare(b));
-    return [...list, ...empty];
-  }, [facilities, occurrencesByFacility]);
+  const sortedFacilities = useMemo(
+    () => [...facilities].sort((a, b) => a.localeCompare(b, 'sv')),
+    [facilities]
+  );
 
   const COL_W = 64;
   const LABEL_W = 240;
   const totalGridW = LABEL_W + COL_W * 12;
-
-  const bookExpected = async (o: Occurrence) => {
-    const { data, error } = await supabase.from('services').insert({
-      contract_id: o.contract_id,
-      customer: o.contract?.customer || o.facility,
-      facility_name: o.facility,
-      planned_date: o.date,
-      status: 'Planerad',
-    }).select().single();
-    if (error) { toast.error(error.message); return; }
-    toast.success('Service bokad');
-    if (data) onOpen(data.id);
-  };
 
   return (
     <Card>
@@ -506,7 +476,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                                     <Tooltip key={o.key}>
                                       <TooltipTrigger asChild>
                                         <button
-                                          onClick={() => bookExpected(o)}
+                                          onClick={() => setBookTarget(o)}
                                           aria-label={`Boka in service ${facility} ${o.date}`}
                                           className="h-3.5 w-3.5 rotate-45 border border-dashed border-muted-foreground/70 bg-background hover:bg-primary/15 hover:border-primary hover:scale-150 transition-all cursor-pointer"
                                         />
@@ -556,7 +526,92 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
           </TooltipProvider>
         </div>
       </CardContent>
+      {bookTarget && (
+        <BookServiceDialog
+          target={bookTarget}
+          onClose={() => setBookTarget(null)}
+          onBooked={(id) => { setBookTarget(null); onOpen(id); }}
+        />
+      )}
     </Card>
+  );
+}
+
+function BookServiceDialog({ target, onClose, onBooked }: { target: Occurrence; onClose: () => void; onBooked: (id: string) => void }) {
+  const [date, setDate] = useState(target.date);
+  const [technician, setTechnician] = useState('');
+  const [hours, setHours] = useState<number | ''>('');
+  const [status, setStatus] = useState<ServiceStatus>('Bokad');
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    setSaving(true);
+    const { data, error } = await supabase.from('services').insert({
+      contract_id: target.contract_id,
+      customer: target.contract?.customer || target.facility,
+      facility_name: target.facility,
+      planned_date: date,
+      assigned_technician: technician || null,
+      planned_hours: hours === '' ? 0 : Number(hours),
+      status,
+      notes: notes || null,
+    }).select().single();
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Service bokad');
+    if (data) onBooked(data.id);
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4 text-primary" /> Boka service
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 pt-1">
+          <div>
+            <Label className="text-xs">Anläggning</Label>
+            <div className="text-sm font-semibold mt-1">{target.facility}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Planerat datum</Label>
+              <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="h-9 mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Status</Label>
+              <Select value={status} onValueChange={v => setStatus(v as ServiceStatus)}>
+                <SelectTrigger className="h-9 mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(['Planerad', 'Bokad', 'Utförd'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Tekniker</Label>
+              <Input value={technician} onChange={e => setTechnician(e.target.value)} className="h-9 mt-1" placeholder="Namn" />
+            </div>
+            <div>
+              <Label className="text-xs">Planerade timmar</Label>
+              <Input type="number" min={0} value={hours} onChange={e => setHours(e.target.value === '' ? '' : +e.target.value)} className="h-9 mt-1" />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Anteckning</Label>
+            <Textarea value={notes} onChange={e => setNotes(e.target.value)} className="mt-1 min-h-[80px]" placeholder="Förberedelser, kontaktperson…" />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose}>Avbryt</Button>
+          <Button onClick={submit} disabled={saving || !date}>Boka service</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -564,6 +619,8 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
 /* -------------------- Avtal -------------------- */
 
 function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceContract[]; onChange: () => void; services: Service[] }) {
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
   const addContract = async () => {
     const { error } = await supabase.from('service_contracts').insert({
       customer: 'Ny kund', facility_name: 'Ny anläggning', recurrence_months: 12, recurrence_month: 9,
@@ -571,11 +628,31 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
     if (error) toast.error(error.message); else { toast.success('Avtal skapat'); onChange(); }
   };
 
+  const visible = useMemo(() => {
+    const filtered = contracts.filter(c =>
+      activeFilter === 'all' ? true : activeFilter === 'active' ? c.active : !c.active
+    );
+    return [...filtered].sort((a, b) => (a.facility_name || '').localeCompare(b.facility_name || '', 'sv'));
+  }, [contracts, activeFilter]);
+
+  const activeCount = contracts.filter(c => c.active).length;
+  const inactiveCount = contracts.length - activeCount;
+
   return (
     <Card>
-      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0">
+      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0 gap-2 flex-wrap">
         <CardTitle className="text-sm font-semibold">Serviceavtal & anläggningar</CardTitle>
-        <Button onClick={addContract} size="sm"><Plus className="h-4 w-4 mr-1" /> Nytt avtal</Button>
+        <div className="flex items-center gap-2">
+          <Select value={activeFilter} onValueChange={(v) => setActiveFilter(v as any)}>
+            <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alla avtal ({contracts.length})</SelectItem>
+              <SelectItem value="active">Aktiva ({activeCount})</SelectItem>
+              <SelectItem value="inactive">Inaktiva ({inactiveCount})</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={addContract} size="sm"><Plus className="h-4 w-4 mr-1" /> Nytt avtal</Button>
+        </div>
       </CardHeader>
       <CardContent className="px-0 pb-0">
         <div className="px-4 pb-3 text-xs text-muted-foreground">
@@ -595,9 +672,12 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contracts.map(c => (
+              {visible.map(c => (
                 <ContractRow key={c.id} contract={c} onChange={onChange} />
               ))}
+              {visible.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">Inga avtal matchar filtret.</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
