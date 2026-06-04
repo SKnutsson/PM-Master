@@ -141,15 +141,28 @@ export function ServicesView() {
         <TabsContent value="overview" className="space-y-4 mt-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <KpiCard label="Kommande" value={upcoming.length} icon={<CalendarIcon className="h-4 w-4 text-status-not-started" />} />
-            <KpiCard label="Påminnelser ≤30 d" value={reminders.length} icon={<Bell className="h-4 w-4 text-status-in-progress" />} />
+            <KpiCard label="< 1 månad kvar" value={reminders.length} icon={<Bell className="h-4 w-4 text-status-in-progress" />} />
             <KpiCard label="Försenade" value={overdue.length} icon={<AlertTriangle className="h-4 w-4 text-status-delayed" />} />
             <KpiCard label="Utförda i år" value={completedThisYear} icon={<ListChecks className="h-4 w-4 text-status-completed" />} />
           </div>
 
+          <Card className="border-status-in-progress/40">
+            <CardHeader className="py-3 px-4 bg-status-in-progress/5">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Bell className="h-4 w-4 text-status-in-progress" /> Snart förfallna · mindre än 1 månad kvar
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 pt-3">
+              {reminders.length === 0
+                ? <p className="text-sm text-muted-foreground">Inga servicar inom 30 dagar.</p>
+                : <ServiceTable services={reminders} onOpen={setOpenServiceId} onChange={loadAll} />}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="py-3 px-4">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Bell className="h-4 w-4" /> Påminnelser & kommande
+                <CalendarIcon className="h-4 w-4" /> Alla kommande servicar
               </CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 pt-0">
@@ -157,6 +170,7 @@ export function ServicesView() {
             </CardContent>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="timeline" className="mt-4">
           <TimelineGantt contracts={contracts} services={services} onOpen={setOpenServiceId} />
