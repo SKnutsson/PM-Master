@@ -118,29 +118,6 @@ export function ServicesView() {
 
   const openService = services.find(s => s.id === openServiceId) || null;
 
-  // Auto-fill missing next planned services from active contracts
-  const ensureUpcomingForActive = async () => {
-    const today = todayISO();
-    const inserts: any[] = [];
-    for (const c of contracts.filter(x => x.active)) {
-      const future = services.find(s =>
-        s.contract_id === c.id && s.planned_date && s.planned_date >= today && effectiveStatus(s) !== 'Utförd'
-      );
-      if (future) continue;
-      const last = services.filter(s => s.contract_id === c.id).sort((a, b) => (b.planned_date || '').localeCompare(a.planned_date || ''))[0];
-      const baseYear = last?.planned_date ? new Date(last.planned_date).getFullYear() : new Date().getFullYear() - 1;
-      const stepY = Math.max(1, Math.round(c.recurrence_months / 12));
-      let nextYear = baseYear + stepY;
-      const nowY = new Date().getFullYear();
-      if (nextYear < nowY) nextYear = nowY;
-      const planned = `${nextYear}-${String(c.recurrence_month).padStart(2, '0')}-15`;
-      inserts.push({ contract_id: c.id, customer: c.customer, facility_name: c.facility_name, planned_date: planned, status: 'Planerad' });
-    }
-    if (!inserts.length) { toast.info('Alla aktiva avtal har redan en kommande service.'); return; }
-    const { error } = await supabase.from('services').insert(inserts);
-    if (error) toast.error(error.message); else { toast.success(`Skapade ${inserts.length} kommande servicar`); loadAll(); }
-  };
-
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="p-6 space-y-5">
       <div className="flex items-end justify-between gap-4 flex-wrap">
@@ -150,12 +127,8 @@ export function ServicesView() {
           </h1>
           <p className="text-sm text-muted-foreground">Planera, boka och följ upp service på teleskopläktare.</p>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={ensureUpcomingForActive}>
-            <Sparkles className="h-4 w-4 mr-1.5" /> Generera kommande från aktiva avtal
-          </Button>
-        </div>
       </div>
+
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="grid w-full max-w-2xl grid-cols-4">
