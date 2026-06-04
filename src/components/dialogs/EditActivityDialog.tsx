@@ -284,6 +284,60 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
               </div>
             </div>
 
+            {!isMilestone && (
+              <div className="grid gap-2 rounded-md border border-dashed border-border/60 p-3 bg-muted/20">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-1.5">
+                    <Split className="h-3.5 w-3.5" />
+                    Splitta aktivitet (pauser)
+                  </Label>
+                  <Button type="button" size="sm" variant="outline" className="h-7" onClick={addSegment}>
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    {segments.length === 0 ? 'Dela upp' : 'Lägg till del'}
+                  </Button>
+                </div>
+                {segments.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Aktiviteten visas som en sammanhängande stapel. Dela upp för att t.ex. pausa under semester och återuppta senare.
+                  </p>
+                ) : segments.length === 1 ? (
+                  <p className="text-xs text-status-delayed">
+                    Lägg till minst en del till för att aktivera splittning.
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {segments.length} delar – startdatum och slutdatum ovan synkas automatiskt till första/sista del.
+                  </p>
+                )}
+                {segments.length > 0 && (
+                  <div className="space-y-1.5">
+                    {segments.map((seg, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs">
+                        <span className="w-12 text-muted-foreground">Del {idx + 1}</span>
+                        <Input
+                          type="date"
+                          value={seg.start}
+                          onChange={(e) => updateSegment(idx, { start: e.target.value })}
+                          className="h-8 flex-1"
+                        />
+                        <span className="text-muted-foreground">→</span>
+                        <Input
+                          type="date"
+                          value={seg.end}
+                          onChange={(e) => updateSegment(idx, { end: e.target.value })}
+                          className="h-8 flex-1"
+                        />
+                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removeSegment(idx)}>
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+
             <div className="grid gap-2">
               <Label htmlFor="edit-notes">Kommentar</Label>
               <Textarea
