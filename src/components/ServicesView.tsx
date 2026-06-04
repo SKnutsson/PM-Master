@@ -264,131 +264,211 @@ function ServiceTable({ services, onOpen, onChange }: { services: Service[]; onO
 
 /* -------------------- Timeline (Gantt-liknande) -------------------- */
 
+interface Occurrence {
+  key: string;
+  facility: string;
+  contract_id: string | null;
+  contract?: ServiceContract;
+  date: string;
+  service: Service | null;
+  isExpected: boolean;
+}
+
 function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceContract[]; services: Service[]; onOpen: (id: string) => void }) {
-  const allYears = useMemo(() => {
-    const ys = new Set<number>();
-    services.forEach(s => {
-      const d = s.completed_date || s.planned_date;
-      if (d) ys.add(new Date(d).getFullYear());
-    });
-    const cur = new Date().getFullYear();
-    ys.add(cur); ys.add(cur + 1);
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(currentYear);
+
+  const yearOptions = useMemo(() => {
+    const ys = new Set<number>([currentYear - 1, currentYear, currentYear + 1, currentYear + 2]);
+    services.forEach(s => { const d = s.completed_date || s.planned_date; if (d) ys.add(new Date(d).getFullYear()); });
     return Array.from(ys).sort((a, b) => a - b);
-  }, [services]);
+  }, [services, currentYear]);
 
-  const [startYear, setStartYear] = useState(() => Math.max(allYears[0] || new Date().getFullYear(), new Date().getFullYear() - 2));
-  const visibleYears = [startYear, startYear + 1, startYear + 2];
-  const minY = allYears[0] ?? new Date().getFullYear();
-  const maxY = allYears[allYears.length - 1] ?? new Date().getFullYear();
-
-  // group services by facility
-  const byFacility = useMemo(() => {
-    const map = new Map<string, Service[]>();
-    services.forEach(s => {
-      const key = s.facility_name || s.customer || '—';
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(s);
-    });
-    return map;
-  }, [services]);
-
-  // facility list = union of contracts + services, ordered by contract list
   const facilities = useMemo(() => {
     const set = new Set<string>();
     contracts.forEach(c => set.add(c.facility_name));
-    Array.from(byFacility.keys()).forEach(f => set.add(f));
+    services.forEach(s => { const f = s.facility_name || s.customer || '—'; set.add(f); });
     return Array.from(set);
-  }, [contracts, byFacility]);
+  }, [contracts, services]);
+
+  const occurrencesByFacility = useMemo(() => {
+    const map = new Map<string, Occurrence[]>();
+    facilities.forEach(f => map.set(f, []));
+
+    // Real services for visible year
+    services.forEach(s => {
+      const d = s.completed_date || s.planned_date;
+      if (!d) return;
+      const dt = new Date(d);
+      if (dt.getFullYear() !== year) return;
+      const facility = s.facility_name || s.customer || '—';
+      const arr = map.get(facility) || [];
+      arr.push({
+        key: s.id,
+        facility,
+        contract_id: s.contract_id,
+        contract: contracts.find(c => c.id === s.contract_id),
+        date: d,
+        service: s,
+        isExpected: false,
+      });
+      map.set(facility, arr);
+    });
+
+    // Expected occurrences from active contracts
+    contracts.filter(c => c.active).forEach(c => {
+      const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
+      if ((year - currentYear) % stepY !== 0 && stepY > 1) return;
+      const month0 = (c.recurrence_month || 1) - 1;
+      const date = `${year}-${String(month0 + 1).padStart(2, '0')}-15`;
+      const arr = map.get(c.facility_name) || [];
+      const alreadyReal = arr.some(o => o.contract_id === c.id && new Date(o.date).getMonth() === month0);
+      if (alreadyReal) return;
+      arr.push({
+        key: `expected-${c.id}-${year}`,
+        facility: c.facility_name,
+        contract_id: c.id,
+        contract: c,
+        date,
+        service: null,
+        isExpected: true,
+      });
+      map.set(c.facility_name, arr);
+    });
+
+    return map;
+  }, [services, contracts, facilities, year, currentYear]);
 
   const today = new Date();
-  const todayCol = today.getFullYear() * 12 + today.getMonth();
-  const startCol = startYear * 12;
+  const isCurrentYear = today.getFullYear() === year;
+  const todayMonth = today.getMonth();
+
+  const sortedFacilities = useMemo(() => {
+    const list = facilities.filter(f => (occurrencesByFacility.get(f) || []).length > 0);
+    list.sort((a, b) => {
+      const oa = occurrencesByFacility.get(a)!;
+      const ob = occurrencesByFacility.get(b)!;
+      return new Date(oa[0].date).getTime() - new Date(ob[0].date).getTime() || a.localeCompare(b);
+    });
+    // append facilities with no occurrences (inactive contracts)
+    const empty = facilities.filter(f => (occurrencesByFacility.get(f) || []).length === 0).sort((a, b) => a.localeCompare(b));
+    return [...list, ...empty];
+  }, [facilities, occurrencesByFacility]);
+
+  const COL_W = 64;
+  const LABEL_W = 240;
+  const totalGridW = LABEL_W + COL_W * 12;
+
+  const bookExpected = async (o: Occurrence) => {
+    const { data, error } = await supabase.from('services').insert({
+      contract_id: o.contract_id,
+      customer: o.contract?.customer || o.facility,
+      facility_name: o.facility,
+      planned_date: o.date,
+      status: 'Planerad',
+    }).select().single();
+    if (error) { toast.error(error.message); return; }
+    toast.success('Service bokad');
+    if (data) onOpen(data.id);
+  };
 
   return (
     <Card>
-      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0">
+      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0 gap-3 flex-wrap">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <CalendarIcon className="h-4 w-4" /> Tidslinje · {visibleYears[0]}–{visibleYears[2]}
+          <CalendarIcon className="h-4 w-4" /> Tidslinje · {year}
         </CardTitle>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground mr-3">
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-status-completed" /> Utförd</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-status-not-started" /> Planerad</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-status-in-progress" /> Bokad</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-status-delayed" /> Försenad</span>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-status-completed" /> Utförd</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-status-not-started" /> Planerad</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-status-in-progress" /> Bokad</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-status-delayed" /> Försenad</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 border border-dashed border-muted-foreground/70 bg-transparent" /> Förväntad</span>
           </div>
-          <Button size="sm" variant="outline" className="h-7 px-2" disabled={startYear <= minY} onClick={() => setStartYear(y => y - 1)}><ChevronLeft className="h-4 w-4" /></Button>
-          <Button size="sm" variant="outline" className="h-7 px-2" disabled={startYear + 2 >= maxY + 1} onClick={() => setStartYear(y => y + 1)}><ChevronRight className="h-4 w-4" /></Button>
+          <div className="flex items-center gap-0.5 rounded-md border bg-muted/30 p-0.5">
+            <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => setYear(y => y - 1)}><ChevronLeft className="h-4 w-4" /></Button>
+            {yearOptions.map(y => (
+              <Button key={y} size="sm" variant={y === year ? 'default' : 'ghost'} className="h-7 px-2.5 text-xs tabular-nums" onClick={() => setYear(y)}>{y}</Button>
+            ))}
+            <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => setYear(y => y + 1)}><ChevronRight className="h-4 w-4" /></Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-0 pb-0">
         <div className="overflow-x-auto">
           <TooltipProvider delayDuration={100}>
-            <div className="min-w-[900px]">
-              {/* Header */}
-              <div className="grid sticky top-0 z-10 bg-card border-y" style={{ gridTemplateColumns: `220px repeat(36, minmax(28px,1fr))` }}>
-                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground border-r">Anläggning</div>
-                {visibleYears.map(y => (
-                  <div key={y} className="col-span-12 grid grid-cols-12 border-r last:border-r-0" style={{ gridColumn: 'span 12 / span 12' }}>
-                    <div className="col-span-12 text-center text-xs font-semibold py-1 bg-muted/40 border-b">{y}</div>
-                    {MONTHS.map((m, i) => (
-                      <div key={i} className="text-[10px] text-center text-muted-foreground py-1 border-r last:border-r-0">{m[0]}</div>
-                    ))}
-                  </div>
+            <div style={{ minWidth: totalGridW }}>
+              {/* Year header row */}
+              <div className="flex border-y bg-muted/40 sticky top-0 z-20">
+                <div style={{ width: LABEL_W }} className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-r bg-card">Anläggning</div>
+                <div className="flex-1 text-center text-xs font-bold py-1.5 tabular-nums">{year}</div>
+              </div>
+              {/* Month header row */}
+              <div className="flex border-b sticky top-[33px] z-10 bg-card">
+                <div style={{ width: LABEL_W }} className="border-r" />
+                {MONTHS.map((m, i) => (
+                  <div key={i} style={{ width: COL_W }} className={cn(
+                    'text-[11px] text-center text-muted-foreground py-1 border-r last:border-r-0',
+                    isCurrentYear && i === todayMonth && 'bg-primary/10 text-primary font-semibold',
+                  )}>{m}</div>
                 ))}
               </div>
 
-              {/* Rows */}
-              {facilities.map(facility => {
-                const items = (byFacility.get(facility) || []).filter(s => {
-                  const d = s.completed_date || s.planned_date;
-                  if (!d) return false;
-                  const y = new Date(d).getFullYear();
-                  return y >= visibleYears[0] && y <= visibleYears[2];
-                });
-                // bucket by column index (year*12 + month relative to visible start)
-                const byCol = new Map<number, Service[]>();
-                items.forEach(s => {
-                  const d = s.completed_date || s.planned_date!;
-                  const dt = new Date(d);
-                  const colIdx = (dt.getFullYear() - visibleYears[0]) * 12 + dt.getMonth();
-                  if (colIdx < 0 || colIdx > 35) return;
-                  if (!byCol.has(colIdx)) byCol.set(colIdx, []);
-                  byCol.get(colIdx)!.push(s);
-                });
+              {/* Body rows */}
+              {sortedFacilities.length === 0 && (
+                <div className="px-4 py-6 text-sm text-muted-foreground">Inga servicar för {year}.</div>
+              )}
+              {sortedFacilities.map(facility => {
+                const occs = occurrencesByFacility.get(facility) || [];
                 const contract = contracts.find(c => c.facility_name === facility);
                 return (
-                  <div key={facility} className="grid border-b hover:bg-muted/30 transition-colors" style={{ gridTemplateColumns: `220px repeat(36, minmax(28px,1fr))` }}>
-                    <div className="px-3 py-2 border-r flex items-center gap-2 min-w-0">
+                  <div key={facility} className="flex border-b hover:bg-muted/30 transition-colors">
+                    <div style={{ width: LABEL_W }} className="px-3 py-2 border-r flex items-center gap-2 min-w-0">
                       <span className={cn('text-sm truncate', contract?.active && 'font-semibold text-primary')}>{facility}</span>
-                      {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-4 border-primary/40 text-primary">Avtal</Badge>}
+                      {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-4 border-primary/40 text-primary shrink-0">Avtal</Badge>}
                     </div>
-                    {Array.from({ length: 36 }).map((_, i) => {
-                      const colY = visibleYears[Math.floor(i / 12)];
-                      const colM = i % 12;
-                      const colKey = colY * 12 + colM;
-                      const isToday = colKey === todayCol;
-                      const isYearBoundary = colM === 0 && i !== 0;
-                      const cellItems = byCol.get(i) || [];
+                    {Array.from({ length: 12 }).map((_, m) => {
+                      const cellOccs = occs.filter(o => new Date(o.date).getMonth() === m);
+                      const isToday = isCurrentYear && m === todayMonth;
                       return (
-                        <div key={i} className={cn(
+                        <div key={m} style={{ width: COL_W }} className={cn(
                           'h-10 border-r last:border-r-0 relative flex items-center justify-center',
-                          isToday && 'bg-primary/5',
-                          isYearBoundary && 'border-l-2 border-l-border',
+                          isToday && 'bg-primary/[0.04]',
                         )}>
                           {isToday && <div className="absolute inset-y-0 left-1/2 w-px bg-primary/60 z-0" />}
-                          {cellItems.length > 0 && (
-                            <div className="flex gap-0.5 items-center justify-center z-10">
-                              {cellItems.map(s => {
-                                const st = effectiveStatus(s);
+                          {cellOccs.length > 0 && (
+                            <div className="flex gap-1 items-center z-10">
+                              {cellOccs.map(o => {
+                                if (o.isExpected) {
+                                  return (
+                                    <Tooltip key={o.key}>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() => bookExpected(o)}
+                                          aria-label={`Boka in service ${facility} ${o.date}`}
+                                          className="h-3.5 w-3.5 rotate-45 border border-dashed border-muted-foreground/70 bg-background hover:bg-primary/15 hover:border-primary hover:scale-150 transition-all cursor-pointer"
+                                        />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <div className="text-xs">
+                                          <div className="font-semibold">{facility}</div>
+                                          <div>{o.date}</div>
+                                          <div className="text-muted-foreground">Förväntad – klicka för att boka in</div>
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  );
+                                }
+                                const st = effectiveStatus(o.service!);
                                 return (
-                                  <Tooltip key={s.id}>
+                                  <Tooltip key={o.key}>
                                     <TooltipTrigger asChild>
                                       <button
-                                        onClick={() => onOpen(s.id)}
-                                        aria-label={`${facility} ${s.planned_date || s.completed_date}`}
+                                        onClick={() => onOpen(o.service!.id)}
+                                        aria-label={`${facility} ${o.date}`}
                                         className={cn(
-                                          'h-3 w-3 rotate-45 ring-2 ring-background hover:scale-150 transition-transform cursor-pointer',
+                                          'h-3.5 w-3.5 rotate-45 ring-2 ring-background hover:scale-150 transition-transform cursor-pointer',
                                           STATUS_DOT[st]
                                         )}
                                       />
@@ -396,8 +476,8 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                                     <TooltipContent>
                                       <div className="text-xs">
                                         <div className="font-semibold">{facility}</div>
-                                        <div>{s.completed_date || s.planned_date} · {st}</div>
-                                        {s.assigned_technician && <div className="text-muted-foreground">{s.assigned_technician}</div>}
+                                        <div>{o.service!.completed_date || o.service!.planned_date} · {st}</div>
+                                        {o.service!.assigned_technician && <div className="text-muted-foreground">{o.service!.assigned_technician}</div>}
                                       </div>
                                     </TooltipContent>
                                   </Tooltip>
@@ -418,6 +498,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
     </Card>
   );
 }
+
 
 /* -------------------- Avtal -------------------- */
 
