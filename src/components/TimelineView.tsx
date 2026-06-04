@@ -494,6 +494,24 @@ export function TimelineView() {
     });
   }, [updateActivity]);
 
+  const handleSegmentDatesChange = useCallback(async (
+    projectId: string,
+    activityId: string,
+    segmentIndex: number,
+    segments: { start: string; end: string }[],
+    newStart: string,
+    newEnd: string,
+  ) => {
+    const next = segments.map((s, i) => i === segmentIndex ? { start: newStart, end: newEnd } : s);
+    const allStarts = next.map(s => s.start).sort();
+    const allEnds = next.map(s => s.end).sort();
+    await updateActivity(projectId, activityId, {
+      segments: next,
+      startDate: allStarts[0],
+      endDate: allEnds[allEnds.length - 1],
+    });
+  }, [updateActivity]);
+
   const renderTodayMarker = () => {
     if (todayColIndex < 0 || todayColIndex >= columnCount) return null;
     const leftPx = todayColIndex * colWidth + colWidth / 2;
