@@ -338,6 +338,7 @@ interface Occurrence {
 function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceContract[]; services: Service[]; onOpen: (id: string) => void }) {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
+  const [bookTarget, setBookTarget] = useState<Occurrence | null>(null);
 
   const yearOptions = useMemo(() => {
     const ys = new Set<number>([currentYear - 1, currentYear, currentYear + 1, currentYear + 2]);
@@ -356,7 +357,6 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
     const map = new Map<string, Occurrence[]>();
     facilities.forEach(f => map.set(f, []));
 
-    // Real services for visible year
     services.forEach(s => {
       const d = s.completed_date || s.planned_date;
       if (!d) return;
@@ -365,18 +365,13 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
       const facility = s.facility_name || s.customer || '—';
       const arr = map.get(facility) || [];
       arr.push({
-        key: s.id,
-        facility,
-        contract_id: s.contract_id,
+        key: s.id, facility, contract_id: s.contract_id,
         contract: contracts.find(c => c.id === s.contract_id),
-        date: d,
-        service: s,
-        isExpected: false,
+        date: d, service: s, isExpected: false,
       });
       map.set(facility, arr);
     });
 
-    // Expected occurrences from active contracts
     contracts.filter(c => c.active).forEach(c => {
       const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
       if ((year - currentYear) % stepY !== 0 && stepY > 1) return;
@@ -386,13 +381,8 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
       const alreadyReal = arr.some(o => o.contract_id === c.id && new Date(o.date).getMonth() === month0);
       if (alreadyReal) return;
       arr.push({
-        key: `expected-${c.id}-${year}`,
-        facility: c.facility_name,
-        contract_id: c.id,
-        contract: c,
-        date,
-        service: null,
-        isExpected: true,
+        key: `expected-${c.id}-${year}`, facility: c.facility_name,
+        contract_id: c.id, contract: c, date, service: null, isExpected: true,
       });
       map.set(c.facility_name, arr);
     });
@@ -404,34 +394,14 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
   const isCurrentYear = today.getFullYear() === year;
   const todayMonth = today.getMonth();
 
-  const sortedFacilities = useMemo(() => {
-    const list = facilities.filter(f => (occurrencesByFacility.get(f) || []).length > 0);
-    list.sort((a, b) => {
-      const oa = occurrencesByFacility.get(a)!;
-      const ob = occurrencesByFacility.get(b)!;
-      return new Date(oa[0].date).getTime() - new Date(ob[0].date).getTime() || a.localeCompare(b);
-    });
-    // append facilities with no occurrences (inactive contracts)
-    const empty = facilities.filter(f => (occurrencesByFacility.get(f) || []).length === 0).sort((a, b) => a.localeCompare(b));
-    return [...list, ...empty];
-  }, [facilities, occurrencesByFacility]);
+  const sortedFacilities = useMemo(
+    () => [...facilities].sort((a, b) => a.localeCompare(b, 'sv')),
+    [facilities]
+  );
 
   const COL_W = 64;
   const LABEL_W = 240;
   const totalGridW = LABEL_W + COL_W * 12;
-
-  const bookExpected = async (o: Occurrence) => {
-    const { data, error } = await supabase.from('services').insert({
-      contract_id: o.contract_id,
-      customer: o.contract?.customer || o.facility,
-      facility_name: o.facility,
-      planned_date: o.date,
-      status: 'Planerad',
-    }).select().single();
-    if (error) { toast.error(error.message); return; }
-    toast.success('Service bokad');
-    if (data) onOpen(data.id);
-  };
 
   return (
     <Card>
