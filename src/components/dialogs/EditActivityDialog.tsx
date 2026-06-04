@@ -26,7 +26,7 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
-import { Activity, Status, Department, departments, statuses, Phase, phases } from '@/data/projectData';
+import { Activity, ActivitySegment, Status, Department, departments, statuses, Phase, phases } from '@/data/projectData';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 
