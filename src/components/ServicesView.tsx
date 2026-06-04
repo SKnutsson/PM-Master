@@ -71,6 +71,9 @@ function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+function toISODate(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 function effectiveStatus(s: Service): ServiceStatus {
   if (s.status === 'Utförd' || s.completed_date) return 'Utförd';
   if (s.planned_date && s.planned_date < todayISO()) return 'Försenad';
