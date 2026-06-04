@@ -25,6 +25,7 @@ export type Database = {
           phase: string | null
           project_id: string
           responsible: string
+          segments: Json | null
           sort_order: number | null
           start_date: string | null
           status: string
@@ -40,6 +41,7 @@ export type Database = {
           phase?: string | null
           project_id: string
           responsible: string
+          segments?: Json | null
           sort_order?: number | null
           start_date?: string | null
           status?: string
@@ -55,6 +57,7 @@ export type Database = {
           phase?: string | null
           project_id?: string
           responsible?: string
+          segments?: Json | null
           sort_order?: number | null
           start_date?: string | null
           status?: string
