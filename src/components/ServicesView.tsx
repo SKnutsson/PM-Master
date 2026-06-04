@@ -526,7 +526,92 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
           </TooltipProvider>
         </div>
       </CardContent>
+      {bookTarget && (
+        <BookServiceDialog
+          target={bookTarget}
+          onClose={() => setBookTarget(null)}
+          onBooked={(id) => { setBookTarget(null); onOpen(id); }}
+        />
+      )}
     </Card>
+  );
+}
+
+function BookServiceDialog({ target, onClose, onBooked }: { target: Occurrence; onClose: () => void; onBooked: (id: string) => void }) {
+  const [date, setDate] = useState(target.date);
+  const [technician, setTechnician] = useState('');
+  const [hours, setHours] = useState<number | ''>('');
+  const [status, setStatus] = useState<ServiceStatus>('Bokad');
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    setSaving(true);
+    const { data, error } = await supabase.from('services').insert({
+      contract_id: target.contract_id,
+      customer: target.contract?.customer || target.facility,
+      facility_name: target.facility,
+      planned_date: date,
+      assigned_technician: technician || null,
+      planned_hours: hours === '' ? 0 : Number(hours),
+      status,
+      notes: notes || null,
+    }).select().single();
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success('Service bokad');
+    if (data) onBooked(data.id);
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4 text-primary" /> Boka service
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 pt-1">
+          <div>
+            <Label className="text-xs">Anläggning</Label>
+            <div className="text-sm font-semibold mt-1">{target.facility}</div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Planerat datum</Label>
+              <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="h-9 mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Status</Label>
+              <Select value={status} onValueChange={v => setStatus(v as ServiceStatus)}>
+                <SelectTrigger className="h-9 mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(['Planerad', 'Bokad', 'Utförd'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Tekniker</Label>
+              <Input value={technician} onChange={e => setTechnician(e.target.value)} className="h-9 mt-1" placeholder="Namn" />
+            </div>
+            <div>
+              <Label className="text-xs">Planerade timmar</Label>
+              <Input type="number" min={0} value={hours} onChange={e => setHours(e.target.value === '' ? '' : +e.target.value)} className="h-9 mt-1" />
+            </div>
+          </div>
+          <div>
+            <Label className="text-xs">Anteckning</Label>
+            <Textarea value={notes} onChange={e => setNotes(e.target.value)} className="mt-1 min-h-[80px]" placeholder="Förberedelser, kontaktperson…" />
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose}>Avbryt</Button>
+          <Button onClick={submit} disabled={saving || !date}>Boka service</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
