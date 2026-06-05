@@ -659,26 +659,24 @@ export function ResourcePlanningView() {
                                <span className="font-semibold text-xs truncate">{project.code} - {project.name}</span>
                                {!isExpanded && <span className="text-[10px] text-muted-foreground shrink-0">({pInstallers.length})</span>}
                              </div>
-                             {!isArchived &&
-                            <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                                 <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
-                                setEstDialogProjectId(project.id);
-                                setEstDialogProjectName(`${project.code} - ${project.name}`);
-                                setEstDialogOpen(true);
-                              }}>
-                                   <Calculator className="h-3 w-3" />
-                                 </Button>
-                                 <AssignInstallerDialog
-                                projectName={project.name}
-                                installers={installers}
-                                projectInstallers={allPInstallers}
-                                onAssign={(installerId) => assignInstaller(project.id, installerId)}
-                                onAssignVacant={() => assignVacant(project.id)}
-                                onUnassign={unassignInstaller}
-                                trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>} />
+                             <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+                                  <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
+                                 setEstDialogProjectId(project.id);
+                                 setEstDialogProjectName(`${project.code} - ${project.name}`);
+                                 setEstDialogOpen(true);
+                               }}>
+                                    <Calculator className="h-3 w-3" />
+                                  </Button>
+                                  <AssignInstallerDialog
+                                 projectName={project.name}
+                                 installers={installers}
+                                 projectInstallers={allPInstallers}
+                                 onAssign={(installerId) => assignInstaller(project.id, installerId)}
+                                 onAssignVacant={() => assignVacant(project.id)}
+                                 onUnassign={unassignInstaller}
+                                 trigger={<Button size="icon" variant="ghost" className="h-5 w-5"><UserPlus className="h-3 w-3" /></Button>} />
 
-                               </div>
-                             }
+                                </div>
                            </div>
                             {/* Kalkyl column */}
                             <div className="border-l border-border/50 flex items-center justify-center relative" style={{ width: KALKYL_COL_WIDTH }}>
