@@ -18,13 +18,8 @@ export function ReassignInstallerDialog({ open, onOpenChange, projectInstaller, 
 
   if (!projectInstaller) return null;
 
-  // Filter out installers already assigned to this project (except current one)
-  const assignedIds = new Set(
-    projectInstallers
-      .filter(pi => pi.id !== projectInstaller.id)
-      .map(pi => pi.installerId)
-  );
-  const available = installers.filter(i => !assignedIds.has(i.id));
+  // Allow assigning the same installer multiple times to the same project
+  const available = installers;
 
   const handleSave = async () => {
     if (selectedInstallerId === 'vakant') {
