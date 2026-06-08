@@ -105,7 +105,7 @@ export function ResourcePlanningView() {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation, assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry
+    upsertDailyEntry, updateHotel
   } = useResourceData();
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
