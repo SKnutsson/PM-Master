@@ -215,6 +215,7 @@ export function useResourceData() {
     const pi: ProjectInstaller = {
       id: data.id, projectId: data.project_id, installerId: data.installer_id,
       installerName: undefined, installerCompany: undefined, isVacant: true,
+      hotelStatus: 'ej_relevant', hotelName: null, hotelNotering: null,
     };
     setProjectInstallers(prev => [...prev, pi]);
     return pi;
