@@ -178,7 +178,7 @@ export function ServicesView() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="overview">Översikt</TabsTrigger>
-          <TabsTrigger value="timeline">Tidslinje</TabsTrigger>
+          <TabsTrigger value="timeline">Schema</TabsTrigger>
           <TabsTrigger value="contracts">Avtal ({contracts.length})</TabsTrigger>
           <TabsTrigger value="services">Servicar ({services.length})</TabsTrigger>
         </TabsList>
@@ -346,7 +346,7 @@ const STATUS_CELL: Record<string, string> = {
 };
 
 function shortDate(iso: string) {
-  return iso.slice(5);
+  return iso.slice(0, 10);
 }
 
 function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceContract[]; services: Service[]; onOpen: (id: string) => void }) {
@@ -418,15 +418,15 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
     [facilities]
   );
 
-  const COL_W = 110;
-  const LABEL_W = 240;
+  const COL_W = 130;
+  const LABEL_W = 220;
   const totalGridW = LABEL_W + COL_W * years.length;
 
   return (
     <Card>
       <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0 gap-3 flex-wrap">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <CalendarIcon className="h-4 w-4" /> Tidslinje · översikt per år
+          <CalendarIcon className="h-4 w-4" /> Schema · översikt per år
         </CardTitle>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
           <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-completed/30 border border-status-completed/50" /> Utförd</span>
@@ -458,9 +458,9 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                 const contract = contracts.find(c => c.facility_name === facility);
                 return (
                   <div key={facility} className="flex border-b hover:bg-muted/20 transition-colors">
-                    <div style={{ width: LABEL_W }} className="px-3 py-2 border-r flex items-center gap-2 min-w-0">
-                      <span className={cn('text-sm truncate', contract?.active && 'font-semibold text-primary')}>{facility}</span>
-                      {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-4 border-primary/40 text-primary shrink-0">Avtal</Badge>}
+                    <div style={{ width: LABEL_W }} className="px-2.5 py-1 border-r flex items-center gap-1.5 min-w-0">
+                      <span className={cn('text-xs truncate', contract?.active && 'font-semibold text-primary')}>{facility}</span>
+                      {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-3.5 border-primary/40 text-primary shrink-0">Avtal</Badge>}
                     </div>
                     {years.map(y => {
                       const cellOccs = occs
@@ -469,7 +469,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                       const isCurrent = y === currentYear;
                       return (
                         <div key={y} style={{ width: COL_W }} className={cn(
-                          'min-h-[44px] border-r last:border-r-0 p-1 flex flex-wrap items-center justify-center gap-1 content-center',
+                          'min-h-[28px] border-r last:border-r-0 px-1 py-0.5 flex flex-wrap items-center justify-center gap-0.5 content-center',
                           isCurrent && 'bg-primary/[0.03]',
                         )}>
                           {cellOccs.map(o => {
@@ -480,7 +480,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                                   <button
                                     onClick={() => o.isExpected ? setBookTarget(o) : onOpen(o.service!.id)}
                                     className={cn(
-                                      'px-1.5 py-0.5 rounded text-[10px] font-medium tabular-nums leading-tight transition-all hover:scale-105 cursor-pointer',
+                                      'px-1 py-0 rounded text-[10px] font-medium tabular-nums leading-tight transition-all hover:scale-105 cursor-pointer whitespace-nowrap',
                                       STATUS_CELL[st],
                                     )}
                                   >
