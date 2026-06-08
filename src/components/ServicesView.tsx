@@ -325,7 +325,7 @@ function ServiceTable({ services, onOpen, onChange }: { services: Service[]; onO
   );
 }
 
-/* -------------------- Timeline (Gantt-liknande) -------------------- */
+/* -------------------- Timeline (År-översikt) -------------------- */
 
 interface Occurrence {
   key: string;
@@ -337,16 +337,34 @@ interface Occurrence {
   isExpected: boolean;
 }
 
+const STATUS_CELL: Record<string, string> = {
+  'Utförd': 'bg-status-completed/20 text-status-completed border border-status-completed/40 hover:bg-status-completed/30',
+  'Planerad': 'bg-status-not-started/20 text-status-not-started border border-status-not-started/40 hover:bg-status-not-started/30',
+  'Bokad': 'bg-status-in-progress/20 text-status-in-progress border border-status-in-progress/40 hover:bg-status-in-progress/30',
+  'Försenad': 'bg-status-delayed/20 text-status-delayed border border-status-delayed/40 hover:bg-status-delayed/30',
+  'Förväntad': 'bg-background text-muted-foreground border border-dashed border-muted-foreground/60 hover:bg-muted/60',
+};
+
+function shortDate(iso: string) {
+  return iso.slice(5);
+}
+
 function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceContract[]; services: Service[]; onOpen: (id: string) => void }) {
   const currentYear = new Date().getFullYear();
-  const [year, setYear] = useState(currentYear);
   const [bookTarget, setBookTarget] = useState<Occurrence | null>(null);
 
-  const yearOptions = useMemo(() => {
-    const ys = new Set<number>([currentYear - 1, currentYear, currentYear + 1, currentYear + 2]);
-    services.forEach(s => { const d = s.completed_date || s.planned_date; if (d) ys.add(new Date(d).getFullYear()); });
-    return Array.from(ys).sort((a, b) => a - b);
-  }, [services, currentYear]);
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    services.forEach(s => { const d = s.completed_date || s.planned_date; if (d) set.add(new Date(d).getFullYear()); });
+    contracts.filter(c => c.active && c.contract_start).forEach(c => {
+      const sy = new Date(c.contract_start!).getFullYear();
+      const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
+      for (let y = Math.max(sy, currentYear); y <= currentYear + 2; y += stepY) set.add(y);
+    });
+    set.add(currentYear);
+    set.add(currentYear + 1);
+    return Array.from(set).sort((a, b) => a - b);
+  }, [services, contracts, currentYear]);
 
   const facilities = useMemo(() => {
     const set = new Set<string>();
@@ -362,8 +380,6 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
     services.forEach(s => {
       const d = s.completed_date || s.planned_date;
       if (!d) return;
-      const dt = new Date(d);
-      if (dt.getFullYear() !== year) return;
       const facility = s.facility_name || s.customer || '—';
       const arr = map.get(facility) || [];
       arr.push({
@@ -376,151 +392,112 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
 
     contracts.filter(c => c.active && c.contract_start).forEach(c => {
       const startYear = new Date(c.contract_start!).getFullYear();
-      if (year < startYear) return;
       const stepY = Math.max(1, Math.round((c.recurrence_months || 12) / 12));
-      if ((year - startYear) % stepY !== 0 && stepY > 1) return;
       const month0 = (c.recurrence_month || 1) - 1;
-      const date = `${year}-${String(month0 + 1).padStart(2, '0')}-15`;
-      if (date < c.contract_start!) return;
-      const arr = map.get(c.facility_name) || [];
-      const alreadyReal = arr.some(o => o.contract_id === c.id && new Date(o.date).getMonth() === month0);
-      if (alreadyReal) return;
-      arr.push({
-        key: `expected-${c.id}-${year}`, facility: c.facility_name,
-        contract_id: c.id, contract: c, date, service: null, isExpected: true,
+      years.forEach(year => {
+        if (year < Math.max(startYear, currentYear)) return;
+        if ((year - startYear) % stepY !== 0) return;
+        const date = `${year}-${String(month0 + 1).padStart(2, '0')}-15`;
+        if (date < c.contract_start!) return;
+        const arr = map.get(c.facility_name) || [];
+        const alreadyReal = arr.some(o => o.contract_id === c.id && new Date(o.date).getFullYear() === year);
+        if (alreadyReal) return;
+        arr.push({
+          key: `expected-${c.id}-${year}`, facility: c.facility_name,
+          contract_id: c.id, contract: c, date, service: null, isExpected: true,
+        });
+        map.set(c.facility_name, arr);
       });
-      map.set(c.facility_name, arr);
     });
 
     return map;
-  }, [services, contracts, facilities, year, currentYear]);
-
-  const today = new Date();
-  const isCurrentYear = today.getFullYear() === year;
-  const todayMonth = today.getMonth();
+  }, [services, contracts, facilities, years, currentYear]);
 
   const sortedFacilities = useMemo(
     () => [...facilities].sort((a, b) => a.localeCompare(b, 'sv')),
     [facilities]
   );
 
-  const COL_W = 64;
+  const COL_W = 110;
   const LABEL_W = 240;
-  const totalGridW = LABEL_W + COL_W * 12;
+  const totalGridW = LABEL_W + COL_W * years.length;
 
   return (
     <Card>
       <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0 gap-3 flex-wrap">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <CalendarIcon className="h-4 w-4" /> Tidslinje · {year}
+          <CalendarIcon className="h-4 w-4" /> Tidslinje · översikt per år
         </CardTitle>
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-status-completed" /> Utförd</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-status-not-started" /> Planerad</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-status-in-progress" /> Bokad</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 bg-status-delayed" /> Försenad</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rotate-45 border border-dashed border-muted-foreground/70 bg-transparent" /> Förväntad</span>
-          </div>
-          <div className="flex items-center gap-0.5 rounded-md border bg-muted/30 p-0.5">
-            <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => setYear(y => y - 1)}><ChevronLeft className="h-4 w-4" /></Button>
-            {yearOptions.map(y => (
-              <Button key={y} size="sm" variant={y === year ? 'default' : 'ghost'} className="h-7 px-2.5 text-xs tabular-nums" onClick={() => setYear(y)}>{y}</Button>
-            ))}
-            <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => setYear(y => y + 1)}><ChevronRight className="h-4 w-4" /></Button>
-          </div>
+        <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-completed/30 border border-status-completed/50" /> Utförd</span>
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-not-started/30 border border-status-not-started/50" /> Planerad</span>
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-in-progress/30 border border-status-in-progress/50" /> Bokad</span>
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-delayed/30 border border-status-delayed/50" /> Försenad</span>
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded border border-dashed border-muted-foreground/60" /> Förväntad</span>
         </div>
       </CardHeader>
       <CardContent className="px-0 pb-0">
         <div className="overflow-x-auto">
           <TooltipProvider delayDuration={100}>
             <div style={{ minWidth: totalGridW }}>
-              {/* Year header row */}
-              <div className="flex border-y bg-muted/40 sticky top-0 z-20">
-                <div style={{ width: LABEL_W }} className="px-3 py-1.5 text-xs font-semibold text-muted-foreground border-r bg-card">Anläggning</div>
-                <div className="flex-1 text-center text-xs font-bold py-1.5 tabular-nums">{year}</div>
-              </div>
-              {/* Month header row */}
-              <div className="flex border-b sticky top-[33px] z-10 bg-card">
-                <div style={{ width: LABEL_W }} className="border-r" />
-                {MONTHS.map((m, i) => (
-                  <div key={i} style={{ width: COL_W }} className={cn(
-                    'text-[11px] text-center text-muted-foreground py-1 border-r last:border-r-0',
-                    isCurrentYear && i === todayMonth && 'bg-primary/10 text-primary font-semibold',
-                  )}>{m}</div>
+              <div className="flex border-y bg-muted/40 sticky top-0 z-10">
+                <div style={{ width: LABEL_W }} className="px-3 py-2 text-xs font-semibold text-muted-foreground border-r bg-card">Anläggning</div>
+                {years.map(y => (
+                  <div key={y} style={{ width: COL_W }} className={cn(
+                    'text-center text-xs font-bold py-2 border-r last:border-r-0 tabular-nums',
+                    y === currentYear && 'bg-primary/10 text-primary',
+                  )}>{y}</div>
                 ))}
               </div>
 
-              {/* Body rows */}
               {sortedFacilities.length === 0 && (
-                <div className="px-4 py-6 text-sm text-muted-foreground">Inga servicar för {year}.</div>
+                <div className="px-4 py-6 text-sm text-muted-foreground">Inga servicar.</div>
               )}
               {sortedFacilities.map(facility => {
                 const occs = occurrencesByFacility.get(facility) || [];
                 const contract = contracts.find(c => c.facility_name === facility);
                 return (
-                  <div key={facility} className="flex border-b hover:bg-muted/30 transition-colors">
+                  <div key={facility} className="flex border-b hover:bg-muted/20 transition-colors">
                     <div style={{ width: LABEL_W }} className="px-3 py-2 border-r flex items-center gap-2 min-w-0">
                       <span className={cn('text-sm truncate', contract?.active && 'font-semibold text-primary')}>{facility}</span>
                       {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-4 border-primary/40 text-primary shrink-0">Avtal</Badge>}
                     </div>
-                    {Array.from({ length: 12 }).map((_, m) => {
-                      const cellOccs = occs.filter(o => new Date(o.date).getMonth() === m);
-                      const isToday = isCurrentYear && m === todayMonth;
+                    {years.map(y => {
+                      const cellOccs = occs
+                        .filter(o => new Date(o.date).getFullYear() === y)
+                        .sort((a, b) => a.date.localeCompare(b.date));
+                      const isCurrent = y === currentYear;
                       return (
-                        <div key={m} style={{ width: COL_W }} className={cn(
-                          'h-10 border-r last:border-r-0 relative flex items-center justify-center',
-                          isToday && 'bg-primary/[0.04]',
+                        <div key={y} style={{ width: COL_W }} className={cn(
+                          'min-h-[44px] border-r last:border-r-0 p-1 flex flex-wrap items-center justify-center gap-1 content-center',
+                          isCurrent && 'bg-primary/[0.03]',
                         )}>
-                          {isToday && <div className="absolute inset-y-0 left-1/2 w-px bg-primary/60 z-0" />}
-                          {cellOccs.length > 0 && (
-                            <div className="flex gap-1 items-center z-10">
-                              {cellOccs.map(o => {
-                                if (o.isExpected) {
-                                  return (
-                                    <Tooltip key={o.key}>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={() => setBookTarget(o)}
-                                          aria-label={`Boka in service ${facility} ${o.date}`}
-                                          className="h-3.5 w-3.5 rotate-45 border border-dashed border-muted-foreground/70 bg-background hover:bg-primary/15 hover:border-primary hover:scale-150 transition-all cursor-pointer"
-                                        />
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <div className="text-xs">
-                                          <div className="font-semibold">{facility}</div>
-                                          <div>{o.date}</div>
-                                          <div className="text-muted-foreground">Förväntad – klicka för att boka in</div>
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  );
-                                }
-                                const st = effectiveStatus(o.service!);
-                                return (
-                                  <Tooltip key={o.key}>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() => onOpen(o.service!.id)}
-                                        aria-label={`${facility} ${o.date}`}
-                                        className={cn(
-                                          'h-3.5 w-3.5 rotate-45 ring-2 ring-background hover:scale-150 transition-transform cursor-pointer',
-                                          STATUS_DOT[st]
-                                        )}
-                                      />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <div className="text-xs">
-                                        <div className="font-semibold">{facility}</div>
-                                        <div>{o.service!.completed_date || o.service!.planned_date} · {st}</div>
-                                        {o.service!.assigned_technician && <div className="text-muted-foreground">{o.service!.assigned_technician}</div>}
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                );
-                              })}
-                            </div>
-                          )}
+                          {cellOccs.map(o => {
+                            const st: string = o.isExpected ? 'Förväntad' : effectiveStatus(o.service!);
+                            return (
+                              <Tooltip key={o.key}>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() => o.isExpected ? setBookTarget(o) : onOpen(o.service!.id)}
+                                    className={cn(
+                                      'px-1.5 py-0.5 rounded text-[10px] font-medium tabular-nums leading-tight transition-all hover:scale-105 cursor-pointer',
+                                      STATUS_CELL[st],
+                                    )}
+                                  >
+                                    {shortDate(o.date)}
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-xs">
+                                    <div className="font-semibold">{facility}</div>
+                                    <div>{o.date} · {st}</div>
+                                    {o.service?.assigned_technician && <div className="text-muted-foreground">{o.service.assigned_technician}</div>}
+                                    {o.isExpected && <div className="text-muted-foreground">Klicka för att boka in</div>}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            );
+                          })}
                         </div>
                       );
                     })}
