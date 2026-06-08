@@ -96,8 +96,8 @@ function generateAllDays(year: number) {
 const WEEK_COL_WIDTH = 56;
 const DAY_COL_WIDTH = 32;
 const LEFT_COL_WIDTH = 288; // w-72 = 18rem = 288px
-const KALKYL_COL_WIDTH = 96; // separate column for kalkyl/utfall
-const HOTEL_COL_WIDTH = 130; // hotel booking column
+const KALKYL_COL_WIDTH = 0; // merged into Projekt/Montör column
+const HOTEL_COL_WIDTH = 96; // hotel booking column (compact)
 
 export function ResourcePlanningView() {
   const { projects: allProjects } = useProjectDataContext();
@@ -610,10 +610,7 @@ export function ResourcePlanningView() {
                 <div className={cn("sticky z-30 flex border-b border-border/50 bg-card", viewMode === 'days' ? 'top-[42px]' : 'top-[21px]')}>
                   <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }}>
                     <div className="w-72 shrink-0 px-2 py-1 text-xs font-semibold">
-                      Projekt / Montör
-                    </div>
-                    <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold text-center" style={{ width: KALKYL_COL_WIDTH }}>
-                      Kalkyl / Utfall
+                      Projekt / Montör · Kalkyl / Utfall
                     </div>
                     <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold flex items-center gap-1" style={{ width: HOTEL_COL_WIDTH }}>
                       <Hotel className="h-3 w-3" /> Hotell
@@ -656,15 +653,39 @@ export function ResourcePlanningView() {
                         {/* Project row */}
                         <div className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors" onClick={() => toggleProject(project.id)}>
                           <div className="sticky left-0 z-10 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }}>
-                            <div className="w-72 shrink-0 px-2 py-1 flex items-center justify-between relative">
+                            <div className="w-72 shrink-0 px-2 py-1 flex items-center justify-between relative gap-1.5">
                             <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
-                          <div className="flex items-center gap-1.5 min-w-0">
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                {isExpanded ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronUp className="h-3 w-3 text-muted-foreground rotate-180 shrink-0" />}
                                <div className={cn('h-2 w-2 rounded-full shrink-0', getBarColor(resourceStatus))} />
                                <span className="font-semibold text-xs truncate">{project.code} - {project.name}</span>
                                {!isExpanded && <span className="text-[10px] text-muted-foreground shrink-0">({pInstallers.length})</span>}
                              </div>
-                             <div className="flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+                             {(() => {
+                                 const est = getEstimation(project.id);
+                                 const summary = getProjectSummary(project.id);
+                                 const estTotal = (est?.estimatedInstallHours || 0) + (est?.estimatedTravelHours || 0);
+                                 if (estTotal === 0 && summary.total === 0) return null;
+                                 return (
+                                   <Tooltip>
+                                     <TooltipTrigger asChild>
+                                       <span className={cn(
+                                         'relative text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0',
+                                         resourceStatus === 'ok' && 'bg-status-completed/20 text-status-completed border-status-completed/40',
+                                         resourceStatus === 'over' && 'bg-status-delayed/20 text-status-delayed border-status-delayed/40'
+                                       )}>
+                                         {estTotal > 0 ? `${estTotal}h` : '–'} / {summary.total}h
+                                       </span>
+                                     </TooltipTrigger>
+                                     <TooltipContent side="top" className="text-xs">
+                                       <p className="font-semibold mb-1">Kalkyl vs Utfall</p>
+                                       <p>Montage: {est?.estimatedInstallHours || 0}h kalkyl / {summary.totalWork}h utfall</p>
+                                       <p>Resa: {est?.estimatedTravelHours || 0}h kalkyl / {summary.totalTravel}h utfall</p>
+                                       <p className="mt-1 font-medium">Totalt: {estTotal}h / {summary.total}h</p>
+                                     </TooltipContent>
+                                   </Tooltip>);
+                               })()}
+                             <div className="flex items-center gap-0.5 relative" onClick={(e) => e.stopPropagation()}>
                                   <Button size="icon" variant="ghost" className="h-5 w-5" onClick={() => {
                                  setEstDialogProjectId(project.id);
                                  setEstDialogProjectName(`${project.code} - ${project.name}`);
@@ -683,50 +704,9 @@ export function ResourcePlanningView() {
 
                                 </div>
                            </div>
-                            {/* Kalkyl column */}
-                            <div className="border-l border-border/50 flex items-center justify-center relative" style={{ width: KALKYL_COL_WIDTH }}>
-                              <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
-                              {(() => {
-                                const est = getEstimation(project.id);
-                                const summary = getProjectSummary(project.id);
-                                const estTotal = (est?.estimatedInstallHours || 0) + (est?.estimatedTravelHours || 0);
-                                if (estTotal === 0 && summary.total === 0) return null;
-                                return (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span className={cn(
-                                        'text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0',
-                                        resourceStatus === 'ok' && 'bg-status-completed/20 text-status-completed',
-                                        resourceStatus === 'over' && 'bg-status-delayed/20 text-status-delayed'
-                                      )}>
-                                        {estTotal > 0 ? `${estTotal}h` : '–'} / {summary.total}h
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="text-xs">
-                                      <p className="font-semibold mb-1">Kalkyl vs Utfall</p>
-                                      <p>Montage: {est?.estimatedInstallHours || 0}h kalkyl / {summary.totalWork}h utfall</p>
-                                      <p>Resa: {est?.estimatedTravelHours || 0}h kalkyl / {summary.totalTravel}h utfall</p>
-                                      <p className="mt-1 font-medium">Totalt: {estTotal}h / {summary.total}h</p>
-                                    </TooltipContent>
-                                  </Tooltip>);
-                              })()}
-                            </div>
                             {/* Hotel summary column */}
                             <div className="border-l border-border/50 flex items-center justify-center relative px-1" style={{ width: HOTEL_COL_WIDTH }}>
                               <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
-                              {(() => {
-                                const bookedCount = allPInstallers.filter(p => p.hotelStatus === 'bokat').length;
-                                const ejBokat = allPInstallers.filter(p => p.hotelStatus === 'ej_bokat').length;
-                                if (allPInstallers.length === 0) return <span className="text-[10px] text-muted-foreground relative">—</span>;
-                                if (bookedCount === 0 && ejBokat === 0) return <span className="text-[10px] text-muted-foreground relative">—</span>;
-                                return (
-                                  <span className="text-[10px] font-medium relative">
-                                    {bookedCount > 0 && <span className="text-status-completed">{bookedCount} bokat</span>}
-                                    {bookedCount > 0 && ejBokat > 0 && <span className="text-muted-foreground"> · </span>}
-                                    {ejBokat > 0 && <span className="text-status-delayed">{ejBokat} ej bokat</span>}
-                                  </span>
-                                );
-                              })()}
                             </div>
                           </div>
                           {/* Schedule cells */}
@@ -781,7 +761,6 @@ export function ResourcePlanningView() {
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
                                     </div>
-                                    <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
                                     <div className="border-l border-border/50 flex items-center px-1.5" style={{ width: HOTEL_COL_WIDTH }}>
                                       <HotelBookingCell pi={pi} onSave={(updates) => updateHotel(pi.id, updates)} />
                                     </div>
