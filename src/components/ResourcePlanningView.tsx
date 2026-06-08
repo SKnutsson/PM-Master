@@ -97,6 +97,7 @@ const WEEK_COL_WIDTH = 56;
 const DAY_COL_WIDTH = 32;
 const LEFT_COL_WIDTH = 288; // w-72 = 18rem = 288px
 const KALKYL_COL_WIDTH = 96; // separate column for kalkyl/utfall
+const HOTEL_COL_WIDTH = 130; // hotel booking column
 
 export function ResourcePlanningView() {
   const { projects: allProjects } = useProjectDataContext();
