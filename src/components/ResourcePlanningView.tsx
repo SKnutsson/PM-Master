@@ -14,6 +14,7 @@ import { AssignInstallerDialog } from './dialogs/AssignInstallerDialog';
 import { ReassignInstallerDialog } from './dialogs/ReassignInstallerDialog';
 import { DailyEntryDialog } from './dialogs/DailyEntryDialog';
 import { EditEstimationDialog } from './dialogs/EditEstimationDialog';
+import { HotelBookingCell } from './HotelBookingCell';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
