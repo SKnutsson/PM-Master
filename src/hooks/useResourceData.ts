@@ -75,6 +75,9 @@ export function useResourceData() {
         id: pi.id, projectId: pi.project_id, installerId: pi.installer_id,
         installerName: pi.installers?.name, installerCompany: pi.installers?.company,
         isVacant: pi.is_vacant ?? false,
+        hotelStatus: (pi.hotel_status as any) ?? 'ej_relevant',
+        hotelName: pi.hotel_name ?? null,
+        hotelNotering: pi.hotel_notering ?? null,
       })));
     }
   };
