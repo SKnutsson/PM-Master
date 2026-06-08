@@ -1,0 +1,1 @@
+ALTER TABLE public.daily_resource_entries DROP CONSTRAINT IF EXISTS daily_resource_entries_project_id_installer_id_date_key; CREATE UNIQUE INDEX IF NOT EXISTS daily_resource_entries_project_installer_id_date_key ON public.daily_resource_entries (project_installer_id, date);
