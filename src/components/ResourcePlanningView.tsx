@@ -610,10 +610,7 @@ export function ResourcePlanningView() {
                 <div className={cn("sticky z-30 flex border-b border-border/50 bg-card", viewMode === 'days' ? 'top-[42px]' : 'top-[21px]')}>
                   <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }}>
                     <div className="w-72 shrink-0 px-2 py-1 text-xs font-semibold">
-                      Projekt / Montör
-                    </div>
-                    <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold text-center" style={{ width: KALKYL_COL_WIDTH }}>
-                      Kalkyl / Utfall
+                      Projekt / Montör · Kalkyl / Utfall
                     </div>
                     <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold flex items-center gap-1" style={{ width: HOTEL_COL_WIDTH }}>
                       <Hotel className="h-3 w-3" /> Hotell
