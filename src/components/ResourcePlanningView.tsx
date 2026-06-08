@@ -711,6 +711,23 @@ export function ResourcePlanningView() {
                                   </Tooltip>);
                               })()}
                             </div>
+                            {/* Hotel summary column */}
+                            <div className="border-l border-border/50 flex items-center justify-center relative px-1" style={{ width: HOTEL_COL_WIDTH }}>
+                              <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
+                              {(() => {
+                                const bookedCount = allPInstallers.filter(p => p.hotelStatus === 'bokat').length;
+                                const ejBokat = allPInstallers.filter(p => p.hotelStatus === 'ej_bokat').length;
+                                if (allPInstallers.length === 0) return <span className="text-[10px] text-muted-foreground relative">—</span>;
+                                if (bookedCount === 0 && ejBokat === 0) return <span className="text-[10px] text-muted-foreground relative">—</span>;
+                                return (
+                                  <span className="text-[10px] font-medium relative">
+                                    {bookedCount > 0 && <span className="text-status-completed">{bookedCount} bokat</span>}
+                                    {bookedCount > 0 && ejBokat > 0 && <span className="text-muted-foreground"> · </span>}
+                                    {ejBokat > 0 && <span className="text-status-delayed">{ejBokat} ej bokat</span>}
+                                  </span>
+                                );
+                              })()}
+                            </div>
                           </div>
                           {/* Schedule cells */}
                           <div className="flex items-center relative">
