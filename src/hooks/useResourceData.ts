@@ -270,9 +270,13 @@ export function useResourceData() {
     }
   }, [dailyEntries]);
 
-  const deleteDailyEntry = useCallback(async (id: string) => {
-    await supabase.from('daily_resource_entries').delete().eq('id', id);
-    setDailyEntries(prev => prev.filter(d => d.id !== id));
+  const updateHotel = useCallback(async (projectInstallerId: string, updates: { hotelStatus?: ProjectInstaller['hotelStatus']; hotelName?: string | null; hotelNotering?: string | null; }) => {
+    const payload: any = {};
+    if (updates.hotelStatus !== undefined) payload.hotel_status = updates.hotelStatus;
+    if (updates.hotelName !== undefined) payload.hotel_name = updates.hotelName;
+    if (updates.hotelNotering !== undefined) payload.hotel_notering = updates.hotelNotering;
+    await supabase.from('project_installers').update(payload).eq('id', projectInstallerId);
+    setProjectInstallers(prev => prev.map(p => p.id === projectInstallerId ? { ...p, ...updates } as ProjectInstaller : p));
   }, []);
 
   return {
@@ -280,7 +284,7 @@ export function useResourceData() {
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation,
     assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry, deleteDailyEntry,
+    upsertDailyEntry, deleteDailyEntry, updateHotel,
     refresh: loadAll,
   };
 }
