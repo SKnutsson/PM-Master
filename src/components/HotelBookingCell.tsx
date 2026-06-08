@@ -51,7 +51,7 @@ export function HotelBookingCell({ pi, onSave }: Props) {
       ? pi.hotelName?.trim() || 'Bokat'
       : pi.hotelStatus === 'ej_bokat'
       ? 'Ej bokat'
-      : 'Ej relevant';
+      : 'Ej aktuellt';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
