@@ -23,6 +23,9 @@ export interface ProjectInstaller {
   installerName?: string;
   installerCompany?: string;
   isVacant: boolean;
+  hotelStatus: 'bokat' | 'ej_bokat' | 'ej_relevant';
+  hotelName: string | null;
+  hotelNotering: string | null;
 }
 
 export interface DailyResourceEntry {
