@@ -761,7 +761,6 @@ export function ResourcePlanningView() {
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
                                     </div>
-                                    <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
                                     <div className="border-l border-border/50 flex items-center px-1.5" style={{ width: HOTEL_COL_WIDTH }}>
                                       <HotelBookingCell pi={pi} onSave={(updates) => updateHotel(pi.id, updates)} />
                                     </div>
