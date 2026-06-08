@@ -28,6 +28,29 @@ const cardVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
+function AutoTextarea({ value, onChange, placeholder, className, minHeight = 70 }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string; minHeight?: number }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const resize = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.max(minHeight, el.scrollHeight)}px`;
+  };
+  useEffect(() => { resize(); }, [value]);
+  return (
+    <Textarea
+      ref={ref}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onInput={resize}
+      placeholder={placeholder}
+      className={cn('text-sm overflow-hidden resize-none print:!h-auto', className)}
+      style={{ minHeight }}
+    />
+  );
+}
+
+
 interface StatCardProps {
   title: string;
   value: string;
@@ -515,7 +538,7 @@ export function ResourceAnalyticsView() {
               ))}
               <div>
                 <Label className="text-xs mb-1.5 block">Övrig kommentar</Label>
-                <Textarea value={kpiNotes} onChange={e => setKpiNotes(e.target.value)} placeholder="Noteringar om kvalitet, leverans eller besiktning…" className="min-h-[70px] text-sm" />
+                <AutoTextarea value={kpiNotes} onChange={setKpiNotes} placeholder="Noteringar om kvalitet, leverans eller besiktning…" minHeight={90} />
               </div>
 
               {/* KPI summary tiles for report */}
