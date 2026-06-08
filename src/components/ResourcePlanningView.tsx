@@ -802,6 +802,7 @@ export function ResourcePlanningView() {
                                       <span className="text-[10px] text-muted-foreground italic">Inga montörer kopplade</span>
                                     </div>
                                     <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
+                                    <div className="border-l border-border/50" style={{ width: HOTEL_COL_WIDTH }} />
                                   </div>
                                   <div style={{ width: gridWidth }} />
                                 </div>
