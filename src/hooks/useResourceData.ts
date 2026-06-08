@@ -276,6 +276,7 @@ export function useResourceData() {
   }, []);
 
 
+  const updateHotel = useCallback(async (projectInstallerId: string, updates: { hotelStatus?: ProjectInstaller['hotelStatus']; hotelName?: string | null; hotelNotering?: string | null; }) => {
     const payload: any = {};
     if (updates.hotelStatus !== undefined) payload.hotel_status = updates.hotelStatus;
     if (updates.hotelName !== undefined) payload.hotel_name = updates.hotelName;
