@@ -270,7 +270,12 @@ export function useResourceData() {
     }
   }, [dailyEntries]);
 
-  const updateHotel = useCallback(async (projectInstallerId: string, updates: { hotelStatus?: ProjectInstaller['hotelStatus']; hotelName?: string | null; hotelNotering?: string | null; }) => {
+  const deleteDailyEntry = useCallback(async (id: string) => {
+    await supabase.from('daily_resource_entries').delete().eq('id', id);
+    setDailyEntries(prev => prev.filter(d => d.id !== id));
+  }, []);
+
+
     const payload: any = {};
     if (updates.hotelStatus !== undefined) payload.hotel_status = updates.hotelStatus;
     if (updates.hotelName !== undefined) payload.hotel_name = updates.hotelName;
