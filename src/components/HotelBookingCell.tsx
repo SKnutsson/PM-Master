@@ -12,7 +12,7 @@ type HotelStatus = ProjectInstaller['hotelStatus'];
 const STATUS_OPTIONS: { value: HotelStatus; label: string; dot: string }[] = [
   { value: 'bokat', label: 'Bokat', dot: 'bg-status-completed' },
   { value: 'ej_bokat', label: 'Ej bokat', dot: 'bg-status-delayed' },
-  { value: 'ej_relevant', label: 'Ej relevant', dot: 'bg-muted-foreground' },
+  { value: 'ej_relevant', label: 'Ej aktuellt', dot: 'bg-muted-foreground' },
 ];
 
 function badgeClasses(status: HotelStatus) {
@@ -51,7 +51,7 @@ export function HotelBookingCell({ pi, onSave }: Props) {
       ? pi.hotelName?.trim() || 'Bokat'
       : pi.hotelStatus === 'ej_bokat'
       ? 'Ej bokat'
-      : 'Ej relevant';
+      : 'Ej aktuellt';
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
