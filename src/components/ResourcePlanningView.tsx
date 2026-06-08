@@ -615,6 +615,9 @@ export function ResourcePlanningView() {
                     <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold text-center" style={{ width: KALKYL_COL_WIDTH }}>
                       Kalkyl / Utfall
                     </div>
+                    <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold flex items-center gap-1" style={{ width: HOTEL_COL_WIDTH }}>
+                      <Hotel className="h-3 w-3" /> Hotell
+                    </div>
                   </div>
                   <div className="flex">
                     {viewMode === 'weeks' ? displayedWeeks.map((week) =>
