@@ -23,6 +23,9 @@ export interface ProjectInstaller {
   installerName?: string;
   installerCompany?: string;
   isVacant: boolean;
+  hotelStatus: 'bokat' | 'ej_bokat' | 'ej_relevant';
+  hotelName: string | null;
+  hotelNotering: string | null;
 }
 
 export interface DailyResourceEntry {
@@ -72,6 +75,9 @@ export function useResourceData() {
         id: pi.id, projectId: pi.project_id, installerId: pi.installer_id,
         installerName: pi.installers?.name, installerCompany: pi.installers?.company,
         isVacant: pi.is_vacant ?? false,
+        hotelStatus: (pi.hotel_status as any) ?? 'ej_relevant',
+        hotelName: pi.hotel_name ?? null,
+        hotelNotering: pi.hotel_notering ?? null,
       })));
     }
   };
@@ -194,6 +200,7 @@ export function useResourceData() {
       id: data.id, projectId: data.project_id, installerId: data.installer_id,
       installerName: (data as any).installers?.name, installerCompany: (data as any).installers?.company,
       isVacant: false,
+      hotelStatus: 'ej_relevant', hotelName: null, hotelNotering: null,
     };
     setProjectInstallers(prev => [...prev, pi]);
     return pi;
@@ -208,6 +215,7 @@ export function useResourceData() {
     const pi: ProjectInstaller = {
       id: data.id, projectId: data.project_id, installerId: data.installer_id,
       installerName: undefined, installerCompany: undefined, isVacant: true,
+      hotelStatus: 'ej_relevant', hotelName: null, hotelNotering: null,
     };
     setProjectInstallers(prev => [...prev, pi]);
     return pi;
@@ -267,12 +275,22 @@ export function useResourceData() {
     setDailyEntries(prev => prev.filter(d => d.id !== id));
   }, []);
 
+
+  const updateHotel = useCallback(async (projectInstallerId: string, updates: { hotelStatus?: ProjectInstaller['hotelStatus']; hotelName?: string | null; hotelNotering?: string | null; }) => {
+    const payload: any = {};
+    if (updates.hotelStatus !== undefined) payload.hotel_status = updates.hotelStatus;
+    if (updates.hotelName !== undefined) payload.hotel_name = updates.hotelName;
+    if (updates.hotelNotering !== undefined) payload.hotel_notering = updates.hotelNotering;
+    await supabase.from('project_installers').update(payload).eq('id', projectInstallerId);
+    setProjectInstallers(prev => prev.map(p => p.id === projectInstallerId ? { ...p, ...updates } as ProjectInstaller : p));
+  }, []);
+
   return {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation,
     assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry, deleteDailyEntry,
+    upsertDailyEntry, deleteDailyEntry, updateHotel,
     refresh: loadAll,
   };
 }

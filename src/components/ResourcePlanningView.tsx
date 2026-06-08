@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Users, Archive, UserPlus, Calculator, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, Archive, UserPlus, Calculator, Trash2, Hotel } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,6 +14,7 @@ import { AssignInstallerDialog } from './dialogs/AssignInstallerDialog';
 import { ReassignInstallerDialog } from './dialogs/ReassignInstallerDialog';
 import { DailyEntryDialog } from './dialogs/DailyEntryDialog';
 import { EditEstimationDialog } from './dialogs/EditEstimationDialog';
+import { HotelBookingCell } from './HotelBookingCell';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -96,6 +97,7 @@ const WEEK_COL_WIDTH = 56;
 const DAY_COL_WIDTH = 32;
 const LEFT_COL_WIDTH = 288; // w-72 = 18rem = 288px
 const KALKYL_COL_WIDTH = 96; // separate column for kalkyl/utfall
+const HOTEL_COL_WIDTH = 130; // hotel booking column
 
 export function ResourcePlanningView() {
   const { projects: allProjects } = useProjectDataContext();
@@ -103,7 +105,7 @@ export function ResourcePlanningView() {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation, assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry
+    upsertDailyEntry, updateHotel
   } = useResourceData();
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
@@ -577,10 +579,10 @@ export function ResourcePlanningView() {
               ref={mainScrollRef}
               className="overflow-auto max-h-[calc(100vh-280px)]">
 
-              <div style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + gridWidth }}>
+              <div style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH + gridWidth }}>
                 {/* Year/Month header */}
                 <div className="sticky top-0 z-30 flex border-b border-border/30 bg-card">
-                  <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }} />
+                  <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }} />
                   <div className="flex">
                     {yearGroups.map((g, i) =>
                     <div key={i} className="border-r border-border/30 text-center text-[10px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
@@ -593,7 +595,7 @@ export function ResourcePlanningView() {
                 {/* Week number row for day view */}
                 {viewMode === 'days' &&
                 <div className="sticky top-[21px] z-30 flex border-b border-border/30 bg-card">
-                    <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }} />
+                    <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }} />
                     <div className="flex">
                       {dayWeekGroups.map((g, i) =>
                     <div key={i} className="border-r border-border/30 text-center text-[9px] font-semibold text-muted-foreground py-0.5" style={{ width: g.span * colWidth }}>
@@ -606,12 +608,15 @@ export function ResourcePlanningView() {
 
                 {/* Week/Day header */}
                 <div className={cn("sticky z-30 flex border-b border-border/50 bg-card", viewMode === 'days' ? 'top-[42px]' : 'top-[21px]')}>
-                  <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                  <div className="sticky left-0 z-40 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }}>
                     <div className="w-72 shrink-0 px-2 py-1 text-xs font-semibold">
                       Projekt / Montör
                     </div>
                     <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold text-center" style={{ width: KALKYL_COL_WIDTH }}>
                       Kalkyl / Utfall
+                    </div>
+                    <div className="border-l border-border/50 px-2 py-1 text-xs font-semibold flex items-center gap-1" style={{ width: HOTEL_COL_WIDTH }}>
+                      <Hotel className="h-3 w-3" /> Hotell
                     </div>
                   </div>
                   <div className="flex">
@@ -631,7 +636,7 @@ export function ResourcePlanningView() {
 
                 {/* Projects */}
                 <div className="relative">
-                  <div className="absolute top-0 bottom-0 pointer-events-none z-[5]" style={{ left: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                  <div className="absolute top-0 bottom-0 pointer-events-none z-[5]" style={{ left: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }}>
                     {renderTodayMarker()}
                   </div>
 
@@ -650,7 +655,7 @@ export function ResourcePlanningView() {
                       <motion.div key={project.id} variants={itemVariants}>
                         {/* Project row */}
                         <div className="flex border-b border-border/50 bg-primary/15 cursor-pointer hover:bg-primary/20 transition-colors" onClick={() => toggleProject(project.id)}>
-                          <div className="sticky left-0 z-10 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                          <div className="sticky left-0 z-10 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }}>
                             <div className="w-72 shrink-0 px-2 py-1 flex items-center justify-between relative">
                             <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
                           <div className="flex items-center gap-1.5 min-w-0">
@@ -706,6 +711,23 @@ export function ResourcePlanningView() {
                                   </Tooltip>);
                               })()}
                             </div>
+                            {/* Hotel summary column */}
+                            <div className="border-l border-border/50 flex items-center justify-center relative px-1" style={{ width: HOTEL_COL_WIDTH }}>
+                              <div className="absolute inset-0 bg-primary/15 pointer-events-none" />
+                              {(() => {
+                                const bookedCount = allPInstallers.filter(p => p.hotelStatus === 'bokat').length;
+                                const ejBokat = allPInstallers.filter(p => p.hotelStatus === 'ej_bokat').length;
+                                if (allPInstallers.length === 0) return <span className="text-[10px] text-muted-foreground relative">—</span>;
+                                if (bookedCount === 0 && ejBokat === 0) return <span className="text-[10px] text-muted-foreground relative">—</span>;
+                                return (
+                                  <span className="text-[10px] font-medium relative">
+                                    {bookedCount > 0 && <span className="text-status-completed">{bookedCount} bokat</span>}
+                                    {bookedCount > 0 && ejBokat > 0 && <span className="text-muted-foreground"> · </span>}
+                                    {ejBokat > 0 && <span className="text-status-delayed">{ejBokat} ej bokat</span>}
+                                  </span>
+                                );
+                              })()}
+                            </div>
                           </div>
                           {/* Schedule cells */}
                           <div className="flex items-center relative">
@@ -726,7 +748,7 @@ export function ResourcePlanningView() {
                           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                               {pInstallers.map((pi) =>
                             <div key={pi.id} className="flex border-b border-border/30 hover:bg-muted/20 group">
-                                  <div className="sticky left-0 z-10 shrink-0 border-r border-border/50 flex bg-primary-foreground" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                                  <div className="sticky left-0 z-10 shrink-0 border-r border-border/50 flex bg-primary-foreground" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }}>
                                     <div className="w-72 shrink-0 px-2 py-0.5 pl-7 flex items-center justify-between min-w-0">
                                       <div className="min-w-0 flex items-center gap-1.5">
                                        <div className={cn('h-2 w-2 rounded-full shrink-0', pi.isVacant ? 'bg-destructive' : getBarColor(resourceStatus))} />
@@ -760,6 +782,9 @@ export function ResourcePlanningView() {
                                       </Button>
                                     </div>
                                     <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
+                                    <div className="border-l border-border/50 flex items-center px-1.5" style={{ width: HOTEL_COL_WIDTH }}>
+                                      <HotelBookingCell pi={pi} onSave={(updates) => updateHotel(pi.id, updates)} />
+                                    </div>
                                   </div>
                                   <div className="flex items-center relative">
                                     {viewMode === 'days' ?
@@ -772,11 +797,12 @@ export function ResourcePlanningView() {
 
                               {pInstallers.length === 0 &&
                             <div className="flex border-b border-border/30">
-                                  <div className="sticky left-0 z-10 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH }}>
+                                  <div className="sticky left-0 z-10 bg-card shrink-0 border-r border-border/50 flex" style={{ width: LEFT_COL_WIDTH + KALKYL_COL_WIDTH + HOTEL_COL_WIDTH }}>
                                     <div className="w-72 shrink-0 px-2 py-2 pl-7">
                                       <span className="text-[10px] text-muted-foreground italic">Inga montörer kopplade</span>
                                     </div>
                                     <div className="border-l border-border/50" style={{ width: KALKYL_COL_WIDTH }} />
+                                    <div className="border-l border-border/50" style={{ width: HOTEL_COL_WIDTH }} />
                                   </div>
                                   <div style={{ width: gridWidth }} />
                                 </div>
