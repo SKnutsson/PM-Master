@@ -200,6 +200,7 @@ export function useResourceData() {
       id: data.id, projectId: data.project_id, installerId: data.installer_id,
       installerName: (data as any).installers?.name, installerCompany: (data as any).installers?.company,
       isVacant: false,
+      hotelStatus: 'ej_relevant', hotelName: null, hotelNotering: null,
     };
     setProjectInstallers(prev => [...prev, pi]);
     return pi;
