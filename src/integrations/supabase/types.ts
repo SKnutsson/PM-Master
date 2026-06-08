@@ -706,6 +706,9 @@ export type Database = {
       project_installers: {
         Row: {
           created_at: string
+          hotel_name: string | null
+          hotel_notering: string | null
+          hotel_status: string
           id: string
           installer_id: string | null
           is_vacant: boolean
@@ -713,6 +716,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hotel_name?: string | null
+          hotel_notering?: string | null
+          hotel_status?: string
           id?: string
           installer_id?: string | null
           is_vacant?: boolean
@@ -720,6 +726,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hotel_name?: string | null
+          hotel_notering?: string | null
+          hotel_status?: string
           id?: string
           installer_id?: string | null
           is_vacant?: boolean
