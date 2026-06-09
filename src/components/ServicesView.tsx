@@ -458,7 +458,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                 const contract = contracts.find(c => c.facility_name === facility);
                 return (
                   <div key={facility} className="flex border-b hover:bg-muted/20 transition-colors">
-                    <div style={{ width: LABEL_W }} className="px-2.5 py-1 border-r flex items-center gap-1.5 min-w-0">
+                    <div style={{ width: LABEL_W }} className="px-2.5 py-1 border-r flex items-center gap-1.5 min-w-0 sticky left-0 bg-card z-10">
                       <span className={cn('text-xs truncate', contract?.active && 'font-semibold text-primary')}>{facility}</span>
                       {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-3.5 border-primary/40 text-primary shrink-0">Avtal</Badge>}
                     </div>
