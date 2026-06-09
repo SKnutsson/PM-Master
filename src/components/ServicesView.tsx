@@ -426,11 +426,9 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
           <CalendarIcon className="h-4 w-4" /> Schema · översikt per år
         </CardTitle>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-completed/30 border border-status-completed/50" /> Utförd</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-not-started/30 border border-status-not-started/50" /> Planerad</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-in-progress/30 border border-status-in-progress/50" /> Bokad</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-delayed/30 border border-status-delayed/50" /> Försenad</span>
           <span className="flex items-center gap-1"><span className="h-3 w-5 rounded border border-dashed border-muted-foreground/60" /> Förväntad</span>
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-not-started/30 border border-status-not-started/50" /> Bokad</span>
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-completed/30 border border-status-completed/50" /> Utförd</span>
         </div>
       </CardHeader>
       <CardContent className="px-0 pb-0">
