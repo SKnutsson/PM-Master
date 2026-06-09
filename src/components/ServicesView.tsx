@@ -52,8 +52,7 @@ interface Deviation { id: string; service_id: string; description: string; sever
 interface Attachment { id: string; service_id: string; file_url: string; caption: string; kind: string; }
 
 const STATUS_BADGE: Record<string, string> = {
-  'Planerad': 'bg-status-not-started/15 text-status-not-started border-status-not-started/30',
-  'Bokad': 'bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30',
+  'Bokad': 'bg-status-not-started/15 text-status-not-started border-status-not-started/30',
   'Utförd': 'bg-status-completed/15 text-status-completed border-status-completed/30',
   'Försenad': 'bg-status-delayed/15 text-status-delayed border-status-delayed/30',
 };
