@@ -317,48 +317,67 @@ export function EditActivityDialog({ projectId, activity, trigger }: EditActivit
                       const segStart = seg.start ? new Date(seg.start) : undefined;
                       const segEnd = seg.end ? new Date(seg.end) : undefined;
                       return (
-                        <div key={idx} className="flex items-center gap-2 text-xs">
-                          <span className="w-12 text-muted-foreground">Del {idx + 1}</span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button type="button" variant="outline" className="h-8 flex-1 justify-start text-left font-normal text-xs">
-                                <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
-                                {segStart ? format(segStart, "yyyy-MM-dd") : "Datum"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={segStart}
-                                onSelect={(d) => d && updateSegment(idx, { start: format(d, 'yyyy-MM-dd') })}
-                                initialFocus
-                                showWeekNumber
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <span className="text-muted-foreground">→</span>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button type="button" variant="outline" className="h-8 flex-1 justify-start text-left font-normal text-xs">
-                                <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
-                                {segEnd ? format(segEnd, "yyyy-MM-dd") : "Datum"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={segEnd}
-                                onSelect={(d) => d && updateSegment(idx, { end: format(d, 'yyyy-MM-dd') })}
-                                initialFocus
-                                showWeekNumber
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removeSegment(idx)}>
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
+                        <div key={idx} className="space-y-1.5 rounded-md bg-background/40 p-2">
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="w-12 text-muted-foreground">Del {idx + 1}</span>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button type="button" variant="outline" className="h-8 flex-1 justify-start text-left font-normal text-xs">
+                                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                                  {segStart ? format(segStart, "yyyy-MM-dd") : "Datum"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={segStart}
+                                  onSelect={(d) => d && updateSegment(idx, { start: format(d, 'yyyy-MM-dd') })}
+                                  initialFocus
+                                  showWeekNumber
+                                  className="p-3 pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <span className="text-muted-foreground">→</span>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button type="button" variant="outline" className="h-8 flex-1 justify-start text-left font-normal text-xs">
+                                  <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                                  {segEnd ? format(segEnd, "yyyy-MM-dd") : "Datum"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={segEnd}
+                                  onSelect={(d) => d && updateSegment(idx, { end: format(d, 'yyyy-MM-dd') })}
+                                  initialFocus
+                                  showWeekNumber
+                                  className="p-3 pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removeSegment(idx)}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs pl-14">
+                            <span className="text-muted-foreground">Status</span>
+                            <Select
+                              value={seg.status || '__inherit__'}
+                              onValueChange={(v) => updateSegment(idx, { status: v === '__inherit__' ? undefined : (v as Status) })}
+                            >
+                              <SelectTrigger className="h-8 flex-1 text-xs">
+                                <SelectValue placeholder="Status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="__inherit__">Ärv från aktivitet</SelectItem>
+                                {statuses.map((s) => (
+                                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       );
                     })}
