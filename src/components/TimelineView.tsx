@@ -506,11 +506,11 @@ export function TimelineView() {
     projectId: string,
     activityId: string,
     segmentIndex: number,
-    segments: { start: string; end: string }[],
+    segments: { start: string; end: string; status?: Status }[],
     newStart: string,
     newEnd: string,
   ) => {
-    const next = segments.map((s, i) => i === segmentIndex ? { start: newStart, end: newEnd } : s);
+    const next = segments.map((s, i) => i === segmentIndex ? { ...s, start: newStart, end: newEnd } : s);
     const allStarts = next.map(s => s.start).sort();
     const allEnds = next.map(s => s.end).sort();
     await updateActivity(projectId, activityId, {
@@ -518,6 +518,17 @@ export function TimelineView() {
       startDate: allStarts[0],
       endDate: allEnds[allEnds.length - 1],
     });
+  }, [updateActivity]);
+
+  const handleSegmentStatusChange = useCallback(async (
+    projectId: string,
+    activityId: string,
+    segmentIndex: number,
+    segments: { start: string; end: string; status?: Status }[],
+    newStatus: Status,
+  ) => {
+    const next = segments.map((s, i) => i === segmentIndex ? { ...s, status: newStatus } : s);
+    await updateActivity(projectId, activityId, { segments: next });
   }, [updateActivity]);
 
   const renderTodayMarker = () => {
