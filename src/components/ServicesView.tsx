@@ -888,7 +888,7 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
               <div><Label>Status</Label>
                 <Select value={s.status} onValueChange={v => save({ status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(['Planerad', 'Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(['Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div><Label>Planerad tid (h)</Label><Input type="number" step="0.5" value={s.planned_hours} onChange={e => setS({ ...s, planned_hours: +e.target.value })} onBlur={() => save({ planned_hours: s.planned_hours })} /></div>
