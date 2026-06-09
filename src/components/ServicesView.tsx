@@ -706,7 +706,7 @@ function ContractRow({ contract, onChange }: { contract: ServiceContract; onChan
         </Select>
       </TableCell>
       <TableCell><Checkbox checked={c.active} onCheckedChange={v => save({ active: !!v })} /></TableCell>
-      <TableCell><Input value={c.notes || ''} onChange={e => setC({ ...c, notes: e.target.value })} onBlur={() => save({ notes: c.notes })} className="h-8 min-w-[200px]" placeholder="t.ex. Betalas vid service 1ggr/år" /></TableCell>
+      <TableCell><Input value={c.notes || ''} onChange={e => setC({ ...c, notes: e.target.value })} onBlur={() => save({ notes: c.notes })} className="h-8 min-w-[200px]" /></TableCell>
       <TableCell>
         <div className="flex justify-end">
           <Button size="sm" variant="ghost" onClick={del}><Trash2 className="h-4 w-4" /></Button>
