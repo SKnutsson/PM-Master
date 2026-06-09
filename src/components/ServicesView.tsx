@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
-type ServiceStatus = 'Planerad' | 'Bokad' | 'Utförd' | 'Försenad';
+type ServiceStatus = 'Bokad' | 'Utförd' | 'Försenad';
 
 interface ServiceContract {
   id: string;
@@ -52,15 +52,13 @@ interface Deviation { id: string; service_id: string; description: string; sever
 interface Attachment { id: string; service_id: string; file_url: string; caption: string; kind: string; }
 
 const STATUS_BADGE: Record<string, string> = {
-  'Planerad': 'bg-status-not-started/15 text-status-not-started border-status-not-started/30',
-  'Bokad': 'bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30',
+  'Bokad': 'bg-status-not-started/15 text-status-not-started border-status-not-started/30',
   'Utförd': 'bg-status-completed/15 text-status-completed border-status-completed/30',
   'Försenad': 'bg-status-delayed/15 text-status-delayed border-status-delayed/30',
 };
 
 const STATUS_DOT: Record<string, string> = {
-  'Planerad': 'bg-status-not-started',
-  'Bokad': 'bg-status-in-progress',
+  'Bokad': 'bg-status-not-started',
   'Utförd': 'bg-status-completed',
   'Försenad': 'bg-status-delayed',
 };
@@ -77,7 +75,8 @@ function toISODate(d: Date) {
 function effectiveStatus(s: Service): ServiceStatus {
   if (s.status === 'Utförd' || s.completed_date) return 'Utförd';
   if (s.planned_date && s.planned_date < todayISO()) return 'Försenad';
-  return (s.status as ServiceStatus) || 'Planerad';
+  if (s.status === 'Planerad' || !s.status) return 'Bokad';
+  return s.status as ServiceStatus;
 }
 function daysUntil(dateStr: string | null) {
   if (!dateStr) return null;
@@ -155,7 +154,7 @@ export function ServicesView() {
       customer: item.contract.customer || item.contract.facility_name,
       facility_name: item.contract.facility_name,
       planned_date: item.date,
-      status: 'Planerad',
+      status: 'Bokad',
     }).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Service bokad');
@@ -338,11 +337,10 @@ interface Occurrence {
 }
 
 const STATUS_CELL: Record<string, string> = {
-  'Utförd': 'bg-status-completed/20 text-status-completed border border-status-completed/40 hover:bg-status-completed/30',
-  'Planerad': 'bg-status-not-started/20 text-status-not-started border border-status-not-started/40 hover:bg-status-not-started/30',
-  'Bokad': 'bg-status-in-progress/20 text-status-in-progress border border-status-in-progress/40 hover:bg-status-in-progress/30',
-  'Försenad': 'bg-status-delayed/20 text-status-delayed border border-status-delayed/40 hover:bg-status-delayed/30',
   'Förväntad': 'bg-background text-muted-foreground border border-dashed border-muted-foreground/60 hover:bg-muted/60',
+  'Bokad': 'bg-status-not-started/20 text-status-not-started border border-status-not-started/40 hover:bg-status-not-started/30',
+  'Utförd': 'bg-status-completed/20 text-status-completed border border-status-completed/40 hover:bg-status-completed/30',
+  'Försenad': 'bg-status-delayed/20 text-status-delayed border border-status-delayed/40 hover:bg-status-delayed/30',
 };
 
 function shortDate(iso: string) {
@@ -429,11 +427,9 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
           <CalendarIcon className="h-4 w-4" /> Schema · översikt per år
         </CardTitle>
         <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-completed/30 border border-status-completed/50" /> Utförd</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-not-started/30 border border-status-not-started/50" /> Planerad</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-in-progress/30 border border-status-in-progress/50" /> Bokad</span>
-          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-delayed/30 border border-status-delayed/50" /> Försenad</span>
           <span className="flex items-center gap-1"><span className="h-3 w-5 rounded border border-dashed border-muted-foreground/60" /> Förväntad</span>
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-not-started/30 border border-status-not-started/50" /> Bokad</span>
+          <span className="flex items-center gap-1"><span className="h-3 w-5 rounded bg-status-completed/30 border border-status-completed/50" /> Utförd</span>
         </div>
       </CardHeader>
       <CardContent className="px-0 pb-0">
@@ -568,7 +564,7 @@ function BookServiceDialog({ target, onClose, onBooked }: { target: Occurrence; 
               <Select value={status} onValueChange={v => setStatus(v as ServiceStatus)}>
                 <SelectTrigger className="h-9 mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(['Planerad', 'Bokad', 'Utförd'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {(['Bokad', 'Utförd'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -731,7 +727,7 @@ function AllServicesPanel({ services, contracts, onOpen, onChange }: { services:
 
   const addService = async () => {
     const { error } = await supabase.from('services').insert({
-      customer: '', facility_name: '', status: 'Planerad', planned_date: todayISO(),
+      customer: '', facility_name: '', status: 'Bokad', planned_date: todayISO(),
     });
     if (error) toast.error(error.message); else onChange();
   };
@@ -746,7 +742,7 @@ function AllServicesPanel({ services, contracts, onOpen, onChange }: { services:
             <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alla status</SelectItem>
-              {(['Planerad', 'Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              {(['Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button size="sm" onClick={addService}><Plus className="h-4 w-4 mr-1" /> Ny service</Button>
@@ -893,7 +889,7 @@ function ServiceDetailDialog({ service, allServices, onClose, onChange, userId }
               <div><Label>Status</Label>
                 <Select value={s.status} onValueChange={v => save({ status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{(['Planerad', 'Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
+                  <SelectContent>{(['Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(x => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div><Label>Planerad tid (h)</Label><Input type="number" step="0.5" value={s.planned_hours} onChange={e => setS({ ...s, planned_hours: +e.target.value })} onBlur={() => save({ planned_hours: s.planned_hours })} /></div>
