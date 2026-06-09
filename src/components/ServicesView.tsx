@@ -563,7 +563,7 @@ function BookServiceDialog({ target, onClose, onBooked }: { target: Occurrence; 
               <Select value={status} onValueChange={v => setStatus(v as ServiceStatus)}>
                 <SelectTrigger className="h-9 mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(['Planerad', 'Bokad', 'Utförd'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {(['Bokad', 'Utförd'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
