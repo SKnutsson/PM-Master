@@ -441,7 +441,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
           <TooltipProvider delayDuration={100}>
             <div style={{ minWidth: totalGridW }}>
               <div className="flex border-y bg-muted/40 sticky top-0 z-10">
-                <div style={{ width: LABEL_W }} className="px-3 py-2 text-xs font-semibold text-muted-foreground border-r bg-card">Anläggning</div>
+                <div style={{ width: LABEL_W }} className="px-3 py-2 text-xs font-semibold text-muted-foreground border-r bg-card sticky left-0 z-20">Anläggning</div>
                 {years.map(y => (
                   <div key={y} style={{ width: COL_W }} className={cn(
                     'text-center text-xs font-bold py-2 border-r last:border-r-0 tabular-nums',
@@ -458,7 +458,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
                 const contract = contracts.find(c => c.facility_name === facility);
                 return (
                   <div key={facility} className="flex border-b hover:bg-muted/20 transition-colors">
-                    <div style={{ width: LABEL_W }} className="px-2.5 py-1 border-r flex items-center gap-1.5 min-w-0">
+                    <div style={{ width: LABEL_W }} className="px-2.5 py-1 border-r flex items-center gap-1.5 min-w-0 sticky left-0 bg-card z-10">
                       <span className={cn('text-xs truncate', contract?.active && 'font-semibold text-primary')}>{facility}</span>
                       {contract?.active && <Badge variant="outline" className="text-[9px] py-0 px-1 h-3.5 border-primary/40 text-primary shrink-0">Avtal</Badge>}
                     </div>
@@ -651,7 +651,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
                 <TableHead className="text-xs">Återk. (mån)</TableHead>
                 <TableHead className="text-xs">Service-mån</TableHead>
                 <TableHead className="text-xs">Aktiv</TableHead>
-                <TableHead className="text-xs">Anteckning</TableHead>
+                <TableHead className="text-xs">Notering</TableHead>
                 <TableHead className="text-xs"></TableHead>
               </TableRow>
             </TableHeader>
@@ -706,7 +706,7 @@ function ContractRow({ contract, onChange }: { contract: ServiceContract; onChan
         </Select>
       </TableCell>
       <TableCell><Checkbox checked={c.active} onCheckedChange={v => save({ active: !!v })} /></TableCell>
-      <TableCell><Input value={c.notes || ''} onChange={e => setC({ ...c, notes: e.target.value })} onBlur={() => save({ notes: c.notes })} className="h-8 min-w-[200px]" placeholder="t.ex. Betalas vid service 1ggr/år" /></TableCell>
+      <TableCell><Input value={c.notes || ''} onChange={e => setC({ ...c, notes: e.target.value })} onBlur={() => save({ notes: c.notes })} className="h-8 min-w-[200px]" /></TableCell>
       <TableCell>
         <div className="flex justify-end">
           <Button size="sm" variant="ghost" onClick={del}><Trash2 className="h-4 w-4" /></Button>
