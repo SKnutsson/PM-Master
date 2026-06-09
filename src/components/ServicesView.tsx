@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
-type ServiceStatus = 'Planerad' | 'Bokad' | 'Utförd' | 'Försenad';
+type ServiceStatus = 'Bokad' | 'Utförd' | 'Försenad';
 
 interface ServiceContract {
   id: string;
