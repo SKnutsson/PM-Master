@@ -741,7 +741,7 @@ function AllServicesPanel({ services, contracts, onOpen, onChange }: { services:
             <SelectTrigger className="h-9 w-36"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alla status</SelectItem>
-              {(['Planerad', 'Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              {(['Bokad', 'Utförd', 'Försenad'] as ServiceStatus[]).map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button size="sm" onClick={addService}><Plus className="h-4 w-4 mr-1" /> Ny service</Button>
