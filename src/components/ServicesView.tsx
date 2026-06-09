@@ -336,11 +336,10 @@ interface Occurrence {
 }
 
 const STATUS_CELL: Record<string, string> = {
-  'Utförd': 'bg-status-completed/20 text-status-completed border border-status-completed/40 hover:bg-status-completed/30',
-  'Planerad': 'bg-status-not-started/20 text-status-not-started border border-status-not-started/40 hover:bg-status-not-started/30',
-  'Bokad': 'bg-status-in-progress/20 text-status-in-progress border border-status-in-progress/40 hover:bg-status-in-progress/30',
-  'Försenad': 'bg-status-delayed/20 text-status-delayed border border-status-delayed/40 hover:bg-status-delayed/30',
   'Förväntad': 'bg-background text-muted-foreground border border-dashed border-muted-foreground/60 hover:bg-muted/60',
+  'Bokad': 'bg-status-not-started/20 text-status-not-started border border-status-not-started/40 hover:bg-status-not-started/30',
+  'Utförd': 'bg-status-completed/20 text-status-completed border border-status-completed/40 hover:bg-status-completed/30',
+  'Försenad': 'bg-status-delayed/20 text-status-delayed border border-status-delayed/40 hover:bg-status-delayed/30',
 };
 
 function shortDate(iso: string) {
