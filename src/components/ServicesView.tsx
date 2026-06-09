@@ -441,7 +441,7 @@ function TimelineGantt({ contracts, services, onOpen }: { contracts: ServiceCont
           <TooltipProvider delayDuration={100}>
             <div style={{ minWidth: totalGridW }}>
               <div className="flex border-y bg-muted/40 sticky top-0 z-10">
-                <div style={{ width: LABEL_W }} className="px-3 py-2 text-xs font-semibold text-muted-foreground border-r bg-card">Anläggning</div>
+                <div style={{ width: LABEL_W }} className="px-3 py-2 text-xs font-semibold text-muted-foreground border-r bg-card sticky left-0 z-20">Anläggning</div>
                 {years.map(y => (
                   <div key={y} style={{ width: COL_W }} className={cn(
                     'text-center text-xs font-bold py-2 border-r last:border-r-0 tabular-nums',
