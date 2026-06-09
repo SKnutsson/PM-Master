@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Plus, GripVertical, Archive } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Status } from '@/data/projectData';
+import { Status, statuses } from '@/data/projectData';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { AddActivityDialog } from './dialogs/AddActivityDialog';
 import { EditActivityDialog } from './dialogs/EditActivityDialog';
@@ -11,6 +11,14 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatusLegend } from './StatusLegend';
 import { GanttBar } from './GanttBar';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import {
   Tooltip,
   TooltipContent,
