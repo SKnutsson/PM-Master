@@ -726,7 +726,7 @@ function AllServicesPanel({ services, contracts, onOpen, onChange }: { services:
 
   const addService = async () => {
     const { error } = await supabase.from('services').insert({
-      customer: '', facility_name: '', status: 'Planerad', planned_date: todayISO(),
+      customer: '', facility_name: '', status: 'Bokad', planned_date: todayISO(),
     });
     if (error) toast.error(error.message); else onChange();
   };
