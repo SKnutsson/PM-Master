@@ -153,7 +153,7 @@ export function ServicesView() {
       customer: item.contract.customer || item.contract.facility_name,
       facility_name: item.contract.facility_name,
       planned_date: item.date,
-      status: 'Planerad',
+      status: 'Bokad',
     }).select().single();
     if (error) { toast.error(error.message); return; }
     toast.success('Service bokad');
