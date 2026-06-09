@@ -75,7 +75,8 @@ function toISODate(d: Date) {
 function effectiveStatus(s: Service): ServiceStatus {
   if (s.status === 'Utförd' || s.completed_date) return 'Utförd';
   if (s.planned_date && s.planned_date < todayISO()) return 'Försenad';
-  return (s.status as ServiceStatus) || 'Bokad';
+  if (s.status === 'Planerad' || !s.status) return 'Bokad';
+  return s.status as ServiceStatus;
 }
 function daysUntil(dateStr: string | null) {
   if (!dateStr) return null;
