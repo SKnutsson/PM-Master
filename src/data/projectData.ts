@@ -8,6 +8,7 @@ export const phases: Phase[] = ['Konstruktion', 'Produktion', 'Montage'];
 export interface ActivitySegment {
   start: string;
   end: string;
+  status?: Status;
 }
 
 export interface Activity {

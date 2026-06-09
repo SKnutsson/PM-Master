@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Plus, GripVertical, Archive } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Status } from '@/data/projectData';
+import { Status, statuses } from '@/data/projectData';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { AddActivityDialog } from './dialogs/AddActivityDialog';
 import { EditActivityDialog } from './dialogs/EditActivityDialog';
@@ -11,6 +11,14 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StatusLegend } from './StatusLegend';
 import { GanttBar } from './GanttBar';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import {
   Tooltip,
   TooltipContent,
@@ -498,11 +506,11 @@ export function TimelineView() {
     projectId: string,
     activityId: string,
     segmentIndex: number,
-    segments: { start: string; end: string }[],
+    segments: { start: string; end: string; status?: Status }[],
     newStart: string,
     newEnd: string,
   ) => {
-    const next = segments.map((s, i) => i === segmentIndex ? { start: newStart, end: newEnd } : s);
+    const next = segments.map((s, i) => i === segmentIndex ? { ...s, start: newStart, end: newEnd } : s);
     const allStarts = next.map(s => s.start).sort();
     const allEnds = next.map(s => s.end).sort();
     await updateActivity(projectId, activityId, {
@@ -510,6 +518,17 @@ export function TimelineView() {
       startDate: allStarts[0],
       endDate: allEnds[allEnds.length - 1],
     });
+  }, [updateActivity]);
+
+  const handleSegmentStatusChange = useCallback(async (
+    projectId: string,
+    activityId: string,
+    segmentIndex: number,
+    segments: { start: string; end: string; status?: Status }[],
+    newStatus: Status,
+  ) => {
+    const next = segments.map((s, i) => i === segmentIndex ? { ...s, status: newStatus } : s);
+    await updateActivity(projectId, activityId, { segments: next });
   }, [updateActivity]);
 
   const renderTodayMarker = () => {
@@ -929,29 +948,49 @@ export function TimelineView() {
                                         const sCol = dateToCol(seg.start);
                                         const eCol = dateToCol(seg.end);
                                         if (sCol < 0 || sCol >= columnCount || eCol < 0) return;
+                                        const segDerived = deriveStatus(seg.status || activity.status);
                                         bars.push(
-                                          <GanttBar
-                                            key={`${activity.id}-seg-${idx}`}
-                                            activityId={activity.id}
-                                            projectId={project.id}
-                                            activityName={`${activity.name} (del ${idx + 1}/${sortedSegs.length})`}
-                                            startDate={seg.start}
-                                            endDate={seg.end}
-                                            statusColor={getStatusColor(derived)}
-                                            derivedStatus={derived}
-                                            responsible={activity.responsible}
-                                            columnCount={columnCount}
-                                            startCol={sCol}
-                                            endCol={eCol}
-                                            onDatesChange={(pid, aid, ns, ne) =>
-                                              handleSegmentDatesChange(pid, aid, idx, sortedSegs, ns, ne)
-                                            }
-                                            colToDate={colToDate}
-                                            dateToCol={dateToCol}
-                                            colWidth={colWidth}
-                                            snapCols={1}
-                                            isMilestone={false}
-                                          />
+                                          <ContextMenu key={`${activity.id}-seg-${idx}`}>
+                                            <ContextMenuTrigger asChild>
+                                              <div className="contents">
+                                                <GanttBar
+                                                  activityId={activity.id}
+                                                  projectId={project.id}
+                                                  activityName={`${activity.name} (del ${idx + 1}/${sortedSegs.length})`}
+                                                  startDate={seg.start}
+                                                  endDate={seg.end}
+                                                  statusColor={getStatusColor(segDerived)}
+                                                  derivedStatus={segDerived}
+                                                  responsible={activity.responsible}
+                                                  columnCount={columnCount}
+                                                  startCol={sCol}
+                                                  endCol={eCol}
+                                                  onDatesChange={(pid, aid, ns, ne) =>
+                                                    handleSegmentDatesChange(pid, aid, idx, sortedSegs, ns, ne)
+                                                  }
+                                                  colToDate={colToDate}
+                                                  dateToCol={dateToCol}
+                                                  colWidth={colWidth}
+                                                  snapCols={1}
+                                                  isMilestone={false}
+                                                />
+                                              </div>
+                                            </ContextMenuTrigger>
+                                            <ContextMenuContent>
+                                              <ContextMenuLabel>Status för del {idx + 1}</ContextMenuLabel>
+                                              <ContextMenuSeparator />
+                                              {statuses.map((s) => (
+                                                <ContextMenuItem
+                                                  key={s}
+                                                  onSelect={() => handleSegmentStatusChange(project.id, activity.id, idx, sortedSegs, s)}
+                                                >
+                                                  <span className={cn('mr-2 inline-block h-2.5 w-2.5 rounded-full', getStatusColor(deriveStatus(s)))} />
+                                                  {s}
+                                                  {(seg.status || activity.status) === s && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
+                                                </ContextMenuItem>
+                                              ))}
+                                            </ContextMenuContent>
+                                          </ContextMenu>
                                         );
                                         // Dashed connector to the next segment
                                         if (idx < sortedSegs.length - 1) {
