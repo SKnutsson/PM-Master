@@ -58,8 +58,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 const STATUS_DOT: Record<string, string> = {
-  'Planerad': 'bg-status-not-started',
-  'Bokad': 'bg-status-in-progress',
+  'Bokad': 'bg-status-not-started',
   'Utförd': 'bg-status-completed',
   'Försenad': 'bg-status-delayed',
 };
