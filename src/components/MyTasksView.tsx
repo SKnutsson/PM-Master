@@ -233,12 +233,20 @@ export function MyTasksView() {
     if (!effectiveUserId) return [] as TaskBucket[];
     return buckets
       .filter((b) => b.owner_id === effectiveUserId)
-      .sort((a, b) => {
-        // personal buckets last
-        if (!!a.project_id !== !!b.project_id) return a.project_id ? -1 : 1;
-        return a.sort_order - b.sort_order;
-      });
+      .sort((a, b) => a.sort_order - b.sort_order);
   }, [buckets, effectiveUserId]);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const ids = visibleBuckets.map((b) => b.id);
+    const oldIdx = ids.indexOf(active.id as string);
+    const newIdx = ids.indexOf(over.id as string);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(ids, oldIdx, newIdx);
+    reorderBuckets.mutate(reordered);
+  };
 
   const tasksByBucket = useMemo(() => {
     const map = new Map<string, TaskRow[]>();
