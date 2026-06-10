@@ -808,12 +808,27 @@ function EditTaskDialog({
             </div>
             <div className="grid gap-1.5">
               <Label>Delegera till</Label>
-              <UserSelect
-                profiles={profiles}
-                value={assignedTo ? (profiles.find((p) => p.user_id === assignedTo) ? assignedTo : 'none') : 'none'}
-                useUserIdValue
+              <Select
+                value={assignedTo || 'none'}
                 onValueChange={(v) => setAssignedTo(v === 'none' ? '' : v)}
-              />
+              >
+                <SelectTrigger><SelectValue placeholder="Ingen" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Ingen</SelectItem>
+                  {profiles.map((p) => {
+                    const n = getDisplayName(p);
+                    if (!n) return null;
+                    return (
+                      <SelectItem key={p.user_id} value={p.user_id}>
+                        <div className="flex items-center gap-2">
+                          <UserAvatar profile={p} size="xs" />
+                          <span>{n}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
               <p className="text-[10px] text-muted-foreground">
                 Den delegerade ser kortet under "Tilldelat mig" och du behåller det i din bucket.
               </p>
