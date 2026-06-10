@@ -452,10 +452,44 @@ export function MyTasksView() {
   );
 }
 
+// =================== Sortable wrapper ===================
+function SortableBucket({
+  id, disabled, children,
+}: {
+  id: string;
+  disabled?: boolean;
+  children: (dragHandle: React.ReactNode) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id, disabled });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  const handle = disabled ? null : (
+    <button
+      type="button"
+      {...attributes}
+      {...listeners}
+      className="cursor-grab active:cursor-grabbing rounded p-1 text-muted-foreground/60 hover:bg-muted hover:text-foreground touch-none"
+      aria-label="Flytta bucket"
+    >
+      <GripVertical className="h-3.5 w-3.5" />
+    </button>
+  );
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(handle)}
+    </div>
+  );
+}
+
 // =================== Bucket column ===================
 function BucketColumn({
   title, subtitle, color, icon, tasks, profiles, projects, onCardClick, onAddCard,
-  onToggleComplete, onRename, onDelete, readOnly,
+  onToggleComplete, onRename, onDelete, readOnly, dragHandle,
 }: {
   title: string;
   subtitle?: string;
@@ -470,6 +504,7 @@ function BucketColumn({
   onRename?: ((name: string) => void) | null;
   onDelete?: (() => void) | null;
   readOnly?: boolean;
+  dragHandle?: React.ReactNode;
 }) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
