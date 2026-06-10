@@ -651,12 +651,17 @@ function TaskCard({
     <div
       onClick={onClick}
       className={cn(
-        "group cursor-pointer rounded-md border border-border/50 bg-background p-2 text-sm shadow-sm transition-all duration-150",
+        "group cursor-pointer overflow-hidden rounded-md border border-border/50 bg-background text-sm shadow-sm transition-all duration-150",
         "hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
         isCompleted && "opacity-60"
       )}
     >
-      <div className="flex items-start gap-2">
+      {/* Colored banner */}
+      <div
+        className="h-1.5 w-full"
+        style={{ background: 'linear-gradient(90deg, #ebb932, #f5d06b)' }}
+      />
+      <div className="flex items-start gap-2 p-2">
         <Checkbox
           checked={isCompleted}
           onCheckedChange={onToggleComplete}
