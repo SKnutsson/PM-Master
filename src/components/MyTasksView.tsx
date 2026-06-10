@@ -645,12 +645,14 @@ function TaskCard({
   const assignee = task.assigned_to ? profiles.find((p) => p.user_id === task.assigned_to) : null;
   const project = task.project_id ? projects.find((p) => p.id === task.project_id) : null;
   const isCompleted = task.status === 'Slutförd';
+  const hasComment = !!(task.comment && task.comment.trim());
 
   return (
     <div
       onClick={onClick}
       className={cn(
-        "group cursor-pointer rounded-md border border-border/50 bg-background p-2 text-sm shadow-sm transition hover:border-primary/40 hover:shadow",
+        "group cursor-pointer rounded-md border border-border/50 bg-background p-2 text-sm shadow-sm transition-all duration-150",
+        "hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
         isCompleted && "opacity-60"
       )}
     >
@@ -663,7 +665,12 @@ function TaskCard({
         />
         <div className="min-w-0 flex-1">
           <p className={cn("text-sm leading-snug", isCompleted && "line-through")}>{task.name}</p>
-          {(task.deadline || project || assignee || task.status !== 'Ej påbörjad') && (
+          {hasComment && (
+            <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-[11px] leading-snug text-muted-foreground/80">
+              {task.comment}
+            </p>
+          )}
+          {(task.deadline || project || assignee || task.status !== 'Ej påbörjad' || hasComment) && (
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               {task.status !== 'Ej påbörjad' && <StatusBadge status={task.status as Status} size="sm" />}
               {task.deadline && (
@@ -676,6 +683,11 @@ function TaskCard({
                 <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
                   <Folder className="h-2.5 w-2.5" />
                   {project.code || project.name}
+                </span>
+              )}
+              {hasComment && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/70" title="Har kommentar">
+                  <MessageSquare className="h-2.5 w-2.5" />
                 </span>
               )}
               {assignee && (
