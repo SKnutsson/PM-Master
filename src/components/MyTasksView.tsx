@@ -26,13 +26,20 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Plus, MoreHorizontal, CalendarIcon, Trash2, Inbox, Folder, User as UserIcon, Send, X } from 'lucide-react';
+import { Plus, MoreHorizontal, CalendarIcon, Trash2, Inbox, Folder, User as UserIcon, Send, X, GripVertical, MessageSquare } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import type { Status } from '@/data/projectData';
+import {
+  DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, closestCenter,
+} from '@dnd-kit/core';
+import {
+  SortableContext, horizontalListSortingStrategy, useSortable, arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const TASK_STATUSES = ['Ej påbörjad', 'Pågår', 'Slutförd', 'Försenad'] as const;
 const BUCKET_COLORS = [
@@ -202,17 +209,44 @@ export function MyTasksView() {
     },
   });
 
+  const reorderBuckets = useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      // Optimistic cache update
+      qc.setQueryData<TaskBucket[]>(['task-buckets'], (old) => {
+        if (!old) return old;
+        return old.map((b) => {
+          const idx = orderedIds.indexOf(b.id);
+          return idx === -1 ? b : { ...b, sort_order: idx };
+        });
+      });
+      await Promise.all(
+        orderedIds.map((id, idx) =>
+          supabase.from('task_buckets').update({ sort_order: idx }).eq('id', id)
+        )
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['task-buckets'] }),
+  });
+
   // ---- Derived columns ----
   const visibleBuckets = useMemo(() => {
     if (!effectiveUserId) return [] as TaskBucket[];
     return buckets
       .filter((b) => b.owner_id === effectiveUserId)
-      .sort((a, b) => {
-        // personal buckets last
-        if (!!a.project_id !== !!b.project_id) return a.project_id ? -1 : 1;
-        return a.sort_order - b.sort_order;
-      });
+      .sort((a, b) => a.sort_order - b.sort_order);
   }, [buckets, effectiveUserId]);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const handleDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const ids = visibleBuckets.map((b) => b.id);
+    const oldIdx = ids.indexOf(active.id as string);
+    const newIdx = ids.indexOf(over.id as string);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(ids, oldIdx, newIdx);
+    reorderBuckets.mutate(reordered);
+  };
 
   const tasksByBucket = useMemo(() => {
     const map = new Map<string, TaskRow[]>();
@@ -295,43 +329,53 @@ export function MyTasksView() {
             />
           )}
 
-          {visibleBuckets.map((bucket) => {
-            const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
-            const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
-            return (
-              <BucketColumn
-                key={bucket.id}
-                title={bucket.name}
-                subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
-                color={bucket.color || 'hsl(190 35% 20%)'}
-                icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
-                tasks={bucketTasks}
-                profiles={profiles}
-                projects={projects}
-                readOnly={viewUser !== 'me'}
-                onCardClick={setEditTask}
-                onAddCard={
-                  viewUser === 'me'
-                    ? (name) => addTask.mutate({
-                        name,
-                        bucket,
-                        projectId: bucket.project_id,
-                        ownerId: bucket.owner_id,
-                        responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
-                      })
-                    : null
-                }
-                onToggleComplete={(t) => updateTask.mutate({
-                  id: t.id,
-                  patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={visibleBuckets.map((b) => b.id)} strategy={horizontalListSortingStrategy}>
+              <div className="inline-flex items-start gap-3">
+                {visibleBuckets.map((bucket) => {
+                  const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
+                  const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
+                  return (
+                    <SortableBucket key={bucket.id} id={bucket.id} disabled={viewUser !== 'me'}>
+                      {(dragHandle) => (
+                        <BucketColumn
+                          title={bucket.name}
+                          subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
+                          color={bucket.color || 'hsl(190 35% 20%)'}
+                          icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
+                          tasks={bucketTasks}
+                          profiles={profiles}
+                          projects={projects}
+                          readOnly={viewUser !== 'me'}
+                          dragHandle={dragHandle}
+                          onCardClick={setEditTask}
+                          onAddCard={
+                            viewUser === 'me'
+                              ? (name) => addTask.mutate({
+                                  name,
+                                  bucket,
+                                  projectId: bucket.project_id,
+                                  ownerId: bucket.owner_id,
+                                  responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
+                                })
+                              : null
+                          }
+                          onToggleComplete={(t) => updateTask.mutate({
+                            id: t.id,
+                            patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
+                          })}
+                          onRename={viewUser === 'me' && !bucket.project_id
+                            ? (name) => renameBucket.mutate({ id: bucket.id, name })
+                            : null}
+                          onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
+                        />
+                      )}
+                    </SortableBucket>
+                  );
                 })}
-                onRename={viewUser === 'me' && !bucket.project_id
-                  ? (name) => renameBucket.mutate({ id: bucket.id, name })
-                  : null}
-                onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
-              />
-            );
-          })}
+              </div>
+            </SortableContext>
+          </DndContext>
 
           {/* Project picker to add a project-bucket */}
           {viewUser === 'me' && (
@@ -408,10 +452,44 @@ export function MyTasksView() {
   );
 }
 
+// =================== Sortable wrapper ===================
+function SortableBucket({
+  id, disabled, children,
+}: {
+  id: string;
+  disabled?: boolean;
+  children: (dragHandle: React.ReactNode) => React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id, disabled });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+  const handle = disabled ? null : (
+    <button
+      type="button"
+      {...attributes}
+      {...listeners}
+      className="cursor-grab active:cursor-grabbing rounded p-1 text-muted-foreground/60 hover:bg-muted hover:text-foreground touch-none"
+      aria-label="Flytta bucket"
+    >
+      <GripVertical className="h-3.5 w-3.5" />
+    </button>
+  );
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(handle)}
+    </div>
+  );
+}
+
 // =================== Bucket column ===================
 function BucketColumn({
   title, subtitle, color, icon, tasks, profiles, projects, onCardClick, onAddCard,
-  onToggleComplete, onRename, onDelete, readOnly,
+  onToggleComplete, onRename, onDelete, readOnly, dragHandle,
 }: {
   title: string;
   subtitle?: string;
@@ -426,6 +504,7 @@ function BucketColumn({
   onRename?: ((name: string) => void) | null;
   onDelete?: (() => void) | null;
   readOnly?: boolean;
+  dragHandle?: React.ReactNode;
 }) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
@@ -439,10 +518,16 @@ function BucketColumn({
   };
 
   return (
-    <div className="flex h-full w-[300px] shrink-0 flex-col rounded-xl border border-border/40 bg-card/60 shadow-sm">
+    <div
+      className="flex h-full w-[300px] shrink-0 flex-col rounded-xl border border-border/40 bg-card/60 shadow-sm transition hover:border-border/70 hover:shadow-md"
+    >
       {/* Color stripe */}
-      <div className="h-1.5 rounded-t-xl" style={{ backgroundColor: color }} />
-      <div className="flex items-start justify-between gap-2 px-3 pt-2.5 pb-2">
+      <div
+        className="h-1.5 rounded-t-xl"
+        style={{ background: `linear-gradient(90deg, ${color}, ${color}cc)` }}
+      />
+      <div className="flex items-start justify-between gap-1 px-2 pt-2 pb-2">
+        {dragHandle}
         <div className="min-w-0 flex-1">
           {renaming && onRename ? (
             <Input
@@ -560,12 +645,14 @@ function TaskCard({
   const assignee = task.assigned_to ? profiles.find((p) => p.user_id === task.assigned_to) : null;
   const project = task.project_id ? projects.find((p) => p.id === task.project_id) : null;
   const isCompleted = task.status === 'Slutförd';
+  const hasComment = !!(task.comment && task.comment.trim());
 
   return (
     <div
       onClick={onClick}
       className={cn(
-        "group cursor-pointer rounded-md border border-border/50 bg-background p-2 text-sm shadow-sm transition hover:border-primary/40 hover:shadow",
+        "group cursor-pointer rounded-md border border-border/50 bg-background p-2 text-sm shadow-sm transition-all duration-150",
+        "hover:border-primary/40 hover:shadow-md hover:-translate-y-0.5",
         isCompleted && "opacity-60"
       )}
     >
@@ -578,7 +665,12 @@ function TaskCard({
         />
         <div className="min-w-0 flex-1">
           <p className={cn("text-sm leading-snug", isCompleted && "line-through")}>{task.name}</p>
-          {(task.deadline || project || assignee || task.status !== 'Ej påbörjad') && (
+          {hasComment && (
+            <p className="mt-1 line-clamp-2 whitespace-pre-wrap text-[11px] leading-snug text-muted-foreground/80">
+              {task.comment}
+            </p>
+          )}
+          {(task.deadline || project || assignee || task.status !== 'Ej påbörjad' || hasComment) && (
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               {task.status !== 'Ej påbörjad' && <StatusBadge status={task.status as Status} size="sm" />}
               {task.deadline && (
@@ -591,6 +683,11 @@ function TaskCard({
                 <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
                   <Folder className="h-2.5 w-2.5" />
                   {project.code || project.name}
+                </span>
+              )}
+              {hasComment && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/70" title="Har kommentar">
+                  <MessageSquare className="h-2.5 w-2.5" />
                 </span>
               )}
               {assignee && (
