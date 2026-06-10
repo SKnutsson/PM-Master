@@ -518,10 +518,16 @@ function BucketColumn({
   };
 
   return (
-    <div className="flex h-full w-[300px] shrink-0 flex-col rounded-xl border border-border/40 bg-card/60 shadow-sm">
+    <div
+      className="flex h-full w-[300px] shrink-0 flex-col rounded-xl border border-border/40 bg-card/60 shadow-sm transition hover:border-border/70 hover:shadow-md"
+    >
       {/* Color stripe */}
-      <div className="h-1.5 rounded-t-xl" style={{ backgroundColor: color }} />
-      <div className="flex items-start justify-between gap-2 px-3 pt-2.5 pb-2">
+      <div
+        className="h-1.5 rounded-t-xl"
+        style={{ background: `linear-gradient(90deg, ${color}, ${color}cc)` }}
+      />
+      <div className="flex items-start justify-between gap-1 px-2 pt-2 pb-2">
+        {dragHandle}
         <div className="min-w-0 flex-1">
           {renaming && onRename ? (
             <Input
