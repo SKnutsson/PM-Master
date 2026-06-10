@@ -1198,44 +1198,107 @@ export type Database = {
           },
         ]
       }
+      task_buckets: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          project_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          project_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          project_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_buckets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
+          assigned_to: string | null
+          bucket_id: string | null
           comment: string | null
+          completed_at: string | null
           created_at: string
           created_by: string | null
           deadline: string | null
           id: string
           name: string
+          owner_id: string | null
           project_id: string | null
           responsible: string
+          sort_order: number
           status: string
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
+          bucket_id?: string | null
           comment?: string | null
+          completed_at?: string | null
           created_at?: string
           created_by?: string | null
           deadline?: string | null
           id?: string
           name: string
+          owner_id?: string | null
           project_id?: string | null
           responsible?: string
+          sort_order?: number
           status?: string
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
+          bucket_id?: string | null
           comment?: string | null
+          completed_at?: string | null
           created_at?: string
           created_by?: string | null
           deadline?: string | null
           id?: string
           name?: string
+          owner_id?: string | null
           project_id?: string | null
           responsible?: string
+          sort_order?: number
           status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "task_buckets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_project_id_fkey"
             columns: ["project_id"]
