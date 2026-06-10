@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Project } from '@/data/projectData';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
+import { ProjectTasksList } from './ProjectTasksList';
 import { cn } from '@/lib/utils';
 
 const containerVariants = {
@@ -210,6 +211,9 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                     {!project.customer && !project.projectManager && !project.salesPerson && !project.product && !project.notes && (
                       <p className="text-xs text-muted-foreground">Ingen information tillagd. Klicka på pennikonen för att redigera.</p>
                     )}
+                    <div className="border-t border-border/30 pt-2">
+                      <ProjectTasksList projectId={project.id} />
+                    </div>
                   </div>
                 )}
               </div>

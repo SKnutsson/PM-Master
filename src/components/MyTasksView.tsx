@@ -1,13 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfiles, getDisplayName, UserProfile } from '@/hooks/useProfiles';
 import { UserAvatar } from '@/components/UserAvatar';
 import { UserSelect } from '@/components/UserSelect';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,14 +13,20 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { CalendarDays, ClipboardList, Filter, Layers, Clock, AlertTriangle, Plus, CalendarIcon, Trash2, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Plus, MoreHorizontal, CalendarIcon, Trash2, Inbox, Folder, User as UserIcon, Send, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { cn } from '@/lib/utils';
@@ -31,11 +34,26 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import type { Status } from '@/data/projectData';
 
-type StatusFilter = 'all' | 'Ej påbörjad' | 'Pågår' | 'Försenad';
-const EXCLUDED_STATUSES = ['Slutförd'];
 const TASK_STATUSES = ['Ej påbörjad', 'Pågår', 'Slutförd', 'Försenad'] as const;
+const BUCKET_COLORS = [
+  { name: 'Petrol', value: 'hsl(190 35% 20%)' },
+  { name: 'Grön', value: 'hsl(170 55% 35%)' },
+  { name: 'Blå', value: 'hsl(217 70% 50%)' },
+  { name: 'Orange', value: 'hsl(25 90% 53%)' },
+  { name: 'Lila', value: 'hsl(265 60% 55%)' },
+  { name: 'Rosa', value: 'hsl(330 65% 55%)' },
+];
 
-interface Task {
+interface TaskBucket {
+  id: string;
+  name: string;
+  owner_id: string;
+  project_id: string | null;
+  color: string | null;
+  sort_order: number;
+}
+
+interface TaskRow {
   id: string;
   name: string;
   responsible: string;
@@ -44,75 +62,133 @@ interface Task {
   comment: string | null;
   status: string;
   created_by: string | null;
-  created_at: string;
-  project_name?: string;
+  owner_id: string | null;
+  assigned_to: string | null;
+  bucket_id: string | null;
+  sort_order: number;
 }
 
 export function MyTasksView() {
   const { user } = useAuth();
   const { profiles } = useProfiles();
   const { projects } = useProjectDataContext();
-  const queryClient = useQueryClient();
-  const [selectedUser, setSelectedUser] = useState<string>('me');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
+  const qc = useQueryClient();
+  const [viewUser, setViewUser] = useState<string>('me');
+  const [newBucketOpen, setNewBucketOpen] = useState(false);
+  const [editTask, setEditTask] = useState<TaskRow | null>(null);
+  const [deleteBucketId, setDeleteBucketId] = useState<string | null>(null);
 
-  const currentProfile = useMemo(
-    () => profiles.find((p) => p.user_id === user?.id),
-    [profiles, user]
-  );
+  const effectiveUserId = viewUser === 'me' ? user?.id : viewUser;
+  const currentProfile = useMemo(() => profiles.find((p) => p.user_id === user?.id), [profiles, user]);
 
-  const selectedDisplayName = useMemo(() => {
-    if (selectedUser === 'me') return currentProfile ? getDisplayName(currentProfile) : '';
-    if (selectedUser === 'all') return '';
-    const p = profiles.find((pr) => pr.user_id === selectedUser);
-    return p ? getDisplayName(p) : '';
-  }, [selectedUser, profiles, currentProfile]);
-
-  // Fetch tasks
-  const { data: tasks = [] } = useQuery({
-    queryKey: ['my-tasks'],
-    queryFn: async () => {
-      const { data: tasksData } = await supabase
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false });
-      const projectMap = new Map(projects.map((p) => [p.id, p.name]));
-      return (tasksData || []).map((t: any) => ({
-        ...t,
-        project_name: t.project_id ? projectMap.get(t.project_id) || 'Okänt projekt' : null,
-      })) as Task[];
+  // ---- Queries ----
+  const { data: buckets = [] } = useQuery({
+    queryKey: ['task-buckets'],
+    queryFn: async (): Promise<TaskBucket[]> => {
+      const { data } = await supabase.from('task_buckets').select('*').order('sort_order');
+      return (data || []) as TaskBucket[];
     },
     enabled: !!user,
   });
 
-  // Mutations
-  const addTask = useMutation({
-    mutationFn: async (task: { name: string; responsible: string; deadline?: string; project_id?: string; comment?: string; status: string }) => {
-      const { error } = await supabase.from('tasks').insert({
-        name: task.name,
-        responsible: task.responsible,
-        deadline: task.deadline || null,
-        project_id: task.project_id || null,
-        comment: task.comment || null,
-        status: task.status,
-        created_by: user?.id,
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks-all'],
+    queryFn: async (): Promise<TaskRow[]> => {
+      const { data } = await supabase.from('tasks').select('*').order('sort_order');
+      return (data || []) as TaskRow[];
+    },
+    enabled: !!user,
+  });
+
+  // ---- Mutations ----
+  const ensureBucket = async (ownerId: string, projectId: string | null, fallbackName: string) => {
+    const existing = buckets.find((b) => b.owner_id === ownerId && b.project_id === projectId);
+    if (existing) return existing;
+    const { data, error } = await supabase
+      .from('task_buckets')
+      .insert({
+        name: fallbackName,
+        owner_id: ownerId,
+        project_id: projectId,
+        sort_order: buckets.length,
+        color: projectId ? null : BUCKET_COLORS[buckets.length % BUCKET_COLORS.length].value,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    qc.invalidateQueries({ queryKey: ['task-buckets'] });
+    return data as TaskBucket;
+  };
+
+  const createBucket = useMutation({
+    mutationFn: async ({ name, color }: { name: string; color: string }) => {
+      if (!user?.id) throw new Error('No user');
+      const { error } = await supabase.from('task_buckets').insert({
+        name, owner_id: user.id, color, sort_order: buckets.length,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-      toast.success('Uppgift skapad');
+      qc.invalidateQueries({ queryKey: ['task-buckets'] });
+      toast.success('Bucket skapad');
     },
   });
 
-  const updateTaskStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from('tasks').update({ status }).eq('id', id);
+  const renameBucket = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      const { error } = await supabase.from('task_buckets').update({ name }).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-tasks'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['task-buckets'] }),
+  });
+
+  const deleteBucket = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('task_buckets').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['task-buckets'] });
+      qc.invalidateQueries({ queryKey: ['tasks-all'] });
+      toast.success('Bucket borttagen');
+    },
+  });
+
+  const addTask = useMutation({
+    mutationFn: async (input: {
+      name: string;
+      bucket: TaskBucket | null;
+      projectId: string | null;
+      ownerId: string;
+      responsibleName: string;
+      assignedTo?: string | null;
+    }) => {
+      let bucket = input.bucket;
+      if (!bucket) {
+        const projName = input.projectId ? projects.find((p) => p.id === input.projectId)?.name || 'Projekt' : 'Att göra';
+        bucket = await ensureBucket(input.ownerId, input.projectId, projName);
+      }
+      const { error } = await supabase.from('tasks').insert({
+        name: input.name,
+        responsible: input.responsibleName,
+        project_id: input.projectId,
+        bucket_id: bucket.id,
+        owner_id: input.ownerId,
+        assigned_to: input.assignedTo || null,
+        status: 'Ej påbörjad',
+        created_by: user?.id,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks-all'] }),
+  });
+
+  const updateTask = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<TaskRow> }) => {
+      const { error } = await supabase.from('tasks').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks-all'] }),
   });
 
   const deleteTask = useMutation({
@@ -121,63 +197,52 @@ export function MyTasksView() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      qc.invalidateQueries({ queryKey: ['tasks-all'] });
       toast.success('Uppgift borttagen');
     },
   });
 
-  // Filters
-  const filterByUser = (items: Task[]) => {
-    if (selectedUser === 'all') return items;
-    const name = selectedDisplayName;
-    if (!name) return [];
-    return items.filter((item) => item.responsible === name);
-  };
+  // ---- Derived columns ----
+  const visibleBuckets = useMemo(() => {
+    if (!effectiveUserId) return [] as TaskBucket[];
+    return buckets
+      .filter((b) => b.owner_id === effectiveUserId)
+      .sort((a, b) => {
+        // personal buckets last
+        if (!!a.project_id !== !!b.project_id) return a.project_id ? -1 : 1;
+        return a.sort_order - b.sort_order;
+      });
+  }, [buckets, effectiveUserId]);
 
-  const filterByStatus = (items: Task[]) => {
-    const nonCompleted = items.filter((item) => !EXCLUDED_STATUSES.includes(item.status));
-    if (statusFilter === 'all') return nonCompleted;
-    return nonCompleted.filter((item) => item.status === statusFilter);
-  };
+  const tasksByBucket = useMemo(() => {
+    const map = new Map<string, TaskRow[]>();
+    tasks.forEach((t) => {
+      if (!t.bucket_id) return;
+      const arr = map.get(t.bucket_id) || [];
+      arr.push(t);
+      map.set(t.bucket_id, arr);
+    });
+    return map;
+  }, [tasks]);
 
-  const filteredTasks = useMemo(
-    () => filterByStatus(filterByUser(tasks)),
-    [tasks, selectedUser, selectedDisplayName, statusFilter]
-  );
+  // Delegated to viewed user (tasks where they are assignee but not owner)
+  const delegatedToMe = useMemo(() => {
+    if (!effectiveUserId) return [];
+    return tasks.filter((t) => t.assigned_to === effectiveUserId && t.owner_id !== effectiveUserId);
+  }, [tasks, effectiveUserId]);
 
-  const counts = useMemo(() => {
-    const userFiltered = filterByUser(tasks);
-    const nonCompleted = userFiltered.filter((t) => !EXCLUDED_STATUSES.includes(t.status));
-    return {
-      total: nonCompleted.length,
-      notStarted: nonCompleted.filter((t) => t.status === 'Ej påbörjad').length,
-      inProgress: nonCompleted.filter((t) => t.status === 'Pågår').length,
-      delayed: nonCompleted.filter((t) => t.status === 'Försenad').length,
-    };
-  }, [tasks, selectedUser, selectedDisplayName]);
-
-  const handleComplete = (task: Task) => {
-    const newStatus = task.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd';
-    updateTaskStatus.mutate({ id: task.id, status: newStatus });
-  };
-
+  // ---- Render ----
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mina uppgifter</h1>
-        <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-          <Plus className="mr-1 h-4 w-4" />
-          Ny uppgift
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border/50">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Mina uppgifter</h1>
+          <p className="text-xs text-muted-foreground">Personliga buckets och delegerade uppgifter</p>
+        </div>
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-muted-foreground">Visa för:</span>
-          <Select value={selectedUser} onValueChange={setSelectedUser}>
-            <SelectTrigger className="w-[200px]">
+          <Select value={viewUser} onValueChange={setViewUser}>
+            <SelectTrigger className="w-[200px] h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -187,129 +252,153 @@ export function MyTasksView() {
                   <span>Mig själv</span>
                 </div>
               </SelectItem>
-              <SelectItem value="all">Alla</SelectItem>
-              {profiles.map((p) => {
-                const name = getDisplayName(p);
-                if (!name || p.user_id === user?.id) return null;
-                return (
+              {profiles
+                .filter((p) => p.user_id !== user?.id)
+                .map((p) => (
                   <SelectItem key={p.user_id} value={p.user_id}>
                     <div className="flex items-center gap-2">
                       <UserAvatar profile={p} size="xs" />
-                      <span>{name}</span>
+                      <span>{getDisplayName(p)}</span>
                     </div>
                   </SelectItem>
-                );
+                ))}
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" onClick={() => setNewBucketOpen(true)} disabled={viewUser !== 'me'}>
+            <Plus className="mr-1 h-4 w-4" />
+            Ny bucket
+          </Button>
+        </div>
+      </div>
+
+      {/* Board */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="inline-flex h-full items-start gap-3 p-4 min-w-full">
+          {/* Delegated column (always first if any) */}
+          {delegatedToMe.length > 0 && (
+            <BucketColumn
+              key="__delegated"
+              title="Tilldelat mig"
+              subtitle="Från andra"
+              color="hsl(25 90% 53%)"
+              icon={<Send className="h-3.5 w-3.5" />}
+              tasks={delegatedToMe}
+              profiles={profiles}
+              projects={projects}
+              readOnly={viewUser !== 'me'}
+              onCardClick={setEditTask}
+              onAddCard={null}
+              onToggleComplete={(t) => updateTask.mutate({
+                id: t.id,
+                patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
               })}
-            </SelectContent>
-          </Select>
-        </div>
+            />
+          )}
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Status:</span>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Alla statusar</SelectItem>
-              <SelectItem value="Ej påbörjad">Ej påbörjad</SelectItem>
-              <SelectItem value="Pågår">Pågår</SelectItem>
-              <SelectItem value="Försenad">Försenad</SelectItem>
-            </SelectContent>
-          </Select>
+          {visibleBuckets.map((bucket) => {
+            const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
+            const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
+            return (
+              <BucketColumn
+                key={bucket.id}
+                title={bucket.name}
+                subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
+                color={bucket.color || 'hsl(190 35% 20%)'}
+                icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
+                tasks={bucketTasks}
+                profiles={profiles}
+                projects={projects}
+                readOnly={viewUser !== 'me'}
+                onCardClick={setEditTask}
+                onAddCard={
+                  viewUser === 'me'
+                    ? (name) => addTask.mutate({
+                        name,
+                        bucket,
+                        projectId: bucket.project_id,
+                        ownerId: bucket.owner_id,
+                        responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
+                      })
+                    : null
+                }
+                onToggleComplete={(t) => updateTask.mutate({
+                  id: t.id,
+                  patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
+                })}
+                onRename={viewUser === 'me' && !bucket.project_id
+                  ? (name) => renameBucket.mutate({ id: bucket.id, name })
+                  : null}
+                onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
+              />
+            );
+          })}
+
+          {/* Project picker to add a project-bucket */}
+          {viewUser === 'me' && (
+            <AddProjectBucketColumn
+              projects={projects.filter((p) => p.status !== 'Avslutat')}
+              existingProjectIds={visibleBuckets.map((b) => b.project_id).filter(Boolean) as string[]}
+              onPick={async (projectId) => {
+                const proj = projects.find((p) => p.id === projectId);
+                if (!proj || !user?.id) return;
+                await ensureBucket(user.id, projectId, proj.name);
+                toast.success(`Bucket skapad för ${proj.name}`);
+              }}
+            />
+          )}
+
+          {visibleBuckets.length === 0 && delegatedToMe.length === 0 && (
+            <div className="flex h-64 w-80 flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-sm text-muted-foreground">
+              <Inbox className="mb-2 h-8 w-8 opacity-40" />
+              {viewUser === 'me' ? 'Inga buckets ännu' : 'Användaren har inga buckets'}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
-          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168,30%,16%)] to-[hsl(168,40%,10%)] p-5 shadow-md">
-          <Layers className="absolute top-3 right-3 h-8 w-8 text-white/10" />
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Totalt</p>
-          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={counts.total} /></p>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(217,70%,55%)] to-[hsl(217,70%,40%)] p-5 shadow-md">
-          <ClipboardList className="absolute top-3 right-3 h-8 w-8 text-white/10" />
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Ej påbörjad</p>
-          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={counts.notStarted} /></p>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(25,95%,53%)] to-[hsl(25,90%,42%)] p-5 shadow-md">
-          <Clock className="absolute top-3 right-3 h-8 w-8 text-white/10" />
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Pågår</p>
-          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={counts.inProgress} /></p>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-          className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0,45%,45%)] to-[hsl(0,40%,35%)] p-5 shadow-md">
-          <AlertTriangle className="absolute top-3 right-3 h-8 w-8 text-white/10" />
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Försenad</p>
-          <p className="text-3xl font-bold text-white mt-1"><AnimatedNumber value={counts.delayed} /></p>
-        </motion.div>
-      </div>
-
-      {/* Task list */}
-      {filteredTasks.length === 0 ? (
-        <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-          Inga uppgifter matchar filtret.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredTasks.map((task) => (
-            <Card key={task.id} className="hover:bg-muted/30 transition-colors">
-              <CardContent className="flex items-center gap-4 py-3 px-4">
-                <Checkbox
-                  checked={task.status === 'Slutförd'}
-                  onCheckedChange={() => handleComplete(task)}
-                  className="shrink-0"
-                />
-                {selectedUser === 'all' && (
-                  <ResponsibleAvatar name={task.responsible} profiles={profiles} />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className={cn("text-sm font-medium truncate", task.status === 'Slutförd' && "line-through text-muted-foreground")}>{task.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {task.project_name || 'Ingen projektkoppling'}
-                    {task.comment ? ` · ${task.comment}` : ''}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {task.deadline && (
-                    <span className="text-xs text-muted-foreground hidden sm:inline">
-                      Deadline: {task.deadline}
-                    </span>
-                  )}
-                  <StatusBadge status={task.status as Status} size="sm" />
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                    onClick={() => setDeleteTaskId(task.id)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Add task dialog */}
-      <AddTaskDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        profiles={profiles}
-        projects={projects}
-        onAdd={(task) => addTask.mutate(task)}
+      {/* New bucket dialog */}
+      <NewBucketDialog
+        open={newBucketOpen}
+        onOpenChange={setNewBucketOpen}
+        onCreate={(name, color) => createBucket.mutate({ name, color })}
       />
 
-      {/* Delete confirmation */}
-      <AlertDialog open={!!deleteTaskId} onOpenChange={(open) => !open && setDeleteTaskId(null)}>
+      {/* Edit task */}
+      {editTask && (
+        <EditTaskDialog
+          task={editTask}
+          buckets={buckets.filter((b) => b.owner_id === editTask.owner_id)}
+          profiles={profiles}
+          projects={projects}
+          onClose={() => setEditTask(null)}
+          onSave={(patch) => {
+            updateTask.mutate({ id: editTask.id, patch });
+            setEditTask(null);
+          }}
+          onDelete={() => {
+            deleteTask.mutate(editTask.id);
+            setEditTask(null);
+          }}
+        />
+      )}
+
+      {/* Delete bucket confirm */}
+      <AlertDialog open={!!deleteBucketId} onOpenChange={(o) => !o && setDeleteBucketId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ta bort uppgift?</AlertDialogTitle>
-            <AlertDialogDescription>Är du säker på att du vill ta bort denna uppgift?</AlertDialogDescription>
+            <AlertDialogTitle>Ta bort bucket?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alla uppgifter i bucketen tas också bort. Detta kan inte ångras.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Avbryt</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { if (deleteTaskId) { deleteTask.mutate(deleteTaskId); setDeleteTaskId(null); } }}>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteBucketId) deleteBucket.mutate(deleteBucketId);
+                setDeleteBucketId(null);
+              }}
+            >
               Ta bort
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -319,100 +408,300 @@ export function MyTasksView() {
   );
 }
 
-// --- Add Task Dialog ---
-function AddTaskDialog({
-  open, onOpenChange, profiles, projects, onAdd,
+// =================== Bucket column ===================
+function BucketColumn({
+  title, subtitle, color, icon, tasks, profiles, projects, onCardClick, onAddCard,
+  onToggleComplete, onRename, onDelete, readOnly,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  title: string;
+  subtitle?: string;
+  color: string;
+  icon: React.ReactNode;
+  tasks: TaskRow[];
   profiles: UserProfile[];
-  projects: Array<{ id: string; name: string }>;
-  onAdd: (task: { name: string; responsible: string; deadline?: string; project_id?: string; comment?: string; status: string }) => void;
+  projects: Array<{ id: string; name: string; code?: string }>;
+  onCardClick: (task: TaskRow) => void;
+  onAddCard: ((name: string) => void) | null;
+  onToggleComplete: (task: TaskRow) => void;
+  onRename?: ((name: string) => void) | null;
+  onDelete?: (() => void) | null;
+  readOnly?: boolean;
 }) {
-  const [name, setName] = useState('');
-  const [responsible, setResponsible] = useState('');
-  const [deadline, setDeadline] = useState<Date | undefined>();
-  const [projectId, setProjectId] = useState('');
-  const [comment, setComment] = useState('');
-  const [status, setStatus] = useState('Ej påbörjad');
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [renaming, setRenaming] = useState(false);
+  const [titleDraft, setTitleDraft] = useState(title);
 
-  const resetForm = () => {
-    setName(''); setResponsible(''); setDeadline(undefined); setProjectId(''); setComment(''); setStatus('Ej påbörjad');
+  const commitAdd = () => {
+    if (newName.trim() && onAddCard) onAddCard(newName.trim());
+    setNewName('');
+    setAdding(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  return (
+    <div className="flex h-full w-[300px] shrink-0 flex-col rounded-xl border border-border/40 bg-card/60 shadow-sm">
+      {/* Color stripe */}
+      <div className="h-1.5 rounded-t-xl" style={{ backgroundColor: color }} />
+      <div className="flex items-start justify-between gap-2 px-3 pt-2.5 pb-2">
+        <div className="min-w-0 flex-1">
+          {renaming && onRename ? (
+            <Input
+              autoFocus
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onBlur={() => { onRename(titleDraft.trim() || title); setRenaming(false); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.currentTarget.blur(); }
+                if (e.key === 'Escape') { setTitleDraft(title); setRenaming(false); }
+              }}
+              className="h-7 text-sm font-semibold"
+            />
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">{icon}</span>
+              <h3 className="truncate text-sm font-semibold">{title}</h3>
+              <span className="ml-auto rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
+                {tasks.length}
+              </span>
+            </div>
+          )}
+          {subtitle && !renaming && (
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{subtitle}</p>
+          )}
+        </div>
+        {(onRename || onDelete) && !readOnly && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground">
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {onRename && (
+                <DropdownMenuItem onClick={() => { setTitleDraft(title); setRenaming(true); }}>
+                  Byt namn
+                </DropdownMenuItem>
+              )}
+              {onRename && onDelete && <DropdownMenuSeparator />}
+              {onDelete && (
+                <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                  <Trash2 className="mr-2 h-3.5 w-3.5" />
+                  Ta bort bucket
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+
+      {/* Cards */}
+      <div className="flex-1 space-y-1.5 overflow-y-auto px-2 pb-2">
+        {tasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            profiles={profiles}
+            projects={projects}
+            onClick={() => onCardClick(task)}
+            onToggleComplete={() => onToggleComplete(task)}
+          />
+        ))}
+      </div>
+
+      {/* Add card */}
+      {onAddCard && (
+        <div className="border-t border-border/40 p-2">
+          {adding ? (
+            <div className="space-y-1.5">
+              <Textarea
+                autoFocus
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitAdd(); }
+                  if (e.key === 'Escape') { setNewName(''); setAdding(false); }
+                }}
+                placeholder="Skriv titel..."
+                rows={2}
+                className="text-sm resize-none"
+              />
+              <div className="flex gap-1.5">
+                <Button size="sm" className="h-7 flex-1 text-xs" onClick={commitAdd}>Lägg till</Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setNewName(''); setAdding(false); }}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <button
+              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              onClick={() => setAdding(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Lägg till kort
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// =================== Task card ===================
+function TaskCard({
+  task, profiles, projects, onClick, onToggleComplete,
+}: {
+  task: TaskRow;
+  profiles: UserProfile[];
+  projects: Array<{ id: string; name: string; code?: string }>;
+  onClick: () => void;
+  onToggleComplete: () => void;
+}) {
+  const assignee = task.assigned_to ? profiles.find((p) => p.user_id === task.assigned_to) : null;
+  const project = task.project_id ? projects.find((p) => p.id === task.project_id) : null;
+  const isCompleted = task.status === 'Slutförd';
+
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        "group cursor-pointer rounded-md border border-border/50 bg-background p-2 text-sm shadow-sm transition hover:border-primary/40 hover:shadow",
+        isCompleted && "opacity-60"
+      )}
+    >
+      <div className="flex items-start gap-2">
+        <Checkbox
+          checked={isCompleted}
+          onCheckedChange={onToggleComplete}
+          onClick={(e) => e.stopPropagation()}
+          className="mt-0.5 shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <p className={cn("text-sm leading-snug", isCompleted && "line-through")}>{task.name}</p>
+          {(task.deadline || project || assignee || task.status !== 'Ej påbörjad') && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              {task.status !== 'Ej påbörjad' && <StatusBadge status={task.status as Status} size="sm" />}
+              {task.deadline && (
+                <span className="inline-flex items-center gap-0.5 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  <CalendarIcon className="h-2.5 w-2.5" />
+                  {task.deadline}
+                </span>
+              )}
+              {project && (
+                <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                  <Folder className="h-2.5 w-2.5" />
+                  {project.code || project.name}
+                </span>
+              )}
+              {assignee && (
+                <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <Send className="h-2.5 w-2.5" />
+                  <UserAvatar profile={assignee} size="xs" />
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =================== Add project bucket ===================
+function AddProjectBucketColumn({
+  projects, existingProjectIds, onPick,
+}: {
+  projects: Array<{ id: string; name: string; code?: string }>;
+  existingProjectIds: string[];
+  onPick: (projectId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const available = projects.filter((p) => !existingProjectIds.includes(p.id));
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className="flex h-12 w-[300px] shrink-0 items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border/50 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground">
+          <Plus className="h-4 w-4" />
+          Lägg till projekt-bucket
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[280px] p-1" align="start">
+        {available.length === 0 ? (
+          <div className="p-3 text-center text-xs text-muted-foreground">Du har redan en bucket för alla aktiva projekt.</div>
+        ) : (
+          <div className="max-h-72 overflow-y-auto">
+            {available.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => { onPick(p.id); setOpen(false); }}
+                className="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted"
+              >
+                <span className="font-medium">{p.code || '–'}</span>
+                <span className="ml-1.5 text-muted-foreground">{p.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// =================== New bucket dialog ===================
+function NewBucketDialog({
+  open, onOpenChange, onCreate,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onCreate: (name: string, color: string) => void;
+}) {
+  const [name, setName] = useState('');
+  const [color, setColor] = useState(BUCKET_COLORS[0].value);
+
+  const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !responsible.trim()) return;
-    onAdd({
-      name: name.trim(),
-      responsible: responsible.trim(),
-      deadline: deadline ? format(deadline, 'yyyy-MM-dd') : undefined,
-      project_id: projectId || undefined,
-      comment: comment.trim() || undefined,
-      status,
-    });
-    resetForm();
+    if (!name.trim()) return;
+    onCreate(name.trim(), color);
+    setName(''); setColor(BUCKET_COLORS[0].value);
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <form onSubmit={handleSubmit}>
+      <DialogContent className="sm:max-w-[400px]">
+        <form onSubmit={submit}>
           <DialogHeader>
-            <DialogTitle>Ny uppgift</DialogTitle>
-            <DialogDescription>Skapa en ny uppgift.</DialogDescription>
+            <DialogTitle>Ny personlig bucket</DialogTitle>
+            <DialogDescription>Skapa en bucket utan koppling till projekt.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Uppgiftsnamn</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="t.ex. Boka hotell" />
+          <div className="grid gap-3 py-4">
+            <div className="grid gap-1.5">
+              <Label>Namn</Label>
+              <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="t.ex. Inkomna, Idéer" />
             </div>
-            <div className="grid gap-2">
-              <Label>Ansvarig</Label>
-              <UserSelect profiles={profiles} value={responsible || 'none'} onValueChange={(v) => setResponsible(v === 'none' ? '' : v)} />
-            </div>
-            <div className="grid gap-2">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TASK_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label>Projekt (valfritt)</Label>
-              <Select value={projectId || 'none'} onValueChange={(v) => setProjectId(v === 'none' ? '' : v)}>
-                <SelectTrigger><SelectValue placeholder="Inget projekt" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Inget projekt</SelectItem>
-                  {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label>Deadline (valfritt)</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("justify-start text-left font-normal", !deadline && "text-muted-foreground")}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {deadline ? format(deadline, 'yyyy-MM-dd') : 'Välj datum'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus showWeekNumber className="p-3 pointer-events-auto" />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="grid gap-2">
-              <Label>Kommentar (valfritt)</Label>
-              <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Skriv en kommentar..." rows={3} />
+            <div className="grid gap-1.5">
+              <Label>Färg</Label>
+              <div className="flex flex-wrap gap-2">
+                {BUCKET_COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setColor(c.value)}
+                    className={cn(
+                      "h-8 w-8 rounded-full border-2 transition",
+                      color === c.value ? "border-foreground scale-110" : "border-transparent"
+                    )}
+                    style={{ backgroundColor: c.value }}
+                    title={c.name}
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
-            <Button type="submit" disabled={!name.trim() || !responsible.trim()}>Skapa</Button>
+            <Button type="submit" disabled={!name.trim()}>Skapa</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -420,31 +709,146 @@ function AddTaskDialog({
   );
 }
 
-// --- Helper components ---
-function ResponsibleAvatar({ name, profiles }: { name: string; profiles: UserProfile[] }) {
-  const profile = profiles.find((p) => getDisplayName(p) === name);
-  if (profile) return <UserAvatar profile={profile} size="sm" />;
-  return (
-    <div className="flex items-center justify-center rounded-full bg-muted text-muted-foreground w-7 h-7 text-xs font-medium shrink-0">
-      {name.charAt(0).toUpperCase()}
-    </div>
-  );
-}
+// =================== Edit task dialog ===================
+function EditTaskDialog({
+  task, buckets, profiles, projects, onClose, onSave, onDelete,
+}: {
+  task: TaskRow;
+  buckets: TaskBucket[];
+  profiles: UserProfile[];
+  projects: Array<{ id: string; name: string; code?: string }>;
+  onClose: () => void;
+  onSave: (patch: Partial<TaskRow>) => void;
+  onDelete: () => void;
+}) {
+  const [name, setName] = useState(task.name);
+  const [comment, setComment] = useState(task.comment || '');
+  const [status, setStatus] = useState(task.status);
+  const [deadline, setDeadline] = useState<Date | undefined>(task.deadline ? new Date(task.deadline) : undefined);
+  const [bucketId, setBucketId] = useState(task.bucket_id || '');
+  const [assignedTo, setAssignedTo] = useState(task.assigned_to || '');
+  const [projectId, setProjectId] = useState(task.project_id || '');
 
-function AnimatedNumber({ value, duration = 800 }: { value: number; duration?: number }) {
-  const [display, setDisplay] = useState(0);
-  useEffect(() => {
-    if (value === 0) { setDisplay(0); return; }
-    const start = performance.now();
-    let raf: number;
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [value, duration]);
-  return <>{display}</>;
+  const save = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      name: name.trim(),
+      comment: comment.trim() || null,
+      status,
+      deadline: deadline ? format(deadline, 'yyyy-MM-dd') : null,
+      bucket_id: bucketId || null,
+      assigned_to: assignedTo || null,
+      project_id: projectId || null,
+    });
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-[500px]">
+        <form onSubmit={save}>
+          <DialogHeader>
+            <DialogTitle>Redigera uppgift</DialogTitle>
+            <DialogDescription>Uppdatera, delegera eller flytta uppgiften.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-4">
+            <div className="grid gap-1.5">
+              <Label>Titel</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label>Status</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TASK_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Deadline</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" type="button" className={cn("justify-start text-left font-normal", !deadline && "text-muted-foreground")}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {deadline ? format(deadline, 'yyyy-MM-dd') : 'Inget'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={deadline} onSelect={setDeadline} initialFocus showWeekNumber className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Bucket</Label>
+              <Select value={bucketId} onValueChange={setBucketId}>
+                <SelectTrigger><SelectValue placeholder="Välj bucket" /></SelectTrigger>
+                <SelectContent>
+                  {buckets.map((b) => {
+                    const proj = b.project_id ? projects.find((p) => p.id === b.project_id) : null;
+                    return (
+                      <SelectItem key={b.id} value={b.id}>
+                        {b.name}{proj ? ` (${proj.code || proj.name})` : ' (personlig)'}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Projekt</Label>
+              <Select value={projectId || 'none'} onValueChange={(v) => setProjectId(v === 'none' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Inget" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Inget projekt</SelectItem>
+                  {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.code} – {p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Delegera till</Label>
+              <Select
+                value={assignedTo || 'none'}
+                onValueChange={(v) => setAssignedTo(v === 'none' ? '' : v)}
+              >
+                <SelectTrigger><SelectValue placeholder="Ingen" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Ingen</SelectItem>
+                  {profiles.map((p) => {
+                    const n = getDisplayName(p);
+                    if (!n) return null;
+                    return (
+                      <SelectItem key={p.user_id} value={p.user_id}>
+                        <div className="flex items-center gap-2">
+                          <UserAvatar profile={p} size="xs" />
+                          <span>{n}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">
+                Den delegerade ser kortet under "Tilldelat mig" och du behåller det i din bucket.
+              </p>
+            </div>
+            <div className="grid gap-1.5">
+              <Label>Kommentar</Label>
+              <Textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} />
+            </div>
+          </div>
+          <DialogFooter className="flex justify-between">
+            <Button type="button" variant="destructive" onClick={onDelete}>
+              <Trash2 className="mr-2 h-4 w-4" />Ta bort
+            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>Avbryt</Button>
+              <Button type="submit" disabled={!name.trim()}>Spara</Button>
+            </div>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
