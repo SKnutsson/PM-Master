@@ -329,43 +329,53 @@ export function MyTasksView() {
             />
           )}
 
-          {visibleBuckets.map((bucket) => {
-            const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
-            const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
-            return (
-              <BucketColumn
-                key={bucket.id}
-                title={bucket.name}
-                subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
-                color={bucket.color || 'hsl(190 35% 20%)'}
-                icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
-                tasks={bucketTasks}
-                profiles={profiles}
-                projects={projects}
-                readOnly={viewUser !== 'me'}
-                onCardClick={setEditTask}
-                onAddCard={
-                  viewUser === 'me'
-                    ? (name) => addTask.mutate({
-                        name,
-                        bucket,
-                        projectId: bucket.project_id,
-                        ownerId: bucket.owner_id,
-                        responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
-                      })
-                    : null
-                }
-                onToggleComplete={(t) => updateTask.mutate({
-                  id: t.id,
-                  patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={visibleBuckets.map((b) => b.id)} strategy={horizontalListSortingStrategy}>
+              <div className="inline-flex items-start gap-3">
+                {visibleBuckets.map((bucket) => {
+                  const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
+                  const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
+                  return (
+                    <SortableBucket key={bucket.id} id={bucket.id} disabled={viewUser !== 'me'}>
+                      {(dragHandle) => (
+                        <BucketColumn
+                          title={bucket.name}
+                          subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
+                          color={bucket.color || 'hsl(190 35% 20%)'}
+                          icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
+                          tasks={bucketTasks}
+                          profiles={profiles}
+                          projects={projects}
+                          readOnly={viewUser !== 'me'}
+                          dragHandle={dragHandle}
+                          onCardClick={setEditTask}
+                          onAddCard={
+                            viewUser === 'me'
+                              ? (name) => addTask.mutate({
+                                  name,
+                                  bucket,
+                                  projectId: bucket.project_id,
+                                  ownerId: bucket.owner_id,
+                                  responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
+                                })
+                              : null
+                          }
+                          onToggleComplete={(t) => updateTask.mutate({
+                            id: t.id,
+                            patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
+                          })}
+                          onRename={viewUser === 'me' && !bucket.project_id
+                            ? (name) => renameBucket.mutate({ id: bucket.id, name })
+                            : null}
+                          onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
+                        />
+                      )}
+                    </SortableBucket>
+                  );
                 })}
-                onRename={viewUser === 'me' && !bucket.project_id
-                  ? (name) => renameBucket.mutate({ id: bucket.id, name })
-                  : null}
-                onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
-              />
-            );
-          })}
+              </div>
+            </SortableContext>
+          </DndContext>
 
           {/* Project picker to add a project-bucket */}
           {viewUser === 'me' && (
