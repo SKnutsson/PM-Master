@@ -51,16 +51,8 @@ const BUCKET_COLORS = [
   { name: 'Rosa', value: 'hsl(330 65% 55%)' },
 ];
 
-const PROJECT_BUCKET_COLORS = [
-  'hsl(190 35% 20%)',
-  'hsl(170 55% 35%)',
-  'hsl(217 70% 50%)',
-  'hsl(25 90% 53%)',
-  'hsl(265 60% 55%)',
-  'hsl(330 65% 55%)',
-  'hsl(205 60% 38%)',
-  'hsl(145 45% 35%)',
-];
+// Unified brand color for ALL project buckets (varumärkets gröna #1c7f72)
+const PROJECT_BUCKET_COLOR = 'hsl(173 64% 33%)';
 
 const colorWithAlpha = (color: string, alpha: number) => {
   const hslMatch = color.match(/^hsl\((.+)\)$/);
@@ -68,10 +60,7 @@ const colorWithAlpha = (color: string, alpha: number) => {
   return color;
 };
 
-const getProjectBucketColor = (projectId: string) => {
-  const hash = projectId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return PROJECT_BUCKET_COLORS[hash % PROJECT_BUCKET_COLORS.length];
-};
+const getProjectBucketColor = (_projectId: string) => PROJECT_BUCKET_COLOR;
 
 interface TaskBucket {
   id: string;
