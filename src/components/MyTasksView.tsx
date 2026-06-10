@@ -209,6 +209,25 @@ export function MyTasksView() {
     },
   });
 
+  const reorderBuckets = useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      // Optimistic cache update
+      qc.setQueryData<TaskBucket[]>(['task-buckets'], (old) => {
+        if (!old) return old;
+        return old.map((b) => {
+          const idx = orderedIds.indexOf(b.id);
+          return idx === -1 ? b : { ...b, sort_order: idx };
+        });
+      });
+      await Promise.all(
+        orderedIds.map((id, idx) =>
+          supabase.from('task_buckets').update({ sort_order: idx }).eq('id', id)
+        )
+      );
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['task-buckets'] }),
+  });
+
   // ---- Derived columns ----
   const visibleBuckets = useMemo(() => {
     if (!effectiveUserId) return [] as TaskBucket[];
