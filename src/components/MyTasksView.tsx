@@ -26,13 +26,20 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Plus, MoreHorizontal, CalendarIcon, Trash2, Inbox, Folder, User as UserIcon, Send, X } from 'lucide-react';
+import { Plus, MoreHorizontal, CalendarIcon, Trash2, Inbox, Folder, User as UserIcon, Send, X, GripVertical, MessageSquare } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import type { Status } from '@/data/projectData';
+import {
+  DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, closestCenter,
+} from '@dnd-kit/core';
+import {
+  SortableContext, horizontalListSortingStrategy, useSortable, arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const TASK_STATUSES = ['Ej påbörjad', 'Pågår', 'Slutförd', 'Försenad'] as const;
 const BUCKET_COLORS = [
