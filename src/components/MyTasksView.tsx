@@ -51,6 +51,28 @@ const BUCKET_COLORS = [
   { name: 'Rosa', value: 'hsl(330 65% 55%)' },
 ];
 
+const PROJECT_BUCKET_COLORS = [
+  'hsl(190 35% 20%)',
+  'hsl(170 55% 35%)',
+  'hsl(217 70% 50%)',
+  'hsl(25 90% 53%)',
+  'hsl(265 60% 55%)',
+  'hsl(330 65% 55%)',
+  'hsl(205 60% 38%)',
+  'hsl(145 45% 35%)',
+];
+
+const colorWithAlpha = (color: string, alpha: number) => {
+  const hslMatch = color.match(/^hsl\((.+)\)$/);
+  if (hslMatch) return `hsl(${hslMatch[1]} / ${alpha})`;
+  return color;
+};
+
+const getProjectBucketColor = (projectId: string) => {
+  const hash = projectId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return PROJECT_BUCKET_COLORS[hash % PROJECT_BUCKET_COLORS.length];
+};
+
 interface TaskBucket {
   id: string;
   name: string;
@@ -118,7 +140,7 @@ export function MyTasksView() {
         owner_id: ownerId,
         project_id: projectId,
         sort_order: buckets.length,
-        color: projectId ? null : BUCKET_COLORS[buckets.length % BUCKET_COLORS.length].value,
+        color: projectId ? getProjectBucketColor(projectId) : BUCKET_COLORS[buckets.length % BUCKET_COLORS.length].value,
       })
       .select()
       .single();
@@ -341,7 +363,7 @@ export function MyTasksView() {
                         <BucketColumn
                           title={bucket.name}
                           subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
-                          color={bucket.color || 'hsl(190 35% 20%)'}
+                          color={bucket.color || (bucket.project_id ? getProjectBucketColor(bucket.project_id) : BUCKET_COLORS[0].value)}
                           icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
                           tasks={bucketTasks}
                           profiles={profiles}
@@ -519,16 +541,20 @@ function BucketColumn({
 
   return (
     <div
-      className="flex h-full w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border border-border/40 bg-card/60 shadow-sm transition hover:border-border/70 hover:shadow-md"
+      className="flex h-full w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card/60 shadow-sm transition hover:shadow-md"
+      style={{ borderColor: colorWithAlpha(color, 0.38) }}
     >
       {/* Color stripe */}
       <div
-        className="h-1.5"
-        style={{ background: `linear-gradient(90deg, ${color}, ${color}cc)` }}
+        className="h-2.5"
+        style={{ background: `linear-gradient(90deg, ${color}, ${colorWithAlpha(color, 0.7)})` }}
       />
       <div
-        className="flex items-start justify-between gap-1 px-2 pt-2 pb-2 border-b border-border/40"
-        style={{ background: `linear-gradient(180deg, ${color}26, ${color}0d)` }}
+        className="flex items-start justify-between gap-1 px-2 pt-2 pb-2 border-b"
+        style={{
+          background: `linear-gradient(135deg, ${colorWithAlpha(color, 0.24)}, ${colorWithAlpha(color, 0.1)})`,
+          borderColor: colorWithAlpha(color, 0.28),
+        }}
       >
         {dragHandle}
         <div className="min-w-0 flex-1">
@@ -546,9 +572,12 @@ function BucketColumn({
             />
           ) : (
             <div className="flex items-center gap-1.5">
-              <span className="text-muted-foreground">{icon}</span>
+              <span style={{ color }}>{icon}</span>
               <h3 className="truncate text-sm font-semibold">{title}</h3>
-              <span className="ml-auto rounded-full bg-muted px-1.5 text-xs font-medium text-muted-foreground">
+              <span
+                className="ml-auto rounded-full px-1.5 text-xs font-medium"
+                style={{ backgroundColor: colorWithAlpha(color, 0.14), color }}
+              >
                 {tasks.length}
               </span>
             </div>
