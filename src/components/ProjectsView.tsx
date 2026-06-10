@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Project } from '@/data/projectData';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
+import { ProjectTasksList } from './ProjectTasksList';
 import { cn } from '@/lib/utils';
 
 const containerVariants = {
