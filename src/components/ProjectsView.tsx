@@ -69,7 +69,27 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
   };
 
   const handleSave = async () => {
-    await onUpdateProject(project.id, editData);
+    setSavingEdit(true);
+    const updates: Partial<Project> = { ...editData };
+    // Geocode when address changed
+    if ((editData.address || '').trim() !== (project.address || '').trim()) {
+      if (editData.address.trim()) {
+        const geo = await geocodeAddress(editData.address);
+        if (geo) {
+          updates.latitude = geo.lat;
+          updates.longitude = geo.lon;
+        } else {
+          updates.latitude = null;
+          updates.longitude = null;
+          toast.warning('Kunde inte hitta koordinater för adressen.');
+        }
+      } else {
+        updates.latitude = null;
+        updates.longitude = null;
+      }
+    }
+    await onUpdateProject(project.id, updates);
+    setSavingEdit(false);
     setIsEditing(false);
   };
 
@@ -80,6 +100,7 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
       projectManager: project.projectManager || '',
       salesPerson: project.salesPerson || '',
       product: project.product || '',
+      address: project.address || '',
       notes: project.notes || ''
     });
     setIsEditing(true);
