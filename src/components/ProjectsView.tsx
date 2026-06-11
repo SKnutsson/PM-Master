@@ -202,12 +202,19 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                       </div>
                     </div>
                     <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Adress (för karta)</label>
+                      <Input className="h-8 text-sm" value={editData.address} onChange={(e) => setEditData((prev) => ({ ...prev, address: e.target.value }))} placeholder="t.ex. Storgatan 1, Stockholm" />
+                    </div>
+                    <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground">Noteringar</label>
                       <Textarea className="text-sm" value={editData.notes} onChange={(e) => setEditData((prev) => ({ ...prev, notes: e.target.value }))} placeholder="Övrig information..." rows={2} />
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsEditing(false)}>Avbryt</Button>
-                      <Button size="sm" className="h-7 text-xs" onClick={handleSave}>Spara</Button>
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsEditing(false)} disabled={savingEdit}>Avbryt</Button>
+                      <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={savingEdit}>
+                        {savingEdit && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                        Spara
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -226,6 +233,13 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                         </div>
                       ))}
                     </div>
+                    {project.address && (
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <MapPin className="h-3 w-3 text-primary/60 shrink-0" />
+                        <span className="text-muted-foreground">Adress:</span>
+                        <span className="font-medium truncate">{project.address}</span>
+                      </div>
+                    )}
                     {project.notes && (
                       <div className="flex items-start gap-1.5 text-xs border-t border-border/30 pt-2">
                         <FileText className="h-3 w-3 text-primary/60 shrink-0 mt-0.5" />
@@ -233,7 +247,7 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                         <span className="text-foreground">{project.notes}</span>
                       </div>
                     )}
-                    {!project.customer && !project.projectManager && !project.salesPerson && !project.product && !project.notes && (
+                    {!project.customer && !project.projectManager && !project.salesPerson && !project.product && !project.address && !project.notes && (
                       <p className="text-xs text-muted-foreground">Ingen information tillagd. Klicka på pennikonen för att redigera.</p>
                     )}
                     <div className="border-t border-border/30 pt-2">
