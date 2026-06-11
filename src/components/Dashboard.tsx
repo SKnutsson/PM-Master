@@ -554,11 +554,15 @@ export function Dashboard() {
                     let EventIcon = ArrowUpRight;
 
                     switch (evt.eventType) {
-                      case 'created':
-                        description = `Ny affär tillagd${evt.details ? ` (${evt.details})` : ''}`;
-                        badgeText = 'Ny';
+                      case 'created': {
+                        const isOffer = evt.newValue === 'Offert';
+                        description = isOffer
+                          ? `Ny offert${evt.details ? ` (${evt.details})` : ''}`
+                          : `Ny affär tillagd${evt.details ? ` (${evt.details})` : ''}`;
+                        badgeText = isOffer ? 'Ny offert' : 'Ny';
                         badgeCls = 'bg-primary/10 text-primary';
                         break;
+                      }
                       case 'status_change':
                         description = `${evt.oldValue} → ${evt.newValue}`;
                         badgeText = evt.newValue || 'Ändrad';
@@ -569,8 +573,8 @@ export function Dashboard() {
                         } else badgeCls = 'bg-primary/10 text-primary';
                         break;
                       case 'month_moved':
-                        description = `${evt.oldValue} → ${evt.newValue}`;
-                        badgeText = 'Flyttad';
+                        description = `Flyttad: ${evt.oldValue} → ${evt.newValue}`;
+                        badgeText = `${evt.oldValue} → ${evt.newValue}`;
                         badgeCls = 'bg-status-in-progress/10 text-status-in-progress';
                         break;
                       case 'deleted':
