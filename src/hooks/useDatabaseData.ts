@@ -224,6 +224,9 @@ export function useDatabaseData() {
         salesPerson: (p as any).sales_person || '',
         product: (p as any).product || '',
         notes: (p as any).notes || '',
+        address: (p as any).address || '',
+        latitude: (p as any).latitude ?? null,
+        longitude: (p as any).longitude ?? null,
         sortOrder: (p as any).sort_order || 0,
         activities: (activitiesData || [])
           .filter(a => a.project_id === p.id)
