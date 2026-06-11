@@ -843,12 +843,15 @@ export type Database = {
       }
       projects: {
         Row: {
+          address: string | null
           code: string | null
           created_at: string | null
           customer: string
           department: string
           end_date: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           name: string
           notes: string | null
           product: string | null
@@ -861,12 +864,15 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
           code?: string | null
           created_at?: string | null
           customer: string
           department: string
           end_date?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name: string
           notes?: string | null
           product?: string | null
@@ -879,12 +885,15 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
           code?: string | null
           created_at?: string | null
           customer?: string
           department?: string
           end_date?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           notes?: string | null
           product?: string | null
