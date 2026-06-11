@@ -39,11 +39,13 @@ interface ProjectRowProps {
 function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived }: ProjectRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [editData, setEditData] = useState({
     customer: project.customer || '',
     projectManager: project.projectManager || '',
     salesPerson: project.salesPerson || '',
     product: project.product || '',
+    address: project.address || '',
     notes: project.notes || ''
   });
 
