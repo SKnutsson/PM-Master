@@ -400,6 +400,9 @@ export function useDatabaseData() {
         sales_person: project.salesPerson || '',
         product: project.product || '',
         notes: project.notes || '',
+        address: project.address || null,
+        latitude: project.latitude ?? null,
+        longitude: project.longitude ?? null,
         sort_order: nextOrder,
       } as any)
       .select()
