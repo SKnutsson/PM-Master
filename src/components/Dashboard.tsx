@@ -16,11 +16,14 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowRight,
+  MapPin,
   Plus,
   RefreshCw,
   MessageSquare,
   Users } from
 'lucide-react';
+import { ProjectMap } from './ProjectMap';
 import { YearNavigator } from './YearNavigator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
