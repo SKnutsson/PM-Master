@@ -427,6 +427,9 @@ export function useDatabaseData() {
     if (updates.salesPerson !== undefined) updateData.sales_person = updates.salesPerson;
     if (updates.product !== undefined) updateData.product = updates.product;
     if (updates.notes !== undefined) updateData.notes = updates.notes;
+    if (updates.address !== undefined) updateData.address = updates.address || null;
+    if ('latitude' in updates) updateData.latitude = updates.latitude ?? null;
+    if ('longitude' in updates) updateData.longitude = updates.longitude ?? null;
 
     const { error } = await supabase
       .from('projects')
