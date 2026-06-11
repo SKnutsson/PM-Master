@@ -146,6 +146,15 @@ export function AddProjectDialog() {
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="address">Adress (för karta)</Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="t.ex. Storgatan 1, Stockholm"
+              />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="notes">Noteringar</Label>
               <Textarea
                 id="notes"
@@ -157,10 +166,11 @@ export function AddProjectDialog() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
               Avbryt
             </Button>
-            <Button type="submit" disabled={!code.trim() || !name.trim()}>
+            <Button type="submit" disabled={!code.trim() || !name.trim() || saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Skapa projekt
             </Button>
           </DialogFooter>
