@@ -224,6 +224,9 @@ export function useDatabaseData() {
         salesPerson: (p as any).sales_person || '',
         product: (p as any).product || '',
         notes: (p as any).notes || '',
+        address: (p as any).address || '',
+        latitude: (p as any).latitude ?? null,
+        longitude: (p as any).longitude ?? null,
         sortOrder: (p as any).sort_order || 0,
         activities: (activitiesData || [])
           .filter(a => a.project_id === p.id)
@@ -397,6 +400,9 @@ export function useDatabaseData() {
         sales_person: project.salesPerson || '',
         product: project.product || '',
         notes: project.notes || '',
+        address: project.address || null,
+        latitude: project.latitude ?? null,
+        longitude: project.longitude ?? null,
         sort_order: nextOrder,
       } as any)
       .select()
@@ -421,6 +427,9 @@ export function useDatabaseData() {
     if (updates.salesPerson !== undefined) updateData.sales_person = updates.salesPerson;
     if (updates.product !== undefined) updateData.product = updates.product;
     if (updates.notes !== undefined) updateData.notes = updates.notes;
+    if (updates.address !== undefined) updateData.address = updates.address || null;
+    if ('latitude' in updates) updateData.latitude = updates.latitude ?? null;
+    if ('longitude' in updates) updateData.longitude = updates.longitude ?? null;
 
     const { error } = await supabase
       .from('projects')
@@ -643,12 +652,17 @@ export function useDatabaseData() {
       });
     }
 
-    // Log month move events
-    if (updates.months && currentForecast) {
-      const oldMonthKeys = Object.entries(currentForecast.months).filter(([_, v]) => v > 0).map(([m]) => m);
-      const newMonthKeys = Object.entries(updates.months).filter(([_, v]) => v > 0).map(([m]) => m);
-      const removed = oldMonthKeys.filter(m => !newMonthKeys.includes(m));
-      const added = newMonthKeys.filter(m => !oldMonthKeys.includes(m));
+    // Log month move events (with year, e.g. "Feb 2026 → Jun 2027")
+    if (updates.monthEntries && currentForecast) {
+      const fmtKey = (m: string, y: number) => `${m} ${y}`;
+      const oldKeys = (currentForecast.monthEntries || [])
+        .filter((e) => e.amount > 0)
+        .map((e) => fmtKey(e.month, e.year));
+      const newKeys = updates.monthEntries
+        .filter((e) => e.amount > 0)
+        .map((e) => fmtKey(e.month, e.year));
+      const removed = oldKeys.filter((k) => !newKeys.includes(k));
+      const added = newKeys.filter((k) => !oldKeys.includes(k));
       if (removed.length > 0 && added.length > 0) {
         await logForecastEvent({
           forecastId: forecastId,

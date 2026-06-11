@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
+import { geocodeAddress } from '@/lib/geocode';
+import { toast } from 'sonner';
 
 export function AddProjectDialog() {
   const [open, setOpen] = useState(false);
@@ -23,31 +25,49 @@ export function AddProjectDialog() {
   const [projectManager, setProjectManager] = useState('');
   const [salesPerson, setSalesPerson] = useState('');
   const [product, setProduct] = useState('');
+  const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
   const { addProject } = useProjectDataContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.trim() && name.trim()) {
-      await addProject({
-        code: code.trim(),
-        name: name.trim(),
-        customer: customer.trim(),
-        projectManager: projectManager.trim(),
-        salesPerson: salesPerson.trim(),
-        product: product.trim(),
-        notes: notes.trim(),
-        activities: [],
-      });
-      setCode('');
-      setName('');
-      setCustomer('');
-      setProjectManager('');
-      setSalesPerson('');
-      setProduct('');
-      setNotes('');
-      setOpen(false);
+    if (!code.trim() || !name.trim()) return;
+    setSaving(true);
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    if (address.trim()) {
+      const geo = await geocodeAddress(address);
+      if (geo) {
+        latitude = geo.lat;
+        longitude = geo.lon;
+      } else {
+        toast.warning('Kunde inte hitta koordinater för adressen – sparar utan kartposition.');
+      }
     }
+    await addProject({
+      code: code.trim(),
+      name: name.trim(),
+      customer: customer.trim(),
+      projectManager: projectManager.trim(),
+      salesPerson: salesPerson.trim(),
+      product: product.trim(),
+      address: address.trim(),
+      latitude,
+      longitude,
+      notes: notes.trim(),
+      activities: [],
+    });
+    setCode('');
+    setName('');
+    setCustomer('');
+    setProjectManager('');
+    setSalesPerson('');
+    setProduct('');
+    setAddress('');
+    setNotes('');
+    setOpen(false);
+    setSaving(false);
   };
 
   return (
@@ -126,6 +146,15 @@ export function AddProjectDialog() {
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="address">Adress (för karta)</Label>
+              <Input
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="t.ex. Storgatan 1, Stockholm"
+              />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="notes">Noteringar</Label>
               <Textarea
                 id="notes"
@@ -137,10 +166,11 @@ export function AddProjectDialog() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>
               Avbryt
             </Button>
-            <Button type="submit" disabled={!code.trim() || !name.trim()}>
+            <Button type="submit" disabled={!code.trim() || !name.trim() || saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Skapa projekt
             </Button>
           </DialogFooter>

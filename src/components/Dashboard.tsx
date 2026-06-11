@@ -16,11 +16,14 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowRight,
+  MapPin,
   Plus,
   RefreshCw,
   MessageSquare,
   Users } from
 'lucide-react';
+import { ProjectMap } from './ProjectMap';
 import { YearNavigator } from './YearNavigator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -375,72 +378,104 @@ export function Dashboard() {
 
       {/* Försäljningsöversikt + Måluppfyllnad flyttade till CRM Dashboard */}
 
-      {/* ── ROW 3: Phase Cards — Full width, side by side ── */}
+      {/* ── ROW 3: Phase Cards — sequential with arrows ── */}
       <motion.div variants={itemVariants}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex items-stretch gap-2 flex-col md:flex-row">
           {projectsByPhase.map(({ phase, projects: phaseProjects }, idx) => {
             const config = phaseConfig[phase];
             const PhaseIcon = config.icon;
+            const isLast = idx === projectsByPhase.length - 1;
 
             return (
-              <motion.div
-                key={phase}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.08, type: 'spring' as const, stiffness: 300, damping: 26 }}
-                className="rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group border border-border/30 flex flex-col">
-                
-                {/* Phase header */}
-                <div className={`${config.bg} px-5 py-4 relative overflow-hidden`}>
-                  <div className="absolute inset-0 opacity-[0.08]" style={{
-                    backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.4) 0%, transparent 60%)'
-                  }} />
-                  <div className="flex items-center gap-3 relative z-10">
-                    <div className="rounded-lg p-2.5 bg-white/15 backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
-                      <PhaseIcon className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-white text-xl">{phase}</h3>
-                      <p className="text-white/50 text-sm">
-                        <AnimatedNumber value={phaseProjects.length} /> projekt
-                      </p>
+              <div key={phase} className="contents md:flex md:items-stretch md:flex-1 md:gap-2">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.08, type: 'spring' as const, stiffness: 300, damping: 26 }}
+                  className="flex-1 rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group border border-border/30 flex flex-col">
+
+                  {/* Phase header */}
+                  <div className={`${config.bg} px-5 py-4 relative overflow-hidden`}>
+                    <div className="absolute inset-0 opacity-[0.08]" style={{
+                      backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.4) 0%, transparent 60%)'
+                    }} />
+                    <div className="flex items-center gap-3 relative z-10">
+                      <div className="rounded-lg p-2.5 bg-white/15 backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
+                        <PhaseIcon className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Fas {idx + 1}</span>
+                        </div>
+                        <h3 className="font-bold text-white text-xl">{phase}</h3>
+                        <p className="text-white/50 text-sm">
+                          <AnimatedNumber value={phaseProjects.length} /> projekt
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Project list */}
-                <div className="bg-card px-4 py-3 flex-1">
-                  {phaseProjects.length === 0 ?
-                  <p className="text-sm text-muted-foreground py-3 text-center italic">Inga pågående projekt</p> :
+                  {/* Project list */}
+                  <div className="bg-card px-4 py-3 flex-1">
+                    {phaseProjects.length === 0 ?
+                    <p className="text-sm text-muted-foreground py-3 text-center italic">Inga pågående projekt</p> :
 
-                  <div className="space-y-1">
-                    {phaseProjects.map((p, i) =>
-                    <Tooltip key={p.id} delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <motion.div
-                          initial={{ opacity: 0, x: -6 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.04 }}
-                          className="rounded-lg px-3 py-2 text-sm cursor-default transition-all hover:bg-muted/50 border border-transparent hover:border-border/40">
-                          
-                              <span className="font-semibold text-foreground/60">{p.code}</span>
-                              <span className="text-muted-foreground mx-2">–</span>
-                              <span className="font-semibold text-secondary-foreground">{p.name}</span>
-                            </motion.div>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p className="font-medium">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">{p.customer}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    )}
+                    <div className="space-y-1">
+                      {phaseProjects.map((p, i) =>
+                      <Tooltip key={p.id} delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <motion.div
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.04 }}
+                            className="rounded-lg px-3 py-2 text-sm cursor-default transition-all hover:bg-muted/50 border border-transparent hover:border-border/40">
+
+                                <span className="font-semibold text-foreground/60">{p.code}</span>
+                                <span className="text-muted-foreground mx-2">–</span>
+                                <span className="font-semibold text-secondary-foreground">{p.name}</span>
+                              </motion.div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="font-medium">{p.name}</p>
+                          <p className="text-xs text-muted-foreground">{p.customer}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      )}
+                      </div>
+                    }
+                  </div>
+                </motion.div>
+
+                {!isLast && (
+                  <div className="flex items-center justify-center md:px-1 py-1 md:py-0" aria-hidden>
+                    <div className="hidden md:flex items-center">
+                      <ArrowRight className="h-7 w-7 text-primary/70" strokeWidth={2.5} />
                     </div>
-                  }
-                </div>
-              </motion.div>);
+                    <div className="md:hidden flex items-center">
+                      <ArrowRight className="h-5 w-5 text-primary/70 rotate-90" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                )}
+              </div>);
 
           })}
         </div>
+      </motion.div>
+
+      {/* ── Project map ── */}
+      <motion.div variants={itemVariants}>
+        <Card className="border-border/50 bg-card/90 overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MapPin className="h-4 w-4 text-primary" />
+              Projektkarta
+            </CardTitle>
+            <CardDescription className="text-xs">Geografisk översikt av alla projekt</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProjectMap projects={activeProjects} height={380} />
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* ── ROW 4: Project Status + Events — side by side ── */}
@@ -554,11 +589,15 @@ export function Dashboard() {
                     let EventIcon = ArrowUpRight;
 
                     switch (evt.eventType) {
-                      case 'created':
-                        description = `Ny affär tillagd${evt.details ? ` (${evt.details})` : ''}`;
-                        badgeText = 'Ny';
+                      case 'created': {
+                        const isOffer = evt.newValue === 'Offert';
+                        description = isOffer
+                          ? `Ny offert${evt.details ? ` (${evt.details})` : ''}`
+                          : `Ny affär tillagd${evt.details ? ` (${evt.details})` : ''}`;
+                        badgeText = isOffer ? 'Ny offert' : 'Ny';
                         badgeCls = 'bg-primary/10 text-primary';
                         break;
+                      }
                       case 'status_change':
                         description = `${evt.oldValue} → ${evt.newValue}`;
                         badgeText = evt.newValue || 'Ändrad';
@@ -569,8 +608,8 @@ export function Dashboard() {
                         } else badgeCls = 'bg-primary/10 text-primary';
                         break;
                       case 'month_moved':
-                        description = `${evt.oldValue} → ${evt.newValue}`;
-                        badgeText = 'Flyttad';
+                        description = `Flyttad: ${evt.oldValue} → ${evt.newValue}`;
+                        badgeText = `${evt.oldValue} → ${evt.newValue}`;
                         badgeCls = 'bg-status-in-progress/10 text-status-in-progress';
                         break;
                       case 'deleted':

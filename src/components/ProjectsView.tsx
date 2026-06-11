@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil, FolderOpen, FolderArchive } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil, FolderOpen, FolderArchive, MapPin, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,8 @@ import { Project } from '@/data/projectData';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { ProjectTasksList } from './ProjectTasksList';
+import { geocodeAddress } from '@/lib/geocode';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 const containerVariants = {
@@ -37,11 +39,13 @@ interface ProjectRowProps {
 function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived }: ProjectRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [editData, setEditData] = useState({
     customer: project.customer || '',
     projectManager: project.projectManager || '',
     salesPerson: project.salesPerson || '',
     product: project.product || '',
+    address: project.address || '',
     notes: project.notes || ''
   });
 
@@ -65,7 +69,27 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
   };
 
   const handleSave = async () => {
-    await onUpdateProject(project.id, editData);
+    setSavingEdit(true);
+    const updates: Partial<Project> = { ...editData };
+    // Geocode when address changed
+    if ((editData.address || '').trim() !== (project.address || '').trim()) {
+      if (editData.address.trim()) {
+        const geo = await geocodeAddress(editData.address);
+        if (geo) {
+          updates.latitude = geo.lat;
+          updates.longitude = geo.lon;
+        } else {
+          updates.latitude = null;
+          updates.longitude = null;
+          toast.warning('Kunde inte hitta koordinater för adressen.');
+        }
+      } else {
+        updates.latitude = null;
+        updates.longitude = null;
+      }
+    }
+    await onUpdateProject(project.id, updates);
+    setSavingEdit(false);
     setIsEditing(false);
   };
 
@@ -76,6 +100,7 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
       projectManager: project.projectManager || '',
       salesPerson: project.salesPerson || '',
       product: project.product || '',
+      address: project.address || '',
       notes: project.notes || ''
     });
     setIsEditing(true);
@@ -177,12 +202,19 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                       </div>
                     </div>
                     <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Adress (för karta)</label>
+                      <Input className="h-8 text-sm" value={editData.address} onChange={(e) => setEditData((prev) => ({ ...prev, address: e.target.value }))} placeholder="t.ex. Storgatan 1, Stockholm" />
+                    </div>
+                    <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground">Noteringar</label>
                       <Textarea className="text-sm" value={editData.notes} onChange={(e) => setEditData((prev) => ({ ...prev, notes: e.target.value }))} placeholder="Övrig information..." rows={2} />
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsEditing(false)}>Avbryt</Button>
-                      <Button size="sm" className="h-7 text-xs" onClick={handleSave}>Spara</Button>
+                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsEditing(false)} disabled={savingEdit}>Avbryt</Button>
+                      <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={savingEdit}>
+                        {savingEdit && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                        Spara
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -201,6 +233,13 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                         </div>
                       ))}
                     </div>
+                    {project.address && (
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <MapPin className="h-3 w-3 text-primary/60 shrink-0" />
+                        <span className="text-muted-foreground">Adress:</span>
+                        <span className="font-medium truncate">{project.address}</span>
+                      </div>
+                    )}
                     {project.notes && (
                       <div className="flex items-start gap-1.5 text-xs border-t border-border/30 pt-2">
                         <FileText className="h-3 w-3 text-primary/60 shrink-0 mt-0.5" />
@@ -208,7 +247,7 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                         <span className="text-foreground">{project.notes}</span>
                       </div>
                     )}
-                    {!project.customer && !project.projectManager && !project.salesPerson && !project.product && !project.notes && (
+                    {!project.customer && !project.projectManager && !project.salesPerson && !project.product && !project.address && !project.notes && (
                       <p className="text-xs text-muted-foreground">Ingen information tillagd. Klicka på pennikonen för att redigera.</p>
                     )}
                     <div className="border-t border-border/30 pt-2">

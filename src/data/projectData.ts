@@ -39,6 +39,9 @@ export interface Project {
   salesPerson?: string;
   product?: string;
   notes?: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   sortOrder?: number;
   activities: Activity[];
 }
