@@ -72,10 +72,19 @@ const getCellStatusStyle = (status: DealStatus) => {
   }
 };
 
-const getMovedFromMonth = (scheduleHistory: ScheduleChange[] | undefined, month: string): ScheduleChange | undefined => {
+const getMovedFromMonth = (
+  scheduleHistory: ScheduleChange[] | undefined,
+  month: string,
+  year: number
+): ScheduleChange | undefined => {
   if (!scheduleHistory) return undefined;
-  return scheduleHistory.find((h) => h.originalMonth === month);
+  // Prefer entries with matching year. If a row has no year (legacy), ignore it
+  // so we don't show the yellow cell on a year the move did not happen.
+  return scheduleHistory.find(
+    (h) => h.originalMonth === month && h.originalYear === year
+  );
 };
+
 
 const printSection = (element: HTMLElement | null, title: string) => {
   if (!element) return;
@@ -451,7 +460,7 @@ export function ForecastView() {
                             </span>
                           </td>
                           {displayMonths.map((dm, i) => {
-                            const movedFrom = getMovedFromMonth(item.scheduleHistory, dm.month);
+                            const movedFrom = getMovedFromMonth(item.scheduleHistory, dm.month, dm.year);
                             const hasValue = item.months[dm.month] && item.months[dm.month] > 0;
                             const isQuarterStart = !!(selectedPeriod !== 'rolling12' && i % 3 === 0);
 
@@ -473,13 +482,14 @@ export function ForecastView() {
                                       </span>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>Flyttad till {monthLabels[movedFrom.newMonth]}</p>
+                                      <p>Flyttad till {monthLabels[movedFrom.newMonth]} {movedFrom.newYear ?? ''}</p>
                                       <p className="text-xs text-muted-foreground">
                                         Ursprungligt belopp: {movedFrom.originalAmount.toFixed(2)} MSEK
                                       </p>
                                     </TooltipContent>
                                   </UITooltip>
                                 }
+
                                 {hasValue &&
                                 <span className={cn("inline-flex items-center justify-center rounded px-1 min-w-[30px] py-[5px] text-xs font-semibold",
 

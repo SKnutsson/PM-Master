@@ -16,10 +16,13 @@ export interface ScheduleChange {
   id: string;
   forecastId: string;
   originalMonth: string;
+  originalYear: number | null;
   newMonth: string;
+  newYear: number | null;
   originalAmount: number;
   movedAt: string;
 }
+
 
 export interface ForecastMonthEntry {
   month: string;
@@ -292,10 +295,13 @@ export function useDatabaseData() {
             id: h.id,
             forecastId: h.forecast_id,
             originalMonth: h.original_month,
+            originalYear: (h as any).original_year ?? null,
             newMonth: h.new_month,
+            newYear: (h as any).new_year ?? null,
             originalAmount: parseFloat(String(h.original_amount)),
             movedAt: h.moved_at,
           }));
+
 
         return {
           id: f.id,
@@ -590,55 +596,58 @@ export function useDatabaseData() {
     // Get current forecast to check for schedule changes
     const currentForecast = forecast.find(f => f.id === forecastId);
     
-    if (updates.months && currentForecast) {
-      // Check for moved months (schedule changes)
-      const oldMonths = Object.entries(currentForecast.months).filter(([_, v]) => v > 0);
-      const newMonths = Object.entries(updates.months).filter(([_, v]) => v > 0);
+    if (updates.monthEntries && currentForecast) {
+      // Year-aware comparison of month entries
+      const keyOf = (m: string, y: number) => `${m}|${y}`;
+      const oldEntries = (currentForecast.monthEntries || []).filter((e) => e.amount > 0);
+      const newEntries = (updates.monthEntries || []).filter((e) => e.amount > 0);
+      const newKeys = new Set(newEntries.map((e) => keyOf(e.month, e.year)));
+      const oldKeys = new Set(oldEntries.map((e) => keyOf(e.month, e.year)));
 
-      for (const [oldMonth, oldAmount] of oldMonths) {
-        const stillExists = updates.months[oldMonth] && updates.months[oldMonth] > 0;
-        if (!stillExists) {
-          // This month was removed or moved
-          const newMonth = newMonths.find(([m, _]) => !currentForecast.months[m] || currentForecast.months[m] === 0);
-          if (newMonth) {
-            // Record the schedule change
-            await supabase.from('schedule_history').insert({
-              forecast_id: forecastId,
-              original_month: oldMonth,
-              new_month: newMonth[0],
-              original_amount: oldAmount,
-            });
-          }
-        }
+      const removedEntries = oldEntries.filter((e) => !newKeys.has(keyOf(e.month, e.year)));
+      const addedEntries = newEntries.filter((e) => !oldKeys.has(keyOf(e.month, e.year)));
+
+      // Pair removed→added 1:1 (by index) to record schedule_history rows with year info
+      const pairs = Math.min(removedEntries.length, addedEntries.length);
+      for (let i = 0; i < pairs; i++) {
+        const from = removedEntries[i];
+        const to = addedEntries[i];
+        await supabase.from('schedule_history').insert({
+          forecast_id: forecastId,
+          original_month: from.month,
+          original_year: from.year,
+          new_month: to.month,
+          new_year: to.year,
+          original_amount: from.amount,
+        } as any);
       }
 
-      // Delete existing month entries and insert new ones
+      // Replace all month rows with the new entries
       await supabase.from('forecast_months').delete().eq('forecast_id', forecastId);
-      
-      // Use monthEntries if provided (year-aware), otherwise fallback to months
-      if (updates.monthEntries && updates.monthEntries.length > 0) {
-        for (const entry of updates.monthEntries) {
-          if (entry.amount > 0) {
-            await supabase.from('forecast_months').insert({
-              forecast_id: forecastId,
-              month: entry.month,
-              amount: entry.amount,
-              year: entry.year,
-            });
-          }
+      for (const entry of updates.monthEntries) {
+        if (entry.amount > 0) {
+          await supabase.from('forecast_months').insert({
+            forecast_id: forecastId,
+            month: entry.month,
+            amount: entry.amount,
+            year: entry.year,
+          });
         }
-      } else {
-        for (const [month, amount] of Object.entries(updates.months)) {
-          if (amount > 0) {
-            await supabase.from('forecast_months').insert({
-              forecast_id: forecastId,
-              month: month,
-              amount: amount,
-            });
-          }
+      }
+    } else if (updates.months && currentForecast) {
+      // Fallback path (no year info): just replace months
+      await supabase.from('forecast_months').delete().eq('forecast_id', forecastId);
+      for (const [month, amount] of Object.entries(updates.months)) {
+        if (amount > 0) {
+          await supabase.from('forecast_months').insert({
+            forecast_id: forecastId,
+            month: month,
+            amount: amount,
+          });
         }
       }
     }
+
 
     // Log status change event
     if (currentForecast && updates.dealStatus && updates.dealStatus !== currentForecast.dealStatus) {
