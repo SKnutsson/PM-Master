@@ -972,24 +972,30 @@ export type Database = {
           id: string
           moved_at: string | null
           new_month: string
+          new_year: number | null
           original_amount: number
           original_month: string
+          original_year: number | null
         }
         Insert: {
           forecast_id: string
           id?: string
           moved_at?: string | null
           new_month: string
+          new_year?: number | null
           original_amount: number
           original_month: string
+          original_year?: number | null
         }
         Update: {
           forecast_id?: string
           id?: string
           moved_at?: string | null
           new_month?: string
+          new_year?: number | null
           original_amount?: number
           original_month?: string
+          original_year?: number | null
         }
         Relationships: [
           {
