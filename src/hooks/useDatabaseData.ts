@@ -16,10 +16,13 @@ export interface ScheduleChange {
   id: string;
   forecastId: string;
   originalMonth: string;
+  originalYear: number | null;
   newMonth: string;
+  newYear: number | null;
   originalAmount: number;
   movedAt: string;
 }
+
 
 export interface ForecastMonthEntry {
   month: string;
@@ -292,10 +295,13 @@ export function useDatabaseData() {
             id: h.id,
             forecastId: h.forecast_id,
             originalMonth: h.original_month,
+            originalYear: (h as any).original_year ?? null,
             newMonth: h.new_month,
+            newYear: (h as any).new_year ?? null,
             originalAmount: parseFloat(String(h.original_amount)),
             movedAt: h.moved_at,
           }));
+
 
         return {
           id: f.id,
