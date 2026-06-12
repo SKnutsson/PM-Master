@@ -607,11 +607,18 @@ export function Dashboard() {
                           EventIcon = ArrowDownRight;
                         } else badgeCls = 'bg-primary/10 text-primary';
                         break;
-                      case 'month_moved':
-                        description = `Flyttad: ${evt.oldValue} → ${evt.newValue}`;
-                        badgeText = `${evt.oldValue} → ${evt.newValue}`;
+                      case 'month_moved': {
+                        const evtYear = new Date(evt.createdAt).getFullYear();
+                        const enrich = (v: string | null | undefined) =>
+                          v && !/\d{4}/.test(v) ? `${v} ${evtYear}` : (v || '');
+                        const oldLabel = enrich(evt.oldValue);
+                        const newLabel = enrich(evt.newValue);
+                        description = `Flyttad: ${oldLabel} → ${newLabel}`;
+                        badgeText = `${oldLabel} → ${newLabel}`;
                         badgeCls = 'bg-status-in-progress/10 text-status-in-progress';
                         break;
+                      }
+
                       case 'deleted':
                         description = 'Borttagen';
                         badgeText = 'Borttagen';
