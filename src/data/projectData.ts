@@ -241,4 +241,4 @@ export const monthlyTotals = {
 export const yearTotal = 64.7;
 
 export const departments: Department[] = ['Sälj', 'Projektledare', 'Konstruktion', 'Beredning', 'Inköp', 'Produktion', 'Montageledare'];
-export const statuses: Status[] = ['Ej påbörjad', 'Pågår', 'Slutförd', 'Försenad'];
+export const statuses: Status[] = ['Ej påbörjad', 'Pågår', 'Slutförd', 'Försenad', 'Förväntad'];
