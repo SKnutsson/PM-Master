@@ -1,4 +1,4 @@
-export type Status = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad';
+export type Status = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad' | 'Förväntad';
 export type Department = 'Sälj' | 'Projektledare' | 'Konstruktion' | 'Beredning' | 'Inköp' | 'Produktion' | 'Montageledare';
 
 export type Phase = 'Konstruktion' | 'Produktion' | 'Montage';
