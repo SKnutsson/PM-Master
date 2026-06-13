@@ -197,7 +197,7 @@ export function ForecastView() {
     `Försäljningsbudget ${selectedPeriod}`;
 
     return { filteredForecast: forecastsInPeriod, filteredMonthlyTotals, filteredYearTotal, displayMonths, periodLabel };
-  }, [forecast, selectedPeriod, selectedSalesPerson]);
+  }, [forecast, selectedPeriod, selectedSalesPerson, hideLost]);
 
   const chartData = displayMonths.map((dm) => ({
     month: monthLabels[dm.month] || dm.month,
