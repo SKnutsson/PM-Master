@@ -369,33 +369,36 @@ export function ForecastView() {
       <motion.div variants={itemVariants}>
         <Card className="border-border/50 bg-card/80" style={{ overflow: 'visible' }}>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Detaljerad budget</CardTitle>
-                <CardDescription>Belopp färgkodas per cell baserat på affärsstatus</CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                {(salesPersons.list.length > 0 || salesPersons.hasMissing) &&
+            <div className="flex items-center justify-end gap-2">
+              {(salesPersons.list.length > 0 || salesPersons.hasMissing) &&
                 <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
-                    <SelectTrigger className="w-[180px] h-8 text-xs">
-                      <Filter className="h-3 w-3 mr-1" />
-                      <SelectValue placeholder="Filtrera säljare" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Alla säljare</SelectItem>
-                      {salesPersons.list.map((sp) =>
-                    <SelectItem key={sp} value={sp}>{sp}</SelectItem>
-                      )}
-                      {salesPersons.hasMissing && <SelectItem value="_missing">Saknar säljare</SelectItem>}
-                    </SelectContent>
-                  </Select>
-                }
-                <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
-                  <Printer className="h-4 w-4" />
-                </Button>
-              </div>
+                  <SelectTrigger className="w-[180px] h-8 text-xs">
+                    <Filter className="h-3 w-3 mr-1" />
+                    <SelectValue placeholder="Filtrera säljare" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Alla säljare</SelectItem>
+                    {salesPersons.list.map((sp) =>
+                      <SelectItem key={sp} value={sp}>{sp}</SelectItem>
+                    )}
+                    {salesPersons.hasMissing && <SelectItem value="_missing">Saknar säljare</SelectItem>}
+                  </SelectContent>
+                </Select>
+              }
+              <Button
+                variant={hideLost ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setHideLost((v) => !v)}
+                className="h-8 text-xs"
+              >
+                {hideLost ? 'Visa förlorade affärer' : 'Dölj förlorade affärer'}
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
+                <Printer className="h-4 w-4" />
+              </Button>
             </div>
           </CardHeader>
+
           <CardContent className="px-0 pb-0" style={{ overflow: 'visible' }}>
             <div ref={forecastTableRef} style={{ overflowX: 'clip', overflowY: 'visible' }}>
               <table className="w-full border-collapse">
