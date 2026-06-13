@@ -112,6 +112,7 @@ export function ForecastView() {
   const [editingTarget, setEditingTarget] = useState(false);
   const [targetInput, setTargetInput] = useState('');
   const [selectedSalesPerson, setSelectedSalesPerson] = useState<string>('all');
+  const [hideLost, setHideLost] = useState(false);
 
   // Get unique sales persons dynamically from current forecast data
   const salesPersons = useMemo(() => {
