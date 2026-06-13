@@ -179,6 +179,11 @@ export function ForecastView() {
       forecastsInPeriod = forecastsInPeriod.filter((f) => f.salesPerson === selectedSalesPerson);
     }
 
+    if (hideLost) {
+      forecastsInPeriod = forecastsInPeriod.filter((f) => f.dealStatus !== 'Förlorad');
+    }
+
+
     const activeForecast = forecastsInPeriod.filter((f) => f.dealStatus !== 'Förlorad');
     const filteredMonthlyTotals: {[key: string]: number;} = {};
     for (const dm of displayMonths) {
