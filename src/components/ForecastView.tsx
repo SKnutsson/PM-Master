@@ -351,51 +351,49 @@ export function ForecastView() {
         </motion.div>
       </div>
 
-      {/* Legend */}
-      <motion.div variants={itemVariants}>
-        <StatusLegend
-          items={[
-          { color: 'bg-blue-600', label: 'Offert' },
-          { color: 'bg-emerald-600', label: 'Order' },
-          { color: 'bg-emerald-600', label: 'Fakturerad' },
-          { color: 'bg-yellow-400', label: 'Flyttad' },
-          { color: 'bg-red-600', label: 'Förlorad' },
-          { color: 'bg-foreground/50', label: 'Budget' }]
-          } />
-
-      </motion.div>
-
       {/* Forecast Table */}
       <motion.div variants={itemVariants}>
         <Card className="border-border/50 bg-card/80" style={{ overflow: 'visible' }}>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-end gap-2">
-              {(salesPersons.list.length > 0 || salesPersons.hasMissing) &&
-                <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
-                  <SelectTrigger className="w-[180px] h-8 text-xs">
-                    <Filter className="h-3 w-3 mr-1" />
-                    <SelectValue placeholder="Filtrera säljare" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alla säljare</SelectItem>
-                    {salesPersons.list.map((sp) =>
-                      <SelectItem key={sp} value={sp}>{sp}</SelectItem>
-                    )}
-                    {salesPersons.hasMissing && <SelectItem value="_missing">Saknar säljare</SelectItem>}
-                  </SelectContent>
-                </Select>
-              }
-              <Button
-                variant={hideLost ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setHideLost((v) => !v)}
-                className="h-8 text-xs"
-              >
-                {hideLost ? 'Visa förlorade affärer' : 'Dölj förlorade affärer'}
-              </Button>
-              <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
-                <Printer className="h-4 w-4" />
-              </Button>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <StatusLegend
+                items={[
+                  { color: 'bg-blue-600', label: 'Offert' },
+                  { color: 'bg-emerald-600', label: 'Order' },
+                  { color: 'bg-emerald-600', label: 'Fakturerad' },
+                  { color: 'bg-yellow-400', label: 'Flyttad' },
+                  { color: 'bg-red-600', label: 'Förlorad' },
+                  { color: 'bg-foreground/50', label: 'Budget' },
+                ]}
+              />
+              <div className="flex items-center gap-2 flex-wrap">
+                {(salesPersons.list.length > 0 || salesPersons.hasMissing) &&
+                  <Select value={selectedSalesPerson} onValueChange={setSelectedSalesPerson}>
+                    <SelectTrigger className="w-[180px] h-8 text-xs">
+                      <Filter className="h-3 w-3 mr-1" />
+                      <SelectValue placeholder="Filtrera säljare" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alla säljare</SelectItem>
+                      {salesPersons.list.map((sp) =>
+                        <SelectItem key={sp} value={sp}>{sp}</SelectItem>
+                      )}
+                      {salesPersons.hasMissing && <SelectItem value="_missing">Saknar säljare</SelectItem>}
+                    </SelectContent>
+                  </Select>
+                }
+                <Button
+                  variant={hideLost ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setHideLost((v) => !v)}
+                  className="h-8 text-xs"
+                >
+                  {hideLost ? 'Visa förlorade affärer' : 'Dölj förlorade affärer'}
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => printSection(forecastTableRef.current, `Detaljerad Försäljningsbudget`)} className="print:hidden h-8 w-8">
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
