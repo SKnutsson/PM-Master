@@ -104,6 +104,7 @@ function deriveStatus(status: Status): DerivedStatus {
   if (status === 'Slutförd') return 'Slutförd';
   if (status === 'Försenad') return 'Försenad';
   if (status === 'Pågår') return 'Pågår';
+  if (status === 'Förväntad') return 'Förväntad';
   return 'Ej påbörjad';
 }
 
@@ -113,6 +114,7 @@ const getStatusColor = (derivedStatus: DerivedStatus) => {
     case 'Pågår':return 'bg-status-in-progress';
     case 'Försenad':return 'bg-status-delayed';
     case 'Ej påbörjad':return 'bg-status-not-started';
+    case 'Förväntad':return 'bg-card border-2 border-dashed border-foreground/60';
     default:return 'bg-muted-foreground/30';
   }
 };
@@ -123,6 +125,7 @@ const getStatusDotColor = (derivedStatus: DerivedStatus) => {
     case 'Pågår':return 'bg-status-in-progress';
     case 'Försenad':return 'bg-status-delayed';
     case 'Ej påbörjad':return 'bg-status-not-started';
+    case 'Förväntad':return 'bg-card border border-dashed border-foreground/60';
     default:return 'bg-muted-foreground/30';
   }
 };
@@ -131,7 +134,8 @@ const statusLabels: {status: DerivedStatus;color: string;label: string;}[] = [
 { status: 'Ej påbörjad', color: 'bg-status-not-started', label: 'Ej påbörjad' },
 { status: 'Pågår', color: 'bg-status-in-progress', label: 'Pågår' },
 { status: 'Slutförd', color: 'bg-status-completed', label: 'Slutförd' },
-{ status: 'Försenad', color: 'bg-status-delayed', label: 'Försenad' }];
+{ status: 'Försenad', color: 'bg-status-delayed', label: 'Försenad' },
+{ status: 'Förväntad', color: 'bg-card border-2 border-dashed border-foreground/60', label: 'Förväntad' }];
 
 
 function toISODate(d: Date): string {
