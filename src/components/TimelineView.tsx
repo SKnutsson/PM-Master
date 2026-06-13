@@ -44,7 +44,7 @@ const itemVariants = {
 
 type ViewMode = 'weeks' | 'days';
 
-type DerivedStatus = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad';
+type DerivedStatus = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad' | 'Förväntad';
 
 // ISO 8601 week number: week 1 contains the first Thursday of the year
 function getISOWeekNumber(date: Date): number {
