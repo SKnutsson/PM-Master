@@ -114,7 +114,7 @@ const getStatusColor = (derivedStatus: DerivedStatus) => {
     case 'Pågår':return 'bg-status-in-progress';
     case 'Försenad':return 'bg-status-delayed';
     case 'Ej påbörjad':return 'bg-status-not-started';
-    case 'Förväntad':return 'bg-card border-2 border-dashed border-foreground/60';
+    case 'Förväntad':return 'bg-muted/50 border-2 border-dashed border-foreground/50';
     default:return 'bg-muted-foreground/30';
   }
 };
