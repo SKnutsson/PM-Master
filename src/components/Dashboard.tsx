@@ -378,85 +378,83 @@ export function Dashboard() {
 
       {/* Försäljningsöversikt + Måluppfyllnad flyttade till CRM Dashboard */}
 
-      {/* ── ROW 3: Phase Cards — sequential with arrows ── */}
+      {/* ── ROW 3: Phase Cards — sequential with arrows, grid aligned with row 1 ── */}
       <motion.div variants={itemVariants}>
-        <div className="flex items-stretch gap-2 flex-col md:flex-row">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
           {projectsByPhase.map(({ phase, projects: phaseProjects }, idx) => {
             const config = phaseConfig[phase];
             const PhaseIcon = config.icon;
             const isLast = idx === projectsByPhase.length - 1;
 
             return (
-              <div key={phase} className="contents md:flex md:items-stretch md:flex-1 md:gap-2">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.08, type: 'spring' as const, stiffness: 300, damping: 26 }}
-                  className="flex-1 rounded-xl overflow-hidden shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group border border-border/30 flex flex-col">
+              <motion.div
+                key={phase}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.08, type: 'spring' as const, stiffness: 300, damping: 26 }}
+                className="relative rounded-xl overflow-visible shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group border border-border/30 flex flex-col">
 
-                  {/* Phase header */}
-                  <div className={`${config.bg} px-5 py-4 relative overflow-hidden`}>
-                    <div className="absolute inset-0 opacity-[0.08]" style={{
-                      backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.4) 0%, transparent 60%)'
-                    }} />
-                    <div className="flex items-center gap-3 relative z-10">
-                      <div className="rounded-lg p-2.5 bg-white/15 backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
-                        <PhaseIcon className="h-5 w-5 text-white" />
+                {/* Phase header */}
+                <div className={`${config.bg} px-5 py-4 relative overflow-hidden rounded-t-xl`}>
+                  <div className="absolute inset-0 opacity-[0.08]" style={{
+                    backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.4) 0%, transparent 60%)'
+                  }} />
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className="rounded-lg p-2.5 bg-white/15 backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
+                      <PhaseIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Fas {idx + 1}</span>
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Fas {idx + 1}</span>
-                        </div>
-                        <h3 className="font-bold text-white text-xl">{phase}</h3>
-                        <p className="text-white/50 text-sm">
-                          <AnimatedNumber value={phaseProjects.length} /> projekt
-                        </p>
-                      </div>
+                      <h3 className="font-bold text-white text-xl">{phase}</h3>
+                      <p className="text-white/50 text-sm">
+                        <AnimatedNumber value={phaseProjects.length} /> projekt
+                      </p>
                     </div>
                   </div>
+                </div>
 
-                  {/* Project list */}
-                  <div className="bg-card px-4 py-3 flex-1">
-                    {phaseProjects.length === 0 ?
-                    <p className="text-sm text-muted-foreground py-3 text-center italic">Inga pågående projekt</p> :
+                {/* Project list */}
+                <div className="bg-card px-4 py-3 flex-1 rounded-b-xl">
+                  {phaseProjects.length === 0 ?
+                  <p className="text-sm text-muted-foreground py-3 text-center italic">Inga pågående projekt</p> :
 
-                    <div className="space-y-1">
-                      {phaseProjects.map((p, i) =>
-                      <Tooltip key={p.id} delayDuration={200}>
-                        <TooltipTrigger asChild>
-                          <motion.div
-                            initial={{ opacity: 0, x: -6 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.04 }}
-                            className="rounded-lg px-3 py-2 text-sm cursor-default transition-all hover:bg-muted/50 border border-transparent hover:border-border/40">
+                  <div className="space-y-1">
+                    {phaseProjects.map((p, i) =>
+                    <Tooltip key={p.id} delayDuration={200}>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          initial={{ opacity: 0, x: -6 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="rounded-lg px-3 py-2 text-sm cursor-default transition-all hover:bg-muted/50 border border-transparent hover:border-border/40">
 
-                                <span className="font-semibold text-foreground/60">{p.code}</span>
-                                <span className="text-muted-foreground mx-2">–</span>
-                                <span className="font-semibold text-secondary-foreground">{p.name}</span>
-                              </motion.div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          <p className="font-medium">{p.name}</p>
-                          <p className="text-xs text-muted-foreground">{p.customer}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      )}
-                      </div>
-                    }
-                  </div>
-                </motion.div>
+                              <span className="font-semibold text-foreground/60">{p.code}</span>
+                              <span className="text-muted-foreground mx-2">–</span>
+                              <span className="font-semibold text-secondary-foreground">{p.name}</span>
+                            </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="font-medium">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">{p.customer}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    )}
+                    </div>
+                  }
+                </div>
 
+                {/* Arrow overlay positioned in the grid gap so card widths stay equal */}
                 {!isLast && (
-                  <div className="flex items-center justify-center md:px-1 py-1 md:py-0" aria-hidden>
-                    <div className="hidden md:flex items-center">
-                      <ArrowRight className="h-7 w-7 text-primary/70" strokeWidth={2.5} />
-                    </div>
-                    <div className="md:hidden flex items-center">
-                      <ArrowRight className="h-5 w-5 text-primary/70 rotate-90" strokeWidth={2.5} />
-                    </div>
+                  <div
+                    className="hidden sm:flex items-center justify-center absolute top-1/2 -translate-y-1/2 -right-[18px] z-10 pointer-events-none bg-background rounded-full"
+                    aria-hidden
+                  >
+                    <ArrowRight className="h-6 w-6 text-primary/70" strokeWidth={2.5} />
                   </div>
                 )}
-              </div>);
+              </motion.div>);
 
           })}
         </div>

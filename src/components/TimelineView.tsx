@@ -954,47 +954,28 @@ export function TimelineView() {
                                         if (sCol < 0 || sCol >= columnCount || eCol < 0) return;
                                         const segDerived = deriveStatus(seg.status || activity.status);
                                         bars.push(
-                                          <ContextMenu key={`${activity.id}-seg-${idx}`}>
-                                            <ContextMenuTrigger asChild>
-                                              <div className="contents">
-                                                <GanttBar
-                                                  activityId={activity.id}
-                                                  projectId={project.id}
-                                                  activityName={`${activity.name} (del ${idx + 1}/${sortedSegs.length})`}
-                                                  startDate={seg.start}
-                                                  endDate={seg.end}
-                                                  statusColor={getStatusColor(segDerived)}
-                                                  derivedStatus={segDerived}
-                                                  responsible={activity.responsible}
-                                                  columnCount={columnCount}
-                                                  startCol={sCol}
-                                                  endCol={eCol}
-                                                  onDatesChange={(pid, aid, ns, ne) =>
-                                                    handleSegmentDatesChange(pid, aid, idx, sortedSegs, ns, ne)
-                                                  }
-                                                  colToDate={colToDate}
-                                                  dateToCol={dateToCol}
-                                                  colWidth={colWidth}
-                                                  snapCols={1}
-                                                  isMilestone={false}
-                                                />
-                                              </div>
-                                            </ContextMenuTrigger>
-                                            <ContextMenuContent>
-                                              <ContextMenuLabel>Status för del {idx + 1}</ContextMenuLabel>
-                                              <ContextMenuSeparator />
-                                              {statuses.map((s) => (
-                                                <ContextMenuItem
-                                                  key={s}
-                                                  onSelect={() => handleSegmentStatusChange(project.id, activity.id, idx, sortedSegs, s)}
-                                                >
-                                                  <span className={cn('mr-2 inline-block h-2.5 w-2.5 rounded-full', getStatusColor(deriveStatus(s)))} />
-                                                  {s}
-                                                  {(seg.status || activity.status) === s && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
-                                                </ContextMenuItem>
-                                              ))}
-                                            </ContextMenuContent>
-                                          </ContextMenu>
+                                          <GanttBar
+                                            key={`${activity.id}-seg-${idx}`}
+                                            activityId={activity.id}
+                                            projectId={project.id}
+                                            activityName={`${activity.name} (del ${idx + 1}/${sortedSegs.length})`}
+                                            startDate={seg.start}
+                                            endDate={seg.end}
+                                            statusColor={getStatusColor(segDerived)}
+                                            derivedStatus={segDerived}
+                                            responsible={activity.responsible}
+                                            columnCount={columnCount}
+                                            startCol={sCol}
+                                            endCol={eCol}
+                                            onDatesChange={(pid, aid, ns, ne) =>
+                                              handleSegmentDatesChange(pid, aid, idx, sortedSegs, ns, ne)
+                                            }
+                                            colToDate={colToDate}
+                                            dateToCol={dateToCol}
+                                            colWidth={colWidth}
+                                            snapCols={1}
+                                            isMilestone={false}
+                                          />
                                         );
                                         // Dashed connector to the next segment
                                         if (idx < sortedSegs.length - 1) {
