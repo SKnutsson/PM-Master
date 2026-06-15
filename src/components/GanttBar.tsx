@@ -99,6 +99,22 @@ export function GanttBar({
     });
   }, [currentStartCol, currentEndCol]);
 
+  // Stable refs for callbacks/values so we don't re-attach listeners on every parent rerender
+  const onDatesChangeRef = useRef(onDatesChange);
+  const colToDateRef = useRef(colToDate);
+  const startDateRef = useRef(startDate);
+  const endDateRef = useRef(endDate);
+  const startColRef = useRef(startCol);
+  const endColRef = useRef(endCol);
+  const columnCountRef = useRef(columnCount);
+  onDatesChangeRef.current = onDatesChange;
+  colToDateRef.current = colToDate;
+  startDateRef.current = startDate;
+  endDateRef.current = endDate;
+  startColRef.current = startCol;
+  endColRef.current = endCol;
+  columnCountRef.current = columnCount;
+
   useEffect(() => {
     if (!dragState) return;
 
@@ -109,7 +125,7 @@ export function GanttBar({
       hasDragged.current = true;
 
       const containerWidth = getContainerWidth();
-      const colWidth = containerWidth / columnCount;
+      const colWidth = containerWidth / columnCountRef.current;
       const deltaCols = deltaX / colWidth;
 
       if (dragState.type === 'move') {
@@ -120,11 +136,9 @@ export function GanttBar({
         setCurrentEndCol(Math.max(span, newEnd));
       } else if (dragState.type === 'resize-left') {
         const newStart = snap(dragState.origStartCol + deltaCols);
-        // Allow shrinking to same day (startCol === endCol)
         setCurrentStartCol(Math.min(newStart, currentEndColRef.current));
       } else if (dragState.type === 'resize-right') {
         const newEnd = snap(dragState.origEndCol + deltaCols);
-        // Allow shrinking to same day (endCol === startCol)
         setCurrentEndCol(Math.max(newEnd, currentStartColRef.current));
       }
     };
@@ -138,17 +152,17 @@ export function GanttBar({
       const finalStartCol = currentStartColRef.current;
       const finalEndCol = currentEndColRef.current;
 
-      const newStartDate = colToDate(Math.max(0, finalStartCol));
-      const newEndDate = colToDate(Math.max(0, finalEndCol));
+      const newStartDate = colToDateRef.current(Math.max(0, finalStartCol));
+      const newEndDate = colToDateRef.current(Math.max(0, finalEndCol));
 
-      if (newStartDate !== startDate || newEndDate !== endDate) {
+      if (newStartDate !== startDateRef.current || newEndDate !== endDateRef.current) {
         setIsSaving(true);
         setDragState(null);
         try {
-          await onDatesChange(projectId, activityId, newStartDate, newEndDate);
+          await onDatesChangeRef.current(projectId, activityId, newStartDate, newEndDate);
         } catch {
-          setCurrentStartCol(startCol);
-          setCurrentEndCol(endCol);
+          setCurrentStartCol(startColRef.current);
+          setCurrentEndCol(endColRef.current);
           toast.error('Kunde inte spara ändringen. Försök igen.');
         } finally {
           setIsSaving(false);
@@ -164,8 +178,8 @@ export function GanttBar({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-    // Only depend on dragState – read current cols from refs
-  }, [dragState, columnCount, getContainerWidth, snap, colToDate, onDatesChange, projectId, activityId, startDate, endDate, startCol, endCol]);
+  }, [dragState, getContainerWidth, snap, projectId, activityId]);
+
 
   // Compute position in pixels using fixed column width for precision
   const BAR_INSET_PX = 2;

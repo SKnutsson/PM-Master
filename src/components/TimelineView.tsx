@@ -114,7 +114,7 @@ const getStatusColor = (derivedStatus: DerivedStatus) => {
     case 'Pågår':return 'bg-status-in-progress';
     case 'Försenad':return 'bg-status-delayed';
     case 'Ej påbörjad':return 'bg-status-not-started';
-    case 'Förväntad':return 'bg-card border-2 border-dashed border-foreground/60';
+    case 'Förväntad':return 'bg-muted/50 border-2 border-dashed border-foreground/50';
     default:return 'bg-muted-foreground/30';
   }
 };
@@ -135,7 +135,7 @@ const statusLabels: {status: DerivedStatus;color: string;label: string;}[] = [
 { status: 'Pågår', color: 'bg-status-in-progress', label: 'Pågår' },
 { status: 'Slutförd', color: 'bg-status-completed', label: 'Slutförd' },
 { status: 'Försenad', color: 'bg-status-delayed', label: 'Försenad' },
-{ status: 'Förväntad', color: 'bg-card border-2 border-dashed border-foreground/60', label: 'Förväntad' }];
+{ status: 'Förväntad', color: 'bg-muted/50 border-2 border-dashed border-foreground/50', label: 'Förväntad' }];
 
 
 function toISODate(d: Date): string {
