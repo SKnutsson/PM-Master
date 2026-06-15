@@ -135,7 +135,7 @@ const statusLabels: {status: DerivedStatus;color: string;label: string;}[] = [
 { status: 'Pågår', color: 'bg-status-in-progress', label: 'Pågår' },
 { status: 'Slutförd', color: 'bg-status-completed', label: 'Slutförd' },
 { status: 'Försenad', color: 'bg-status-delayed', label: 'Försenad' },
-{ status: 'Förväntad', color: 'bg-card border-2 border-dashed border-foreground/60', label: 'Förväntad' }];
+{ status: 'Förväntad', color: 'bg-muted/50 border-2 border-dashed border-foreground/50', label: 'Förväntad' }];
 
 
 function toISODate(d: Date): string {
