@@ -958,6 +958,12 @@ export function TimelineView() {
                                       return <span className="text-[12px] text-muted-foreground truncate text-center">{activity.responsible}</span>;
                                     })()}
                                   </div>
+                                  <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 bg-primary-foreground flex items-center justify-center text-[11px] text-slate-950 tabular-nums">
+                                    {(() => {
+                                      const wd = countWeekdays(activity.startDate, activity.endDate);
+                                      return wd !== null ? wd : <span className="text-muted-foreground">–</span>;
+                                    })()}
+                                  </div>
                                 </div>
                                 {/* Grid area with absolute-positioned draggable bar */}
                                 <div className="flex items-center relative" style={{ width: gridWidth }}>
