@@ -148,7 +148,23 @@ function toISODate(d: Date): string {
 // Fixed column widths for consistent layout
 const WEEK_COL_WIDTH = 56; // px per week column
 const DAY_COL_WIDTH = 32; // px per day column
-const LEFT_COL_WIDTH = 304; // w-60 + w-16 = 240 + 64
+const LEFT_COL_WIDTH = 368; // w-60 + w-16 + w-16 = 240 + 64 + 64
+
+// Count weekdays (Mon-Fri) between two ISO dates, inclusive
+function countWeekdays(start?: string, end?: string): number | null {
+  if (!start) return null;
+  const s = new Date(start + 'T00:00:00');
+  const e = new Date((end || start) + 'T00:00:00');
+  if (isNaN(s.getTime()) || isNaN(e.getTime()) || e < s) return null;
+  let count = 0;
+  const cur = new Date(s);
+  while (cur <= e) {
+    const dow = cur.getDay();
+    if (dow !== 0 && dow !== 6) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
 
 export function TimelineView() {
   const { projects: allProjects, updateActivity, updateProjectOrder, updateActivityOrder } = useProjectDataContext();
