@@ -28,6 +28,7 @@ import { YearNavigator } from './YearNavigator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
@@ -646,32 +647,32 @@ export function Dashboard() {
                         badgeText = 'Ändrad';
                     }
 
-                    return (
+                      return (
                       <motion.div
                         key={evt.id}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 8 }}
                         transition={{ delay: idx * 0.03 }}
-                        className="flex items-center gap-3 py-3 group">
+                        className="flex items-start gap-3 py-3 group">
                         
-                          <div className={`rounded-full p-2 ${badgeCls} shrink-0`}>
+                          <div className={`rounded-full p-2 ${badgeCls} shrink-0 mt-0.5`}>
                             <EventIcon className="h-3.5 w-3.5" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">{evt.projectName}</p>
-                            <p className="text-xs text-muted-foreground truncate">{description}</p>
+                            <p className="text-sm font-medium break-words">{evt.projectName}</p>
+                            <p className="text-xs text-muted-foreground whitespace-pre-wrap break-words">{description}</p>
                           </div>
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0 ${badgeCls}`}>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium shrink-0 mt-0.5 ${badgeCls}`}>
                             {badgeText}
                           </span>
-                          <div className="text-right shrink-0 min-w-[70px]">
+                          <div className="text-right shrink-0 min-w-[70px] mt-0.5">
                             <p className="text-xs text-muted-foreground">{formatDate(evt.createdAt)}</p>
                             {evt.changedBy && <p className="text-[10px] text-muted-foreground/50">{evt.changedBy}</p>}
                           </div>
                           <button
                           onClick={() => deleteForecastEvent(evt.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-destructive/10 shrink-0"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-destructive/10 shrink-0 mt-0.5"
                           title="Ta bort">
                           
                             <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
@@ -700,7 +701,7 @@ export function Dashboard() {
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Beskrivning</label>
-              <Input value={newEventDetails} onChange={(e) => setNewEventDetails(e.target.value)} placeholder="Vad hände?" />
+              <Textarea value={newEventDetails} onChange={(e) => setNewEventDetails(e.target.value)} placeholder="Vad hände?" rows={4} className="min-h-[100px]" />
             </div>
           </div>
           <DialogFooter>

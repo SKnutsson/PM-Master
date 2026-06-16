@@ -755,6 +755,8 @@ export type Database = {
         Row: {
           created_at: string
           delivery_precision_missing: number | null
+          deviation_details: Json
+          deviations: number | null
           first_time_right_percent: number | null
           ftr_details: Json
           id: string
@@ -768,6 +770,8 @@ export type Database = {
         Insert: {
           created_at?: string
           delivery_precision_missing?: number | null
+          deviation_details?: Json
+          deviations?: number | null
           first_time_right_percent?: number | null
           ftr_details?: Json
           id?: string
@@ -781,6 +785,8 @@ export type Database = {
         Update: {
           created_at?: string
           delivery_precision_missing?: number | null
+          deviation_details?: Json
+          deviations?: number | null
           first_time_right_percent?: number | null
           ftr_details?: Json
           id?: string

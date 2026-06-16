@@ -15,7 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Legend, Cell,
 } from 'recharts';
-import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, Printer, Save, FolderOpen, FolderArchive } from 'lucide-react';
+import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, AlertTriangle, Printer, Save, FolderOpen, FolderArchive } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const containerVariants = {
@@ -122,10 +122,12 @@ export function ResourceAnalyticsView() {
   const [ftr, setFtr] = useState<string>('');
   const [missing, setMissing] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
+  const [deviations, setDeviations] = useState<string>('');
   const [kpiNotes, setKpiNotes] = useState<string>('');
   const [ftrDetails, setFtrDetails] = useState<string[]>([]);
   const [missingDetails, setMissingDetails] = useState<string[]>([]);
   const [remarkDetails, setRemarkDetails] = useState<string[]>([]);
+  const [deviationDetails, setDeviationDetails] = useState<string[]>([]);
   const [savingKpi, setSavingKpi] = useState(false);
 
   // Sync detail array length to count number
@@ -138,8 +140,8 @@ export function ResourceAnalyticsView() {
 
   useEffect(() => {
     if (!selectedProjectId) {
-      setFtr(''); setMissing(''); setRemarks(''); setKpiNotes('');
-      setFtrDetails([]); setMissingDetails([]); setRemarkDetails([]);
+      setFtr(''); setMissing(''); setRemarks(''); setDeviations(''); setKpiNotes('');
+      setFtrDetails([]); setMissingDetails([]); setRemarkDetails([]); setDeviationDetails([]);
       return;
     }
     (async () => {
@@ -152,10 +154,12 @@ export function ResourceAnalyticsView() {
       setFtr(d.first_time_right_percent != null ? String(d.first_time_right_percent) : '');
       setMissing(d.delivery_precision_missing != null ? String(d.delivery_precision_missing) : '');
       setRemarks(d.inspection_remarks != null ? String(d.inspection_remarks) : '');
+      setDeviations(d.deviations != null ? String(d.deviations) : '');
       setKpiNotes(d.notes ?? '');
       setFtrDetails(Array.isArray(d.ftr_details) ? d.ftr_details : []);
       setMissingDetails(Array.isArray(d.missing_article_details) ? d.missing_article_details : []);
       setRemarkDetails(Array.isArray(d.inspection_remark_details) ? d.inspection_remark_details : []);
+      setDeviationDetails(Array.isArray(d.deviation_details) ? d.deviation_details : []);
     })();
   }, [selectedProjectId]);
 
@@ -167,10 +171,12 @@ export function ResourceAnalyticsView() {
       first_time_right_percent: ftr === '' ? null : parseFloat(ftr),
       delivery_precision_missing: missing === '' ? null : parseInt(missing),
       inspection_remarks: remarks === '' ? null : parseInt(remarks),
+      deviations: deviations === '' ? null : parseInt(deviations),
       notes: kpiNotes || null,
       ftr_details: ftrDetails,
       missing_article_details: missingDetails,
       inspection_remark_details: remarkDetails,
+      deviation_details: deviationDetails,
     };
     const { error } = await supabase.from('project_kpi_metrics' as any).upsert(payload, { onConflict: 'project_id' });
     setSavingKpi(false);
@@ -483,7 +489,7 @@ export function ResourceAnalyticsView() {
               </Button>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <Label className="text-xs flex items-center gap-1.5 mb-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
@@ -508,12 +514,21 @@ export function ResourceAnalyticsView() {
                   <Input type="number" min="0" step="1" value={remarks} onChange={e => { setRemarks(e.target.value); setRemarkDetails(syncDetails(e.target.value, remarkDetails)); }} placeholder="antal" className="h-9" />
                   <p className="text-[10px] text-muted-foreground mt-1">Antal anmärkningar vid besiktning</p>
                 </div>
+                <div>
+                  <Label className="text-xs flex items-center gap-1.5 mb-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />
+                    Avvikelser
+                  </Label>
+                  <Input type="number" min="0" step="1" value={deviations} onChange={e => { setDeviations(e.target.value); setDeviationDetails(syncDetails(e.target.value, deviationDetails)); }} placeholder="antal" className="h-9" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Övriga avvikelser i projektet</p>
+                </div>
               </div>
 
               {/* Detail lists */}
               {[
                 { title: 'Saknade artiklar – beskrivning per artikel', icon: <Truck className="h-3.5 w-3.5 text-blue-500" />, items: missingDetails, setItems: setMissingDetails, placeholder: 'Beskriv den saknade artikeln…' },
                 { title: 'Besiktningsanmärkningar – beskrivning per anmärkning', icon: <ClipboardCheck className="h-3.5 w-3.5 text-amber-500" />, items: remarkDetails, setItems: setRemarkDetails, placeholder: 'Beskriv anmärkningen…' },
+                { title: 'Avvikelser – beskrivning per avvikelse', icon: <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />, items: deviationDetails, setItems: setDeviationDetails, placeholder: 'Beskriv avvikelsen…' },
               ].map((section) => section.items.length > 0 && (
                 <div key={section.title} className="border-t border-border/50 pt-3">
                   <Label className="text-xs flex items-center gap-1.5 mb-2">{section.icon}{section.title}</Label>
@@ -542,7 +557,7 @@ export function ResourceAnalyticsView() {
               </div>
 
               {/* KPI summary tiles for report */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/50">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-border/50">
                 <div className="rounded-md bg-muted/40 p-2">
                   <p className="text-[10px] text-muted-foreground">First-time-right</p>
                   <p className="text-lg font-bold tabular-nums">{ftr ? `${ftr}%` : '–'}</p>
@@ -560,6 +575,10 @@ export function ResourceAnalyticsView() {
                 <div className="rounded-md bg-muted/40 p-2">
                   <p className="text-[10px] text-muted-foreground">Besiktn.anm.</p>
                   <p className="text-lg font-bold tabular-nums">{remarks || '–'}</p>
+                </div>
+                <div className="rounded-md bg-muted/40 p-2">
+                  <p className="text-[10px] text-muted-foreground">Avvikelser</p>
+                  <p className="text-lg font-bold tabular-nums">{deviations || '–'}</p>
                 </div>
               </div>
             </CardContent>

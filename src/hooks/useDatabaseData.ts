@@ -177,7 +177,7 @@ export function useDatabaseData() {
     details?: string;
   }) => {
     const changedBy = await getCurrentUserName();
-    await supabase.from('forecast_events').insert({
+    const { data, error } = await supabase.from('forecast_events').insert({
       forecast_id: params.forecastId || null,
       event_type: params.eventType,
       project_name: params.projectName,
@@ -186,8 +186,24 @@ export function useDatabaseData() {
       new_value: params.newValue || null,
       details: params.details || null,
       changed_by: changedBy,
-    } as any);
-    loadForecastEvents();
+    } as any).select().single();
+    if (!error && data) {
+      const e: any = data;
+      setForecastEvents(prev => [{
+        id: e.id,
+        forecastId: e.forecast_id,
+        eventType: e.event_type,
+        projectName: e.project_name,
+        productName: e.product_name,
+        oldValue: e.old_value,
+        newValue: e.new_value,
+        details: e.details,
+        changedBy: e.changed_by,
+        createdAt: e.created_at,
+      }, ...prev.filter(p => p.id !== e.id)].slice(0, 20));
+    } else {
+      loadForecastEvents();
+    }
   };
 
   const loadData = async () => {
