@@ -650,6 +650,7 @@ export function TimelineView() {
                   <div className="sticky left-0 z-40 bg-card border-r border-border/50 flex shrink-0">
                     <div className="w-60 shrink-0" />
                     <div className="w-16 shrink-0" />
+                    <div className="w-16 shrink-0" />
                   </div>
                   <div className="flex">
                     {viewMode === 'weeks' ?
