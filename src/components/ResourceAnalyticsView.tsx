@@ -15,7 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Legend, Cell,
 } from 'recharts';
-import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, Printer, Save, FolderOpen, FolderArchive } from 'lucide-react';
+import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, AlertTriangle, Printer, Save, FolderOpen, FolderArchive } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const containerVariants = {
