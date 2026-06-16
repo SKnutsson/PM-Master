@@ -140,8 +140,8 @@ export function ResourceAnalyticsView() {
 
   useEffect(() => {
     if (!selectedProjectId) {
-      setFtr(''); setMissing(''); setRemarks(''); setKpiNotes('');
-      setFtrDetails([]); setMissingDetails([]); setRemarkDetails([]);
+      setFtr(''); setMissing(''); setRemarks(''); setDeviations(''); setKpiNotes('');
+      setFtrDetails([]); setMissingDetails([]); setRemarkDetails([]); setDeviationDetails([]);
       return;
     }
     (async () => {
@@ -154,10 +154,12 @@ export function ResourceAnalyticsView() {
       setFtr(d.first_time_right_percent != null ? String(d.first_time_right_percent) : '');
       setMissing(d.delivery_precision_missing != null ? String(d.delivery_precision_missing) : '');
       setRemarks(d.inspection_remarks != null ? String(d.inspection_remarks) : '');
+      setDeviations(d.deviations != null ? String(d.deviations) : '');
       setKpiNotes(d.notes ?? '');
       setFtrDetails(Array.isArray(d.ftr_details) ? d.ftr_details : []);
       setMissingDetails(Array.isArray(d.missing_article_details) ? d.missing_article_details : []);
       setRemarkDetails(Array.isArray(d.inspection_remark_details) ? d.inspection_remark_details : []);
+      setDeviationDetails(Array.isArray(d.deviation_details) ? d.deviation_details : []);
     })();
   }, [selectedProjectId]);
 
