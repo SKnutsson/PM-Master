@@ -557,7 +557,7 @@ export function ResourceAnalyticsView() {
               </div>
 
               {/* KPI summary tiles for report */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-border/50">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-border/50">
                 <div className="rounded-md bg-muted/40 p-2">
                   <p className="text-[10px] text-muted-foreground">First-time-right</p>
                   <p className="text-lg font-bold tabular-nums">{ftr ? `${ftr}%` : '–'}</p>
@@ -575,6 +575,10 @@ export function ResourceAnalyticsView() {
                 <div className="rounded-md bg-muted/40 p-2">
                   <p className="text-[10px] text-muted-foreground">Besiktn.anm.</p>
                   <p className="text-lg font-bold tabular-nums">{remarks || '–'}</p>
+                </div>
+                <div className="rounded-md bg-muted/40 p-2">
+                  <p className="text-[10px] text-muted-foreground">Avvikelser</p>
+                  <p className="text-lg font-bold tabular-nums">{deviations || '–'}</p>
                 </div>
               </div>
             </CardContent>
