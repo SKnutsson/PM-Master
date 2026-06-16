@@ -489,7 +489,7 @@ export function ResourceAnalyticsView() {
               </Button>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <Label className="text-xs flex items-center gap-1.5 mb-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
@@ -514,12 +514,21 @@ export function ResourceAnalyticsView() {
                   <Input type="number" min="0" step="1" value={remarks} onChange={e => { setRemarks(e.target.value); setRemarkDetails(syncDetails(e.target.value, remarkDetails)); }} placeholder="antal" className="h-9" />
                   <p className="text-[10px] text-muted-foreground mt-1">Antal anmärkningar vid besiktning</p>
                 </div>
+                <div>
+                  <Label className="text-xs flex items-center gap-1.5 mb-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />
+                    Avvikelser
+                  </Label>
+                  <Input type="number" min="0" step="1" value={deviations} onChange={e => { setDeviations(e.target.value); setDeviationDetails(syncDetails(e.target.value, deviationDetails)); }} placeholder="antal" className="h-9" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Övriga avvikelser i projektet</p>
+                </div>
               </div>
 
               {/* Detail lists */}
               {[
                 { title: 'Saknade artiklar – beskrivning per artikel', icon: <Truck className="h-3.5 w-3.5 text-blue-500" />, items: missingDetails, setItems: setMissingDetails, placeholder: 'Beskriv den saknade artikeln…' },
                 { title: 'Besiktningsanmärkningar – beskrivning per anmärkning', icon: <ClipboardCheck className="h-3.5 w-3.5 text-amber-500" />, items: remarkDetails, setItems: setRemarkDetails, placeholder: 'Beskriv anmärkningen…' },
+                { title: 'Avvikelser – beskrivning per avvikelse', icon: <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />, items: deviationDetails, setItems: setDeviationDetails, placeholder: 'Beskriv avvikelsen…' },
               ].map((section) => section.items.length > 0 && (
                 <div key={section.title} className="border-t border-border/50 pt-3">
                   <Label className="text-xs flex items-center gap-1.5 mb-2">{section.icon}{section.title}</Label>
