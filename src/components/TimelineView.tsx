@@ -809,6 +809,7 @@ export function TimelineView() {
                               </div>
                             </div>
                             <div className="w-16 shrink-0 border-r border-border/50 relative" />
+                            <div className="w-16 shrink-0 border-r border-border/50 relative" />
                           </div>
                           {/* Collapsed summary bar */}
                           {!isExpanded &&
