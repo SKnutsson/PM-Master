@@ -701,7 +701,7 @@ export function Dashboard() {
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Beskrivning</label>
-              <Input value={newEventDetails} onChange={(e) => setNewEventDetails(e.target.value)} placeholder="Vad hände?" />
+              <Textarea value={newEventDetails} onChange={(e) => setNewEventDetails(e.target.value)} placeholder="Vad hände?" rows={4} className="min-h-[100px]" />
             </div>
           </div>
           <DialogFooter>
