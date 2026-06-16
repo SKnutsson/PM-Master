@@ -171,10 +171,12 @@ export function ResourceAnalyticsView() {
       first_time_right_percent: ftr === '' ? null : parseFloat(ftr),
       delivery_precision_missing: missing === '' ? null : parseInt(missing),
       inspection_remarks: remarks === '' ? null : parseInt(remarks),
+      deviations: deviations === '' ? null : parseInt(deviations),
       notes: kpiNotes || null,
       ftr_details: ftrDetails,
       missing_article_details: missingDetails,
       inspection_remark_details: remarkDetails,
+      deviation_details: deviationDetails,
     };
     const { error } = await supabase.from('project_kpi_metrics' as any).upsert(payload, { onConflict: 'project_id' });
     setSavingKpi(false);
