@@ -122,10 +122,12 @@ export function ResourceAnalyticsView() {
   const [ftr, setFtr] = useState<string>('');
   const [missing, setMissing] = useState<string>('');
   const [remarks, setRemarks] = useState<string>('');
+  const [deviations, setDeviations] = useState<string>('');
   const [kpiNotes, setKpiNotes] = useState<string>('');
   const [ftrDetails, setFtrDetails] = useState<string[]>([]);
   const [missingDetails, setMissingDetails] = useState<string[]>([]);
   const [remarkDetails, setRemarkDetails] = useState<string[]>([]);
+  const [deviationDetails, setDeviationDetails] = useState<string[]>([]);
   const [savingKpi, setSavingKpi] = useState(false);
 
   // Sync detail array length to count number
