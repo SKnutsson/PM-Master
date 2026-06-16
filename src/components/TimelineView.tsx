@@ -148,7 +148,23 @@ function toISODate(d: Date): string {
 // Fixed column widths for consistent layout
 const WEEK_COL_WIDTH = 56; // px per week column
 const DAY_COL_WIDTH = 32; // px per day column
-const LEFT_COL_WIDTH = 304; // w-60 + w-16 = 240 + 64
+const LEFT_COL_WIDTH = 368; // w-60 + w-16 + w-16 = 240 + 64 + 64
+
+// Count weekdays (Mon-Fri) between two ISO dates, inclusive
+function countWeekdays(start?: string, end?: string): number | null {
+  if (!start) return null;
+  const s = new Date(start + 'T00:00:00');
+  const e = new Date((end || start) + 'T00:00:00');
+  if (isNaN(s.getTime()) || isNaN(e.getTime()) || e < s) return null;
+  let count = 0;
+  const cur = new Date(s);
+  while (cur <= e) {
+    const dow = cur.getDay();
+    if (dow !== 0 && dow !== 6) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
 
 export function TimelineView() {
   const { projects: allProjects, updateActivity, updateProjectOrder, updateActivityOrder } = useProjectDataContext();
@@ -634,6 +650,7 @@ export function TimelineView() {
                   <div className="sticky left-0 z-40 bg-card border-r border-border/50 flex shrink-0">
                     <div className="w-60 shrink-0" />
                     <div className="w-16 shrink-0" />
+                    <div className="w-16 shrink-0" />
                   </div>
                   <div className="flex">
                     {viewMode === 'weeks' ?
@@ -664,6 +681,7 @@ export function TimelineView() {
                     <div className="sticky left-0 z-40 bg-card flex shrink-0">
                       <div className="w-60 shrink-0 border-r border-border/50" />
                       <div className="w-16 shrink-0 border-r border-border/50" />
+                      <div className="w-16 shrink-0 border-r border-border/50" />
                     </div>
                     <div className="flex">
                       {dayWeekGroups.map((g, i) =>
@@ -687,6 +705,9 @@ export function TimelineView() {
                     </div>
                     <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground pt-[5px] pl-[13px]">
                       Ansvarig
+                    </div>
+                    <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground pt-[5px] text-center">
+                      Arbetsdagar
                     </div>
                   </div>
                   <div className="flex">
@@ -787,6 +808,7 @@ export function TimelineView() {
 
                               </div>
                             </div>
+                            <div className="w-16 shrink-0 border-r border-border/50 relative" />
                             <div className="w-16 shrink-0 border-r border-border/50 relative" />
                           </div>
                           {/* Collapsed summary bar */}
@@ -934,6 +956,12 @@ export function TimelineView() {
                                         );
                                       }
                                       return <span className="text-[12px] text-muted-foreground truncate text-center">{activity.responsible}</span>;
+                                    })()}
+                                  </div>
+                                  <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 bg-primary-foreground flex items-center justify-center text-[11px] text-slate-950 tabular-nums">
+                                    {(() => {
+                                      const wd = countWeekdays(activity.startDate, activity.endDate);
+                                      return wd !== null ? wd : <span className="text-muted-foreground">–</span>;
                                     })()}
                                   </div>
                                 </div>
