@@ -706,6 +706,9 @@ export function TimelineView() {
                     <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground pt-[5px] pl-[13px]">
                       Ansvarig
                     </div>
+                    <div className="w-16 shrink-0 border-r border-border/50 px-1 py-1 text-[10px] font-semibold text-muted-foreground pt-[5px] text-center">
+                      Arbetsdagar
+                    </div>
                   </div>
                   <div className="flex">
                     {viewMode === 'weeks' ?
