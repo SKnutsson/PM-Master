@@ -362,65 +362,53 @@ export function MyTasksView() {
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={visibleBuckets.map((b) => b.id)} strategy={rectSortingStrategy}>
-              <div className="inline-flex items-start gap-3">
-                {visibleBuckets.map((bucket) => {
-                  const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
-                  const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
-                  return (
-                    <SortableBucket key={bucket.id} id={bucket.id} disabled={viewUser !== 'me'}>
-                      {(dragHandle) => (
-                        <BucketColumn
-                          title={bucket.name}
-                          subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
-                          color={bucket.color || (bucket.project_id ? getProjectBucketColor(bucket.project_id) : BUCKET_COLORS[0].value)}
-                          icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
-                          tasks={bucketTasks}
-                          profiles={profiles}
-                          projects={projects}
-                          readOnly={viewUser !== 'me'}
-                          dragHandle={dragHandle}
-                          onCardClick={setEditTask}
-                          onAddCard={
-                            viewUser === 'me'
-                              ? (name) => addTask.mutate({
-                                  name,
-                                  bucket,
-                                  projectId: bucket.project_id,
-                                  ownerId: bucket.owner_id,
-                                  responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
-                                })
-                              : null
-                          }
-                          onToggleComplete={(t) => updateTask.mutate({
-                            id: t.id,
-                            patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
-                          })}
-                          onRename={viewUser === 'me' && !bucket.project_id
-                            ? (name) => renameBucket.mutate({ id: bucket.id, name })
-                            : null}
-                          onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
-                        />
-                      )}
-                    </SortableBucket>
-                  );
-                })}
-              </div>
+              {visibleBuckets.map((bucket) => {
+                const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
+                const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
+                return (
+                  <SortableBucket key={bucket.id} id={bucket.id} disabled={viewUser !== 'me'}>
+                    {(dragHandle) => (
+                      <BucketColumn
+                        title={bucket.name}
+                        subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
+                        color={bucket.color || (bucket.project_id ? getProjectBucketColor(bucket.project_id) : BUCKET_COLORS[0].value)}
+                        icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
+                        tasks={bucketTasks}
+                        profiles={profiles}
+                        projects={projects}
+                        readOnly={viewUser !== 'me'}
+                        dragHandle={dragHandle}
+                        onCardClick={setEditTask}
+                        onAddCard={
+                          viewUser === 'me'
+                            ? (name) => addTask.mutate({
+                                name,
+                                bucket,
+                                projectId: bucket.project_id,
+                                ownerId: bucket.owner_id,
+                                responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
+                              })
+                            : null
+                        }
+                        onToggleComplete={(t) => updateTask.mutate({
+                          id: t.id,
+                          patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
+                        })}
+                        onRename={viewUser === 'me' && !bucket.project_id
+                          ? (name) => renameBucket.mutate({ id: bucket.id, name })
+                          : null}
+                        onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
+                        onChangeColor={viewUser === 'me'
+                          ? (color) => updateBucketColor.mutate({ id: bucket.id, color })
+                          : null}
+                      />
+                    )}
+                  </SortableBucket>
+                );
+              })}
             </SortableContext>
           </DndContext>
 
-          {/* Project picker to add a project-bucket */}
-          {viewUser === 'me' && (
-            <AddProjectBucketColumn
-              projects={projects.filter((p) => p.status !== 'Avslutat')}
-              existingProjectIds={visibleBuckets.map((b) => b.project_id).filter(Boolean) as string[]}
-              onPick={async (projectId) => {
-                const proj = projects.find((p) => p.id === projectId);
-                if (!proj || !user?.id) return;
-                await ensureBucket(user.id, projectId, proj.name);
-                toast.success(`Bucket skapad för ${proj.name}`);
-              }}
-            />
-          )}
 
           {visibleBuckets.length === 0 && delegatedToMe.length === 0 && (
             <div className="flex h-64 w-80 flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-sm text-muted-foreground">
