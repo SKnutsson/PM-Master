@@ -508,7 +508,7 @@ function SortableBucket({
 // =================== Bucket column ===================
 function BucketColumn({
   title, subtitle, color, icon, tasks, profiles, projects, onCardClick, onAddCard,
-  onToggleComplete, onRename, onDelete, readOnly, dragHandle,
+  onToggleComplete, onRename, onDelete, onChangeColor, readOnly, dragHandle,
 }: {
   title: string;
   subtitle?: string;
@@ -522,6 +522,7 @@ function BucketColumn({
   onToggleComplete: (task: TaskRow) => void;
   onRename?: ((name: string) => void) | null;
   onDelete?: (() => void) | null;
+  onChangeColor?: ((color: string) => void) | null;
   readOnly?: boolean;
   dragHandle?: React.ReactNode;
 }) {
@@ -529,6 +530,10 @@ function BucketColumn({
   const [newName, setNewName] = useState('');
   const [renaming, setRenaming] = useState(false);
   const [titleDraft, setTitleDraft] = useState(title);
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const activeTasks = useMemo(() => tasks.filter((t) => t.status !== 'Slutförd'), [tasks]);
+  const completedTasks = useMemo(() => tasks.filter((t) => t.status === 'Slutförd'), [tasks]);
 
   const commitAdd = () => {
     if (newName.trim() && onAddCard) onAddCard(newName.trim());
@@ -538,7 +543,7 @@ function BucketColumn({
 
   return (
     <div
-      className="flex h-full w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card/60 shadow-sm transition hover:shadow-md"
+      className="flex w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card/60 shadow-sm transition hover:shadow-md self-start max-h-[calc(100vh-200px)]"
       style={{ borderColor: colorWithAlpha(color, 0.38) }}
     >
       {/* Color stripe */}
@@ -575,7 +580,7 @@ function BucketColumn({
                 className="ml-auto rounded-full px-1.5 text-xs font-medium"
                 style={{ backgroundColor: colorWithAlpha(color, 0.14), color }}
               >
-                {tasks.length}
+                {activeTasks.length}
               </span>
             </div>
           )}
@@ -583,25 +588,50 @@ function BucketColumn({
             <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{subtitle}</p>
           )}
         </div>
-        {(onRename || onDelete) && !readOnly && (
+        {(onRename || onDelete || onChangeColor) && !readOnly && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground">
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               {onRename && (
                 <DropdownMenuItem onClick={() => { setTitleDraft(title); setRenaming(true); }}>
                   Byt namn
                 </DropdownMenuItem>
               )}
-              {onRename && onDelete && <DropdownMenuSeparator />}
+              {onChangeColor && (
+                <>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5">
+                    <p className="text-[11px] text-muted-foreground mb-1.5">Byt färg</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {BUCKET_COLORS.map((c) => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => onChangeColor(c.value)}
+                          className={cn(
+                            "h-6 w-6 rounded-full border-2 transition",
+                            color === c.value ? "border-foreground scale-110" : "border-transparent hover:scale-110"
+                          )}
+                          style={{ backgroundColor: c.value }}
+                          title={c.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
               {onDelete && (
-                <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-                  <Trash2 className="mr-2 h-3.5 w-3.5" />
-                  Ta bort bucket
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                    Ta bort bucket
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -609,8 +639,27 @@ function BucketColumn({
       </div>
 
       {/* Cards */}
-      <div className="flex-1 space-y-1.5 overflow-y-auto px-2 pb-2">
-        {tasks.map((task) => (
+      <div className="flex-1 space-y-1.5 overflow-y-auto px-2 pb-2 pt-2">
+        {activeTasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            profiles={profiles}
+            projects={projects}
+            onClick={() => onCardClick(task)}
+            onToggleComplete={() => onToggleComplete(task)}
+          />
+        ))}
+        {completedTasks.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowCompleted((v) => !v)}
+            className="mt-1 flex w-full items-center justify-center gap-1 rounded px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {showCompleted ? 'Dölj' : 'Visa'} {completedTasks.length} slutförda
+          </button>
+        )}
+        {showCompleted && completedTasks.map((task) => (
           <TaskCard
             key={task.id}
             task={task}
@@ -660,6 +709,7 @@ function BucketColumn({
     </div>
   );
 }
+
 
 // =================== Task card ===================
 function TaskCard({
