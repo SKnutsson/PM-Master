@@ -510,21 +510,7 @@ export function ForecastView() {
                               </td>);
 
                           })}
-                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40 border-l border-l-border/50 bg-inherit">
-                            {item.notes ?
-                            <UITooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="block truncate cursor-default">{item.notes}</span>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-[300px] whitespace-normal">
-                                  <p>{item.notes}</p>
-                                </TooltipContent>
-                              </UITooltip> :
-
-                            <span className="text-muted-foreground/30">–</span>
-                            }
-                          </td>
-                          <td className="py-0 px-1 border-b border-border/40 bg-inherit">
+                          <td className="py-0 px-1 border-b border-border/40 bg-inherit border-l border-l-border/50">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <EditForecastDialog forecast={item} />
                             </div>
