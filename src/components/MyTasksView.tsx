@@ -788,8 +788,8 @@ function TaskCard({
   );
 }
 
-// =================== Add project bucket ===================
-function AddProjectBucketColumn({
+// =================== Add project bucket (header button) ===================
+function AddProjectBucketButton({
   projects, existingProjectIds, onPick,
 }: {
   projects: Array<{ id: string; name: string; code?: string }>;
@@ -802,12 +802,12 @@ function AddProjectBucketColumn({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex h-12 w-[300px] shrink-0 items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border/50 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground">
-          <Plus className="h-4 w-4" />
+        <Button size="sm" variant="outline">
+          <Plus className="mr-1 h-4 w-4" />
           Lägg till projekt-bucket
-        </button>
+        </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-1" align="start">
+      <PopoverContent className="w-[280px] p-1" align="end">
         {available.length === 0 ? (
           <div className="p-3 text-center text-xs text-muted-foreground">Du har redan en bucket för alla aktiva projekt.</div>
         ) : (
