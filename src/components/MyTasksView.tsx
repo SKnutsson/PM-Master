@@ -37,7 +37,7 @@ import {
   DndContext, DragEndEvent, PointerSensor, useSensor, useSensors, closestCenter,
 } from '@dnd-kit/core';
 import {
-  SortableContext, horizontalListSortingStrategy, useSortable, arrayMove,
+  SortableContext, rectSortingStrategy, useSortable, arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -155,6 +155,14 @@ export function MyTasksView() {
   const renameBucket = useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       const { error } = await supabase.from('task_buckets').update({ name }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['task-buckets'] }),
+  });
+
+  const updateBucketColor = useMutation({
+    mutationFn: async ({ id, color }: { id: string; color: string }) => {
+      const { error } = await supabase.from('task_buckets').update({ color }).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['task-buckets'] }),
@@ -309,6 +317,18 @@ export function MyTasksView() {
                 ))}
             </SelectContent>
           </Select>
+          {viewUser === 'me' && (
+            <AddProjectBucketButton
+              projects={projects.filter((p) => p.status !== 'Avslutat')}
+              existingProjectIds={visibleBuckets.map((b) => b.project_id).filter(Boolean) as string[]}
+              onPick={async (projectId) => {
+                const proj = projects.find((p) => p.id === projectId);
+                if (!proj || !user?.id) return;
+                await ensureBucket(user.id, projectId, proj.name);
+                toast.success(`Bucket skapad för ${proj.name}`);
+              }}
+            />
+          )}
           <Button size="sm" variant="outline" onClick={() => setNewBucketOpen(true)} disabled={viewUser !== 'me'}>
             <Plus className="mr-1 h-4 w-4" />
             Ny bucket
@@ -317,8 +337,8 @@ export function MyTasksView() {
       </div>
 
       {/* Board */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="inline-flex h-full items-start gap-3 p-4 min-w-full">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-wrap items-start gap-3 p-4">
           {/* Delegated column (always first if any) */}
           {delegatedToMe.length > 0 && (
             <BucketColumn
@@ -341,66 +361,54 @@ export function MyTasksView() {
           )}
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={visibleBuckets.map((b) => b.id)} strategy={horizontalListSortingStrategy}>
-              <div className="inline-flex items-start gap-3">
-                {visibleBuckets.map((bucket) => {
-                  const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
-                  const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
-                  return (
-                    <SortableBucket key={bucket.id} id={bucket.id} disabled={viewUser !== 'me'}>
-                      {(dragHandle) => (
-                        <BucketColumn
-                          title={bucket.name}
-                          subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
-                          color={bucket.color || (bucket.project_id ? getProjectBucketColor(bucket.project_id) : BUCKET_COLORS[0].value)}
-                          icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
-                          tasks={bucketTasks}
-                          profiles={profiles}
-                          projects={projects}
-                          readOnly={viewUser !== 'me'}
-                          dragHandle={dragHandle}
-                          onCardClick={setEditTask}
-                          onAddCard={
-                            viewUser === 'me'
-                              ? (name) => addTask.mutate({
-                                  name,
-                                  bucket,
-                                  projectId: bucket.project_id,
-                                  ownerId: bucket.owner_id,
-                                  responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
-                                })
-                              : null
-                          }
-                          onToggleComplete={(t) => updateTask.mutate({
-                            id: t.id,
-                            patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
-                          })}
-                          onRename={viewUser === 'me' && !bucket.project_id
-                            ? (name) => renameBucket.mutate({ id: bucket.id, name })
-                            : null}
-                          onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
-                        />
-                      )}
-                    </SortableBucket>
-                  );
-                })}
-              </div>
+            <SortableContext items={visibleBuckets.map((b) => b.id)} strategy={rectSortingStrategy}>
+              {visibleBuckets.map((bucket) => {
+                const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
+                const bucketTasks = (tasksByBucket.get(bucket.id) || []).sort((a, b) => a.sort_order - b.sort_order);
+                return (
+                  <SortableBucket key={bucket.id} id={bucket.id} disabled={viewUser !== 'me'}>
+                    {(dragHandle) => (
+                      <BucketColumn
+                        title={bucket.name}
+                        subtitle={project ? `${project.code || ''} ${project.name}`.trim() : 'Personlig'}
+                        color={bucket.color || (bucket.project_id ? getProjectBucketColor(bucket.project_id) : BUCKET_COLORS[0].value)}
+                        icon={project ? <Folder className="h-3.5 w-3.5" /> : <UserIcon className="h-3.5 w-3.5" />}
+                        tasks={bucketTasks}
+                        profiles={profiles}
+                        projects={projects}
+                        readOnly={viewUser !== 'me'}
+                        dragHandle={dragHandle}
+                        onCardClick={setEditTask}
+                        onAddCard={
+                          viewUser === 'me'
+                            ? (name) => addTask.mutate({
+                                name,
+                                bucket,
+                                projectId: bucket.project_id,
+                                ownerId: bucket.owner_id,
+                                responsibleName: currentProfile ? getDisplayName(currentProfile) : '',
+                              })
+                            : null
+                        }
+                        onToggleComplete={(t) => updateTask.mutate({
+                          id: t.id,
+                          patch: { status: t.status === 'Slutförd' ? 'Ej påbörjad' : 'Slutförd' },
+                        })}
+                        onRename={viewUser === 'me' && !bucket.project_id
+                          ? (name) => renameBucket.mutate({ id: bucket.id, name })
+                          : null}
+                        onDelete={viewUser === 'me' ? () => setDeleteBucketId(bucket.id) : null}
+                        onChangeColor={viewUser === 'me'
+                          ? (color) => updateBucketColor.mutate({ id: bucket.id, color })
+                          : null}
+                      />
+                    )}
+                  </SortableBucket>
+                );
+              })}
             </SortableContext>
           </DndContext>
 
-          {/* Project picker to add a project-bucket */}
-          {viewUser === 'me' && (
-            <AddProjectBucketColumn
-              projects={projects.filter((p) => p.status !== 'Avslutat')}
-              existingProjectIds={visibleBuckets.map((b) => b.project_id).filter(Boolean) as string[]}
-              onPick={async (projectId) => {
-                const proj = projects.find((p) => p.id === projectId);
-                if (!proj || !user?.id) return;
-                await ensureBucket(user.id, projectId, proj.name);
-                toast.success(`Bucket skapad för ${proj.name}`);
-              }}
-            />
-          )}
 
           {visibleBuckets.length === 0 && delegatedToMe.length === 0 && (
             <div className="flex h-64 w-80 flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/50 text-sm text-muted-foreground">
@@ -500,7 +508,7 @@ function SortableBucket({
 // =================== Bucket column ===================
 function BucketColumn({
   title, subtitle, color, icon, tasks, profiles, projects, onCardClick, onAddCard,
-  onToggleComplete, onRename, onDelete, readOnly, dragHandle,
+  onToggleComplete, onRename, onDelete, onChangeColor, readOnly, dragHandle,
 }: {
   title: string;
   subtitle?: string;
@@ -514,6 +522,7 @@ function BucketColumn({
   onToggleComplete: (task: TaskRow) => void;
   onRename?: ((name: string) => void) | null;
   onDelete?: (() => void) | null;
+  onChangeColor?: ((color: string) => void) | null;
   readOnly?: boolean;
   dragHandle?: React.ReactNode;
 }) {
@@ -521,6 +530,10 @@ function BucketColumn({
   const [newName, setNewName] = useState('');
   const [renaming, setRenaming] = useState(false);
   const [titleDraft, setTitleDraft] = useState(title);
+  const [showCompleted, setShowCompleted] = useState(false);
+
+  const activeTasks = useMemo(() => tasks.filter((t) => t.status !== 'Slutförd'), [tasks]);
+  const completedTasks = useMemo(() => tasks.filter((t) => t.status === 'Slutförd'), [tasks]);
 
   const commitAdd = () => {
     if (newName.trim() && onAddCard) onAddCard(newName.trim());
@@ -530,7 +543,7 @@ function BucketColumn({
 
   return (
     <div
-      className="flex h-full w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card/60 shadow-sm transition hover:shadow-md"
+      className="flex w-[300px] shrink-0 flex-col overflow-hidden rounded-xl border bg-card/60 shadow-sm transition hover:shadow-md self-start max-h-[calc(100vh-200px)]"
       style={{ borderColor: colorWithAlpha(color, 0.38) }}
     >
       {/* Color stripe */}
@@ -567,7 +580,7 @@ function BucketColumn({
                 className="ml-auto rounded-full px-1.5 text-xs font-medium"
                 style={{ backgroundColor: colorWithAlpha(color, 0.14), color }}
               >
-                {tasks.length}
+                {activeTasks.length}
               </span>
             </div>
           )}
@@ -575,25 +588,50 @@ function BucketColumn({
             <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{subtitle}</p>
           )}
         </div>
-        {(onRename || onDelete) && !readOnly && (
+        {(onRename || onDelete || onChangeColor) && !readOnly && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground">
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               {onRename && (
                 <DropdownMenuItem onClick={() => { setTitleDraft(title); setRenaming(true); }}>
                   Byt namn
                 </DropdownMenuItem>
               )}
-              {onRename && onDelete && <DropdownMenuSeparator />}
+              {onChangeColor && (
+                <>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5">
+                    <p className="text-[11px] text-muted-foreground mb-1.5">Byt färg</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {BUCKET_COLORS.map((c) => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => onChangeColor(c.value)}
+                          className={cn(
+                            "h-6 w-6 rounded-full border-2 transition",
+                            color === c.value ? "border-foreground scale-110" : "border-transparent hover:scale-110"
+                          )}
+                          style={{ backgroundColor: c.value }}
+                          title={c.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
               {onDelete && (
-                <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-                  <Trash2 className="mr-2 h-3.5 w-3.5" />
-                  Ta bort bucket
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                    Ta bort bucket
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -601,8 +639,27 @@ function BucketColumn({
       </div>
 
       {/* Cards */}
-      <div className="flex-1 space-y-1.5 overflow-y-auto px-2 pb-2">
-        {tasks.map((task) => (
+      <div className="flex-1 space-y-1.5 overflow-y-auto px-2 pb-2 pt-2">
+        {activeTasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            task={task}
+            profiles={profiles}
+            projects={projects}
+            onClick={() => onCardClick(task)}
+            onToggleComplete={() => onToggleComplete(task)}
+          />
+        ))}
+        {completedTasks.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowCompleted((v) => !v)}
+            className="mt-1 flex w-full items-center justify-center gap-1 rounded px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {showCompleted ? 'Dölj' : 'Visa'} {completedTasks.length} slutförda
+          </button>
+        )}
+        {showCompleted && completedTasks.map((task) => (
           <TaskCard
             key={task.id}
             task={task}
@@ -652,6 +709,7 @@ function BucketColumn({
     </div>
   );
 }
+
 
 // =================== Task card ===================
 function TaskCard({
@@ -730,8 +788,8 @@ function TaskCard({
   );
 }
 
-// =================== Add project bucket ===================
-function AddProjectBucketColumn({
+// =================== Add project bucket (header button) ===================
+function AddProjectBucketButton({
   projects, existingProjectIds, onPick,
 }: {
   projects: Array<{ id: string; name: string; code?: string }>;
@@ -744,12 +802,12 @@ function AddProjectBucketColumn({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex h-12 w-[300px] shrink-0 items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border/50 text-sm text-muted-foreground transition hover:border-primary/50 hover:text-foreground">
-          <Plus className="h-4 w-4" />
+        <Button size="sm" variant="outline">
+          <Plus className="mr-1 h-4 w-4" />
           Lägg till projekt-bucket
-        </button>
+        </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-1" align="start">
+      <PopoverContent className="w-[280px] p-1" align="end">
         {available.length === 0 ? (
           <div className="p-3 text-center text-xs text-muted-foreground">Du har redan en bucket för alla aktiva projekt.</div>
         ) : (

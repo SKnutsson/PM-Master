@@ -327,9 +327,9 @@ export function ForecastView() {
         <motion.div variants={itemVariants} className="flex">
           <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(160_25%_50%)] to-[hsl(160_20%_38%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Aktiva affärer</p>
-              <p className="text-xl font-bold text-white leading-tight mt-0.5">{activeDeals}</p>
-              <p className="text-[10px] text-white/40">st</p>
+              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Försäljning per månad</p>
+              <p className="text-xl font-bold text-white leading-tight mt-0.5">{(displayMonths.length > 0 ? filteredYearTotal / displayMonths.length : 0).toFixed(1)} MSEK</p>
+              <p className="text-[10px] text-white/40">Snitt {displayMonths.length} mån</p>
             </div>
             <div className="rounded-md p-1.5 bg-white/10">
               <Package className="h-4 w-4 text-white/80" />
@@ -433,8 +433,7 @@ export function ForecastView() {
                         </th>);
 
                     })}
-                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide border-l border-white/40">Notering</th>
-                    <th className="w-8 py-1.5 px-1"></th>
+                    <th className="w-8 py-1.5 px-1 border-l border-white/40"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -511,21 +510,7 @@ export function ForecastView() {
                               </td>);
 
                           })}
-                          <td className="text-xs text-muted-foreground py-0 px-3 max-w-[120px] border-b border-border/40 border-l border-l-border/50 bg-inherit">
-                            {item.notes ?
-                            <UITooltip>
-                                <TooltipTrigger asChild>
-                                  <span className="block truncate cursor-default">{item.notes}</span>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="max-w-[300px] whitespace-normal">
-                                  <p>{item.notes}</p>
-                                </TooltipContent>
-                              </UITooltip> :
-
-                            <span className="text-muted-foreground/30">–</span>
-                            }
-                          </td>
-                          <td className="py-0 px-1 border-b border-border/40 bg-inherit">
+                          <td className="py-0 px-1 border-b border-border/40 bg-inherit border-l border-l-border/50">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <EditForecastDialog forecast={item} />
                             </div>
@@ -536,7 +521,7 @@ export function ForecastView() {
                   </TooltipProvider>
                   {filteredForecast.length === 0 &&
                   <tr>
-                      <td colSpan={16} className="text-center py-10 text-muted-foreground text-sm">
+                      <td colSpan={15} className="text-center py-10 text-muted-foreground text-sm">
                         Inga affärer ännu. Klicka på "Ny affär" för att börja.
                       </td>
                     </tr>
@@ -559,8 +544,7 @@ export function ForecastView() {
                           </td>);
 
                     })}
-                      <td className="py-1.5 px-3"></td>
-                      <td className="py-1.5 px-1"></td>
+                      <td className="py-1.5 px-1 border-l border-white/30"></td>
                     </tr>
                   }
                 </tbody>
