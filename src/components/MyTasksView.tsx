@@ -160,6 +160,14 @@ export function MyTasksView() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['task-buckets'] }),
   });
 
+  const updateBucketColor = useMutation({
+    mutationFn: async ({ id, color }: { id: string; color: string }) => {
+      const { error } = await supabase.from('task_buckets').update({ color }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['task-buckets'] }),
+  });
+
   const deleteBucket = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from('task_buckets').delete().eq('id', id);
