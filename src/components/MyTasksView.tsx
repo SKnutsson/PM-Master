@@ -317,6 +317,18 @@ export function MyTasksView() {
                 ))}
             </SelectContent>
           </Select>
+          {viewUser === 'me' && (
+            <AddProjectBucketButton
+              projects={projects.filter((p) => p.status !== 'Avslutat')}
+              existingProjectIds={visibleBuckets.map((b) => b.project_id).filter(Boolean) as string[]}
+              onPick={async (projectId) => {
+                const proj = projects.find((p) => p.id === projectId);
+                if (!proj || !user?.id) return;
+                await ensureBucket(user.id, projectId, proj.name);
+                toast.success(`Bucket skapad för ${proj.name}`);
+              }}
+            />
+          )}
           <Button size="sm" variant="outline" onClick={() => setNewBucketOpen(true)} disabled={viewUser !== 'me'}>
             <Plus className="mr-1 h-4 w-4" />
             Ny bucket
@@ -325,8 +337,8 @@ export function MyTasksView() {
       </div>
 
       {/* Board */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="inline-flex h-full items-start gap-3 p-4 min-w-full">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-wrap items-start gap-3 p-4">
           {/* Delegated column (always first if any) */}
           {delegatedToMe.length > 0 && (
             <BucketColumn
