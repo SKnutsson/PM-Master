@@ -341,7 +341,7 @@ export function MyTasksView() {
           )}
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={visibleBuckets.map((b) => b.id)} strategy={horizontalListSortingStrategy}>
+            <SortableContext items={visibleBuckets.map((b) => b.id)} strategy={rectSortingStrategy}>
               <div className="inline-flex items-start gap-3">
                 {visibleBuckets.map((bucket) => {
                   const project = bucket.project_id ? projects.find((p) => p.id === bucket.project_id) : null;
