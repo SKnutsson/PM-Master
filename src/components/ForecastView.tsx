@@ -544,8 +544,7 @@ export function ForecastView() {
                           </td>);
 
                     })}
-                      <td className="py-1.5 px-3"></td>
-                      <td className="py-1.5 px-1"></td>
+                      <td className="py-1.5 px-1 border-l border-white/30"></td>
                     </tr>
                   }
                 </tbody>
