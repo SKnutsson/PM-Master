@@ -433,8 +433,7 @@ export function ForecastView() {
                         </th>);
 
                     })}
-                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide border-l border-white/40">Notering</th>
-                    <th className="w-8 py-1.5 px-1"></th>
+                    <th className="w-8 py-1.5 px-1 border-l border-white/40"></th>
                   </tr>
                 </thead>
                 <tbody>
