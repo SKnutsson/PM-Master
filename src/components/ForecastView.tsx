@@ -327,9 +327,9 @@ export function ForecastView() {
         <motion.div variants={itemVariants} className="flex">
           <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(160_25%_50%)] to-[hsl(160_20%_38%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Aktiva affärer</p>
-              <p className="text-xl font-bold text-white leading-tight mt-0.5">{activeDeals}</p>
-              <p className="text-[10px] text-white/40">st</p>
+              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Försäljning per månad</p>
+              <p className="text-xl font-bold text-white leading-tight mt-0.5">{(displayMonths.length > 0 ? filteredYearTotal / displayMonths.length : 0).toFixed(1)} MSEK</p>
+              <p className="text-[10px] text-white/40">Snitt {displayMonths.length} mån</p>
             </div>
             <div className="rounded-md p-1.5 bg-white/10">
               <Package className="h-4 w-4 text-white/80" />
