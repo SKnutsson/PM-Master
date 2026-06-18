@@ -115,7 +115,7 @@ export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 's
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.35 }}
-            className="w-full max-w-[450px] rounded-md bg-black/75 px-8 py-12 backdrop-blur-sm sm:px-16 sm:py-14"
+            className="w-full max-w-[450px] rounded-lg bg-[#0a1612]/55 px-8 py-12 backdrop-blur-md sm:px-16 sm:py-14 border border-white/10 shadow-2xl"
           >
             <h1 className="mb-7 text-3xl font-bold text-white">
               {mode === 'signin' ? 'Logga in' : 'Skapa konto'}
@@ -128,14 +128,14 @@ export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 's
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoFocus
-                className="h-14 rounded border-0 bg-white/10 px-4 text-white placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-1 focus-visible:ring-white/40 focus-visible:ring-offset-0"
+                className="h-14 rounded border border-white/10 bg-white/8 px-4 text-white placeholder:text-white/50 focus-visible:bg-white/12 focus-visible:ring-1 focus-visible:ring-[#1C7F72]/50 focus-visible:ring-offset-0 focus-visible:border-[#1C7F72]/30"
               />
               <Input
                 type="password"
                 placeholder={mode === 'signup' ? 'Lösenord (minst 6 tecken)' : 'Lösenord'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-14 rounded border-0 bg-white/10 px-4 text-white placeholder:text-white/60 focus-visible:bg-white/15 focus-visible:ring-1 focus-visible:ring-white/40 focus-visible:ring-offset-0"
+                className="h-14 rounded border border-white/10 bg-white/8 px-4 text-white placeholder:text-white/50 focus-visible:bg-white/12 focus-visible:ring-1 focus-visible:ring-[#1C7F72]/50 focus-visible:ring-offset-0 focus-visible:border-[#1C7F72]/30"
               />
 
               <AnimatePresence>
