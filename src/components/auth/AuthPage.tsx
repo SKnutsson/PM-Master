@@ -80,15 +80,15 @@ export function AuthPage({ defaultTab = 'signin' }: { defaultTab?: 'signin' | 's
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#0a1612]">
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#0f1f1a]">
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${authBg})` }}
       />
-      {/* Dark green gradient overlays — Netflix-style */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-[#0a1612]/70 to-black/95" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-black/70" />
+      {/* Light, airy gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-[#0f1f1a]/40 to-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
 
       {/* Top bar */}
       <header className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-12 sm:py-6">
