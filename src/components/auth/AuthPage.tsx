@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, Loader2, Mail, KeyRound, ArrowRight } from 'lucide-react';
 
@@ -6,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { z } from 'zod';
 
 const authSchema = z.object({
@@ -24,6 +26,7 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
   const { signIn, signUp } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
+  const [policyConsent, setPolicyConsent] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -47,6 +50,12 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
       setError(validation.error.errors[0].message);
       return;
     }
+
+    if (mode === 'signup' && !policyConsent) {
+      setError('Du måste godkänna integritetspolicyn för att skapa ett konto.');
+      return;
+    }
+
 
     setIsLoading(true);
 
@@ -279,10 +288,27 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
               }
             </AnimatePresence>
 
+            {mode === 'signup' && (
+              <div className="flex items-start gap-2 pt-1">
+                <Checkbox
+                  id="policy-consent"
+                  checked={policyConsent}
+                  onCheckedChange={(v) => setPolicyConsent(v === true)}
+                />
+                <label htmlFor="policy-consent" className="text-xs text-muted-foreground leading-snug">
+                  Jag godkänner{' '}
+                  <Link to="/integritetspolicy" target="_blank" className="text-primary underline">
+                    integritetspolicyn
+                  </Link>
+                </label>
+              </div>
+            )}
+
             <Button
               type="submit"
               className="h-12 w-full gradient-primary font-semibold text-primary-foreground transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-primary/20"
-              disabled={isLoading || !email || !password}>
+              disabled={isLoading || !email || !password || (mode === 'signup' && !policyConsent)}>
+              
               
               {isLoading ?
               <>
