@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FolderOpen, BarChart3, CalendarRange, HardHat, LogIn, UserPlus, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthPage } from '@/components/auth/AuthPage';
+import { Footer } from '@/components/Footer';
 
 const features = [
 {
@@ -157,6 +158,8 @@ export function LandingPage() {
           </Button>
         </div>
       </section>
+
+      <Footer />
     </div>);
 
 }
