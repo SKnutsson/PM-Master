@@ -263,51 +263,25 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
               }
             </AnimatePresence>
 
-            {mode === 'signup' && (
-              <div className="flex items-start gap-2 pt-1">
-                <Checkbox
-                  id="policy-consent"
-                  checked={policyConsent}
-                  onCheckedChange={(v) => setPolicyConsent(v === true)}
-                />
-                <label htmlFor="policy-consent" className="text-xs text-muted-foreground leading-snug">
-                  Jag godkänner{' '}
-                  <Link to="/integritetspolicy" target="_blank" className="text-primary underline">
-                    integritetspolicyn
-                  </Link>
-                </label>
-              </div>
-            )}
-
             <Button
               type="submit"
               className="h-12 w-full gradient-primary font-semibold text-primary-foreground transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-primary/20"
-              disabled={isLoading || !email || !password || (mode === 'signup' && !policyConsent)}>
-              
-              
+              disabled={isLoading || !email || !password}>
               {isLoading ?
               <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {mode === 'signin' ? 'Loggar in...' : 'Skapar konto...'}
+                  Loggar in...
                 </> :
-
               <span className="flex items-center gap-2">
-                  {mode === 'signin' ? 'Logga in' : 'Skapa konto'}
+                  Logga in
                   <ArrowRight className="h-4 w-4" />
                 </span>
               }
             </Button>
           </form>
 
-          {/* Switch mode */}
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            {mode === 'signin' ? 'Har du inget konto?' : 'Har du redan ett konto?'}{' '}
-            <button
-              onClick={() => {setMode(mode === 'signin' ? 'signup' : 'signin');setError('');setSuccess('');}}
-              className="font-semibold text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline">
-              
-              {mode === 'signin' ? 'Skapa konto' : 'Logga in'}
-            </button>
+          <p className="mt-8 text-center text-xs text-muted-foreground">
+            Detta är ett internt system. Konton skapas av administratör.
           </p>
         </motion.div>
       </div>
