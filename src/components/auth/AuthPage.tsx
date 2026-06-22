@@ -288,10 +288,27 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
               }
             </AnimatePresence>
 
+            {mode === 'signup' && (
+              <div className="flex items-start gap-2 pt-1">
+                <Checkbox
+                  id="policy-consent"
+                  checked={policyConsent}
+                  onCheckedChange={(v) => setPolicyConsent(v === true)}
+                />
+                <label htmlFor="policy-consent" className="text-xs text-muted-foreground leading-snug">
+                  Jag godkänner{' '}
+                  <Link to="/integritetspolicy" target="_blank" className="text-primary underline">
+                    integritetspolicyn
+                  </Link>
+                </label>
+              </div>
+            )}
+
             <Button
               type="submit"
               className="h-12 w-full gradient-primary font-semibold text-primary-foreground transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-primary/20"
-              disabled={isLoading || !email || !password}>
+              disabled={isLoading || !email || !password || (mode === 'signup' && !policyConsent)}>
+              
               
               {isLoading ?
               <>
