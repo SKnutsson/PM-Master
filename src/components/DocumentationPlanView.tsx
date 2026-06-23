@@ -207,20 +207,25 @@ export function DocumentationPlanView() {
         const hasOverdue = allProjectItems.some(i => i.deadline && isPast(new Date(i.deadline)) && !isToday(new Date(i.deadline)) && i.status !== 'Inlämnad');
 
         return (
-          <Card key={project.id} className={cn("transition-colors", hasOverdue && "border-destructive/30", isArchivedSection && "opacity-70")}>
-            <CardHeader className="py-3 px-4 cursor-pointer" onClick={() => toggleProject(project.id)}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                  <CardTitle className="text-sm font-semibold">
-                    {project.code && <span className="text-muted-foreground font-normal mr-1.5">{project.code}</span>}
-                    {project.name}
-                    {isArchivedSection && <Badge variant="secondary" className="ml-2 text-[10px] py-0">Arkiverad</Badge>}
-                  </CardTitle>
-                  {hasOverdue && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+          <Card key={project.id} className={cn(
+            "group transition-all border-border/60 hover:border-primary/30 hover:shadow-sm overflow-hidden",
+            hasOverdue && "border-destructive/40",
+            isArchivedSection && "opacity-75",
+            isExpanded && "border-primary/40 shadow-sm"
+          )}>
+            <CardHeader className="py-3 px-4 cursor-pointer select-none" onClick={() => toggleProject(project.id)}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <span className="text-primary/70 shrink-0">
+                    {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </span>
+                  {project.code && <span className="text-xs font-mono text-muted-foreground tracking-wide shrink-0">{project.code}</span>}
+                  <span className="font-semibold text-sm truncate">{project.name}</span>
+                  {isArchivedSection && <Badge variant="secondary" className="ml-1 text-[10px] py-0 h-4 shrink-0"><Archive className="h-2.5 w-2.5 mr-1" />Arkiverad</Badge>}
+                  {hasOverdue && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{allProjectItems.length} dok</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-muted-foreground tabular-nums">{allProjectItems.length} dok</span>
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); openAddDialog(project.id); }}>
                     <Plus className="h-3.5 w-3.5 mr-1" />Lägg till
                   </Button>
