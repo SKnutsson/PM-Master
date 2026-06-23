@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FolderOpen, BarChart3, CalendarRange, HardHat, LogIn, CheckCircle2 } from 'lucide-react';
+import { FolderOpen, BarChart3, CalendarRange, HardHat, LogIn, UserPlus, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { Footer } from '@/components/Footer';
@@ -36,9 +36,15 @@ const valueProps = [
 
 export function LandingPage() {
   const [authOpen, setAuthOpen] = useState(false);
-  const authTab = 'signin' as const;
+  const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
 
   const openLogin = () => {
+    setAuthTab('signin');
+    setAuthOpen(true);
+  };
+
+  const openSignup = () => {
+    setAuthTab('signup');
     setAuthOpen(true);
   };
 
@@ -63,9 +69,13 @@ export function LandingPage() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <span className="text-lg font-bold tracking-tight text-foreground">Project Management Master </span>
           <div className="flex items-center gap-3">
-            <Button size="sm" className="gradient-primary text-primary-foreground" onClick={openLogin}>
+            <Button variant="ghost" size="sm" onClick={openLogin}>
               <LogIn className="mr-2 h-4 w-4" />
               Logga in
+            </Button>
+            <Button size="sm" className="gradient-primary text-primary-foreground" onClick={openSignup}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Skapa konto
             </Button>
           </div>
         </div>
@@ -138,9 +148,12 @@ export function LandingPage() {
       {/* CTA */}
       <section className="border-t border-border/50 py-20 text-center">
         <h2 className="text-2xl font-bold text-foreground">Redo att börja?</h2>
-        <p className="mt-2 text-muted-foreground">Logga in med ditt konto för att komma åt systemet.</p>
+        <p className="mt-2 text-muted-foreground">Skapa ett konto kostnadsfritt och kom igång direkt.</p>
         <div className="mt-8 flex justify-center gap-4">
-          <Button size="lg" className="gradient-primary text-primary-foreground" onClick={openLogin}>
+          <Button size="lg" className="gradient-primary text-primary-foreground" onClick={openSignup}>
+            Skapa konto
+          </Button>
+          <Button size="lg" variant="outline" onClick={openLogin}>
             Logga in
           </Button>
         </div>

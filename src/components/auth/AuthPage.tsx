@@ -22,11 +22,11 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const mode = 'signin' as const;
-  const { signIn } = useAuth();
+  const [mode, setMode] = useState<'signin' | 'signup'>(defaultTab);
+  const { signIn, signUp } = useAuth();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [focused, setFocused] = useState<string | null>(null);
-  const policyConsent = true;
+  const [policyConsent, setPolicyConsent] = useState(false);
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -51,16 +51,37 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
       return;
     }
 
+    if (mode === 'signup' && !policyConsent) {
+      setError('Du måste godkänna integritetspolicyn för att skapa ett konto.');
+      return;
+    }
+
+
     setIsLoading(true);
 
-    const { error, mfaRequired } = await signIn(email, password);
-    if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        setError('Felaktigt e-post eller lösenord.');
-      } else if (error.message.includes('Email not confirmed')) {
-        setError('Vänligen bekräfta din e-postadress innan du loggar in.');
+    if (mode === 'signin') {
+      const { error, mfaRequired } = await signIn(email, password);
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Felaktigt e-post eller lösenord.');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Vänligen bekräfta din e-postadress innan du loggar in.');
+        } else {
+          setError(error.message);
+        }
+      }
+    } else {
+      const { error } = await signUp(email, password);
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          setError('Denna e-postadress är redan registrerad.');
+        } else {
+          setError(error.message);
+        }
       } else {
-        setError(error.message);
+        setSuccess('Konto skapat! Kontrollera din e-post för att bekräfta kontot.');
+        setEmail('');
+        setPassword('');
       }
     }
 
@@ -169,9 +190,13 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2 }}>
                 
-                <h2 className="text-2xl font-bold text-foreground">Välkommen</h2>
+                <h2 className="text-2xl font-bold text-foreground">
+                  {mode === 'signin' ? 'Välkommen' : 'Skapa konto'}
+                </h2>
                 <p className="mt-1.5 text-sm text-muted-foreground">
-                  Logga in för att fortsätta till dina projekt
+                  {mode === 'signin' ?
+                  'Logga in för att fortsätta till dina projekt' :
+                  'Registrera dig och kom igång direkt'}
                 </p>
               </motion.div>
             </AnimatePresence>
@@ -228,7 +253,7 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
                 <KeyRound className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors duration-200 ${focused === 'password' ? 'text-primary' : 'text-muted-foreground'}`} />
                 <Input
                   type="password"
-                  placeholder="Lösenord"
+                  placeholder={mode === 'signup' ? 'Lösenord (minst 6 tecken)' : 'Lösenord'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setFocused('password')}
@@ -263,25 +288,51 @@ export function AuthPage({ defaultTab = 'signin' }: {defaultTab?: 'signin' | 'si
               }
             </AnimatePresence>
 
+            {mode === 'signup' && (
+              <div className="flex items-start gap-2 pt-1">
+                <Checkbox
+                  id="policy-consent"
+                  checked={policyConsent}
+                  onCheckedChange={(v) => setPolicyConsent(v === true)}
+                />
+                <label htmlFor="policy-consent" className="text-xs text-muted-foreground leading-snug">
+                  Jag godkänner{' '}
+                  <Link to="/integritetspolicy" target="_blank" className="text-primary underline">
+                    integritetspolicyn
+                  </Link>
+                </label>
+              </div>
+            )}
+
             <Button
               type="submit"
               className="h-12 w-full gradient-primary font-semibold text-primary-foreground transition-all duration-200 hover:opacity-90 hover:shadow-lg hover:shadow-primary/20"
-              disabled={isLoading || !email || !password}>
+              disabled={isLoading || !email || !password || (mode === 'signup' && !policyConsent)}>
+              
+              
               {isLoading ?
               <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loggar in...
+                  {mode === 'signin' ? 'Loggar in...' : 'Skapar konto...'}
                 </> :
+
               <span className="flex items-center gap-2">
-                  Logga in
+                  {mode === 'signin' ? 'Logga in' : 'Skapa konto'}
                   <ArrowRight className="h-4 w-4" />
                 </span>
               }
             </Button>
           </form>
 
-          <p className="mt-8 text-center text-xs text-muted-foreground">
-            Detta är ett internt system. Konton skapas av administratör.
+          {/* Switch mode */}
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            {mode === 'signin' ? 'Har du inget konto?' : 'Har du redan ett konto?'}{' '}
+            <button
+              onClick={() => {setMode(mode === 'signin' ? 'signup' : 'signin');setError('');setSuccess('');}}
+              className="font-semibold text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline">
+              
+              {mode === 'signin' ? 'Skapa konto' : 'Logga in'}
+            </button>
           </p>
         </motion.div>
       </div>
