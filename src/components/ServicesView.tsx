@@ -89,7 +89,7 @@ export function ServicesView() {
   const [contracts, setContracts] = useState<ServiceContract[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [openServiceId, setOpenServiceId] = useState<string | null>(null);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState('timeline');
 
   const loadAll = async () => {
     const [{ data: c }, { data: s }] = await Promise.all([
@@ -175,63 +175,12 @@ export function ServicesView() {
 
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
-          <TabsTrigger value="overview">Översikt</TabsTrigger>
+        <TabsList className="grid w-full max-w-2xl grid-cols-3">
           <TabsTrigger value="timeline">Schema</TabsTrigger>
           <TabsTrigger value="contracts">Avtal ({contracts.length})</TabsTrigger>
           <TabsTrigger value="services">Servicar ({services.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <KpiCard label="Kommande" value={upcoming.length} icon={<CalendarIcon className="h-4 w-4 text-status-not-started" />} />
-            <KpiCard label="< 1 månad kvar" value={reminders.length + expectedSoon.length} icon={<Bell className="h-4 w-4 text-status-in-progress" />} />
-            <KpiCard label="Försenade" value={overdue.length} icon={<AlertTriangle className="h-4 w-4 text-status-delayed" />} />
-            <KpiCard label="Utförda i år" value={completedThisYear} icon={<ListChecks className="h-4 w-4 text-status-completed" />} />
-          </div>
-
-          <Card className="border-status-in-progress/40">
-            <CardHeader className="py-3 px-4 bg-status-in-progress/5">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Bell className="h-4 w-4 text-status-in-progress" /> Snart förfallna · mindre än 1 månad kvar
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 pt-3 space-y-3">
-              {expectedSoon.length > 0 && (
-                <div className="border border-dashed border-status-in-progress/40 rounded-md divide-y">
-                  {expectedSoon.map(e => (
-                    <div key={`${e.contract.id}-${e.date}`} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="h-2.5 w-2.5 rotate-45 border border-dashed border-muted-foreground/70 bg-background shrink-0" />
-                        <span className="font-medium truncate">{e.contract.facility_name}</span>
-                        <Badge variant="outline" className="text-[10px] py-0 h-4 shrink-0">Förväntad</Badge>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-xs tabular-nums text-muted-foreground">{e.date} · om {e.daysLeft} d</span>
-                        <Button size="sm" variant="outline" className="h-7" onClick={() => bookExpected(e)}>Boka in</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {reminders.length > 0
-                ? <ServiceTable services={reminders} onOpen={setOpenServiceId} onChange={loadAll} />
-                : expectedSoon.length === 0 && <p className="text-sm text-muted-foreground">Inga servicar inom 30 dagar.</p>}
-            </CardContent>
-          </Card>
-
-
-          <Card>
-            <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4" /> Alla kommande servicar
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 pt-0">
-              <ServiceTable services={upcoming.slice(0, 30)} onOpen={setOpenServiceId} onChange={loadAll} />
-            </CardContent>
-          </Card>
-        </TabsContent>
 
 
         <TabsContent value="timeline" className="mt-4">

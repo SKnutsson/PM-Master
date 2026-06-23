@@ -44,7 +44,7 @@ const itemVariants = {
 
 type ViewMode = 'weeks' | 'days';
 
-type DerivedStatus = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad' | 'Förväntad';
+type DerivedStatus = 'Ej påbörjad' | 'Pågår' | 'Slutförd' | 'Försenad' | 'Förväntad' | 'Risk för försening';
 
 // ISO 8601 week number: week 1 contains the first Thursday of the year
 function getISOWeekNumber(date: Date): number {
@@ -103,6 +103,7 @@ function generateAllDaysForRange(startYear: number, endYear: number): {date: Dat
 function deriveStatus(status: Status): DerivedStatus {
   if (status === 'Slutförd') return 'Slutförd';
   if (status === 'Försenad') return 'Försenad';
+  if (status === 'Risk för försening') return 'Risk för försening';
   if (status === 'Pågår') return 'Pågår';
   if (status === 'Förväntad') return 'Förväntad';
   return 'Ej påbörjad';
@@ -113,8 +114,9 @@ const getStatusColor = (derivedStatus: DerivedStatus) => {
     case 'Slutförd':return 'bg-status-completed';
     case 'Pågår':return 'bg-status-in-progress';
     case 'Försenad':return 'bg-status-delayed';
+    case 'Risk för försening':return 'bg-status-risk';
     case 'Ej påbörjad':return 'bg-status-not-started';
-    case 'Förväntad':return 'bg-muted/50 border-2 border-dashed border-foreground/50';
+    case 'Förväntad':return 'bg-muted/40 border-2 border-dashed border-foreground/50';
     default:return 'bg-muted-foreground/30';
   }
 };
@@ -124,6 +126,7 @@ const getStatusDotColor = (derivedStatus: DerivedStatus) => {
     case 'Slutförd':return 'bg-status-completed';
     case 'Pågår':return 'bg-status-in-progress';
     case 'Försenad':return 'bg-status-delayed';
+    case 'Risk för försening':return 'bg-status-risk';
     case 'Ej påbörjad':return 'bg-status-not-started';
     case 'Förväntad':return 'bg-card border border-dashed border-foreground/60';
     default:return 'bg-muted-foreground/30';
@@ -133,9 +136,10 @@ const getStatusDotColor = (derivedStatus: DerivedStatus) => {
 const statusLabels: {status: DerivedStatus;color: string;label: string;}[] = [
 { status: 'Ej påbörjad', color: 'bg-status-not-started', label: 'Ej påbörjad' },
 { status: 'Pågår', color: 'bg-status-in-progress', label: 'Pågår' },
+{ status: 'Risk för försening', color: 'bg-status-risk', label: 'Risk för försening' },
 { status: 'Slutförd', color: 'bg-status-completed', label: 'Slutförd' },
 { status: 'Försenad', color: 'bg-status-delayed', label: 'Försenad' },
-{ status: 'Förväntad', color: 'bg-muted/50 border-2 border-dashed border-foreground/50', label: 'Förväntad' }];
+{ status: 'Förväntad', color: 'bg-muted/40 border-2 border-dashed border-foreground/50', label: 'Förväntad' }];
 
 
 function toISODate(d: Date): string {

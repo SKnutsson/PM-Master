@@ -42,6 +42,7 @@
     --status-in-progress: 25 95% 53%;
     --status-completed: 142 71% 38%;
     --status-delayed: 0 72% 51%;
+    --status-risk: 45 95% 50%;
 
     /* Chart Colors */
     --chart-1: 160 55% 36%;
@@ -108,6 +109,7 @@
     --status-in-progress: 25 95% 53%;
     --status-completed: 142 71% 45%;
     --status-delayed: 0 72% 51%;
+    --status-risk: 45 95% 55%;
 
     /* Chart Colors */
     --chart-1: 160 55% 42%;

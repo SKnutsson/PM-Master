@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil, FolderOpen, FolderArchive, MapPin, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil, FolderOpen, FolderArchive, MapPin, Loader2, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Project } from '@/data/projectData';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
@@ -18,7 +19,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.03 }
+    transition: { staggerChildren: 0.025 }
   }
 };
 
@@ -27,7 +28,7 @@ const itemVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
-interface ProjectRowProps {
+interface ProjectCardProps {
   project: Project;
   onDeleteProject: (projectId: string) => void;
   onArchiveProject?: (projectId: string) => void;
@@ -36,7 +37,18 @@ interface ProjectRowProps {
   isArchived?: boolean;
 }
 
-function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived }: ProjectRowProps) {
+function MetaChip({ icon: Icon, label, value }: { icon: any; label: string; value?: string }) {
+  if (!value) return null;
+  return (
+    <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
+      <Icon className="h-3 w-3 text-primary/70 shrink-0" />
+      <span className="text-muted-foreground/80">{label}:</span>
+      <span className="font-medium text-foreground truncate max-w-[140px]">{value}</span>
+    </div>
+  );
+}
+
+function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived }: ProjectCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -71,7 +83,6 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
   const handleSave = async () => {
     setSavingEdit(true);
     const updates: Partial<Project> = { ...editData };
-    // Geocode when address changed
     if ((editData.address || '').trim() !== (project.address || '').trim()) {
       if (editData.address.trim()) {
         const geo = await geocodeAddress(editData.address);
@@ -108,106 +119,110 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
   };
 
   return (
-    <>
-      <motion.tr
-        variants={itemVariants}
-        className={cn(
-          "group cursor-pointer transition-colors",
-          isArchived ? "opacity-60" : "hover:bg-primary/[0.04]"
-        )}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <TableCell className="py-1.5 px-2 w-[40px] border-0">
-          <span className="text-primary/70">
-            {isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-          </span>
-        </TableCell>
-        <TableCell className="py-1.5 px-2 border-0">
-          <span className="font-semibold text-sm truncate">
-            {project.code} – {project.name}
-          </span>
-        </TableCell>
-        <TableCell className="py-1.5 px-2 border-0">
-          <span className="text-xs text-muted-foreground truncate">{project.customer || '–'}</span>
-        </TableCell>
-        <TableCell className="py-1.5 px-2 border-0">
-          <span className="text-xs text-muted-foreground truncate">{project.product || '–'}</span>
-        </TableCell>
-        <TableCell className="py-1.5 px-2 border-0">
-          <span className="text-xs text-muted-foreground truncate">{project.projectManager || '–'}</span>
-        </TableCell>
-        <TableCell className="py-1.5 px-2 border-0">
-          <span className="text-xs text-muted-foreground truncate">{project.salesPerson || '–'}</span>
-        </TableCell>
-        <TableCell className="py-1.5 px-2 border-0 text-right">
-          <div className="flex items-center justify-end gap-0.5">
-            {isArchived && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded mr-1">
-                <Archive className="h-2.5 w-2.5" />
-                Avslutat
+    <motion.div variants={itemVariants}>
+      <Card className={cn(
+        "group transition-all border-border/60 hover:border-primary/30 hover:shadow-sm overflow-hidden",
+        isArchived && "opacity-75",
+        isExpanded && "border-primary/40 shadow-sm"
+      )}>
+        <CardHeader
+          className="py-3 px-4 cursor-pointer select-none"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <div className="flex items-center justify-between gap-3">
+            {/* Left: title */}
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="text-primary/70 shrink-0">
+                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </span>
-            )}
-            {!isArchived && (
-              <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleStartEdit} title="Redigera">
-                <Pencil className="h-3 w-3" />
-              </Button>
-            )}
-            {isArchived ? (
-              <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleRestore} title="Återställ">
-                <RotateCcw className="h-3 w-3" />
-              </Button>
-            ) : (
-              <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleArchive} title="Arkivera">
-                <Archive className="h-3 w-3" />
-              </Button>
-            )}
-            <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleDeleteProject} title="Ta bort">
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </div>
-        </TableCell>
-      </motion.tr>
+              <span className="text-xs font-mono text-muted-foreground tracking-wide shrink-0">
+                {project.code}
+              </span>
+              <span className="font-semibold text-sm truncate">
+                {project.name}
+              </span>
+              {isArchived && (
+                <Badge variant="secondary" className="ml-1 text-[10px] py-0 h-4 shrink-0">
+                  <Archive className="h-2.5 w-2.5 mr-1" />Avslutat
+                </Badge>
+              )}
+            </div>
 
-      {/* Expanded detail */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.tr
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <TableCell colSpan={7} className="p-0 border-0">
-              <div className="border-t border-border/30 bg-muted/30 px-10 py-3">
+            {/* Middle: meta chips */}
+            <div className="hidden lg:flex items-center gap-4 shrink-0 min-w-0">
+              <MetaChip icon={Briefcase} label="Kund" value={project.customer} />
+              <MetaChip icon={ShoppingBag} label="Produkt" value={project.product} />
+              <MetaChip icon={User} label="PL" value={project.projectManager} />
+              <MetaChip icon={User} label="Säljare" value={project.salesPerson} />
+            </div>
+
+            {/* Right: actions */}
+            <div className="flex items-center gap-0.5 shrink-0">
+              {!isArchived && (
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleStartEdit} title="Redigera">
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {isArchived ? (
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleRestore} title="Återställ">
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </Button>
+              ) : (
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleArchive} title="Arkivera">
+                  <Archive className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleDeleteProject} title="Ta bort">
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* mobile/tablet inline meta */}
+          <div className="lg:hidden mt-2 flex items-center gap-3 flex-wrap pl-6">
+            {project.customer && <span className="text-[11px] text-muted-foreground"><span className="text-muted-foreground/70">Kund:</span> <span className="text-foreground">{project.customer}</span></span>}
+            {project.product && <span className="text-[11px] text-muted-foreground"><span className="text-muted-foreground/70">Produkt:</span> <span className="text-foreground">{project.product}</span></span>}
+            {project.projectManager && <span className="text-[11px] text-muted-foreground"><span className="text-muted-foreground/70">PL:</span> <span className="text-foreground">{project.projectManager}</span></span>}
+          </div>
+        </CardHeader>
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <CardContent className="border-t border-border/40 bg-muted/20 px-4 pt-3 pb-4">
                 {isEditing ? (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Kund</label>
-                        <Input className="h-8 text-sm" value={editData.customer} onChange={(e) => setEditData((prev) => ({ ...prev, customer: e.target.value }))} placeholder="Kundnamn" />
+                        <Input className="h-8 text-sm" value={editData.customer} onChange={(e) => setEditData((p) => ({ ...p, customer: e.target.value }))} placeholder="Kundnamn" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Projektledare</label>
-                        <Input className="h-8 text-sm" value={editData.projectManager} onChange={(e) => setEditData((prev) => ({ ...prev, projectManager: e.target.value }))} placeholder="Namn" />
+                        <Input className="h-8 text-sm" value={editData.projectManager} onChange={(e) => setEditData((p) => ({ ...p, projectManager: e.target.value }))} placeholder="Namn" />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Ansvarig säljare</label>
-                        <Input className="h-8 text-sm" value={editData.salesPerson} onChange={(e) => setEditData((prev) => ({ ...prev, salesPerson: e.target.value }))} placeholder="Namn" />
+                        <Input className="h-8 text-sm" value={editData.salesPerson} onChange={(e) => setEditData((p) => ({ ...p, salesPerson: e.target.value }))} placeholder="Namn" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Såld produkt</label>
-                        <Input className="h-8 text-sm" value={editData.product} onChange={(e) => setEditData((prev) => ({ ...prev, product: e.target.value }))} placeholder="t.ex. Teleskopläktare" />
+                        <Input className="h-8 text-sm" value={editData.product} onChange={(e) => setEditData((p) => ({ ...p, product: e.target.value }))} placeholder="t.ex. Teleskopläktare" />
                       </div>
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground">Adress (för karta)</label>
-                      <Input className="h-8 text-sm" value={editData.address} onChange={(e) => setEditData((prev) => ({ ...prev, address: e.target.value }))} placeholder="t.ex. Storgatan 1, Stockholm" />
+                      <Input className="h-8 text-sm" value={editData.address} onChange={(e) => setEditData((p) => ({ ...p, address: e.target.value }))} placeholder="t.ex. Storgatan 1, Stockholm" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground">Noteringar</label>
-                      <Textarea className="text-sm" value={editData.notes} onChange={(e) => setEditData((prev) => ({ ...prev, notes: e.target.value }))} placeholder="Övrig information..." rows={2} />
+                      <Textarea className="text-sm" value={editData.notes} onChange={(e) => setEditData((p) => ({ ...p, notes: e.target.value }))} placeholder="Övrig information..." rows={2} />
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsEditing(false)} disabled={savingEdit}>Avbryt</Button>
@@ -218,23 +233,25 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-4 gap-4">
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-2">
                       {[
-                        { label: 'Kund', value: project.customer, icon: User },
+                        { label: 'Kund', value: project.customer, icon: Briefcase },
                         { label: 'Projektledare', value: project.projectManager, icon: User },
                         { label: 'Ansvarig säljare', value: project.salesPerson, icon: User },
                         { label: 'Såld produkt', value: project.product, icon: ShoppingBag },
-                      ].map((field) => (
-                        <div key={field.label} className="flex items-center gap-1.5 text-xs">
-                          <field.icon className="h-3 w-3 text-primary/60 shrink-0" />
-                          <span className="text-muted-foreground">{field.label}:</span>
-                          <span className="font-medium truncate">{field.value || '–'}</span>
+                      ].map((f) => (
+                        <div key={f.label} className="flex items-start gap-1.5 text-xs">
+                          <f.icon className="h-3 w-3 text-primary/60 shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <div className="text-muted-foreground/80 text-[10px] uppercase tracking-wide">{f.label}</div>
+                            <div className="font-medium truncate">{f.value || '–'}</div>
+                          </div>
                         </div>
                       ))}
                     </div>
                     {project.address && (
-                      <div className="flex items-center gap-1.5 text-xs">
+                      <div className="flex items-center gap-1.5 text-xs border-t border-border/30 pt-2">
                         <MapPin className="h-3 w-3 text-primary/60 shrink-0" />
                         <span className="text-muted-foreground">Adress:</span>
                         <span className="font-medium truncate">{project.address}</span>
@@ -244,23 +261,20 @@ function ProjectRow({ project, onDeleteProject, onArchiveProject, onRestoreProje
                       <div className="flex items-start gap-1.5 text-xs border-t border-border/30 pt-2">
                         <FileText className="h-3 w-3 text-primary/60 shrink-0 mt-0.5" />
                         <span className="text-muted-foreground">Not:</span>
-                        <span className="text-foreground">{project.notes}</span>
+                        <span className="text-foreground whitespace-pre-wrap break-words">{project.notes}</span>
                       </div>
-                    )}
-                    {!project.customer && !project.projectManager && !project.salesPerson && !project.product && !project.address && !project.notes && (
-                      <p className="text-xs text-muted-foreground">Ingen information tillagd. Klicka på pennikonen för att redigera.</p>
                     )}
                     <div className="border-t border-border/30 pt-2">
                       <ProjectTasksList projectId={project.id} />
                     </div>
                   </div>
                 )}
-              </div>
-            </TableCell>
-          </motion.tr>
-        )}
-      </AnimatePresence>
-    </>
+              </CardContent>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -278,57 +292,44 @@ export function ProjectsView() {
     await updateProject(projectId, { status: 'Pågår' } as any);
   };
 
-  const renderTable = (projectList: Project[], isArchived: boolean) => (
-    <div className="rounded-lg border border-border/50 overflow-hidden bg-card/80 shadow-sm">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead className="w-[40px] py-1.5 px-2"></TableHead>
-            <TableHead className="font-semibold text-xs py-1.5 px-2">Projekt</TableHead>
-            <TableHead className="font-semibold text-xs py-1.5 px-2">Kund</TableHead>
-            <TableHead className="font-semibold text-xs py-1.5 px-2">Produkt</TableHead>
-            <TableHead className="font-semibold text-xs py-1.5 px-2">Projektledare</TableHead>
-            <TableHead className="font-semibold text-xs py-1.5 px-2">Ansvarig säljare</TableHead>
-            <TableHead className="font-semibold text-xs py-1.5 px-2 text-right"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <AnimatePresence>
-            {projectList.map((project) => (
-              <ProjectRow
-                key={project.id}
-                project={project}
-                onDeleteProject={deleteProject}
-                onArchiveProject={isArchived ? undefined : handleArchive}
-                onRestoreProject={isArchived ? handleRestore : undefined}
-                onUpdateProject={updateProject}
-                isArchived={isArchived}
-              />
-            ))}
-          </AnimatePresence>
-          {projectList.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground text-sm border-0">
-                {isArchived ? 'Inga arkiverade projekt ännu.' : 'Inga aktiva projekt. Klicka på "Nytt projekt" för att börja.'}
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  );
-
-  return (
+  const renderList = (projectList: Project[], isArchived: boolean) => (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-4 p-6"
+      className="space-y-2"
     >
-      <div className="flex items-center justify-between">
+      <AnimatePresence>
+        {projectList.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onDeleteProject={deleteProject}
+            onArchiveProject={isArchived ? undefined : handleArchive}
+            onRestoreProject={isArchived ? handleRestore : undefined}
+            onUpdateProject={updateProject}
+            isArchived={isArchived}
+          />
+        ))}
+      </AnimatePresence>
+      {projectList.length === 0 && (
+        <Card className="border-dashed">
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            {isArchived ? 'Inga arkiverade projekt ännu.' : 'Inga aktiva projekt. Klicka på "Nytt projekt" för att börja.'}
+          </CardContent>
+        </Card>
+      )}
+    </motion.div>
+  );
+
+  return (
+    <div className="p-4 md:p-6 space-y-4 max-w-[1400px]">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Projekt</h1>
-          <p className="text-muted-foreground text-sm">Hantera och organisera dina projekt</p>
+          <h1 className="text-2xl font-bold tracking-tight">Projekt</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {activeProjects.length} aktiva · {archivedProjects.length} arkiverade
+          </p>
         </div>
         <AddProjectDialog />
       </div>
@@ -345,14 +346,14 @@ export function ProjectsView() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="active" className="mt-3">
-          {renderTable(activeProjects, false)}
+        <TabsContent value="active" className="mt-4">
+          {renderList(activeProjects, false)}
         </TabsContent>
 
-        <TabsContent value="archived" className="mt-3">
-          {renderTable(archivedProjects, true)}
+        <TabsContent value="archived" className="mt-4">
+          {renderList(archivedProjects, true)}
         </TabsContent>
       </Tabs>
-    </motion.div>
+    </div>
   );
 }
