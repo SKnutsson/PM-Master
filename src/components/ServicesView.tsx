@@ -89,7 +89,7 @@ export function ServicesView() {
   const [contracts, setContracts] = useState<ServiceContract[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [openServiceId, setOpenServiceId] = useState<string | null>(null);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState('timeline');
 
   const loadAll = async () => {
     const [{ data: c }, { data: s }] = await Promise.all([
