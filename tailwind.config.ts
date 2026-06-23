@@ -61,7 +61,8 @@ export default {
   				'not-started': 'hsl(var(--status-not-started))',
   				'in-progress': 'hsl(var(--status-in-progress))',
   				completed: 'hsl(var(--status-completed))',
-  				delayed: 'hsl(var(--status-delayed))'
+  				delayed: 'hsl(var(--status-delayed))',
+  				risk: 'hsl(var(--status-risk))'
   			},
   			chart: {
   				'1': 'hsl(var(--chart-1))',
