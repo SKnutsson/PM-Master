@@ -15,6 +15,8 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
         return 'bg-status-in-progress/15 text-status-in-progress border-status-in-progress/30';
       case 'Försenad':
         return 'bg-status-delayed/15 text-status-delayed border-status-delayed/30';
+      case 'Risk för försening':
+        return 'bg-status-risk/15 text-status-risk border-status-risk/30';
       case 'Förväntad':
         return 'bg-card text-foreground border-dashed border-foreground/60';
       case 'Ej påbörjad':
@@ -37,6 +39,7 @@ export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
           status === 'Slutförd' && 'bg-status-completed',
           status === 'Pågår' && 'bg-status-in-progress',
           status === 'Försenad' && 'bg-status-delayed',
+          status === 'Risk för försening' && 'bg-status-risk',
           status === 'Ej påbörjad' && 'bg-status-not-started',
           status === 'Förväntad' && 'bg-card border border-dashed border-foreground/60'
         )}
