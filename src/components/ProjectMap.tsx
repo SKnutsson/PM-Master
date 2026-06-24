@@ -111,7 +111,8 @@ export function ProjectMap({ projects, onProjectClick, height = 360 }: ProjectMa
       <MapContainer
         center={fallbackCenter}
         zoom={5}
-        scrollWheelZoom={false}
+        scrollWheelZoom={true}
+        wheelPxPerZoomLevel={80}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
