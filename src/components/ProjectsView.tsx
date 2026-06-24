@@ -37,13 +37,11 @@ interface ProjectCardProps {
   isArchived?: boolean;
 }
 
-function MetaChip({ icon: Icon, label, value }: { icon: any; label: string; value?: string }) {
-  if (!value) return null;
+function MetaCell({ icon: Icon, value }: { icon: any; value?: string }) {
   return (
-    <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
+    <div className="hidden lg:flex items-center gap-1.5 text-xs min-w-0">
       <Icon className="h-3 w-3 text-primary/70 shrink-0" />
-      <span className="text-muted-foreground/80">{label}:</span>
-      <span className="font-medium text-foreground truncate max-w-[140px]">{value}</span>
+      <span className="font-medium text-foreground truncate">{value || <span className="text-muted-foreground/50 font-normal">–</span>}</span>
     </div>
   );
 }
