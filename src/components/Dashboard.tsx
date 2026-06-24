@@ -188,12 +188,14 @@ export function Dashboard() {
   const allActivities = projects.flatMap((p) => p.activities);
   const inProgressActivities = allActivities.filter((a) => a.status === 'Pågår').length;
   const delayedActivities = allActivities.filter((a) => a.status === 'Försenad').length;
+  const atRiskActivities = allActivities.filter((a) => a.status === 'Risk för försening').length;
+  const attentionActivities = allActivities.filter((a) => a.status === 'Försenad' || a.status === 'Risk för försening');
   const activeProjects = projects.filter((p) => p.status !== 'Avslutat');
 
   const projectsByPhase = (['Konstruktion', 'Produktion', 'Montage'] as Phase[]).map((phase) => ({
     phase,
     projects: projects.filter(
-      (p) => p.status !== 'Avslutat' && p.activities.some((a) => a.phase === phase && (a.status === 'Pågår' || a.status === 'Försenad'))
+      (p) => p.status !== 'Avslutat' && p.activities.some((a) => a.phase === phase && (a.status === 'Pågår' || a.status === 'Försenad' || a.status === 'Risk för försening'))
     )
   }));
 
