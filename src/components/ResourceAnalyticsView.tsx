@@ -168,7 +168,12 @@ export function ResourceAnalyticsView() {
       setFtrDetails(Array.isArray(d.ftr_details) ? d.ftr_details : []);
       setMissingDetails(Array.isArray(d.missing_article_details) ? d.missing_article_details : []);
       setRemarkDetails(Array.isArray(d.inspection_remark_details) ? d.inspection_remark_details : []);
-      setDeviationDetails(Array.isArray(d.deviation_details) ? d.deviation_details : []);
+      const rawDev = Array.isArray(d.deviation_details) ? d.deviation_details : [];
+      setDeviationDetails(rawDev.map((item: any) =>
+        typeof item === 'string'
+          ? { type: 'Övrigt', description: item }
+          : { type: item?.type || 'Övrigt', description: item?.description || '' }
+      ));
     })();
   }, [selectedProjectId]);
 
