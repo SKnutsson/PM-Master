@@ -295,6 +295,16 @@ export function ProjectsView() {
       animate="visible"
       className="space-y-2"
     >
+      {projectList.length > 0 && (
+        <div className="hidden lg:grid items-center gap-3 px-4 py-1.5 grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_auto] text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+          <div className="pl-6">Projekt</div>
+          <div>Kund</div>
+          <div>Produkt</div>
+          <div>Projektledare</div>
+          <div>Säljare</div>
+          <div className="w-[84px]" />
+        </div>
+      )}
       <AnimatePresence>
         {projectList.map((project) => (
           <ProjectCard
