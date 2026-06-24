@@ -127,7 +127,9 @@ export function ResourceAnalyticsView() {
   const [ftrDetails, setFtrDetails] = useState<string[]>([]);
   const [missingDetails, setMissingDetails] = useState<string[]>([]);
   const [remarkDetails, setRemarkDetails] = useState<string[]>([]);
-  const [deviationDetails, setDeviationDetails] = useState<string[]>([]);
+  type DeviationEntry = { type: string; description: string };
+  const DEVIATION_TYPES = ['Konstruktion', 'Inköp', 'Produktion', 'Montage', 'Dokumentation', 'Övrigt'] as const;
+  const [deviationDetails, setDeviationDetails] = useState<DeviationEntry[]>([]);
   const [savingKpi, setSavingKpi] = useState(false);
 
   // Sync detail array length to count number
@@ -135,6 +137,13 @@ export function ResourceAnalyticsView() {
     const n = countStr === '' ? 0 : Math.max(0, parseInt(countStr) || 0);
     if (n === current.length) return current;
     if (n > current.length) return [...current, ...Array(n - current.length).fill('')];
+    return current.slice(0, n);
+  };
+
+  const syncDeviationDetails = (countStr: string, current: DeviationEntry[]): DeviationEntry[] => {
+    const n = countStr === '' ? 0 : Math.max(0, parseInt(countStr) || 0);
+    if (n === current.length) return current;
+    if (n > current.length) return [...current, ...Array(n - current.length).fill(null).map(() => ({ type: 'Övrigt', description: '' }))];
     return current.slice(0, n);
   };
 
