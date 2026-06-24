@@ -37,13 +37,11 @@ interface ProjectCardProps {
   isArchived?: boolean;
 }
 
-function MetaChip({ icon: Icon, label, value }: { icon: any; label: string; value?: string }) {
-  if (!value) return null;
+function MetaCell({ icon: Icon, value }: { icon: any; value?: string }) {
   return (
-    <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
+    <div className="hidden lg:flex items-center gap-1.5 text-xs min-w-0">
       <Icon className="h-3 w-3 text-primary/70 shrink-0" />
-      <span className="text-muted-foreground/80">{label}:</span>
-      <span className="font-medium text-foreground truncate max-w-[140px]">{value}</span>
+      <span className="font-medium text-foreground truncate">{value || <span className="text-muted-foreground/50 font-normal">–</span>}</span>
     </div>
   );
 }
@@ -129,9 +127,9 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
           className="py-3 px-4 cursor-pointer select-none"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <div className="flex items-center justify-between gap-3">
-            {/* Left: title */}
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="grid items-center gap-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_auto]">
+            {/* Title */}
+            <div className="flex items-center gap-2 min-w-0">
               <span className="text-primary/70 shrink-0">
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </span>
@@ -148,16 +146,14 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
               )}
             </div>
 
-            {/* Middle: meta chips */}
-            <div className="hidden lg:flex items-center gap-4 shrink-0 min-w-0">
-              <MetaChip icon={Briefcase} label="Kund" value={project.customer} />
-              <MetaChip icon={ShoppingBag} label="Produkt" value={project.product} />
-              <MetaChip icon={User} label="PL" value={project.projectManager} />
-              <MetaChip icon={User} label="Säljare" value={project.salesPerson} />
-            </div>
+            {/* Aligned meta columns */}
+            <MetaCell icon={Briefcase} value={project.customer} />
+            <MetaCell icon={ShoppingBag} value={project.product} />
+            <MetaCell icon={User} value={project.projectManager} />
+            <MetaCell icon={User} value={project.salesPerson} />
 
-            {/* Right: actions */}
-            <div className="flex items-center gap-0.5 shrink-0">
+            {/* Actions */}
+            <div className="flex items-center gap-0.5 shrink-0 justify-end">
               {!isArchived && (
                 <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleStartEdit} title="Redigera">
                   <Pencil className="h-3.5 w-3.5" />
@@ -299,6 +295,16 @@ export function ProjectsView() {
       animate="visible"
       className="space-y-2"
     >
+      {projectList.length > 0 && (
+        <div className="hidden lg:grid items-center gap-3 px-4 py-1.5 grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_auto] text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+          <div className="pl-6">Projekt</div>
+          <div>Kund</div>
+          <div>Produkt</div>
+          <div>Projektledare</div>
+          <div>Säljare</div>
+          <div className="w-[84px]" />
+        </div>
+      )}
       <AnimatePresence>
         {projectList.map((project) => (
           <ProjectCard

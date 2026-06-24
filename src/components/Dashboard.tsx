@@ -188,12 +188,14 @@ export function Dashboard() {
   const allActivities = projects.flatMap((p) => p.activities);
   const inProgressActivities = allActivities.filter((a) => a.status === 'Pågår').length;
   const delayedActivities = allActivities.filter((a) => a.status === 'Försenad').length;
+  const atRiskActivities = allActivities.filter((a) => a.status === 'Risk för försening').length;
+  const attentionActivities = allActivities.filter((a) => a.status === 'Försenad' || a.status === 'Risk för försening');
   const activeProjects = projects.filter((p) => p.status !== 'Avslutat');
 
   const projectsByPhase = (['Konstruktion', 'Produktion', 'Montage'] as Phase[]).map((phase) => ({
     phase,
     projects: projects.filter(
-      (p) => p.status !== 'Avslutat' && p.activities.some((a) => a.phase === phase && (a.status === 'Pågår' || a.status === 'Försenad'))
+      (p) => p.status !== 'Avslutat' && p.activities.some((a) => a.phase === phase && (a.status === 'Pågår' || a.status === 'Försenad' || a.status === 'Risk för försening'))
     )
   }));
 
@@ -344,30 +346,49 @@ export function Dashboard() {
 
         {/* Försenade — red with inline list */}
         <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)] px-4 py-3 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_42%)] via-[hsl(20_55%_42%)] to-[hsl(38_75%_45%)] px-4 py-3 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
             <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/5 -translate-y-6 translate-x-6" />
             <div className="relative z-10">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Försenade aktiviteter</p>
-                  <p className="text-3xl font-bold text-white leading-tight tabular-nums">
-                    <AnimatedNumber value={delayedActivities} />
-                  </p>
+                  <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Försenade & i riskzon</p>
+                  <div className="flex items-baseline gap-3 mt-0.5">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-white leading-none tabular-nums">
+                        <AnimatedNumber value={delayedActivities} />
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider text-white/60">försenade</span>
+                    </div>
+                    <span className="text-white/30">·</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-bold text-white/95 leading-none tabular-nums">
+                        <AnimatedNumber value={atRiskActivities} />
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider text-white/60">i risk</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="rounded-lg p-2 bg-white/10 backdrop-blur-sm shrink-0">
                   <AlertTriangle className="h-5 w-5 text-white/80" />
                 </div>
               </div>
-              {delayedActivities > 0 && (
+              {attentionActivities.length > 0 && (
                 <div className="mt-2 space-y-0.5 max-h-28 overflow-y-auto pr-1">
-                  {allActivities
-                    .filter((a) => a.status === 'Försenad')
+                  {attentionActivities
+                    .sort((a, b) => (a.status === 'Försenad' ? -1 : 1) - (b.status === 'Försenad' ? -1 : 1))
                     .map((a, i) => {
                       const project = projects.find((p) => p.activities.some((act) => act.id === a.id));
+                      const isDelayed = a.status === 'Försenad';
                       return (
-                        <p key={i} className="text-[11px] text-white/75 truncate leading-snug">
-                          • {a.name}{project ? ` – ${project.code} ${project.name}` : ''}
-                        </p>
+                        <div key={i} className="flex items-center gap-1.5 text-[11px] text-white/80 leading-snug">
+                          <span
+                            className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${isDelayed ? 'bg-white' : 'bg-amber-300'}`}
+                            title={isDelayed ? 'Försenad' : 'Risk för försening'}
+                          />
+                          <span className="truncate">
+                            {a.name}{project ? ` – ${project.code} ${project.name}` : ''}
+                          </span>
+                        </div>
                       );
                     })}
                 </div>

@@ -127,7 +127,9 @@ export function ResourceAnalyticsView() {
   const [ftrDetails, setFtrDetails] = useState<string[]>([]);
   const [missingDetails, setMissingDetails] = useState<string[]>([]);
   const [remarkDetails, setRemarkDetails] = useState<string[]>([]);
-  const [deviationDetails, setDeviationDetails] = useState<string[]>([]);
+  type DeviationEntry = { type: string; description: string };
+  const DEVIATION_TYPES = ['Konstruktion', 'Inköp', 'Produktion', 'Montage', 'Dokumentation', 'Övrigt'] as const;
+  const [deviationDetails, setDeviationDetails] = useState<DeviationEntry[]>([]);
   const [savingKpi, setSavingKpi] = useState(false);
 
   // Sync detail array length to count number
@@ -135,6 +137,13 @@ export function ResourceAnalyticsView() {
     const n = countStr === '' ? 0 : Math.max(0, parseInt(countStr) || 0);
     if (n === current.length) return current;
     if (n > current.length) return [...current, ...Array(n - current.length).fill('')];
+    return current.slice(0, n);
+  };
+
+  const syncDeviationDetails = (countStr: string, current: DeviationEntry[]): DeviationEntry[] => {
+    const n = countStr === '' ? 0 : Math.max(0, parseInt(countStr) || 0);
+    if (n === current.length) return current;
+    if (n > current.length) return [...current, ...Array(n - current.length).fill(null).map(() => ({ type: 'Övrigt', description: '' }))];
     return current.slice(0, n);
   };
 
@@ -159,7 +168,12 @@ export function ResourceAnalyticsView() {
       setFtrDetails(Array.isArray(d.ftr_details) ? d.ftr_details : []);
       setMissingDetails(Array.isArray(d.missing_article_details) ? d.missing_article_details : []);
       setRemarkDetails(Array.isArray(d.inspection_remark_details) ? d.inspection_remark_details : []);
-      setDeviationDetails(Array.isArray(d.deviation_details) ? d.deviation_details : []);
+      const rawDev = Array.isArray(d.deviation_details) ? d.deviation_details : [];
+      setDeviationDetails(rawDev.map((item: any) =>
+        typeof item === 'string'
+          ? { type: 'Övrigt', description: item }
+          : { type: item?.type || 'Övrigt', description: item?.description || '' }
+      ));
     })();
   }, [selectedProjectId]);
 
@@ -519,16 +533,15 @@ export function ResourceAnalyticsView() {
                     <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />
                     Avvikelser
                   </Label>
-                  <Input type="number" min="0" step="1" value={deviations} onChange={e => { setDeviations(e.target.value); setDeviationDetails(syncDetails(e.target.value, deviationDetails)); }} placeholder="antal" className="h-9" />
+                  <Input type="number" min="0" step="1" value={deviations} onChange={e => { setDeviations(e.target.value); setDeviationDetails(syncDeviationDetails(e.target.value, deviationDetails)); }} placeholder="antal" className="h-9" />
                   <p className="text-[10px] text-muted-foreground mt-1">Övriga avvikelser i projektet</p>
                 </div>
               </div>
 
-              {/* Detail lists */}
+              {/* Detail lists for string-based KPIs */}
               {[
                 { title: 'Saknade artiklar – beskrivning per artikel', icon: <Truck className="h-3.5 w-3.5 text-blue-500" />, items: missingDetails, setItems: setMissingDetails, placeholder: 'Beskriv den saknade artikeln…' },
                 { title: 'Besiktningsanmärkningar – beskrivning per anmärkning', icon: <ClipboardCheck className="h-3.5 w-3.5 text-amber-500" />, items: remarkDetails, setItems: setRemarkDetails, placeholder: 'Beskriv anmärkningen…' },
-                { title: 'Avvikelser – beskrivning per avvikelse', icon: <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />, items: deviationDetails, setItems: setDeviationDetails, placeholder: 'Beskriv avvikelsen…' },
               ].map((section) => section.items.length > 0 && (
                 <div key={section.title} className="border-t border-border/50 pt-3">
                   <Label className="text-xs flex items-center gap-1.5 mb-2">{section.icon}{section.title}</Label>
@@ -551,6 +564,50 @@ export function ResourceAnalyticsView() {
                   </div>
                 </div>
               ))}
+
+              {/* Avvikelser – med typ */}
+              {deviationDetails.length > 0 && (
+                <div className="border-t border-border/50 pt-3">
+                  <Label className="text-xs flex items-center gap-1.5 mb-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />
+                    Avvikelser – typ och beskrivning per avvikelse
+                  </Label>
+                  <div className="space-y-2">
+                    {deviationDetails.map((entry, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <span className="text-[11px] text-muted-foreground font-semibold mt-2 w-5 shrink-0">#{i + 1}</span>
+                        <Select
+                          value={entry.type}
+                          onValueChange={(v) => {
+                            const next = [...deviationDetails];
+                            next[i] = { ...next[i], type: v };
+                            setDeviationDetails(next);
+                          }}
+                        >
+                          <SelectTrigger className="h-9 w-[160px] shrink-0 text-sm">
+                            <SelectValue placeholder="Typ" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DEVIATION_TYPES.map(t => (
+                              <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Textarea
+                          value={entry.description}
+                          onChange={e => {
+                            const next = [...deviationDetails];
+                            next[i] = { ...next[i], description: e.target.value };
+                            setDeviationDetails(next);
+                          }}
+                          placeholder="Beskriv avvikelsen…"
+                          className="min-h-[50px] text-sm flex-1"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
                 <Label className="text-xs mb-1.5 block">Övrig kommentar</Label>
                 <AutoTextarea value={kpiNotes} onChange={setKpiNotes} placeholder="Noteringar om kvalitet, leverans eller besiktning…" minHeight={90} />
