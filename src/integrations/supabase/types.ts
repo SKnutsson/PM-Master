@@ -658,10 +658,341 @@ export type Database = {
         }
         Relationships: []
       }
+      production_comments: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          created_at: string
+          factory_id: string | null
+          id: string
+          project_id: string
+          text: string
+          updated_at: string
+          x: number
+          y: number
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          created_at?: string
+          factory_id?: string | null
+          id?: string
+          project_id: string
+          text: string
+          updated_at?: string
+          x?: number
+          y?: number
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          created_at?: string
+          factory_id?: string | null
+          id?: string
+          project_id?: string
+          text?: string
+          updated_at?: string
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_comments_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "production_factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_factories: {
+        Row: {
+          blueprint_height: number | null
+          blueprint_scale: number
+          blueprint_url: string | null
+          blueprint_width: number | null
+          color: string
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+          overview_x: number
+          overview_y: number
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          blueprint_height?: number | null
+          blueprint_scale?: number
+          blueprint_url?: string | null
+          blueprint_width?: number | null
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          order_index?: number
+          overview_x?: number
+          overview_y?: number
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          blueprint_height?: number | null
+          blueprint_scale?: number
+          blueprint_url?: string | null
+          blueprint_width?: number | null
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+          overview_x?: number
+          overview_y?: number
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_factories_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_flows: {
+        Row: {
+          batch_size: number | null
+          color: string
+          created_at: string
+          data: Json
+          flow_type: string
+          frequency: string | null
+          id: string
+          label: string | null
+          lead_time: number | null
+          project_id: string
+          source_factory_id: string | null
+          source_object_id: string | null
+          target_factory_id: string | null
+          target_object_id: string | null
+          updated_at: string
+          volume: number | null
+        }
+        Insert: {
+          batch_size?: number | null
+          color?: string
+          created_at?: string
+          data?: Json
+          flow_type?: string
+          frequency?: string | null
+          id?: string
+          label?: string | null
+          lead_time?: number | null
+          project_id: string
+          source_factory_id?: string | null
+          source_object_id?: string | null
+          target_factory_id?: string | null
+          target_object_id?: string | null
+          updated_at?: string
+          volume?: number | null
+        }
+        Update: {
+          batch_size?: number | null
+          color?: string
+          created_at?: string
+          data?: Json
+          flow_type?: string
+          frequency?: string | null
+          id?: string
+          label?: string | null
+          lead_time?: number | null
+          project_id?: string
+          source_factory_id?: string | null
+          source_object_id?: string | null
+          target_factory_id?: string | null
+          target_object_id?: string | null
+          updated_at?: string
+          volume?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_flows_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_flows_source_factory_id_fkey"
+            columns: ["source_factory_id"]
+            isOneToOne: false
+            referencedRelation: "production_factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_flows_source_object_id_fkey"
+            columns: ["source_object_id"]
+            isOneToOne: false
+            referencedRelation: "production_objects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_flows_target_factory_id_fkey"
+            columns: ["target_factory_id"]
+            isOneToOne: false
+            referencedRelation: "production_factories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "production_flows_target_object_id_fkey"
+            columns: ["target_object_id"]
+            isOneToOne: false
+            referencedRelation: "production_objects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_objects: {
+        Row: {
+          category: string | null
+          color: string
+          created_at: string
+          data: Json
+          factory_id: string
+          height: number
+          icon: string | null
+          id: string
+          locked: boolean
+          name: string
+          rotation: number
+          type: string
+          updated_at: string
+          width: number
+          x: number
+          y: number
+        }
+        Insert: {
+          category?: string | null
+          color?: string
+          created_at?: string
+          data?: Json
+          factory_id: string
+          height?: number
+          icon?: string | null
+          id?: string
+          locked?: boolean
+          name: string
+          rotation?: number
+          type?: string
+          updated_at?: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Update: {
+          category?: string | null
+          color?: string
+          created_at?: string
+          data?: Json
+          factory_id?: string
+          height?: number
+          icon?: string | null
+          id?: string
+          locked?: boolean
+          name?: string
+          rotation?: number
+          type?: string
+          updated_at?: string
+          width?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_objects_factory_id_fkey"
+            columns: ["factory_id"]
+            isOneToOne: false
+            referencedRelation: "production_factories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_projects: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      production_versions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          project_id: string
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          project_id: string
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          project_id?: string
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_versions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "production_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_color: string | null
           can_access_crm: boolean
+          can_access_production: boolean
           created_at: string
           display_name: string | null
           first_name: string | null
@@ -676,6 +1007,7 @@ export type Database = {
         Insert: {
           avatar_color?: string | null
           can_access_crm?: boolean
+          can_access_production?: boolean
           created_at?: string
           display_name?: string | null
           first_name?: string | null
@@ -690,6 +1022,7 @@ export type Database = {
         Update: {
           avatar_color?: string | null
           can_access_crm?: boolean
+          can_access_production?: boolean
           created_at?: string
           display_name?: string | null
           first_name?: string | null
@@ -1355,6 +1688,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_production: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

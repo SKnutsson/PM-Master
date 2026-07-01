@@ -1,4 +1,4 @@
-import { ClipboardList, Briefcase } from 'lucide-react';
+import { ClipboardList, Briefcase, Factory } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppMode, AppMode } from '@/contexts/AppModeContext';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -10,18 +10,25 @@ interface Props {
 }
 
 const allOpts: { id: AppMode; label: string; icon: typeof ClipboardList }[] = [
-  { id: 'pm', label: 'Projektledning', icon: ClipboardList },
+  { id: 'pm', label: 'Projekt', icon: ClipboardList },
   { id: 'crm', label: 'CRM', icon: Briefcase },
+  { id: 'production', label: 'Produktion', icon: Factory },
 ];
 
 export function ModeSwitcher({ collapsed }: Props) {
   const { mode, setMode } = useAppMode();
-  const { canAccessCrm, loading } = usePermissions();
-  const opts = allOpts.filter((o) => o.id !== 'crm' || canAccessCrm);
+  const { canAccessCrm, canAccessProduction, loading } = usePermissions();
+  const opts = allOpts.filter((o) => {
+    if (o.id === 'crm') return canAccessCrm;
+    if (o.id === 'production') return canAccessProduction;
+    return true;
+  });
 
   useEffect(() => {
-    if (!loading && mode === 'crm' && !canAccessCrm) setMode('pm');
-  }, [loading, mode, canAccessCrm, setMode]);
+    if (loading) return;
+    if (mode === 'crm' && !canAccessCrm) setMode('pm');
+    if (mode === 'production' && !canAccessProduction) setMode('pm');
+  }, [loading, mode, canAccessCrm, canAccessProduction, setMode]);
 
   if (opts.length <= 1) return null;
 
@@ -54,7 +61,7 @@ export function ModeSwitcher({ collapsed }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-1 rounded-lg bg-sidebar-accent/40 p-1">
+    <div className={cn('grid gap-1 rounded-lg bg-sidebar-accent/40 p-1', opts.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
       {opts.map((o) => {
         const active = mode === o.id;
         return (
@@ -62,7 +69,7 @@ export function ModeSwitcher({ collapsed }: Props) {
             key={o.id}
             onClick={() => setMode(o.id)}
             className={cn(
-              'flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-all',
+              'flex items-center justify-center gap-1 rounded-md px-1.5 py-1.5 text-[11px] font-medium transition-all',
               active
                 ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-sm'
                 : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'

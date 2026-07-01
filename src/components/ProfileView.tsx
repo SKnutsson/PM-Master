@@ -42,6 +42,7 @@ export function ProfileView() {
   const [editColor, setEditColor] = useState('#3b82f6');
   const [editIsAdmin, setEditIsAdmin] = useState(false);
   const [editCanAccessCrm, setEditCanAccessCrm] = useState(false);
+  const [editCanAccessProduction, setEditCanAccessProduction] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const email = user?.email ?? '';
@@ -120,6 +121,7 @@ export function ProfileView() {
     setEditRole(profile.user_role ?? '');
     setEditColor(profile.avatar_color ?? '#3b82f6');
     setEditCanAccessCrm(!!profile.can_access_crm);
+    setEditCanAccessProduction(!!(profile as any).can_access_production);
 
     // Fetch roles for this user
     const { data: roles } = await supabase
@@ -146,6 +148,7 @@ export function ProfileView() {
         avatar_color: editColor,
         display_name: displayName,
         can_access_crm: editCanAccessCrm,
+        can_access_production: editCanAccessProduction,
       } as any)
       .eq('id', editingProfile.id);
 
@@ -369,6 +372,13 @@ export function ProfileView() {
                 <p className="text-xs text-muted-foreground">Ser CRM-läget och all CRM-data, men kan inte redigera andra användares behörigheter</p>
               </div>
               <Switch checked={editCanAccessCrm} onCheckedChange={setEditCanAccessCrm} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm">Åtkomst produktionsflöden</Label>
+                <p className="text-xs text-muted-foreground">Ser modulen för att visualisera och optimera produktionsflöden</p>
+              </div>
+              <Switch checked={editCanAccessProduction} onCheckedChange={setEditCanAccessProduction} />
             </div>
           </div>
           <DialogFooter>

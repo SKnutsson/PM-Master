@@ -12,9 +12,10 @@ export interface UserProfile {
   user_role: string | null;
   can_access_crm?: boolean | null;
   linked_salesperson?: string | null;
+  can_access_production?: boolean | null;
 }
 
-const SELECT_COLS = 'id, user_id, first_name, last_name, display_name, avatar_color, phone, user_role, can_access_crm, linked_salesperson';
+const SELECT_COLS = 'id, user_id, first_name, last_name, display_name, avatar_color, phone, user_role, can_access_crm, linked_salesperson, can_access_production';
 
 export function useProfiles() {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);

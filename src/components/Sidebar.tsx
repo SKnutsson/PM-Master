@@ -34,7 +34,8 @@ export type View =
   | 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources'
   | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks'
   | 'services' | 'ata'
-  | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats';
+  | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats'
+  | 'production';
 
 interface SidebarProps {
   currentView: View;
@@ -61,6 +62,9 @@ const crmMainItems = [
   { id: 'crm-stats' as View, label: 'Statistik', icon: PieChart },
 ];
 
+const productionTopItems = [{ id: 'production' as View, label: 'Flödeskarta', icon: LayoutDashboard }];
+const productionMainItems: { id: View; label: string; icon: any }[] = [];
+
 const bottomNavItems = [{ id: 'profile' as View, label: 'Profil', icon: UserCircle }];
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -70,8 +74,8 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const { mode } = useAppMode();
   const isDark = theme === 'dark';
 
-  const topItems = mode === 'crm' ? crmTopItems : pmTopItems;
-  const mainItems = mode === 'crm' ? crmMainItems : pmMainItems;
+  const topItems = mode === 'crm' ? crmTopItems : mode === 'production' ? productionTopItems : pmTopItems;
+  const mainItems = mode === 'crm' ? crmMainItems : mode === 'production' ? productionMainItems : pmMainItems;
 
   const renderNavItem = (item: { id: View; label: string; icon: any }) => {
     const isActive = currentView === item.id;

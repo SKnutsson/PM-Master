@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type AppMode = 'pm' | 'crm';
+export type AppMode = 'pm' | 'crm' | 'production';
 
 interface AppModeCtx {
   mode: AppMode;
