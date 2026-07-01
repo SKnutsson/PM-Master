@@ -69,7 +69,7 @@ export function FactoryCanvasInner({
         id: o.id,
         type: 'object',
         position: { x: o.x, y: o.y },
-        data: o,
+        data: o as unknown as Record<string, unknown>,
         width: o.width,
         height: o.height,
         draggable: !o.locked,
@@ -87,7 +87,7 @@ export function FactoryCanvasInner({
           source: f.source_object_id!,
           target: f.target_object_id!,
           type: 'smoothstep',
-          data: f,
+          data: f as unknown as Record<string, unknown>,
           ...edgeStyle(f),
         })),
     [flows]
