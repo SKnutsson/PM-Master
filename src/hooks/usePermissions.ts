@@ -6,6 +6,7 @@ export interface Permissions {
   isAdmin: boolean;
   isSalesManager: boolean;
   canAccessCrm: boolean;
+  canAccessProduction: boolean;
   canSeeAllSalespeople: boolean;
   linkedSalesperson: string | null;
   loading: boolean;
@@ -17,6 +18,7 @@ export function usePermissions(): Permissions {
     isAdmin: false,
     isSalesManager: false,
     canAccessCrm: false,
+    canAccessProduction: false,
     canSeeAllSalespeople: false,
     linkedSalesperson: null,
     loading: true,
@@ -33,7 +35,7 @@ export function usePermissions(): Permissions {
         supabase.from('user_roles').select('role').eq('user_id', user.id),
         supabase
           .from('profiles')
-          .select('can_access_crm, linked_salesperson')
+          .select('can_access_crm, linked_salesperson, can_access_production')
           .eq('user_id', user.id)
           .maybeSingle(),
       ]);
@@ -42,10 +44,12 @@ export function usePermissions(): Permissions {
       const isAdmin = roles.includes('admin');
       const isSalesManager = roles.includes('sales_manager');
       const canAccessCrm = isAdmin || !!(profileRes.data as any)?.can_access_crm;
+      const canAccessProduction = isAdmin || !!(profileRes.data as any)?.can_access_production;
       setState({
         isAdmin,
         isSalesManager,
         canAccessCrm,
+        canAccessProduction,
         canSeeAllSalespeople: canAccessCrm,
         linkedSalesperson: (profileRes.data as any)?.linked_salesperson || null,
         loading: false,
