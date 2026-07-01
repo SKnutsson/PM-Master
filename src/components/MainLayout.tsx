@@ -15,16 +15,19 @@ import { CrmDashboard } from './crm/CrmDashboard';
 import { CrmQuotesView } from './crm/CrmQuotesView';
 import { CrmCustomersView } from './crm/CrmCustomersView';
 import { CrmStatsView } from './crm/CrmStatsView';
+import { ProductionModule } from './production/ProductionModule';
 import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 import { useAppMode } from '@/contexts/AppModeContext';
 
 export function MainLayout() {
   const { mode } = useAppMode();
-  const [currentView, setCurrentView] = useState<View>(mode === 'crm' ? 'crm-dashboard' : 'dashboard');
+  const [currentView, setCurrentView] = useState<View>(
+    mode === 'crm' ? 'crm-dashboard' : mode === 'production' ? 'production' : 'dashboard'
+  );
 
-  // When mode changes, jump to that mode's dashboard
+  // When mode changes, jump to that mode's default view
   useEffect(() => {
-    setCurrentView(mode === 'crm' ? 'crm-dashboard' : 'dashboard');
+    setCurrentView(mode === 'crm' ? 'crm-dashboard' : mode === 'production' ? 'production' : 'dashboard');
   }, [mode]);
 
   const renderView = () => {
@@ -44,6 +47,7 @@ export function MainLayout() {
       case 'crm-quotes': return <CrmQuotesView />;
       case 'crm-customers': return <CrmCustomersView />;
       case 'crm-stats': return <CrmStatsView />;
+      case 'production': return <ProductionModule />;
       default: return <Dashboard />;
     }
   };
