@@ -715,9 +715,13 @@ export type Database = {
       production_factories: {
         Row: {
           blueprint_height: number | null
+          blueprint_locked: boolean
+          blueprint_opacity: number
           blueprint_scale: number
           blueprint_url: string | null
           blueprint_width: number | null
+          blueprint_x: number
+          blueprint_y: number
           color: string
           created_at: string
           id: string
@@ -730,9 +734,13 @@ export type Database = {
         }
         Insert: {
           blueprint_height?: number | null
+          blueprint_locked?: boolean
+          blueprint_opacity?: number
           blueprint_scale?: number
           blueprint_url?: string | null
           blueprint_width?: number | null
+          blueprint_x?: number
+          blueprint_y?: number
           color?: string
           created_at?: string
           id?: string
@@ -745,9 +753,13 @@ export type Database = {
         }
         Update: {
           blueprint_height?: number | null
+          blueprint_locked?: boolean
+          blueprint_opacity?: number
           blueprint_scale?: number
           blueprint_url?: string | null
           blueprint_width?: number | null
+          blueprint_x?: number
+          blueprint_y?: number
           color?: string
           created_at?: string
           id?: string
@@ -780,6 +792,7 @@ export type Database = {
           label: string | null
           lead_time: number | null
           project_id: string
+          routing: string
           source_factory_id: string | null
           source_object_id: string | null
           target_factory_id: string | null
@@ -798,6 +811,7 @@ export type Database = {
           label?: string | null
           lead_time?: number | null
           project_id: string
+          routing?: string
           source_factory_id?: string | null
           source_object_id?: string | null
           target_factory_id?: string | null
@@ -816,6 +830,7 @@ export type Database = {
           label?: string | null
           lead_time?: number | null
           project_id?: string
+          routing?: string
           source_factory_id?: string | null
           source_object_id?: string | null
           target_factory_id?: string | null
@@ -863,6 +878,8 @@ export type Database = {
       }
       production_objects: {
         Row: {
+          border_color: string | null
+          border_width: number
           category: string | null
           color: string
           created_at: string
@@ -874,6 +891,7 @@ export type Database = {
           locked: boolean
           name: string
           rotation: number
+          shape: string
           type: string
           updated_at: string
           width: number
@@ -881,6 +899,8 @@ export type Database = {
           y: number
         }
         Insert: {
+          border_color?: string | null
+          border_width?: number
           category?: string | null
           color?: string
           created_at?: string
@@ -892,6 +912,7 @@ export type Database = {
           locked?: boolean
           name: string
           rotation?: number
+          shape?: string
           type?: string
           updated_at?: string
           width?: number
@@ -899,6 +920,8 @@ export type Database = {
           y?: number
         }
         Update: {
+          border_color?: string | null
+          border_width?: number
           category?: string | null
           color?: string
           created_at?: string
@@ -910,6 +933,7 @@ export type Database = {
           locked?: boolean
           name?: string
           rotation?: number
+          shape?: string
           type?: string
           updated_at?: string
           width?: number
