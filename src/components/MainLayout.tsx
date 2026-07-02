@@ -30,6 +30,14 @@ export function MainLayout() {
     setCurrentView(mode === 'crm' ? 'crm-dashboard' : mode === 'production' ? 'production' : 'dashboard');
   }, [mode]);
 
+  // Apply theme class on <html> per module (blue for production)
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('theme-production', mode === 'production');
+    return () => { root.classList.remove('theme-production'); };
+  }, [mode]);
+
+
   const renderView = () => {
     switch (currentView) {
       case 'dashboard': return <Dashboard />;

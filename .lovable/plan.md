@@ -1,86 +1,69 @@
-## Mål
+# Produktionsmodulen v2 – "Google Maps för produktionsflöden"
 
-Adminanvändare ska kunna styra:
-1. Vem som är **admin**
-2. Vem som har tillgång till **CRM-modulen**
-3. Vem som är **försäljningschef** (får se alla säljares hitrate + filtrera per säljare)
-4. Vilken **säljare** en användare är kopplad till (för att kunna visa "egen data")
+Bygger om hela produktionsmodulen med en gemensam zoom/pan-canvas där ritning, produktionsgrupper och flöden lever i samma koordinatsystem. Byter också modultema till blått + Alfing-logga.
 
-Övriga regler:
-- Admin ser allt.
-- Försäljningschef ser hitrate/statistik för alla säljare och kan filtrera.
-- Vanlig CRM-användare ser bara sin egen hitrate/statistik (baserat på kopplad säljare).
-- Användare utan CRM-tillgång ser inte CRM-läget alls i sidebar/mode-switcher.
+## 1. Kritisk fix – gemensam canvas
+- Ersätter dagens CSS-bakgrund med en **bakgrundsnod (BlueprintNode)** i React Flow som ligger på egen låg z-nivå men transformeras med samma viewport som alla andra noder.
+- Ritning, produktionsgrupper och flöden zoomar/panorerar synkroniserat. Ritningens storlek sätts i "canvas-enheter" (px i flow-space), inte i skärm-px.
+- PDF-uppladdningar renderas till PNG (via `pdfjs-dist`) innan de placeras som bakgrundsnod.
 
----
+## 2. Projekt & fabriksstruktur (behålls, städas upp)
+- Projektlista → workspace med **Översikt** + en flik per fabrik (som idag).
+- Fabrik: canvas + uppladdad ritning som bakgrundsnod. Ritningen kan skalas/positioneras separat en gång, sen är den låst i canvas-koordinater.
+- Översikt: fabriker som kort-noder, flöden mellan dem, dubbelklick zoomar in.
 
-## Databasändringar
+## 3. Produktionsgrupper (ersätter station/maskin/avdelning)
+- Ny node-typ `ProductionGroupNode`.
+- Metadata: `type` (svets, montering, lager, kontroll, inleverans, utleverans, övrigt), `capacity` (st/h), `cycle_time` (s), `staffing`, `status`.
+- Fri storleksändring (resize-handles), formval: **rektangel / rundad / cirkel / pill**, färg, kantlinje, ikon.
+- Snap-to-grid (togglebart), inline-redigering av namn (dubbelklick).
 
-**1. Utöka `app_role` enum:**
-- Lägg till `sales_manager` (försäljningschef).
-- Admin finns redan.
+## 4. Flöden
+- Dra mellan grupper → skapar riktad pil. Fästpunkter på alla fyra sidor.
+- Metadata: volym, frekvens, ledtid, batchstorlek, typ (material/info/transport).
+- Linjetjocklek skalas med volym; färg per typ; auto-routing via `smoothstep`/`step` med kant-offset så linjer inte överlappar.
+- Flöden mellan fabriker: skapas antingen från Översikt eller genom att markera en grupp som "extern" (visas i detaljvyn med brutet snitt).
 
-**2. Ny kolumn på `profiles`:**
-- `can_access_crm boolean default false` – styr om CRM-läget syns.
-- `linked_salesperson text` – namnet på säljaren i CRM (t.ex. "Mikael", "Martin", "Samuel"). Matchas mot `crm_quotes.salesperson`.
+## 5. Interaktion & UX
+- Zoom med scroll (smooth), pan med space+drag ELLER mellanmusknapp.
+- Högerklicksmeny på canvas (skapa grupp) och på nod (duplicera, radera, lås, färg, form).
+- **Undo/Redo** via lokal history-stack (Cmd/Ctrl+Z, Shift+Z).
+- **Copy/Paste** (Cmd/Ctrl+C/V) för valda noder.
+- Auto-save (debounced 500 ms mot Cloud, som idag).
 
-**3. RLS på `user_roles`:**
-- Admin får full kontroll (finns redan).
-- Lägg till säkerhetsdefinierad funktion `is_admin(uuid)` om den saknas (vi har `has_role` – återanvänd).
+## 6. Filter & analys
+- Sidopanel: filtrera på typ, fabrik, flödestyp; toggles för att dölja flöden/metadata.
+- Auto-flaskhals: om summa inkommande volym > kapacitet → status blir röd (överbelastning), 80–100 % gult, annars grönt. Ring runt noden + badge.
 
-Inga grants behövs på befintliga tabeller (de finns redan).
+## 7. Play mode (simulering)
+- Toolbar-knapp "▶ Play". Animerar pulserande punkter längs varje flödeslinje med hastighet baserad på `lead_time` och `volume`.
+- Kontroller: pausa, hastighet (0.5x/1x/2x/4x), starta om.
+- Vid flaskhals byggs en visuell "kö" (staplade punkter) upp innan noden.
 
----
+## 8. Design/tema-switch
+- När `mode === 'production'`:
+  - primary token skiftar till **mörkblå** (matchar Alfing-loggan, ~`#18324A`/`#1E4C7A`).
+  - Sidebar-logga byts från "Alfing Seating" till "Alfing".
+- Sparar Alfing-loggan som asset via lovable-assets CLI från den uppladdade bilden.
+- Ingen påverkan på PM/CRM-läge.
 
-## Frontend
+## 9. Databas
+Lägger till fält på befintliga tabeller (ingen ny tabell behövs):
+- `production_factories`: `blueprint_offset_x`, `blueprint_offset_y`, `blueprint_scale_x`, `blueprint_scale_y` (position/skala i canvas-koordinater).
+- `production_objects`: `shape` (`rect|rounded|circle|pill`), `border_color`, `border_width`. `type`-enum utökas med `production_group`; gamla typer mappas visuellt till samma nod.
+- `production_flows`: `routing` (`smoothstep|step|bezier`), inget mer nödvändigt.
 
-**Ny hook `usePermissions()`** (`src/hooks/usePermissions.ts`):
-Returnerar `{ isAdmin, isSalesManager, canAccessCrm, linkedSalesperson, canSeeAllSalespeople }`.
-- `canSeeAllSalespeople = isAdmin || isSalesManager`
+## Tekniska detaljer
+- Node-typer: `blueprint`, `productionGroup`, `factory` (översikt).
+- Egen `NodeResizer` från `@xyflow/react`.
+- History-stack: array av snapshots av `{objects, flows}` (max 50).
+- PDF→bild: `pdfjs-dist` (redan lätt att lägga till).
+- Play-mode animation: SVG `<circle>` med `animateMotion` längs edge-path, alt. `requestAnimationFrame` som räknar position längs path.
 
-**`ModeSwitcher` / `Sidebar`:**
-- Dölj CRM-tabben om `!canAccessCrm && !isAdmin`.
-- Om användaren bara har CRM, dölj projektledningstabben (valfritt – kan diskuteras).
+## Vad som INTE ingår i denna iteration
+- Versionshistorik-UI (data-modellen finns, men UI görs senare).
+- Kommentarer på canvas (samma – tabellen finns).
+- What-if scenario-editor (kräver egen UI-flow, tas separat).
+- Realtids-collab (flera användare samtidigt).
 
-**`CrmStatsView`:**
-- Lägg till säljarfilter (dropdown: Alla / Mikael / Martin / Samuel) – syns bara om `canSeeAllSalespeople`.
-- Om inte → filtrera all data till `linkedSalesperson` och dölj "Win rate per säljare"-diagrammet (eller visa endast egen stapel).
-
-**`CrmDashboard` / `SalesOverviewPanel`:**
-- Samma filtreringslogik på offert- och orderdata.
-
-**`ProfileView` – admin-sektion utökas:**
-För varje användare visa toggles/inputs:
-- Switch: **Admin**
-- Switch: **Försäljningschef**
-- Switch: **Tillgång till CRM**
-- Dropdown: **Kopplad säljare** (Mikael / Martin / Samuel / Ingen)
-
-Admin sparar via uppdatering av `profiles` + `user_roles` (insert/delete rader).
-
----
-
-## Teknisk översikt
-
-```text
-profiles
-  ├── can_access_crm  (bool)
-  └── linked_salesperson (text)
-
-user_roles  (en rad per roll per user)
-  └── role: 'admin' | 'sales_manager' | 'user'
-
-usePermissions()  →  styr UI + datafiltrering
-```
-
-Filtreringen sker **klient-sida** på redan hämtad CRM-data (RLS lämnas öppen för authenticated – samma som idag, för att inte bryta delade vyer). Om hård säkerhet på radnivå behövs senare kan vi lägga till det.
-
----
-
-## Steg
-
-1. Migration: utöka enum, lägg till kolumner på `profiles`.
-2. Skapa `usePermissions` hook.
-3. Uppdatera `ProfileView` admin-sektion med nya toggles + säljarkoppling.
-4. Uppdatera `ModeSwitcher` / `Sidebar` att respektera `canAccessCrm`.
-5. Filtrera `CrmStatsView`, `CrmDashboard`, `SalesOverviewPanel` efter `linkedSalesperson` när chef-rätt saknas; lägg till säljarfilter för chefer/admin.
+Säg till om något av dessa ska in i denna runda istället, annars kör jag enligt planen ovan.
