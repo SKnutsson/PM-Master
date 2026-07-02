@@ -6,6 +6,8 @@ import { useTheme } from 'next-themes';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { ModeSwitcher } from './ModeSwitcher';
 import alfingLogo from '@/assets/alfing-seating-logo-green.png';
+import alfingDarkLogo from '@/assets/alfing-logo-dark.png.asset.json';
+
 import {
   LayoutDashboard,
   FolderKanban,
