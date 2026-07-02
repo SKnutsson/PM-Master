@@ -121,12 +121,16 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       className="relative flex h-screen flex-col border-r border-sidebar-border bg-sidebar">
 
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
+      <div className={cn(
+        "flex h-16 items-center gap-3 border-b border-sidebar-border px-4",
+        mode === 'production' && "bg-[hsl(210_55%_10%)]"
+      )}>
         <img
-          src={alfingLogo}
-          alt="Alfing Seating"
-          className={cn("shrink-0 rounded object-cover", isCollapsed ? "h-9 w-9" : "h-9 w-auto max-w-[140px]")} />
+          src={mode === 'production' ? alfingDarkLogo.url : alfingLogo}
+          alt="Alfing"
+          className={cn("shrink-0 rounded object-contain", isCollapsed ? "h-9 w-9" : "h-9 w-auto max-w-[140px]")} />
       </div>
+
 
       {/* Mode switcher */}
       <div className="px-3 pt-3">
