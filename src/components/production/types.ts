@@ -15,17 +15,40 @@ export interface ProductionFactory {
   blueprint_width: number | null;
   blueprint_height: number | null;
   blueprint_scale: number;
+  // canvas-space blueprint transform (v2)
+  blueprint_x: number;
+  blueprint_y: number;
+  blueprint_opacity: number;
+  blueprint_locked: boolean;
   overview_x: number;
   overview_y: number;
   color: string;
   order_index: number;
 }
 
-export type ObjectKind = 'station' | 'machine' | 'storage' | 'group';
+export type ObjectKind =
+  | 'production_group'
+  // legacy — still stored, rendered as production groups
+  | 'station' | 'machine' | 'storage' | 'group';
+
+export type GroupShape = 'rect' | 'rounded' | 'circle' | 'pill';
+
+export const GROUP_TYPES = [
+  { value: 'welding', label: 'Svets' },
+  { value: 'assembly', label: 'Montering' },
+  { value: 'machining', label: 'Bearbetning' },
+  { value: 'storage', label: 'Lager' },
+  { value: 'quality', label: 'Kvalitetskontroll' },
+  { value: 'inbound', label: 'Inleverans' },
+  { value: 'outbound', label: 'Utleverans' },
+  { value: 'packing', label: 'Packning' },
+  { value: 'other', label: 'Övrigt' },
+] as const;
 
 export interface ObjectData {
-  capacity?: number;      // st/tim
-  cycle_time?: number;    // sekunder
+  group_type?: string;     // welding/assembly/…
+  capacity?: number;       // st/h
+  cycle_time?: number;     // sekunder
   staffing?: number;
   status?: 'ok' | 'warning' | 'bottleneck';
   note?: string;
@@ -45,6 +68,9 @@ export interface ProductionObject {
   height: number;
   rotation: number;
   locked: boolean;
+  shape: GroupShape;
+  border_color: string | null;
+  border_width: number;
   data: ObjectData;
 }
 
@@ -62,6 +88,7 @@ export interface ProductionFlow {
   lead_time: number | null;
   batch_size: number | null;
   color: string;
+  routing: 'smoothstep' | 'step' | 'bezier';
   data: Record<string, any>;
 }
 
@@ -77,14 +104,8 @@ export interface ProductionComment {
   created_at: string;
 }
 
-export const OBJECT_PRESETS: {
-  type: ObjectKind;
-  label: string;
-  icon: string;
-  color: string;
-}[] = [
-  { type: 'station', label: 'Station', icon: 'wrench', color: '#1C7F72' },
-  { type: 'machine', label: 'Maskin', icon: 'cog', color: '#18323A' },
-  { type: 'storage', label: 'Lager', icon: 'package', color: '#92AE9D' },
-  { type: 'group', label: 'Avdelning', icon: 'layers', color: '#5C7A6B' },
-];
+export const FLOW_COLORS = {
+  material: '#1E4C7A',
+  transport: '#F59E0B',
+  info: '#8B5CF6',
+} as const;
