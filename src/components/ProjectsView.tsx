@@ -38,6 +38,7 @@ interface ProjectCardProps {
   onRestoreProject?: (projectId: string) => void;
   onUpdateProject: (projectId: string, updates: Partial<Project>) => Promise<void>;
   isArchived?: boolean;
+  isAdmin: boolean;
 }
 
 function MetaCell({ icon: Icon, value }: { icon: any; value?: string }) {
@@ -49,10 +50,13 @@ function MetaCell({ icon: Icon, value }: { icon: any; value?: string }) {
   );
 }
 
-function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived }: ProjectCardProps) {
+function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived, isAdmin }: ProjectCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [generatingReport, setGeneratingReport] = useState(false);
   const [editData, setEditData] = useState({
     customer: project.customer || '',
     projectManager: project.projectManager || '',
@@ -62,10 +66,28 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
     notes: project.notes || ''
   });
 
-  const handleDeleteProject = (e: React.MouseEvent) => {
+  const handleOpenDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Är du säker på att du vill ta bort projektet "${project.code} - ${project.name}"?`)) {
-      onDeleteProject(project.id);
+    setConfirmText('');
+    setDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDeleteProject(project.id);
+    setDeleteOpen(false);
+    toast.success(`Projekt ${project.code} borttaget`);
+  };
+
+  const handleGenerateReport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setGeneratingReport(true);
+    try {
+      await generateProjectReport(project);
+      toast.success('Rapport genererad');
+    } catch (err: any) {
+      toast.error('Kunde inte skapa rapport: ' + (err?.message || 'okänt fel'));
+    } finally {
+      setGeneratingReport(false);
     }
   };
 
