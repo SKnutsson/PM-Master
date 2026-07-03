@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil, FolderOpen, FolderArchive, MapPin, Loader2, Briefcase } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil, FolderOpen, FolderArchive, MapPin, Loader2, Briefcase, FileDown, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Project } from '@/data/projectData';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { ProjectTasksList } from './ProjectTasksList';
 import { geocodeAddress } from '@/lib/geocode';
+import { generateProjectReport } from '@/lib/projectReport';
+import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
