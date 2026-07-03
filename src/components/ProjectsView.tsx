@@ -193,9 +193,16 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
                   <Archive className="h-3.5 w-3.5" />
                 </Button>
               )}
-              <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleDeleteProject} title="Ta bort">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {isAdmin && (
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleGenerateReport} disabled={generatingReport} title="Ladda ner PDF-rapport">
+                  {generatingReport ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
+                </Button>
+              )}
+              {isAdmin && (
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleOpenDelete} title="Ta bort projekt (permanent)">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           </div>
 
