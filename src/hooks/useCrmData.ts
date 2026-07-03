@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { debounce } from '@/lib/utils';
 
 export interface CrmQuote {
   id: string;
@@ -66,11 +67,12 @@ export function useCrmData() {
 
   useEffect(() => {
     refresh();
+    const debouncedRefresh = debounce(() => refresh(), 1500);
     const ch = supabase
       .channel('crm-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_quotes' }, () => refresh())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_customers' }, () => refresh())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_contacts' }, () => refresh())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_quotes' }, debouncedRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_customers' }, debouncedRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_contacts' }, debouncedRefresh)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);
