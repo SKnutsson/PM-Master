@@ -385,6 +385,7 @@ export function ProjectsView() {
             onRestoreProject={isArchived ? handleRestore : undefined}
             onUpdateProject={updateProject}
             isArchived={isArchived}
+            isAdmin={isAdmin}
           />
         ))}
       </AnimatePresence>
