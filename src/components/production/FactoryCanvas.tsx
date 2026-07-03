@@ -448,6 +448,8 @@ function FactoryCanvasInner({
               />
               Snap-to-grid
             </label>
+            <div className="mx-1 h-6 w-px bg-slate-200" />
+            <span className="text-[11px] text-slate-500">Tips: markera en grupp för att skala. Dra från kanten (blå prick) för att skapa pil.</span>
           </div>
         </Panel>
       </ReactFlow>
