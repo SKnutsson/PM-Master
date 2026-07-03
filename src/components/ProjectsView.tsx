@@ -345,6 +345,7 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
 
 export function ProjectsView() {
   const { projects, deleteProject, updateProject } = useProjectDataContext();
+  const { isAdmin } = usePermissions();
 
   const activeProjects = projects.filter((p) => p.status !== 'Avslutat');
   const archivedProjects = projects.filter((p) => p.status === 'Avslutat');
