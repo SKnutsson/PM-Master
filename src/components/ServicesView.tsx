@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { debounce } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -102,9 +103,10 @@ export function ServicesView() {
 
   useEffect(() => { loadAll(); }, []);
   useEffect(() => {
+    const dLoadAll = debounce(() => loadAll(), 1500);
     const ch = supabase.channel('services-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, loadAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_contracts' }, loadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, dLoadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_contracts' }, dLoadAll)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, []);

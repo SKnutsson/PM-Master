@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { debounce } from '@/lib/utils';
 import { 
   projects as initialProjects, 
   salesForecast as initialForecast,
@@ -69,35 +70,27 @@ export function useDatabaseData() {
   // Load initial data from database
   useEffect(() => {
     loadData();
-    
+
+    // Debounce refetches so bursty auto-save writes don't trigger a query per keystroke
+    const reloadForecasts = debounce(() => loadForecasts(), 1500);
+    const reloadForecastEvents = debounce(() => loadForecastEvents(), 1500);
+    const reloadSalesTargets = debounce(() => loadSalesTargets(), 1500);
+    const reloadProjects = debounce(() => loadProjects(), 1500);
+
     // Set up realtime subscriptions
     const forecastChannel = supabase
       .channel('forecasts-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'forecasts' }, () => {
-        loadForecasts();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'forecast_months' }, () => {
-        loadForecasts();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_history' }, () => {
-        loadForecasts();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'forecast_events' }, () => {
-        loadForecastEvents();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_targets' }, () => {
-        loadSalesTargets();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'forecasts' }, reloadForecasts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'forecast_months' }, reloadForecasts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_history' }, reloadForecasts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'forecast_events' }, reloadForecastEvents)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_targets' }, reloadSalesTargets)
       .subscribe();
 
     const projectsChannel = supabase
       .channel('projects-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
-        loadProjects();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () => {
-        loadProjects();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, reloadProjects)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, reloadProjects)
       .subscribe();
 
     return () => {

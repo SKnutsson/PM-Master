@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { debounce } from '@/lib/utils';
 
 export interface Installer {
   id: string;
@@ -103,12 +104,16 @@ export function useResourceData() {
 
   useEffect(() => {
     loadAll();
+    const dInstallers = debounce(() => loadInstallers(), 1500);
+    const dEstimations = debounce(() => loadEstimations(), 1500);
+    const dProjectInstallers = debounce(() => loadProjectInstallers(), 1500);
+    const dDailyEntries = debounce(() => loadDailyEntries(), 1500);
     const channel = supabase
       .channel('resource-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'installers' }, () => loadInstallers())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'resource_estimations' }, () => loadEstimations())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_installers' }, () => loadProjectInstallers())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_resource_entries' }, () => loadDailyEntries())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'installers' }, dInstallers)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'resource_estimations' }, dEstimations)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_installers' }, dProjectInstallers)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_resource_entries' }, dDailyEntries)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
