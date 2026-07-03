@@ -302,6 +302,43 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
           )}
         </AnimatePresence>
       </Card>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Radera projekt permanent?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Du är på väg att radera <strong>{project.code} – {project.name}</strong> och
+                  <strong> all tillhörande data</strong> (aktiviteter, resursplan, dokumentation, ÄTA, avvikelser, KPI).
+                </p>
+                <p className="font-semibold text-destructive">Detta går inte att ångra.</p>
+                <p className="text-sm">Skriv projektets nummer <code className="rounded bg-muted px-1.5 py-0.5">{project.code}</code> för att bekräfta:</p>
+                <Input
+                  autoFocus
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder={project.code}
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={confirmText.trim() !== project.code}
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Radera permanent
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
