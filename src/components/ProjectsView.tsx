@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil, FolderOpen, FolderArchive, MapPin, Loader2, Briefcase } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, Archive, RotateCcw, User, ShoppingBag, FileText, Pencil, FolderOpen, FolderArchive, MapPin, Loader2, Briefcase, FileDown, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Project } from '@/data/projectData';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { ProjectTasksList } from './ProjectTasksList';
 import { geocodeAddress } from '@/lib/geocode';
+import { generateProjectReport } from '@/lib/projectReport';
+import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +38,7 @@ interface ProjectCardProps {
   onRestoreProject?: (projectId: string) => void;
   onUpdateProject: (projectId: string, updates: Partial<Project>) => Promise<void>;
   isArchived?: boolean;
+  isAdmin: boolean;
 }
 
 function MetaCell({ icon: Icon, value }: { icon: any; value?: string }) {
@@ -46,10 +50,13 @@ function MetaCell({ icon: Icon, value }: { icon: any; value?: string }) {
   );
 }
 
-function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived }: ProjectCardProps) {
+function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProject, onUpdateProject, isArchived, isAdmin }: ProjectCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [generatingReport, setGeneratingReport] = useState(false);
   const [editData, setEditData] = useState({
     customer: project.customer || '',
     projectManager: project.projectManager || '',
@@ -59,10 +66,28 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
     notes: project.notes || ''
   });
 
-  const handleDeleteProject = (e: React.MouseEvent) => {
+  const handleOpenDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Är du säker på att du vill ta bort projektet "${project.code} - ${project.name}"?`)) {
-      onDeleteProject(project.id);
+    setConfirmText('');
+    setDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDeleteProject(project.id);
+    setDeleteOpen(false);
+    toast.success(`Projekt ${project.code} borttaget`);
+  };
+
+  const handleGenerateReport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setGeneratingReport(true);
+    try {
+      await generateProjectReport(project);
+      toast.success('Rapport genererad');
+    } catch (err: any) {
+      toast.error('Kunde inte skapa rapport: ' + (err?.message || 'okänt fel'));
+    } finally {
+      setGeneratingReport(false);
     }
   };
 
@@ -168,9 +193,16 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
                   <Archive className="h-3.5 w-3.5" />
                 </Button>
               )}
-              <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleDeleteProject} title="Ta bort">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {isAdmin && (
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleGenerateReport} disabled={generatingReport} title="Ladda ner PDF-rapport">
+                  {generatingReport ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
+                </Button>
+              )}
+              {isAdmin && (
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleOpenDelete} title="Ta bort projekt (permanent)">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -270,12 +302,50 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
           )}
         </AnimatePresence>
       </Card>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Radera projekt permanent?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Du är på väg att radera <strong>{project.code} – {project.name}</strong> och
+                  <strong> all tillhörande data</strong> (aktiviteter, resursplan, dokumentation, ÄTA, avvikelser, KPI).
+                </p>
+                <p className="font-semibold text-destructive">Detta går inte att ångra.</p>
+                <p className="text-sm">Skriv projektets nummer <code className="rounded bg-muted px-1.5 py-0.5">{project.code}</code> för att bekräfta:</p>
+                <Input
+                  autoFocus
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder={project.code}
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={confirmText.trim() !== project.code}
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Radera permanent
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
 
 export function ProjectsView() {
   const { projects, deleteProject, updateProject } = useProjectDataContext();
+  const { isAdmin } = usePermissions();
 
   const activeProjects = projects.filter((p) => p.status !== 'Avslutat');
   const archivedProjects = projects.filter((p) => p.status === 'Avslutat');
@@ -315,6 +385,7 @@ export function ProjectsView() {
             onRestoreProject={isArchived ? handleRestore : undefined}
             onUpdateProject={updateProject}
             isArchived={isArchived}
+            isAdmin={isAdmin}
           />
         ))}
       </AnimatePresence>

@@ -56,10 +56,10 @@ export const ProductionGroupNode = memo(({ data, selected }: NodeProps) => {
           borderStyle: 'solid',
         }}
       >
-        <Handle type="target" position={Position.Left}   style={{ background: d.color, width: 8, height: 8 }} />
-        <Handle type="source" position={Position.Right}  style={{ background: d.color, width: 8, height: 8 }} />
-        <Handle type="target" position={Position.Top}    style={{ background: d.color, width: 8, height: 8 }} id="t" />
-        <Handle type="source" position={Position.Bottom} style={{ background: d.color, width: 8, height: 8 }} id="b" />
+        <Handle type="target" position={Position.Left}   style={{ background: d.color, width: 12, height: 12, border: '2px solid white' }} />
+        <Handle type="source" position={Position.Right}  style={{ background: d.color, width: 12, height: 12, border: '2px solid white' }} />
+        <Handle type="target" position={Position.Top}    style={{ background: d.color, width: 12, height: 12, border: '2px solid white' }} id="t" />
+        <Handle type="source" position={Position.Bottom} style={{ background: d.color, width: 12, height: 12, border: '2px solid white' }} id="b" />
 
         <div
           className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold text-white"
