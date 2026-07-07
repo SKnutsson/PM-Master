@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { debounce } from '@/lib/utils';
+
 
 export interface CrmQuote {
   id: string;
@@ -67,15 +67,22 @@ export function useCrmData() {
 
   useEffect(() => {
     refresh();
-    const debouncedRefresh = debounce(() => refresh(), 1500);
-    const ch = supabase
-      .channel('crm-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_quotes' }, debouncedRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_customers' }, debouncedRefresh)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_contacts' }, debouncedRefresh)
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    // Realtime removed to minimize Cloud usage. Refetch on focus (throttled).
+    let last = Date.now();
+    const maybe = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - last < 60_000) return;
+      last = Date.now();
+      refresh();
+    };
+    window.addEventListener('focus', maybe);
+    document.addEventListener('visibilitychange', maybe);
+    return () => {
+      window.removeEventListener('focus', maybe);
+      document.removeEventListener('visibilitychange', maybe);
+    };
   }, []);
+
 
   return { quotes, customers, contacts, loading, refresh };
 }
