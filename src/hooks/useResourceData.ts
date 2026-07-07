@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { debounce } from '@/lib/utils';
+
 
 export interface Installer {
   id: string;
