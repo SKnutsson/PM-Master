@@ -104,19 +104,22 @@ export function useResourceData() {
 
   useEffect(() => {
     loadAll();
-    const dInstallers = debounce(() => loadInstallers(), 1500);
-    const dEstimations = debounce(() => loadEstimations(), 1500);
-    const dProjectInstallers = debounce(() => loadProjectInstallers(), 1500);
-    const dDailyEntries = debounce(() => loadDailyEntries(), 1500);
-    const channel = supabase
-      .channel('resource-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'installers' }, dInstallers)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'resource_estimations' }, dEstimations)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'project_installers' }, dProjectInstallers)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_resource_entries' }, dDailyEntries)
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    // Realtime removed to minimize Cloud usage. Refetch on focus (throttled).
+    let last = Date.now();
+    const maybe = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - last < 60_000) return;
+      last = Date.now();
+      loadAll();
+    };
+    window.addEventListener('focus', maybe);
+    document.addEventListener('visibilitychange', maybe);
+    return () => {
+      window.removeEventListener('focus', maybe);
+      document.removeEventListener('visibilitychange', maybe);
+    };
   }, []);
+
 
   // Installer CRUD
   const addInstaller = useCallback(async (installer: Omit<Installer, 'id'>) => {
