@@ -1,69 +1,74 @@
-# Produktionsmodulen v2 – "Google Maps för produktionsflöden"
 
-Bygger om hela produktionsmodulen med en gemensam zoom/pan-canvas där ritning, produktionsgrupper och flöden lever i samma koordinatsystem. Byter också modultema till blått + Alfing-logga.
+## Diagnos av din nuvarande förbrukning
 
-## 1. Kritisk fix – gemensam canvas
-- Ersätter dagens CSS-bakgrund med en **bakgrundsnod (BlueprintNode)** i React Flow som ligger på egen låg z-nivå men transformeras med samma viewport som alla andra noder.
-- Ritning, produktionsgrupper och flöden zoomar/panorerar synkroniserat. Ritningens storlek sätts i "canvas-enheter" (px i flow-space), inte i skärm-px.
-- PDF-uppladdningar renderas till PNG (via `pdfjs-dist`) innan de placeras som bakgrundsnod.
+Denna billingperiod (juli): ca **26,9 credits** totalt, varav **cloud** står för **6,9 credits**. Nedbrytning:
 
-## 2. Projekt & fabriksstruktur (behålls, städas upp)
-- Projektlista → workspace med **Översikt** + en flik per fabrik (som idag).
-- Fabrik: canvas + uppladdad ritning som bakgrundsnod. Ritningen kan skalas/positioneras separat en gång, sen är den låst i canvas-koordinater.
-- Översikt: fabriker som kort-noder, flöden mellan dem, dubbelklick zoomar in.
+- **Cloud compute large: 6,91 credits** ← nästan hela cloud-kostnaden
+- Cloud egress: 0,012
+- Cloud realtime: 0,003
+- Cloud file storage / cached: försumbart
 
-## 3. Produktionsgrupper (ersätter station/maskin/avdelning)
-- Ny node-typ `ProductionGroupNode`.
-- Metadata: `type` (svets, montering, lager, kontroll, inleverans, utleverans, övrigt), `capacity` (st/h), `cycle_time` (s), `staffing`, `status`.
-- Fri storleksändring (resize-handles), formval: **rektangel / rundad / cirkel / pill**, färg, kantlinje, ikon.
-- Snap-to-grid (togglebart), inline-redigering av namn (dubbelklick).
+Resten av perioden (~20 credits) är byggkrediter (AI-meddelanden). Cloud-delen är alltså inte extrem — den stora hävstången är att **databasinstansen körs på "large"**.
 
-## 4. Flöden
-- Dra mellan grupper → skapar riktad pil. Fästpunkter på alla fyra sidor.
-- Metadata: volym, frekvens, ledtid, batchstorlek, typ (material/info/transport).
-- Linjetjocklek skalas med volym; färg per typ; auto-routing via `smoothstep`/`step` med kant-offset så linjer inte överlappar.
-- Flöden mellan fabriker: skapas antingen från Översikt eller genom att markera en grupp som "extern" (visas i detaljvyn med brutet snitt).
+## Rekommendation: minimera i stället för att självhosta
 
-## 5. Interaktion & UX
-- Zoom med scroll (smooth), pan med space+drag ELLER mellanmusknapp.
-- Högerklicksmeny på canvas (skapa grupp) och på nod (duplicera, radera, lås, färg, form).
-- **Undo/Redo** via lokal history-stack (Cmd/Ctrl+Z, Shift+Z).
-- **Copy/Paste** (Cmd/Ctrl+C/V) för valda noder.
-- Auto-save (debounced 500 ms mot Cloud, som idag).
+Självhosting kräver att du sätter upp egen Supabase (eller Postgres+Auth+Storage+Edge Functions), migrerar data, sköter backups, uppdateringar och säkerhet själv. För en app i produktion med admins och RLS är det en avsevärd löpande arbetsinsats. Innan vi går den vägen: minimera först — det räcker nästan alltid.
 
-## 6. Filter & analys
-- Sidopanel: filtrera på typ, fabrik, flödestyp; toggles för att dölja flöden/metadata.
-- Auto-flaskhals: om summa inkommande volym > kapacitet → status blir röd (överbelastning), 80–100 % gult, annars grönt. Ring runt noden + badge.
+### Steg 1 — Skala ner databasinstansen (störst effekt)
 
-## 7. Play mode (simulering)
-- Toolbar-knapp "▶ Play". Animerar pulserande punkter längs varje flödeslinje med hastighet baserad på `lead_time` och `volume`.
-- Kontroller: pausa, hastighet (0.5x/1x/2x/4x), starta om.
-- Vid flaskhals byggs en visuell "kö" (staplade punkter) upp innan noden.
+Byt från "large" till en mindre instans i Cloud → Overview → Advanced settings → Instance size. Baserat på din nuvarande last (låg egress, låg realtime) bör en mindre instans räcka med god marginal. Detta är den enskilt största besparingen — potentiellt 70–90 % av cloud-kostnaden.
 
-## 8. Design/tema-switch
-- När `mode === 'production'`:
-  - primary token skiftar till **mörkblå** (matchar Alfing-loggan, ~`#18324A`/`#1E4C7A`).
-  - Sidebar-logga byts från "Alfing Seating" till "Alfing".
-- Sparar Alfing-loggan som asset via lovable-assets CLI från den uppladdade bilden.
-- Ingen påverkan på PM/CRM-läge.
+Jag kan inte byta instansstorlek åt dig — det gör du själv i Cloud-panelen.
 
-## 9. Databas
-Lägger till fält på befintliga tabeller (ingen ny tabell behövs):
-- `production_factories`: `blueprint_offset_x`, `blueprint_offset_y`, `blueprint_scale_x`, `blueprint_scale_y` (position/skala i canvas-koordinater).
-- `production_objects`: `shape` (`rect|rounded|circle|pill`), `border_color`, `border_width`. `type`-enum utökas med `production_group`; gamla typer mappas visuellt till samma nod.
-- `production_flows`: `routing` (`smoothstep|step|bezier`), inget mer nödvändigt.
+### Steg 2 — Skär ner realtime-prenumerationer
 
-## Tekniska detaljer
-- Node-typer: `blueprint`, `productionGroup`, `factory` (översikt).
-- Egen `NodeResizer` från `@xyflow/react`.
-- History-stack: array av snapshots av `{objects, flows}` (max 50).
-- PDF→bild: `pdfjs-dist` (redan lätt att lägga till).
-- Play-mode animation: SVG `<circle>` med `animateMotion` längs edge-path, alt. `requestAnimationFrame` som räknar position längs path.
+Idag prenumererar appen på `postgres_changes` för många tabeller (CRM, resurser, databas-hooks). Även med debounce håller det en socket öppen och triggar refetch. Åtgärder:
 
-## Vad som INTE ingår i denna iteration
-- Versionshistorik-UI (data-modellen finns, men UI görs senare).
-- Kommentarer på canvas (samma – tabellen finns).
-- What-if scenario-editor (kräver egen UI-flow, tas separat).
-- Realtids-collab (flera användare samtidigt).
+- Ta bort realtime på tunga läshooks (`useCrmData`, `useResourceData`, `useDatabaseData`) och ersätt med manuell "Uppdatera"-knapp + refetch vid fönsterfokus.
+- Behåll realtime enbart på ytor där flera användare aktivt samredigerar (t.ex. produktionscanvas).
 
-Säg till om något av dessa ska in i denna runda istället, annars kör jag enligt planen ovan.
+### Steg 3 — Minska queryfrekvens och payload
+
+- Byt breda `select('*')` mot explicita kolumnlistor på de största tabellerna (`activities`, `daily_resource_entries`, `project_kpi_metrics`, `crm_quotes`).
+- Cache:a hooks med React Query (`staleTime` 5 min) i stället för att refetcha vid varje mount.
+- Ladda produktions-modulens tunga data (blueprints, factories) endast när modulen faktiskt öppnas (redan delvis så — verifiera).
+
+### Steg 4 — Radera gammal data
+
+Din nya "Radera projekt"-funktion för admins hjälper redan. Uppmuntra rensning av avslutade projekt + tillhörande `daily_resource_entries`, `activities`, `production_*`-rader.
+
+### Steg 5 — Ordna auto-topup / kredittak
+
+Sätt ett hårt månadstak i Settings → Plans & credits så att en bugg (t.ex. en oändlig useEffect-loop) inte kan dränera kontot.
+
+## Om du ändå vill självhosta
+
+Kort översikt så du vet vad det innebär:
+
+1. Skapa ett eget Supabase-konto (eller kör Supabase self-hosted via Docker).
+2. Exportera schema + data: Cloud → Advanced settings → Export data.
+3. Skapa nytt projekt, importera dump, kör alla `supabase/migrations/*.sql`.
+4. Skapa storage-buckets (`service-attachments`, `production-blueprints`) och ladda upp filer.
+5. Byt `VITE_SUPABASE_URL` och `VITE_SUPABASE_PUBLISHABLE_KEY` mot den nya instansens värden.
+6. Konfigurera Auth-providers, e-postmallar och redirect-URL på nytt.
+7. Hosta frontend någon annanstans (Vercel/Netlify/egen server) eftersom Lovable-hosting är kopplat till Lovable Cloud.
+
+Detta är en engångsflytt men innebär att du tar över drift och säkerhet.
+
+## Vad jag konkret gör i koden om du godkänner
+
+1. **`src/hooks/useCrmData.ts`** — ta bort realtime-kanalen, exponera `refresh()` + refetch på fönsterfokus.
+2. **`src/hooks/useResourceData.ts`** — samma; behåll `refresh()` som anropas av dialoger efter skrivningar.
+3. **`src/hooks/useDatabaseData.ts`** — samma mönster.
+4. **Explicita kolumner** i de största `select()`-anropen ovan.
+5. **React Query wrapping** där det ger mest (`useCrmData`, `useResourceData`) med `staleTime: 5 * 60_000`.
+6. **Instruktion i UI** (kort banner i inställningar) som påminner admin att radera avslutade projekt.
+
+Ingenting av detta ändrar funktionalitet — bara hur ofta klienten pratar med databasen.
+
+## Vad du själv gör parallellt
+
+- Sänk instansstorlek till "small" (eller "micro" om tillgängligt) i Cloud-panelen.
+- Sätt månadstak för cloud-usage i Settings.
+
+Vill du att jag kör steg 1–6 ovan?
