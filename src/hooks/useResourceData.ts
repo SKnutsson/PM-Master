@@ -104,20 +104,7 @@ export function useResourceData() {
 
   useEffect(() => {
     loadAll();
-    // Realtime removed to minimize Cloud usage. Refetch on focus (throttled).
-    let last = Date.now();
-    const maybe = () => {
-      if (document.visibilityState !== 'visible') return;
-      if (Date.now() - last < 60_000) return;
-      last = Date.now();
-      loadAll();
-    };
-    window.addEventListener('focus', maybe);
-    document.addEventListener('visibilitychange', maybe);
-    return () => {
-      window.removeEventListener('focus', maybe);
-      document.removeEventListener('visibilitychange', maybe);
-    };
+    // Focus refetch removed to minimize Cloud usage. Call `refresh` manually.
   }, []);
 
 
