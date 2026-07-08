@@ -84,7 +84,13 @@ export function useResourceData() {
   };
 
   const loadDailyEntries = async () => {
-    const { data } = await supabase.from('daily_resource_entries').select('*, installers(name, company)');
+    // Only load current year's entries to minimize data usage.
+    const year = new Date().getFullYear();
+    const { data } = await supabase
+      .from('daily_resource_entries')
+      .select('*, installers(name, company)')
+      .gte('date', `${year}-01-01`)
+      .lte('date', `${year}-12-31`);
     if (data) {
       setDailyEntries(data.map((d: any) => ({
         id: d.id, projectId: d.project_id, installerId: d.installer_id,
