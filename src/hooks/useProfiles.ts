@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface UserProfile {
@@ -15,30 +15,34 @@ export interface UserProfile {
   can_access_production?: boolean | null;
 }
 
-const SELECT_COLS = 'id, user_id, first_name, last_name, display_name, avatar_color, phone, user_role, can_access_crm, linked_salesperson, can_access_production';
+const SELECT_COLS =
+  'id, user_id, first_name, last_name, display_name, avatar_color, phone, user_role, can_access_crm, linked_salesperson, can_access_production';
 
-export function useProfiles() {
-  const [profiles, setProfiles] = useState<UserProfile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+const PROFILES_KEY = ['profiles'] as const;
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase.from('profiles').select(SELECT_COLS);
-      setProfiles((data as any) || []);
-      setIsLoading(false);
-    };
-    fetch();
-  }, []);
-
-  const refetch = async () => {
-    const { data } = await supabase.from('profiles').select(SELECT_COLS);
-    setProfiles((data as any) || []);
-  };
-
-  return { profiles, isLoading, refetch };
+async function fetchProfiles(): Promise<UserProfile[]> {
+  const { data } = await supabase.from('profiles').select(SELECT_COLS);
+  return (data as any) || [];
 }
 
+export function useProfiles() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: PROFILES_KEY,
+    queryFn: fetchProfiles,
+    staleTime: Infinity, // load once per session; no polling, no refetch on focus
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
+  });
 
+  const refetch = async () => {
+    await qc.invalidateQueries({ queryKey: PROFILES_KEY });
+  };
+
+  return { profiles: data || [], isLoading, refetch };
+}
 
 export function getInitials(profile: UserProfile): string {
   const f = (profile.first_name || '').trim().charAt(0).toUpperCase();
