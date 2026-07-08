@@ -52,14 +52,34 @@ export function useProductionProject(projectId: string | null) {
   };
 }
 
-/** Resolve a private storage path to a signed URL (cached in-memory). */
+/** Resolve a private storage path to a signed URL (cached in sessionStorage + memory). */
 const _urlCache = new Map<string, { url: string; exp: number }>();
+const SS_PREFIX = 'blueprint-url:';
+const TTL_MS = 1000 * 60 * 60 * 7; // 7h (URLs signed for 8h)
+
 export async function signBlueprintUrl(path: string): Promise<string | null> {
   if (!path) return null;
-  const cached = _urlCache.get(path);
-  if (cached && cached.exp > Date.now()) return cached.url;
+  const now = Date.now();
+
+  const mem = _urlCache.get(path);
+  if (mem && mem.exp > now) return mem.url;
+
+  try {
+    const raw = sessionStorage.getItem(SS_PREFIX + path);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { url: string; exp: number };
+      if (parsed.exp > now) {
+        _urlCache.set(path, parsed);
+        return parsed.url;
+      }
+      sessionStorage.removeItem(SS_PREFIX + path);
+    }
+  } catch { /* ignore */ }
+
   const { data } = await supabase.storage.from('production-blueprints').createSignedUrl(path, 60 * 60 * 8);
   if (!data?.signedUrl) return null;
-  _urlCache.set(path, { url: data.signedUrl, exp: Date.now() + 1000 * 60 * 60 * 7 });
+  const entry = { url: data.signedUrl, exp: now + TTL_MS };
+  _urlCache.set(path, entry);
+  try { sessionStorage.setItem(SS_PREFIX + path, JSON.stringify(entry)); } catch { /* quota */ }
   return data.signedUrl;
 }

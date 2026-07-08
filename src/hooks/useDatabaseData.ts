@@ -70,26 +70,7 @@ export function useDatabaseData() {
   // Load initial data from database
   useEffect(() => {
     loadData();
-
-    // Realtime subscriptions removed to minimize Cloud usage.
-    // Instead, refetch when the tab regains focus (throttled).
-    let lastRefresh = Date.now();
-    const MIN_INTERVAL = 60_000; // 1 min
-    const maybeRefresh = () => {
-      if (document.visibilityState !== 'visible') return;
-      if (Date.now() - lastRefresh < MIN_INTERVAL) return;
-      lastRefresh = Date.now();
-      loadProjects();
-      loadForecasts();
-      loadForecastEvents();
-      loadSalesTargets();
-    };
-    window.addEventListener('focus', maybeRefresh);
-    document.addEventListener('visibilitychange', maybeRefresh);
-    return () => {
-      window.removeEventListener('focus', maybeRefresh);
-      document.removeEventListener('visibilitychange', maybeRefresh);
-    };
+    // Focus refetch removed to minimize Cloud usage. Use `refresh` manually if needed.
   }, []);
 
 
