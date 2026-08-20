@@ -19,7 +19,7 @@ import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useProfiles, getDisplayName } from '@/hooks/useProfiles';
-import { UserAvatar } from '@/components/UserAvatar';
+import { UserAvatar, NameAvatar } from '@/components/UserAvatar';
 import { UserSelect } from '@/components/UserSelect';
 
 interface DocumentationItem {
@@ -30,6 +30,7 @@ interface DocumentationItem {
   status: string;
   submitted_date: string | null;
   submitted_to: string | null;
+  regulation: string | null;
   responsible: string | null;
   notes: string | null;
   sort_order: number;
@@ -137,6 +138,7 @@ export function DocumentationPlanView() {
     setFormStatus('Ej påbörjad');
     setFormSubmittedDate(undefined);
     setFormSubmittedTo('');
+    setFormRegulation('');
     setFormNotes('');
     setFormResponsible('');
     setDialogOpen(true);
@@ -150,6 +152,7 @@ export function DocumentationPlanView() {
     setFormStatus(item.status);
     setFormSubmittedDate(item.submitted_date ? new Date(item.submitted_date) : undefined);
     setFormSubmittedTo(item.submitted_to || '');
+    setFormRegulation(item.regulation || '');
     setFormNotes(item.notes || '');
     setFormResponsible(item.responsible || '');
     setDialogOpen(true);
@@ -167,7 +170,7 @@ export function DocumentationPlanView() {
       deadline: formDeadline ? format(formDeadline, 'yyyy-MM-dd') : null,
       status: formStatus,
       submitted_date: formSubmittedDate ? format(formSubmittedDate, 'yyyy-MM-dd') : null,
-      submitted_to: formSubmittedTo.trim() || null,
+      regulation: formRegulation.trim() || null,
       responsible: formResponsible.trim() || null,
       notes: formNotes.trim() || null,
     };
@@ -246,11 +249,11 @@ export function DocumentationPlanView() {
                           <thead>
                             <tr className="bg-muted/50 text-muted-foreground text-xs">
                               <th className="text-left py-2 px-3 font-medium w-[20%]">Dokumenttyp</th>
+                              <th className="text-left py-2 px-3 font-medium w-[14%] hidden md:table-cell">Föreskrift</th>
                               <th className="text-left py-2 px-3 font-medium w-[10%]">Ansvarig</th>
                               <th className="text-left py-2 px-3 font-medium w-[10%]">Deadline</th>
                               <th className="text-left py-2 px-3 font-medium w-[10%]">Status</th>
-                              <th className="text-left py-2 px-3 font-medium w-[12%] hidden md:table-cell">Inlämnat</th>
-                              <th className="text-left py-2 px-3 font-medium w-[12%] hidden md:table-cell">Inlämnat till</th>
+                              <th className="text-left py-2 px-3 font-medium w-[10%] hidden md:table-cell">Inlämnat</th>
                               <th className="text-left py-2 px-3 font-medium w-[18%] hidden lg:table-cell">Kommentar</th>
                               <th className="py-2 px-3 w-[8%]"></th>
                             </tr>
@@ -264,6 +267,7 @@ export function DocumentationPlanView() {
                                     <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                     {item.document_type}
                                   </td>
+                                  <td className="py-2 px-3 hidden md:table-cell text-muted-foreground truncate">{item.regulation || '—'}</td>
                                   <td className="py-2 px-3 text-muted-foreground">
                                     {(() => {
                                       const matchedProfile = profiles.find(p => getDisplayName(p) === item.responsible);
@@ -275,7 +279,15 @@ export function DocumentationPlanView() {
                                           </div>
                                         );
                                       }
-                                      return item.responsible || '—';
+                                      if (item.responsible) {
+                                        return (
+                                          <div className="flex items-center gap-1.5">
+                                            <NameAvatar name={item.responsible} size="xs" />
+                                            <span className="truncate text-xs">{item.responsible}</span>
+                                          </div>
+                                        );
+                                      }
+                                      return '—';
                                     })()}
                                   </td>
                                   <td className={cn("py-2 px-3", isOverdue && "text-destructive font-medium")}>
@@ -285,7 +297,6 @@ export function DocumentationPlanView() {
                                   <td className="py-2 px-3 hidden md:table-cell text-muted-foreground">
                                     {item.submitted_date ? format(new Date(item.submitted_date), 'd MMM yyyy', { locale: sv }) : '—'}
                                   </td>
-                                  <td className="py-2 px-3 hidden md:table-cell text-muted-foreground">{item.submitted_to || '—'}</td>
                                   <td className="py-2 px-3 hidden lg:table-cell text-muted-foreground truncate max-w-[200px]">
                                     {item.notes ? (
                                       <Tooltip>
@@ -448,11 +459,8 @@ export function DocumentationPlanView() {
               </div>
 
               <div className="grid gap-2">
-                <Label>Inlämnat till</Label>
-                <Input value={formSubmittedTo} onChange={e => setFormSubmittedTo(e.target.value)} placeholder="t.ex. Kund" list="submitted-to-list" />
-                <datalist id="submitted-to-list">
-                  {SUBMITTED_TO_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-                </datalist>
+                <Label>Föreskrift</Label>
+                <Input value={formRegulation} onChange={e => setFormRegulation(e.target.value)} placeholder="t.ex. AFC.342" />
               </div>
             </div>
 
