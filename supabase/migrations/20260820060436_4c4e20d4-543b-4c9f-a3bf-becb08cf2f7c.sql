@@ -1,0 +1,1 @@
+ALTER TABLE public.documentation_items ADD COLUMN IF NOT EXISTS regulation text;

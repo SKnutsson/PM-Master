@@ -27,7 +27,7 @@ import {
 '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { useProfiles, getDisplayName } from '@/hooks/useProfiles';
-import { UserAvatar } from '@/components/UserAvatar';
+import { UserAvatar, NameAvatar } from '@/components/UserAvatar';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -959,7 +959,17 @@ export function TimelineView() {
                                           </Tooltip>
                                         );
                                       }
-                                      return <span className="text-[12px] text-muted-foreground truncate text-center">{activity.responsible}</span>;
+                                      if (activity.responsible) {
+                                        return (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <div><NameAvatar name={activity.responsible} size="xs" /></div>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="right" className="text-xs">{activity.responsible}</TooltipContent>
+                                          </Tooltip>
+                                        );
+                                      }
+                                      return <span className="text-[12px] text-muted-foreground">—</span>;
                                     })()}
                                   </div>
                                   <div className="w-16 shrink-0 border-r border-border/50 px-1 py-0.5 bg-primary-foreground flex items-center justify-center text-[11px] text-slate-950 tabular-nums">
