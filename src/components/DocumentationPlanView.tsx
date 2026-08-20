@@ -81,6 +81,7 @@ export function DocumentationPlanView() {
   const [formStatus, setFormStatus] = useState<string>('Ej påbörjad');
   const [formSubmittedDate, setFormSubmittedDate] = useState<Date | undefined>();
   const [formSubmittedTo, setFormSubmittedTo] = useState('');
+  const [formRegulation, setFormRegulation] = useState('');
   const [formNotes, setFormNotes] = useState('');
   const [formResponsible, setFormResponsible] = useState('');
 
