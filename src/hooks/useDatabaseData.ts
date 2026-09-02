@@ -692,11 +692,18 @@ export function useDatabaseData() {
   const deleteForecast = useCallback(async (forecastId: string) => {
     const currentForecast = forecast.find(f => f.id === forecastId);
     if (currentForecast) {
+      const total = Object.values(currentForecast.months || {}).reduce((s, v) => s + (v || 0), 0);
+      const parts = [
+        currentForecast.product,
+        total ? `${total.toLocaleString('sv-SE', { maximumFractionDigits: 2 })} MSEK` : null,
+        currentForecast.dealStatus,
+      ].filter(Boolean);
+      // Ingen forecastId: kopplingen raderas med affären (cascade) och händelsen skulle försvinna.
       await logForecastEvent({
-        forecastId: forecastId,
         eventType: 'deleted',
         projectName: currentForecast.project,
         productName: currentForecast.product,
+        details: parts.join(' · '),
       });
     }
 

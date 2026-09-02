@@ -19,6 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useProjectDataContext, ExtendedSalesForecast, DealStatus, ForecastMonthEntry } from '@/contexts/ProjectDataContext';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -47,6 +58,7 @@ interface EditForecastDialogProps {
 
 export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProps) {
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [project, setProject] = useState(forecast.project);
   const [product, setProduct] = useState(forecast.product);
   const [selectedYear, setSelectedYear] = useState(2026);
@@ -121,11 +133,12 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
   };
 
   const handleDelete = async () => {
-    if (confirm('Är du säker på att du vill ta bort denna affär?')) {
-      await deleteForecast(forecast.id);
-      setOpen(false);
-    }
+    await deleteForecast(forecast.id);
+    setConfirmOpen(false);
+    setOpen(false);
   };
+
+  const totalAmount = Object.values(forecast.months || {}).reduce((s, v) => s + (v || 0), 0);
 
   const handleMonthChange = (month: string, value: string) => {
     setMonthAmounts(prev => ({ ...prev, [month]: value }));
@@ -232,10 +245,34 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
             </div>
           </div>
           <DialogFooter className="flex justify-between">
-            <Button type="button" variant="destructive" onClick={handleDelete}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Ta bort
-            </Button>
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Ta bort
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Radera affär permanent?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Du är på väg att radera <strong>{forecast.project}</strong> ({forecast.product}
+                    {totalAmount ? ` · ${totalAmount.toLocaleString('sv-SE', { maximumFractionDigits: 2 })} MSEK` : ''}).
+                    <br />
+                    Detta går inte att ångra.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Radera permanent
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Avbryt
