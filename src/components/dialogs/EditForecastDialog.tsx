@@ -121,11 +121,12 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
   };
 
   const handleDelete = async () => {
-    if (confirm('Är du säker på att du vill ta bort denna affär?')) {
-      await deleteForecast(forecast.id);
-      setOpen(false);
-    }
+    await deleteForecast(forecast.id);
+    setConfirmOpen(false);
+    setOpen(false);
   };
+
+  const totalAmount = Object.values(forecast.months || {}).reduce((s, v) => s + (v || 0), 0);
 
   const handleMonthChange = (month: string, value: string) => {
     setMonthAmounts(prev => ({ ...prev, [month]: value }));
