@@ -58,6 +58,7 @@ interface EditForecastDialogProps {
 
 export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProps) {
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [project, setProject] = useState(forecast.project);
   const [product, setProduct] = useState(forecast.product);
   const [selectedYear, setSelectedYear] = useState(2026);
