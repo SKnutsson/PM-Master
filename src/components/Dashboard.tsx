@@ -640,7 +640,7 @@ export function Dashboard() {
                       }
 
                       case 'deleted':
-                        description = 'Borttagen';
+                        description = `Affär raderad${evt.details ? `: ${evt.details}` : evt.productName ? `: ${evt.productName}` : ''}`;
                         badgeText = 'Borttagen';
                         badgeCls = 'bg-status-delayed/15 text-status-delayed';
                         EventIcon = ArrowDownRight;
