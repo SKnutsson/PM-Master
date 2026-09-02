@@ -233,10 +233,34 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
             </div>
           </div>
           <DialogFooter className="flex justify-between">
-            <Button type="button" variant="destructive" onClick={handleDelete}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Ta bort
-            </Button>
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Ta bort
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Radera affär permanent?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Du är på väg att radera <strong>{forecast.project}</strong> ({forecast.product}
+                    {totalAmount ? ` · ${totalAmount.toLocaleString('sv-SE', { maximumFractionDigits: 2 })} MSEK` : ''}).
+                    <br />
+                    Detta går inte att ångra.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(e) => { e.preventDefault(); handleDelete(); }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Radera permanent
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Avbryt
