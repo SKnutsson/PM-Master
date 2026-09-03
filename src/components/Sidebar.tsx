@@ -15,6 +15,7 @@ import {
   CalendarDays,
   HardHat,
   ClipboardList,
+  ClipboardCheck,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -35,7 +36,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 export type View =
   | 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources'
   | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks'
-  | 'services' | 'ata'
+  | 'services' | 'ata' | 'project-review'
   | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats'
   | 'production';
 
@@ -47,6 +48,7 @@ interface SidebarProps {
 const pmTopItems = [{ id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard }];
 const pmMainItems = [
   { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
+  { id: 'project-review' as View, label: 'Projektgenomgång', icon: ClipboardCheck },
   { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
   { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
