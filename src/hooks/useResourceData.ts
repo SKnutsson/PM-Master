@@ -271,6 +271,87 @@ export function useResourceData() {
     }
   }, [dailyEntries]);
 
+  /**
+   * Move (or copy) a planned day entry to another date and/or another
+   * project_installer row. If the target slot already has an entry the hours
+   * are merged into it.
+   */
+  const moveDailyEntry = useCallback(async (
+    entryId: string,
+    target: { date: string; projectId: string; projectInstallerId: string; installerId: string | null },
+    mode: 'move' | 'copy' = 'move',
+  ) => {
+    const source = dailyEntries.find(d => d.id === entryId);
+    if (!source) return;
+    if (source.date === target.date && source.projectInstallerId === target.projectInstallerId && mode === 'move') return;
+
+    const existing = dailyEntries.find(d =>
+      d.id !== entryId && d.date === target.date && d.projectInstallerId === target.projectInstallerId);
+
+    const work = source.plannedWorkHours + (existing?.plannedWorkHours || 0);
+    const travel = source.plannedTravelHours + (existing?.plannedTravelHours || 0);
+
+    // Optimistic update
+    setDailyEntries(prev => {
+      let next = prev.filter(d => !(existing && d.id === existing.id));
+      if (mode === 'move') {
+        next = next.map(d => d.id === entryId
+          ? { ...d, date: target.date, projectId: target.projectId, projectInstallerId: target.projectInstallerId, installerId: target.installerId as any, plannedWorkHours: work, plannedTravelHours: travel }
+          : d);
+      } else {
+        next = [...next, {
+          ...source,
+          id: `temp-${Date.now()}`,
+          date: target.date,
+          projectId: target.projectId,
+          projectInstallerId: target.projectInstallerId,
+          installerId: target.installerId as any,
+          plannedWorkHours: work,
+          plannedTravelHours: travel,
+        }];
+      }
+      return next;
+    });
+
+    try {
+      if (existing) {
+        await supabase.from('daily_resource_entries').delete().eq('id', existing.id);
+      }
+      if (mode === 'move') {
+        const { error } = await supabase.from('daily_resource_entries').update({
+          date: target.date,
+          project_id: target.projectId,
+          project_installer_id: target.projectInstallerId,
+          installer_id: target.installerId,
+          planned_work_hours: work,
+          planned_travel_hours: travel,
+        } as any).eq('id', entryId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from('daily_resource_entries').insert({
+          date: target.date,
+          project_id: target.projectId,
+          project_installer_id: target.projectInstallerId,
+          installer_id: target.installerId,
+          planned_work_hours: work,
+          planned_travel_hours: travel,
+        } as any).select('*, installers(name, company)').single();
+        if (error) throw error;
+        setDailyEntries(prev => prev.map(d => d.id.startsWith('temp-') ? {
+          id: data.id, projectId: data.project_id, installerId: data.installer_id,
+          projectInstallerId: (data as any).project_installer_id || null,
+          installerName: (data as any).installers?.name, installerCompany: (data as any).installers?.company,
+          date: data.date, plannedWorkHours: parseFloat(String(data.planned_work_hours)),
+          plannedTravelHours: parseFloat(String(data.planned_travel_hours)),
+        } : d));
+      }
+    } catch (e) {
+      console.error(e);
+      await loadDailyEntries();
+      throw e;
+    }
+  }, [dailyEntries]);
+
   const deleteDailyEntry = useCallback(async (id: string) => {
     await supabase.from('daily_resource_entries').delete().eq('id', id);
     setDailyEntries(prev => prev.filter(d => d.id !== id));
@@ -291,7 +372,7 @@ export function useResourceData() {
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation,
     assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry, deleteDailyEntry, updateHotel,
+    upsertDailyEntry, deleteDailyEntry, moveDailyEntry, updateHotel,
     refresh: loadAll,
   };
 }
