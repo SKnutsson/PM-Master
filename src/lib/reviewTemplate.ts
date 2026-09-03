@@ -39,6 +39,8 @@ export interface ReviewSection {
   fields?: ReviewField[];
   columns?: ReviewField[];
   addLabel?: string;
+  /** Dölj spårbarhetsfälten (källa/dokument/rev/ansvarig) i checklistvyn */
+  hideTraceability?: boolean;
   /** Sektioner som räknas in i "huvudområden genomgångna" */
   countsTowardProgress?: boolean;
 }
