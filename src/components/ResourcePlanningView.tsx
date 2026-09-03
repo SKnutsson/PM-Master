@@ -105,11 +105,17 @@ export function ResourcePlanningView() {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation, assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry, updateHotel
+    upsertDailyEntry, moveDailyEntry, updateHotel
   } = useResourceData();
+
+  // Drag & drop state for moving planned days
+  const [dragEntryId, setDragEntryId] = useState<string | null>(null);
+  const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
+  const [dragCopy, setDragCopy] = useState(false);
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('days');
+
   const [showArchived, setShowArchived] = useState(false);
   const [filterInstallers, setFilterInstallers] = useState<string[]>([]);
   const [filterCompanies, setFilterCompanies] = useState<string[]>([]);
@@ -311,20 +317,61 @@ export function ResourcePlanningView() {
       const entry = entryMap.get(day.dateStr);
       const isWeekend = day.dayOfWeek === 0 || day.dayOfWeek === 6;
       const totalH = entry ? entry.plannedWorkHours + entry.plannedTravelHours : 0;
+      const cellKey = `${projectInstallerId}|${day.dateStr}`;
+      const isDropTarget = dropTargetKey === cellKey && dragEntryId !== null;
       return (
         <div
           key={i}
           className={cn(
             'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors',
-            isWeekend && 'bg-muted/40'
+            isWeekend && 'bg-muted/40',
+            isDropTarget && 'bg-primary/20 ring-1 ring-inset ring-primary'
           )}
           style={{ width: colWidth, minWidth: colWidth }}
+          onDragOver={(e) => {
+            if (!dragEntryId) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = (e.ctrlKey || e.altKey) ? 'copy' : 'move';
+            setDragCopy(e.ctrlKey || e.altKey);
+            if (dropTargetKey !== cellKey) setDropTargetKey(cellKey);
+          }}
+          onDragLeave={() => { if (dropTargetKey === cellKey) setDropTargetKey(null); }}
+          onDrop={async (e) => {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text/plain') || dragEntryId;
+            setDropTargetKey(null);
+            setDragEntryId(null);
+            if (!id) return;
+            const copy = e.ctrlKey || e.altKey || dragCopy;
+            try {
+              await moveDailyEntry(id, {
+                date: day.dateStr,
+                projectId,
+                projectInstallerId,
+                installerId: installerId || null,
+              }, copy ? 'copy' : 'move');
+              toast.success(copy ? 'Tid kopierad' : 'Tid flyttad');
+            } catch {
+              toast.error('Kunde inte flytta tiden');
+            }
+          }}
           onClick={() => openDailyDialog(projectId, day.dateStr, projectInstallerId)}>
 
           {entry && totalH > 0 &&
           <Tooltip>
               <TooltipTrigger asChild>
-                <div className="absolute inset-0.5 flex flex-col gap-px">
+                <div
+                  className={cn('absolute inset-0.5 flex flex-col gap-px cursor-grab active:cursor-grabbing', dragEntryId === entry.id && 'opacity-40')}
+                  draggable
+                  onDragStart={(e) => {
+                    e.stopPropagation();
+                    e.dataTransfer.effectAllowed = 'copyMove';
+                    e.dataTransfer.setData('text/plain', entry.id);
+                    setDragEntryId(entry.id);
+                  }}
+                  onDragEnd={() => { setDragEntryId(null); setDropTargetKey(null); setDragCopy(false); }}
+                  onClick={(e) => e.stopPropagation()}
+                  onDoubleClick={() => openDailyDialog(projectId, day.dateStr, projectInstallerId)}>
                   {entry.plannedWorkHours > 0 &&
                 <div className={cn('flex-1 rounded-sm flex items-center justify-center', getBarColor(status))}>
                       <span className="text-[8px] font-bold text-white">{entry.plannedWorkHours}h</span>
@@ -341,6 +388,7 @@ export function ResourcePlanningView() {
                 <p>{entry.installerName} – {day.dateStr}</p>
                 <p>Arbete: {entry.plannedWorkHours}h</p>
                 <p>Resa: {entry.plannedTravelHours}h</p>
+                <p className="text-muted-foreground mt-1">Dra för att flytta • Ctrl+dra för att kopiera • dubbelklicka för att redigera</p>
               </TooltipContent>
             </Tooltip>
           }
