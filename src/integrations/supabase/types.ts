@@ -1207,6 +1207,266 @@ export type Database = {
           },
         ]
       }
+      project_review_answers: {
+        Row: {
+          comment: string | null
+          created_at: string
+          deadline: string | null
+          document_ref: string | null
+          id: string
+          item_key: string
+          page_ref: string | null
+          responsible: string | null
+          review_id: string
+          revision: string | null
+          risk_level: string | null
+          section_key: string
+          source: string | null
+          status: string | null
+          updated_at: string
+          updated_by: string | null
+          value: Json | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          deadline?: string | null
+          document_ref?: string | null
+          id?: string
+          item_key: string
+          page_ref?: string | null
+          responsible?: string | null
+          review_id: string
+          revision?: string | null
+          risk_level?: string | null
+          section_key: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          deadline?: string | null
+          document_ref?: string | null
+          id?: string
+          item_key?: string
+          page_ref?: string | null
+          responsible?: string | null
+          review_id?: string
+          revision?: string | null
+          risk_level?: string | null
+          section_key?: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_review_answers_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "project_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_review_events: {
+        Row: {
+          action: string
+          actor: string | null
+          actor_name: string | null
+          created_at: string
+          details: Json
+          id: string
+          review_id: string
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          review_id: string
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          review_id?: string
+          target?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_review_events_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "project_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_review_rows: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          review_id: string
+          section_key: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          review_id: string
+          section_key: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          review_id?: string
+          section_key?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_review_rows_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "project_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_review_signoffs: {
+        Row: {
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
+          approved_name: string | null
+          created_at: string
+          id: string
+          review_id: string
+          role: string
+          statement: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_name?: string | null
+          created_at?: string
+          id?: string
+          review_id: string
+          role: string
+          statement?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          approved_name?: string | null
+          created_at?: string
+          id?: string
+          review_id?: string
+          role?: string
+          statement?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_review_signoffs_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "project_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_reviews: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          general_note: string | null
+          header: Json
+          id: string
+          project_id: string
+          review_date: string | null
+          status: string
+          template_id: string | null
+          template_snapshot: Json
+          template_version: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          general_note?: string | null
+          header?: Json
+          id?: string
+          project_id: string
+          review_date?: string | null
+          status?: string
+          template_id?: string | null
+          template_snapshot?: Json
+          template_version?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          general_note?: string | null
+          header?: Json
+          id?: string
+          project_id?: string
+          review_date?: string | null
+          status?: string
+          template_id?: string | null
+          template_snapshot?: Json
+          template_version?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_reviews_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "review_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           address: string | null
@@ -1307,6 +1567,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      review_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          project_type: string
+          sections: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          project_type?: string
+          sections?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          project_type?: string
+          sections?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
       }
       sales_targets: {
         Row: {

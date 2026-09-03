@@ -11,6 +11,7 @@ import { ProfileView } from './ProfileView';
 import { MyTasksView } from './MyTasksView';
 import { ServicesView } from './ServicesView';
 import { AtaView } from './AtaView';
+import { ProjectReviewView } from './review/ProjectReviewView';
 import { CrmDashboard } from './crm/CrmDashboard';
 import { CrmQuotesView } from './crm/CrmQuotesView';
 import { CrmCustomersView } from './crm/CrmCustomersView';
@@ -51,6 +52,7 @@ export function MainLayout() {
       case 'profile': return <ProfileView />;
       case 'services': return <ServicesView />;
       case 'ata': return <AtaView />;
+      case 'project-review': return <ProjectReviewView />;
       case 'crm-dashboard': return <CrmDashboard />;
       case 'crm-quotes': return <CrmQuotesView />;
       case 'crm-customers': return <CrmCustomersView />;
