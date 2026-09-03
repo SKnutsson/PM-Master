@@ -147,6 +147,25 @@ export function ProjectReviewView() {
         sectionRows(s.key).some(r => JSON.stringify(r.data).toLowerCase().includes(search.toLowerCase())))
     : sections;
 
+  // Markera aktivt avsnitt i innehållsmenyn medan man skrollar
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !review) return;
+    const keys = [...sections.map(x => x.key), 'gate', 'signoff'];
+    const onScroll = () => {
+      let current = keys[0];
+      for (const k of keys) {
+        const node = document.getElementById(`sec-${k}`);
+        if (!node) continue;
+        if (node.getBoundingClientRect().top - el.getBoundingClientRect().top <= 96) current = k;
+      }
+      setActiveSection(current);
+    };
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [sections, review, openSections]);
+
   return (
     <div className="flex h-full flex-col">
       {/* Top bar */}
@@ -249,7 +268,10 @@ export function ProjectReviewView() {
               <Separator className="my-2" />
               {['gate', 'signoff'].map(k => (
                 <button key={k} onClick={() => document.getElementById(`sec-${k}`)?.scrollIntoView({ behavior: 'smooth' })}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium hover:bg-accent">
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors hover:bg-accent',
+                    activeSection === k && 'bg-primary/10 text-primary ring-1 ring-primary/30',
+                  )}>
                   <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-primary" />
                   {k === 'gate' ? 'Slutkontroll' : 'Godkännande'}
                 </button>
