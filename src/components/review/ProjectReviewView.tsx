@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ClipboardCheck, Search, FileDown, Loader2, AlertTriangle, CircleCheck,
   CircleAlert, Plus, ShieldCheck, RotateCcw, Info,
@@ -30,7 +30,9 @@ export function ProjectReviewView() {
   const { toast } = useToast();
   const [projectId, setProjectId] = useState<string>('');
   const [search, setSearch] = useState('');
-  const [openSections, setOpenSections] = useState<string[]>(['basics']);
+  const [activeSection, setActiveSection] = useState<string>('');
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [openSections, setOpenSections] = useState<string[]>(['attendees']);
 
   const project = projects.find(p => p.id === projectId) || null;
   const {
@@ -71,8 +73,6 @@ export function ProjectReviewView() {
   /** Automatiskt insamlade öppna punkter från hela genomgången */
   const derivedOpenPoints = useMemo(() => {
     const list: { point: string; category: string; source: string }[] = [];
-    sectionRows('boundaries').filter(r => r.data.responsible_party === 'Oklart')
-      .forEach(r => list.push({ point: `Oklart ansvar: ${r.data.area || 'Område'}`, category: 'Gränsdragning', source: r.data.comment || '' }));
     sectionRows('scope').filter(r => r.data.included === 'Oklart')
       .forEach(r => list.push({ point: `Oklar omfattning: ${r.data.category || ''} ${r.data.description || ''}`.trim(), category: 'Såld omfattning', source: r.data.doc_ref || '' }));
     sectionRows('requirements').filter(r => !r.data.responsible || !r.data.verification)
@@ -83,6 +83,17 @@ export function ProjectReviewView() {
       .forEach(r => list.push({ point: `Obekräftad muntlig överenskommelse: ${String(r.data.what || '').slice(0, 80)}`, category: 'Överenskommelser', source: r.data.by_whom || '' }));
     sectionRows('options').filter(r => r.data.in_order !== 'Ja' && r.data.status !== 'Avböjd')
       .forEach(r => list.push({ point: `Option ej beslutad: ${r.data.number || ''} ${r.data.description || ''}`.trim(), category: 'Optioner', source: r.data.decision_deadline ? `Beslut senast ${r.data.decision_deadline}` : '' }));
+    // Punkter som manuellt markerats för uppföljning
+    rows.filter(r => r.section_key !== 'open_points' && r.data.followup === 'Ja').forEach(r => {
+      const sec = sections.find(x => x.key === r.section_key);
+      const firstCol = (sec?.columns || [])[0];
+      const label = r.data.followup_note || (firstCol ? String(r.data[firstCol.key] ?? '') : '');
+      list.push({
+        point: `Uppföljning: ${String(label || sec?.title || '').slice(0, 100)}`,
+        category: sec?.title || r.section_key,
+        source: [r.data.followup_responsible, r.data.followup_deadline].filter(Boolean).join(' · '),
+      });
+    });
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]);
@@ -90,14 +101,11 @@ export function ProjectReviewView() {
   /** Slutkontroll */
   const gate = useMemo(() => {
     const critical: string[] = [];
-    const contractReviewed = answers['contract.signed_contract']?.value === 'Ja';
-    if (!contractReviewed) critical.push('Kontrakt ej granskat / signerat kontrakt ej mottaget');
-    if (!sectionRows('documents').some(r => r.data.contract_basis === 'Ja')) critical.push('Inga kontraktsgrundande handlingar registrerade');
-    if (!sectionRows('documents').some(r => r.data.doc_type === 'Ritningar' || r.data.doc_type === 'Konstruktionsritningar')) critical.push('Ritning saknas i underlagsförteckningen');
+    if (sectionRows('documents').length === 0) critical.push('Inga handlingar registrerade');
+    if (sectionRows('documents').some(r => r.data.reviewed !== 'Ja')) critical.push('Alla handlingar är inte genomgångna');
     if (sectionRows('requirements').some(r => !r.data.responsible)) critical.push('Ska-krav saknar ansvarig');
-    if (sectionRows('boundaries').some(r => r.data.responsible_party === 'Oklart')) critical.push('Oklar gränsdragning (t.ex. inmätning) – ansvar ej fastställt');
-    if (sectionRows('risks').some(r => riskLevel(r.data.probability, r.data.consequence).level === 'Kritisk' && r.data.status !== 'Hanterad' && r.data.status !== 'Stängd')) critical.push('Kritisk risk utan hantering');
-    if (!sectionRows('attendees').some(r => r.data.present === 'Ja')) critical.push('Inga närvarande deltagare registrerade');
+    if (sectionRows('scope').some(r => r.data.included === 'Oklart')) critical.push('Oklar omfattning – ansvar/innehåll ej fastställt');
+    if (sectionRows('attendees').length === 0) critical.push('Inga deltagare registrerade');
 
     const openCount = sectionRows('open_points').filter(r => r.data.status !== 'Klar').length + derivedOpenPoints.length;
     const approvedAreas = sections.filter(isSectionDone).length;
@@ -138,6 +146,25 @@ export function ProjectReviewView() {
         (s.columns || []).some(f => f.label.toLowerCase().includes(search.toLowerCase())) ||
         sectionRows(s.key).some(r => JSON.stringify(r.data).toLowerCase().includes(search.toLowerCase())))
     : sections;
+
+  // Markera aktivt avsnitt i innehållsmenyn medan man skrollar
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !review) return;
+    const keys = [...sections.map(x => x.key), 'gate', 'signoff'];
+    const onScroll = () => {
+      let current = keys[0];
+      for (const k of keys) {
+        const node = document.getElementById(`sec-${k}`);
+        if (!node) continue;
+        if (node.getBoundingClientRect().top - el.getBoundingClientRect().top <= 96) current = k;
+      }
+      setActiveSection(current);
+    };
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [sections, review, openSections]);
 
   return (
     <div className="flex h-full flex-col">
@@ -196,10 +223,12 @@ export function ProjectReviewView() {
                 ({template.name}, version {template.version}). Mallversionen låses till detta projekt.
               </p>
               <Button className="gap-2" onClick={async () => {
-                const seed: Record<string, any> = {};
-                (sections.find(s => s.key === 'basics')?.fields || []).forEach(f => {
-                  const v = autoValue(f.autoFrom); if (v) seed[f.key] = v;
-                });
+                const seed: Record<string, any> = {
+                  customer: autoValue('customer'),
+                  project_number: autoValue('code'),
+                  sales_person: autoValue('salesPerson'),
+                  project_manager: autoValue('projectManager'),
+                };
                 const r = await createReview(seed);
                 if (r) toast({ title: 'Projektgenomgång skapad' });
               }}>
@@ -225,7 +254,10 @@ export function ProjectReviewView() {
                       setOpenSections(prev => prev.includes(s.key) ? prev : [...prev, s.key]);
                       setTimeout(() => document.getElementById(`sec-${s.key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
                     }}
-                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent"
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent',
+                      activeSection === s.key && 'bg-primary/10 font-semibold text-primary ring-1 ring-primary/30',
+                    )}
                   >
                     {done ? <CircleCheck className="h-3.5 w-3.5 shrink-0 text-status-completed" />
                           : <CircleAlert className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
@@ -236,7 +268,10 @@ export function ProjectReviewView() {
               <Separator className="my-2" />
               {['gate', 'signoff'].map(k => (
                 <button key={k} onClick={() => document.getElementById(`sec-${k}`)?.scrollIntoView({ behavior: 'smooth' })}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium hover:bg-accent">
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors hover:bg-accent',
+                    activeSection === k && 'bg-primary/10 text-primary ring-1 ring-primary/30',
+                  )}>
                   <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-primary" />
                   {k === 'gate' ? 'Slutkontroll' : 'Godkännande'}
                 </button>
@@ -245,7 +280,7 @@ export function ProjectReviewView() {
           </aside>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
             {/* Header card */}
             <Card>
               <CardHeader className="pb-3">
@@ -378,12 +413,16 @@ export function ProjectReviewView() {
                                   <div className="md:col-span-3">
                                     <ReviewFieldInput field={f} value={a?.value ?? ''} onChange={(v) => setAnswer(s.key, key, { value: v })} compact />
                                   </div>
-                                  <div className="md:col-span-5 grid grid-cols-2 gap-2 lg:grid-cols-4">
-                                    <Input className="h-8 text-xs" placeholder="Källa" value={a?.source ?? ''} onChange={e => setAnswer(s.key, key, { source: e.target.value })} />
-                                    <Input className="h-8 text-xs" placeholder="Dokument" value={a?.document_ref ?? ''} onChange={e => setAnswer(s.key, key, { document_ref: e.target.value })} />
-                                    <Input className="h-8 text-xs" placeholder="Rev / sida" value={a?.revision ?? ''} onChange={e => setAnswer(s.key, key, { revision: e.target.value })} />
-                                    <Input className="h-8 text-xs" placeholder="Ansvarig" value={a?.responsible ?? ''} onChange={e => setAnswer(s.key, key, { responsible: e.target.value })} />
-                                    <Textarea className="col-span-2 text-xs lg:col-span-4" rows={1} placeholder="Kommentar" value={a?.comment ?? ''} onChange={e => setAnswer(s.key, key, { comment: e.target.value })} />
+                                  <div className={cn('grid gap-2', s.hideTraceability ? 'md:col-span-5' : 'md:col-span-5 grid-cols-2 lg:grid-cols-4')}>
+                                    {!s.hideTraceability && (
+                                      <>
+                                        <Input className="h-8 text-xs" placeholder="Källa" value={a?.source ?? ''} onChange={e => setAnswer(s.key, key, { source: e.target.value })} />
+                                        <Input className="h-8 text-xs" placeholder="Dokument" value={a?.document_ref ?? ''} onChange={e => setAnswer(s.key, key, { document_ref: e.target.value })} />
+                                        <Input className="h-8 text-xs" placeholder="Rev / sida" value={a?.revision ?? ''} onChange={e => setAnswer(s.key, key, { revision: e.target.value })} />
+                                        <Input className="h-8 text-xs" placeholder="Ansvarig" value={a?.responsible ?? ''} onChange={e => setAnswer(s.key, key, { responsible: e.target.value })} />
+                                      </>
+                                    )}
+                                    <Textarea className={cn('text-xs', !s.hideTraceability && 'col-span-2 lg:col-span-4')} rows={1} placeholder="Kommentar" value={a?.comment ?? ''} onChange={e => setAnswer(s.key, key, { comment: e.target.value })} />
                                   </div>
                                 </div>
                               </div>

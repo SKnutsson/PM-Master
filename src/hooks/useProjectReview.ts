@@ -73,11 +73,27 @@ export function useProjectReview(projectId: string | null) {
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const template: ReviewTemplate = useMemo(() => {
-    if (review?.template_snapshot?.length) {
+    if (review?.template_snapshot?.length && review.template_version === DEFAULT_REVIEW_TEMPLATE.version) {
       return { ...DEFAULT_REVIEW_TEMPLATE, sections: review.template_snapshot as ReviewSection[], version: review.template_version };
     }
     return DEFAULT_REVIEW_TEMPLATE;
   }, [review]);
+
+  // Uppgradera äldre genomgångar till senaste mallversionen
+  useEffect(() => {
+    if (!review || review.template_version === DEFAULT_REVIEW_TEMPLATE.version) return;
+    const id = review.id;
+    (async () => {
+      await supabase.from('project_reviews').update({
+        template_version: DEFAULT_REVIEW_TEMPLATE.version,
+        template_snapshot: DEFAULT_REVIEW_TEMPLATE.sections as any,
+      }).eq('id', id);
+      setReview(prev => prev && prev.id === id
+        ? { ...prev, template_version: DEFAULT_REVIEW_TEMPLATE.version, template_snapshot: DEFAULT_REVIEW_TEMPLATE.sections as ReviewSection[] }
+        : prev);
+    })();
+  }, [review]);
+
 
   const logEvent = useCallback(async (reviewId: string, action: string, target?: string, details: any = {}) => {
     await supabase.from('project_review_events').insert({
