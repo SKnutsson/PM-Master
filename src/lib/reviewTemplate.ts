@@ -57,26 +57,11 @@ const SOURCES = [
   'Mötesprotokoll', 'Muntlig överenskommelse', 'Standard', 'Myndighetskrav', 'Annat',
 ];
 
-const DOC_TYPES = [
-  'Offert', 'Reviderad offert', 'Order', 'Kontrakt', 'Allmänna villkor',
-  'Administrativa föreskrifter', 'Tekniska beskrivningar', 'Ritningar',
-  'Konstruktionsritningar', 'Arkitektritningar', 'DWG', 'PDF', 'IFC/BIM', 'Bilder',
-  'Inmätningsunderlag', 'Geotekniskt underlag', 'Elunderlag', 'VVS-underlag',
-  'Brandhandlingar', 'Akustikhandlingar', 'Montagehandlingar', 'Produktionsunderlag',
-  'Kundens kravspecifikation', 'Övriga bilagor',
-];
-
 const SCOPE_CATEGORIES = [
   'Huvudleverans', 'Konstruktion', 'Material', 'Produktion', 'Montage', 'Installation',
   'Projektering', 'Transport', 'Etablering', 'Inmätning', 'Dokumentation',
   'Relationshandlingar', 'Besiktning', 'Provning', 'Utbildning', 'Service',
   'Garantiåtaganden', 'Övrigt',
-];
-
-const BOUNDARY_AREAS = [
-  'Projektering', 'Konstruktion', 'Mark', 'El', 'VVS', 'Brand', 'Montage', 'Bygg',
-  'Rivning', 'Inmätning', 'Transport', 'Lossning', 'Lyft', 'Etablering', 'Ställning',
-  'Dokumentation', 'Besiktning', 'Myndighetskontakter',
 ];
 
 const TIMELINE_ACTIVITIES = [
