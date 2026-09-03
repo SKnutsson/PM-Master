@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ClipboardCheck, Search, FileDown, Loader2, AlertTriangle, CircleCheck,
-  CircleAlert, Plus, ShieldCheck, RotateCcw, Info,
+  CircleAlert, Plus, ShieldCheck, RotateCcw, Info, ArrowLeft,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,8 @@ import { REVIEW_STATUSES, ReviewSection, riskLevel } from '@/lib/reviewTemplate'
 import { ReviewFieldInput } from './ReviewFieldInput';
 import { ReviewTableSection } from './ReviewTableSection';
 import { generateReviewSummaryPdf } from '@/lib/reviewReport';
+import { ReviewOverviewList } from './ReviewOverviewList';
+import { useReviewOverview } from '@/hooks/useReviewOverview';
 
 export function ProjectReviewView() {
   const { projects } = useProjectDataContext();
@@ -34,6 +36,7 @@ export function ProjectReviewView() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [openSections, setOpenSections] = useState<string[]>(['attendees']);
 
+  const { overview, loading: overviewLoading, reload: reloadOverview } = useReviewOverview();
   const project = projects.find(p => p.id === projectId) || null;
   const {
     review, template, answers, rows, signoffs, events, loading, saving,
@@ -175,6 +178,11 @@ export function ProjectReviewView() {
             <ClipboardCheck className="h-5 w-5 text-primary" />
             <h1 className="text-lg font-semibold">Projektgenomgång</h1>
           </div>
+          {projectId && (
+            <Button size="sm" variant="ghost" className="gap-2 h-9" onClick={() => { setProjectId(''); reloadOverview(); }}>
+              <ArrowLeft className="h-4 w-4" />Alla projekt
+            </Button>
+          )}
           <Select value={projectId} onValueChange={setProjectId}>
             <SelectTrigger className="h-9 w-[280px]"><SelectValue placeholder="Välj projekt" /></SelectTrigger>
             <SelectContent className="z-50 bg-popover max-h-[320px]">
@@ -201,12 +209,9 @@ export function ProjectReviewView() {
       </div>
 
       {!projectId && (
-        <div className="flex flex-1 items-center justify-center p-10 text-center text-muted-foreground">
-          <div>
-            <ClipboardCheck className="mx-auto mb-3 h-10 w-10 opacity-40" />
-            <p>Välj ett projekt för att starta eller fortsätta en projektgenomgång.</p>
-          </div>
-        </div>
+        overviewLoading
+          ? <div className="flex flex-1 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          : <ReviewOverviewList projects={projects as any} overview={overview} onOpen={setProjectId} />
       )}
 
       {projectId && loading && (
