@@ -105,11 +105,17 @@ export function ResourcePlanningView() {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation, assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry, updateHotel
+    upsertDailyEntry, moveDailyEntry, updateHotel
   } = useResourceData();
+
+  // Drag & drop state for moving planned days
+  const [dragEntryId, setDragEntryId] = useState<string | null>(null);
+  const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
+  const [dragCopy, setDragCopy] = useState(false);
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('days');
+
   const [showArchived, setShowArchived] = useState(false);
   const [filterInstallers, setFilterInstallers] = useState<string[]>([]);
   const [filterCompanies, setFilterCompanies] = useState<string[]>([]);
