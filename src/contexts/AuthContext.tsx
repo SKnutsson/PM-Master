@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { toast } from 'sonner';
+import { useSessionTimeout, markSessionStart, clearSessionMarkers } from '@/hooks/useSessionTimeout';
 import { User, Session, AuthError, Factor } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -75,6 +77,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // --- Session policy: 60 min idle timeout, 12 h absolute maximum ---
+  const handleSessionExpired = useCallback(async (reason: 'idle' | 'absolute') => {
+    clearSessionMarkers();
+    await supabase.auth.signOut();
+    setMfaRequired(false);
+    setMfaEnrolled(false);
+    toast.error(
+      reason === 'idle'
+        ? 'Du har loggats ut på grund av 60 minuters inaktivitet'
+        : 'Din session har nått maxtiden på 12 timmar – logga in igen'
+    );
+  }, []);
+
+  useSessionTimeout({ enabled: !!session && !!user, onExpire: handleSessionExpired });
+
   const checkMfaStatus = async () => {
     try {
       const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -94,6 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) {
       return { error };
     }
+
+    markSessionStart();
 
     // Check if MFA challenge is required
     if (data.session === null && data.user === null) {
@@ -120,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    clearSessionMarkers();
     await supabase.auth.signOut();
     setMfaRequired(false);
     setMfaEnrolled(false);
