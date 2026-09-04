@@ -35,7 +35,6 @@ export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
   }), [projects, overview]);
 
   const visible = enriched.filter(r => {
-    if (filter === 'none' && r.state !== 'none') return false;
     if (filter === 'open' && r.state !== 'open') return false;
     if (filter === 'complete' && r.state !== 'complete') return false;
     if (!query) return true;
@@ -45,7 +44,6 @@ export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
 
   const counts = {
     all: enriched.length,
-    none: enriched.filter(r => r.state === 'none').length,
     open: enriched.filter(r => r.state === 'open').length,
     complete: enriched.filter(r => r.state === 'complete').length,
   };
@@ -61,7 +59,6 @@ export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
         </div>
         {([
           ['all', `Alla (${counts.all})`],
-          ['none', `Ingen genomgång (${counts.none})`],
           ['open', `Öppna punkter (${counts.open})`],
           ['complete', `Kompletta (${counts.complete})`],
         ] as [Filter, string][]).map(([k, label]) => (
@@ -69,7 +66,9 @@ export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
             {label}
           </Button>
         ))}
+        <p className="ml-auto text-xs text-muted-foreground">Välj ett projekt i listan ovan för att lägga till en ny genomgång.</p>
       </div>
+
 
       <div className="overflow-hidden rounded-lg border">
         <div className="grid grid-cols-[minmax(200px,2fr)_1fr_170px_170px_110px] items-center gap-3 border-b bg-muted/50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
