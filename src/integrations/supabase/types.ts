@@ -267,6 +267,9 @@ export type Database = {
         Row: {
           amount: number
           comment: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
           country: string | null
           created_at: string
           customer_id: string | null
@@ -274,6 +277,8 @@ export type Database = {
           delivery_time: string | null
           id: string
           next_followup: string | null
+          pdf_name: string | null
+          pdf_path: string | null
           prescriber: boolean
           probability: number
           product: string | null
@@ -289,6 +294,9 @@ export type Database = {
         Insert: {
           amount?: number
           comment?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           country?: string | null
           created_at?: string
           customer_id?: string | null
@@ -296,6 +304,8 @@ export type Database = {
           delivery_time?: string | null
           id?: string
           next_followup?: string | null
+          pdf_name?: string | null
+          pdf_path?: string | null
           prescriber?: boolean
           probability?: number
           product?: string | null
@@ -311,6 +321,9 @@ export type Database = {
         Update: {
           amount?: number
           comment?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           country?: string | null
           created_at?: string
           customer_id?: string | null
@@ -318,6 +331,8 @@ export type Database = {
           delivery_time?: string | null
           id?: string
           next_followup?: string | null
+          pdf_name?: string | null
+          pdf_path?: string | null
           prescriber?: boolean
           probability?: number
           product?: string | null

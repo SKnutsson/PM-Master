@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, FileText, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +40,11 @@ const emptyQuote = (): Partial<CrmQuote> => ({
   status: 'Öppen',
   next_followup: null,
   comment: '',
+  contact_name: '',
+  contact_phone: '',
+  contact_email: '',
+  pdf_path: null,
+  pdf_name: null,
 });
 
 export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
@@ -47,6 +52,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
   const [form, setForm] = useState<Partial<CrmQuote>>(emptyQuote());
   const [newComment, setNewComment] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setForm(quote ? { ...quote } : emptyQuote());
@@ -81,6 +87,11 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       status: form.status || 'Öppen',
       next_followup: form.next_followup || null,
       comment: combinedComment,
+      contact_name: form.contact_name || null,
+      contact_phone: form.contact_phone || null,
+      contact_email: form.contact_email || null,
+      pdf_path: form.pdf_path || null,
+      pdf_name: form.pdf_name || null,
     };
     if (form.quote_number) payload.quote_number = form.quote_number;
 
@@ -96,6 +107,38 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
     toast.success(quote ? 'Offert uppdaterad' : 'Offert skapad');
     onSaved?.();
     onOpenChange(false);
+  };
+
+  const handlePdfUpload = async (file: File) => {
+    if (file.type !== 'application/pdf') {
+      toast.error('Endast PDF-filer kan bifogas');
+      return;
+    }
+    setUploading(true);
+    const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, '_')}`;
+    const { error } = await supabase.storage.from('quote-pdfs').upload(path, file, {
+      contentType: 'application/pdf',
+      upsert: false,
+    });
+    setUploading(false);
+    if (error) {
+      toast.error('Kunde inte ladda upp: ' + error.message);
+      return;
+    }
+    setForm((f) => ({ ...f, pdf_path: path, pdf_name: file.name }));
+    toast.success('PDF bifogad – kom ihåg att spara');
+  };
+
+  const openPdf = async () => {
+    if (!form.pdf_path) return;
+    const { data, error } = await supabase.storage.from('quote-pdfs').createSignedUrl(form.pdf_path, 3600);
+    if (error || !data) return toast.error('Kunde inte öppna filen');
+    window.open(data.signedUrl, '_blank');
+  };
+
+  const removePdf = async () => {
+    if (form.pdf_path) await supabase.storage.from('quote-pdfs').remove([form.pdf_path]);
+    setForm((f) => ({ ...f, pdf_path: null, pdf_name: null }));
   };
 
   const handleDelete = async () => {
@@ -140,6 +183,16 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             <Input value={form.customer_name || ''} onChange={(e) => upd('customer_name', e.target.value)} />
           </Field>
 
+          <Field label="Kontaktperson">
+            <Input placeholder="Namn" value={form.contact_name || ''} onChange={(e) => upd('contact_name', e.target.value)} />
+          </Field>
+          <Field label="Telefon">
+            <Input placeholder="070-123 45 67" value={form.contact_phone || ''} onChange={(e) => upd('contact_phone', e.target.value)} />
+          </Field>
+          <Field label="E-post" className="col-span-2">
+            <Input type="email" placeholder="namn@foretag.se" value={form.contact_email || ''} onChange={(e) => upd('contact_email', e.target.value)} />
+          </Field>
+
           <Field label="Land">
             <Select value={form.country || ''} onValueChange={(v) => upd('country', v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -168,7 +221,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             <Input placeholder="2026 Q3 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} />
           </Field>
 
-          <Field label="Föreskrivare">
+          <Field label="Föreskriven">
             <div className="flex h-10 items-center gap-2">
               <Switch checked={!!form.prescriber} onCheckedChange={(v) => upd('prescriber', v)} />
               <span className="text-sm text-muted-foreground">{form.prescriber ? 'Ja' : 'Nej'}</span>
@@ -203,6 +256,31 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
           <Field label="Nästa uppföljning" className="col-span-2">
             <DatePick value={form.next_followup || undefined} onChange={(v) => upd('next_followup', v)} clearable />
+          </Field>
+
+          <Field label="Offert (PDF)" className="col-span-2">
+            {form.pdf_path ? (
+              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <button type="button" onClick={openPdf} className="flex-1 truncate text-left text-sm hover:underline">
+                  {form.pdf_name || 'Offert.pdf'}
+                </button>
+                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={removePdf}>
+                  Ta bort
+                </Button>
+              </div>
+            ) : (
+              <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground hover:bg-muted/40">
+                <Upload className="h-4 w-4" />
+                {uploading ? 'Laddar upp…' : 'Bifoga PDF'}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePdfUpload(f); e.target.value = ''; }}
+                />
+              </label>
+            )}
           </Field>
 
           <Field label="Ny kommentar" className="col-span-2">

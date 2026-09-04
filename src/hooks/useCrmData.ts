@@ -21,6 +21,11 @@ export interface CrmQuote {
   status: string;
   next_followup: string | null;
   comment: string;
+  contact_name: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  pdf_path: string | null;
+  pdf_name: string | null;
   created_at: string;
   updated_at: string;
 }
