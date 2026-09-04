@@ -93,7 +93,7 @@ const FOLLOWUP: ReviewField[] = [
 export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
   name: 'Standardmall – Projektgenomgång',
   projectType: 'Standardprojekt',
-  version: 2,
+  version: 3,
   sections: [
     {
       key: 'attendees',
@@ -105,8 +105,6 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       columns: [
         { key: 'name', label: 'Namn', type: 'text', required: true },
         { key: 'role', label: 'Roll', type: 'text' },
-        { key: 'comment', label: 'Kommentar', type: 'text' },
-        ...FOLLOWUP,
       ],
       fields: [
         { key: 'external_attendees', label: 'Övriga deltagare / externa deltagare', type: 'textarea' },
@@ -125,23 +123,6 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
         { key: 'doc_date', label: 'Datum', type: 'date' },
         { key: 'reviewed', label: 'Genomgången', type: 'yesno' },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
-        ...FOLLOWUP,
-      ],
-    },
-    {
-      key: 'scope',
-      title: 'Såld omfattning',
-      kind: 'table',
-      countsTowardProgress: true,
-      addLabel: 'Lägg till omfattningspunkt',
-      description: 'Dokumentera exakt vad kunden har köpt. Allt som är "Ingår ej" listas separat i sammanfattningen, allt "Oklart" hamnar i öppna punkter.',
-      columns: [
-        { key: 'category', label: 'Kategori', type: 'select', options: SCOPE_CATEGORIES, required: true },
-        { key: 'included', label: 'Status', type: 'scope', required: true },
-        { key: 'description', label: 'Beskrivning', type: 'textarea' },
-        { key: 'doc_ref', label: 'Hänvisning till handling', type: 'text' },
-        { key: 'revision', label: 'Dokument/revision', type: 'text' },
-        { key: 'responsible', label: 'Ansvarig', type: 'person' },
         ...FOLLOWUP,
       ],
     },
@@ -166,21 +147,16 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
     },
     {
       key: 'requirements',
-      title: 'Ska-krav / Kundkrav',
+      title: 'Ska-/Bör-krav och ingår ej',
       kind: 'table',
       countsTowardProgress: true,
       addLabel: 'Lägg till krav',
-      description: 'Krav utan ansvarig eller verifieringsmetod flaggas automatiskt.',
+      description: 'Registrera ska-krav, bör-krav och sådant som ingår ej. Markera "Kräver uppföljning" om punkten ska hamna i öppna punkter.',
       columns: [
+        { key: 'req_type', label: 'Typ av krav', type: 'select', options: ['Ska-krav', 'Bör-krav', 'Ingår ej'], required: true },
         { key: 'requirement', label: 'Krav', type: 'textarea', required: true },
-        { key: 'source', label: 'Källa', type: 'select', options: SOURCES, required: true },
+        { key: 'source', label: 'Källa', type: 'select', options: SOURCES },
         { key: 'document', label: 'Dokument', type: 'text' },
-        { key: 'page', label: 'Sida/avsnitt', type: 'text' },
-        { key: 'mandatory', label: 'Obligatoriskt', type: 'yesno' },
-        { key: 'fulfilled', label: 'Uppfylls', type: 'select', options: ['Ja', 'Nej', 'Delvis', 'Okänt'] },
-        { key: 'how', label: 'Hur kravet uppfylls', type: 'textarea' },
-        { key: 'responsible', label: 'Ansvarig', type: 'person' },
-        { key: 'verification', label: 'Verifieringsmetod', type: 'text' },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
         ...FOLLOWUP,
       ],
