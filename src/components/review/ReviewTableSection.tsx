@@ -16,12 +16,6 @@ interface Props {
 }
 
 function rowWarning(section: ReviewSection, data: Record<string, any>): string | null {
-  if (section.key === 'requirements') {
-    if (!data.responsible) return 'Ska-krav saknar ansvarig';
-    if (!data.verification) return 'Ska-krav saknar verifieringsmetod';
-  }
-  if (section.key === 'boundaries' && data.responsible_party === 'Oklart') return 'Oklar gränsdragning – hamnar i öppna punkter';
-  if (section.key === 'scope' && data.included === 'Oklart') return 'Oklar omfattning – hamnar i öppna punkter';
   if (section.key === 'open_points' && data.status === 'Klar' && !data.responsible) return 'Kan inte vara klar utan ansvarig';
   if (section.key === 'timeline' && data.date && data.status !== 'Klar' && new Date(data.date) < new Date(new Date().toDateString())) return 'Passerad deadline';
   const missing = (section.columns || []).filter(c => c.required && !data[c.key]);

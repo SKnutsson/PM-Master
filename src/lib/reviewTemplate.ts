@@ -57,12 +57,6 @@ const SOURCES = [
   'Mötesprotokoll', 'Muntlig överenskommelse', 'Standard', 'Myndighetskrav', 'Annat',
 ];
 
-const SCOPE_CATEGORIES = [
-  'Huvudleverans', 'Konstruktion', 'Material', 'Produktion', 'Montage', 'Installation',
-  'Projektering', 'Transport', 'Etablering', 'Inmätning', 'Dokumentation',
-  'Relationshandlingar', 'Besiktning', 'Provning', 'Utbildning', 'Service',
-  'Garantiåtaganden', 'Övrigt',
-];
 
 const TIMELINE_ACTIVITIES = [
   'Projekteringsstart', 'Konstruktionsstart', 'Kundgranskning', 'Bygghandling klar',
