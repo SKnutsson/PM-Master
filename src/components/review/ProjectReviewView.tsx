@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ClipboardCheck, Search, FileDown, Loader2, AlertTriangle, CircleCheck,
-  CircleAlert, Plus, ShieldCheck, RotateCcw, Info, ArrowLeft,
+  CircleAlert, Plus, ShieldCheck, RotateCcw, Info, ArrowLeft, Trash2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,11 @@ import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { useProjectReview } from '@/hooks/useProjectReview';
 import { useProfiles, getDisplayName } from '@/hooks/useProfiles';
 import { useAuth } from '@/contexts/AuthContext';
-import { REVIEW_STATUSES, ReviewSection, riskLevel } from '@/lib/reviewTemplate';
+import { REVIEW_STATUSES, ReviewSection, riskLevel, SIGNOFF_ROLE, SIGNOFF_STATEMENT } from '@/lib/reviewTemplate';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ReviewFieldInput } from './ReviewFieldInput';
 import { ReviewTableSection } from './ReviewTableSection';
 import { generateReviewSummaryPdf } from '@/lib/reviewReport';
@@ -40,8 +44,9 @@ export function ProjectReviewView() {
   const project = projects.find(p => p.id === projectId) || null;
   const {
     review, template, answers, rows, signoffs, events, loading, saving,
-    createReview, updateReview, setAnswer, addRow, updateRow, deleteRow, setSignoff,
+    createReview, updateReview, setAnswer, addRow, updateRow, deleteRow, setSignoff, deleteReview,
   } = useProjectReview(projectId || null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const sections = template.sections;
 
@@ -144,6 +149,11 @@ export function ProjectReviewView() {
     return (p && getDisplayName(p)) || user?.email || 'Okänd';
   })();
 
+  const mainSignoff = signoffs.find(s => s.role === SIGNOFF_ROLE) || null;
+  const attendeeNames = sectionRows('attendees')
+    .map(r => [r.data.name, r.data.role].filter(Boolean).join(' – '))
+    .filter(Boolean);
+
   const exportPdf = () => {
     if (!project || !review) return;
     generateReviewSummaryPdf({ project, review, sections, answers, rows, signoffs, progress });
@@ -209,6 +219,9 @@ export function ProjectReviewView() {
                 {saving && <span className="flex items-center gap-1 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Sparar…</span>}
                 <Button size="sm" variant="outline" className="gap-2" onClick={exportPdf}>
                   <FileDown className="h-4 w-4" />Exportera sammanfattning
+                </Button>
+                <Button size="sm" variant="outline" className="gap-2 text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
+                  <Trash2 className="h-4 w-4" />Radera genomgång
                 </Button>
               </div>
             </>
@@ -575,6 +588,34 @@ function HeaderField({ label, value, onChange }: { label: string; value: string;
     <div>
       <label className="mb-1 block text-[11px] font-medium text-muted-foreground">{label}</label>
       <Input className="h-8 text-sm" value={value} onChange={e => onChange(e.target.value)} />
+    <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Radera projektgenomgången?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hela genomgången för {project?.code} – {project?.name} raderas permanent, inklusive alla svar,
+              rader, godkännanden och historik. Åtgärden går inte att ångra.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                const ok = await deleteReview();
+                setConfirmDelete(false);
+                if (ok) {
+                  setProjectId('');
+                  reloadOverview();
+                  toast({ title: 'Projektgenomgång raderad' });
+                } else {
+                  toast({ title: 'Kunde inte radera', variant: 'destructive' });
+                }
+              }}
+            >Radera permanent</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
