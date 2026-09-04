@@ -86,16 +86,16 @@ export function generateReviewSummaryPdf(opts: {
       });
       y = (doc as any).lastAutoTable.finalY + 6;
 
-      if (section.key === 'scope') {
-        const excluded = secRows.filter(r => r.data.included === 'Ingår ej');
+      if (section.key === 'requirements') {
+        const excluded = secRows.filter(r => r.data.req_type === 'Ingår ej');
         if (excluded.length) {
           y = title(doc, y, 'EJ INGÅENDE');
           autoTable(doc, {
             startY: y, theme: 'grid',
             styles: { fontSize: 8, cellPadding: 1.6 },
             headStyles: { fillColor: [180, 60, 60] as [number, number, number] },
-            head: [['Kategori', 'Beskrivning', 'Hänvisning']],
-            body: excluded.map(r => [String(r.data.category ?? '–'), String(r.data.description ?? '–'), String(r.data.doc_ref ?? '–')]),
+            head: [['Krav', 'Källa', 'Dokument']],
+            body: excluded.map(r => [String(r.data.requirement ?? '–'), String(r.data.source ?? '–'), String(r.data.document ?? '–')]),
           });
           y = (doc as any).lastAutoTable.finalY + 6;
         }

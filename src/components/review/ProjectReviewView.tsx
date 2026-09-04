@@ -89,10 +89,6 @@ export function ProjectReviewView() {
   /** Automatiskt insamlade öppna punkter från hela genomgången */
   const derivedOpenPoints = useMemo(() => {
     const list: { point: string; category: string; source: string }[] = [];
-    sectionRows('scope').filter(r => r.data.included === 'Oklart')
-      .forEach(r => list.push({ point: `Oklar omfattning: ${r.data.category || ''} ${r.data.description || ''}`.trim(), category: 'Såld omfattning', source: r.data.doc_ref || '' }));
-    sectionRows('requirements').filter(r => !r.data.responsible || !r.data.verification)
-      .forEach(r => list.push({ point: `Ska-krav utan ansvarig/verifiering: ${String(r.data.requirement || '').slice(0, 80)}`, category: 'Ska-krav', source: r.data.source || '' }));
     sectionRows('deviations').filter(r => !r.data.decision)
       .forEach(r => list.push({ point: `Obeslutad avvikelse: ${String(r.data.difference || '').slice(0, 80)}`, category: 'Avvikelser', source: `${r.data.source1 || ''} / ${r.data.source2 || ''}` }));
     sectionRows('verbal').filter(r => r.data.written_confirmation === 'Nej')
@@ -119,8 +115,6 @@ export function ProjectReviewView() {
     const critical: string[] = [];
     if (sectionRows('documents').length === 0) critical.push('Inga handlingar registrerade');
     if (sectionRows('documents').some(r => r.data.reviewed !== 'Ja')) critical.push('Alla handlingar är inte genomgångna');
-    if (sectionRows('requirements').some(r => !r.data.responsible)) critical.push('Ska-krav saknar ansvarig');
-    if (sectionRows('scope').some(r => r.data.included === 'Oklart')) critical.push('Oklar omfattning – ansvar/innehåll ej fastställt');
     if (sectionRows('attendees').length === 0) critical.push('Inga deltagare registrerade');
 
     const openCount = sectionRows('open_points').filter(r => r.data.status !== 'Klar').length + derivedOpenPoints.length;
@@ -416,14 +410,14 @@ export function ProjectReviewView() {
                               </ul>
                             </div>
                           )}
-                          {s.key === 'scope' && (
+                          {s.key === 'requirements' && (
                             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
                               <p className="mb-1 text-xs font-semibold text-destructive">EJ INGÅENDE</p>
-                              {sectionRows('scope').filter(r => r.data.included === 'Ingår ej').length === 0
+                              {sectionRows('requirements').filter(r => r.data.req_type === 'Ingår ej').length === 0
                                 ? <p className="text-xs text-muted-foreground">Inga undantag dokumenterade ännu.</p>
                                 : <ul className="list-disc space-y-0.5 pl-4 text-xs">
-                                    {sectionRows('scope').filter(r => r.data.included === 'Ingår ej').map(r => (
-                                      <li key={r.id}><strong>{r.data.category}:</strong> {r.data.description || '–'} {r.data.doc_ref ? `(${r.data.doc_ref})` : ''}</li>
+                                    {sectionRows('requirements').filter(r => r.data.req_type === 'Ingår ej').map(r => (
+                                      <li key={r.id}>{r.data.requirement || '–'} {r.data.document ? `(${r.data.document})` : ''}</li>
                                     ))}
                                   </ul>}
                             </div>
