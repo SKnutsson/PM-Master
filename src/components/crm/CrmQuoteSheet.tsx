@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { CrmQuote } from '@/hooks/useCrmData';
-import { SALESPEOPLE, COUNTRIES, PRODUCTS, QUOTE_STATUSES } from '@/lib/crmConstants';
+import { SALESPEOPLE, COUNTRIES, CITIES, PRODUCTS, QUOTE_STATUSES } from '@/lib/crmConstants';
 
 interface Props {
   open: boolean;
