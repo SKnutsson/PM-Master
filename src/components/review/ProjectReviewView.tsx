@@ -34,7 +34,7 @@ export function ProjectReviewView() {
   const [search, setSearch] = useState('');
   const [activeSection, setActiveSection] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const [openSections, setOpenSections] = useState<string[]>(['attendees']);
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
   const { overview, loading: overviewLoading, reload: reloadOverview } = useReviewOverview();
   const project = projects.find(p => p.id === projectId) || null;
@@ -47,7 +47,12 @@ export function ProjectReviewView() {
 
   const sectionRows = (key: string) => rows.filter(r => r.section_key === key);
 
-  const isSectionDone = (s: ReviewSection): boolean => {
+  /** Manuell markering: avsnittet är genomgånget även om inget fyllts i. */
+  const ackKey = (key: string) => `${key}.__reviewed`;
+  const isSectionAcked = (key: string) => answers[ackKey(key)]?.value === 'Ja';
+  const toggleAck = (key: string, next: boolean) => setAnswer(key, ackKey(key), { value: next ? 'Ja' : '' });
+
+  const isSectionFilled = (s: ReviewSection): boolean => {
     if (s.kind === 'table') {
       const rs = sectionRows(s.key);
       if (rs.length === 0) return false;
@@ -65,6 +70,9 @@ export function ProjectReviewView() {
     });
     return requiredOk && answered >= Math.ceil(fields.length * 0.8);
   };
+
+  const isSectionDone = (s: ReviewSection): boolean => isSectionFilled(s) || isSectionAcked(s.key);
+
 
   const progress = useMemo(() => {
     const total = sections.length;
