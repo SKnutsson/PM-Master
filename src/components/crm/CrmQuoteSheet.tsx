@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { CrmQuote } from '@/hooks/useCrmData';
-import { SALESPEOPLE, COUNTRIES, CITIES, PRODUCTS, QUOTE_STATUSES } from '@/lib/crmConstants';
+import { SALESPEOPLE, COUNTRIES, PRODUCTS, QUOTE_STATUSES } from '@/lib/crmConstants';
 
 interface Props {
   open: boolean;
@@ -202,10 +202,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             </Select>
           </Field>
           <Field label="Ort">
-            <Select value={form.city || ''} onValueChange={(v) => upd('city', v)}>
-              <SelectTrigger><SelectValue placeholder="Välj ort" /></SelectTrigger>
-              <SelectContent>{CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-            </Select>
+            <Input placeholder="Ange ort" value={form.city || ''} onChange={(e) => upd('city', e.target.value)} />
           </Field>
           <Field label="Projekt / Arena" className="col-span-2">
             <Input value={form.project_arena || ''} onChange={(e) => upd('project_arena', e.target.value)} />
