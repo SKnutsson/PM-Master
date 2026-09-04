@@ -219,7 +219,7 @@ export function ProjectReviewView() {
       {!projectId && (
         overviewLoading
           ? <div className="flex flex-1 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-          : <ReviewOverviewList projects={projects as any} overview={overview} onOpen={setProjectId} />
+          : <ReviewOverviewList projects={projects.filter(p => overview[p.id]) as any} overview={overview} onOpen={setProjectId} />
       )}
 
       {projectId && loading && (
