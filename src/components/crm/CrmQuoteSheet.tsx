@@ -86,6 +86,11 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       status: form.status || 'Öppen',
       next_followup: form.next_followup || null,
       comment: combinedComment,
+      contact_name: form.contact_name || null,
+      contact_phone: form.contact_phone || null,
+      contact_email: form.contact_email || null,
+      pdf_path: form.pdf_path || null,
+      pdf_name: form.pdf_name || null,
     };
     if (form.quote_number) payload.quote_number = form.quote_number;
 
