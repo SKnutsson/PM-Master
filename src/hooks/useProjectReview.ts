@@ -144,7 +144,7 @@ export function useProjectReview(projectId: string | null) {
       project_id: projectId,
       template_version: DEFAULT_REVIEW_TEMPLATE.version,
       template_snapshot: DEFAULT_REVIEW_TEMPLATE.sections as any,
-      status: 'Pågår',
+      status: 'Ej påbörjad',
       review_date: new Date().toISOString().slice(0, 10),
       header,
       created_by: user?.id ?? null,
@@ -169,9 +169,20 @@ export function useProjectReview(projectId: string | null) {
     setSaving(false);
   }, [review]);
 
+  /** Sätter status till "Pågår" så fort något fylls i på en ej påbörjad genomgång. */
+  const reviewRef = useRef<ReviewRecord | null>(null);
+  useEffect(() => { reviewRef.current = review; }, [review]);
+  const touchStarted = useCallback(async () => {
+    const current = reviewRef.current;
+    if (!current || current.status !== 'Ej påbörjad') return;
+    setReview(prev => prev ? { ...prev, status: 'Pågår' } : prev);
+    await supabase.from('project_reviews').update({ status: 'Pågår' }).eq('id', current.id);
+  }, []);
+
   /** Autosparar ett checklistesvar (debounce per fält). */
   const setAnswer = useCallback((sectionKey: string, itemKey: string, patch: Partial<AnswerRecord>) => {
     if (!review) return;
+    void touchStarted();
     setAnswers(prev => {
       const next = { ...prev, [itemKey]: { ...(prev[itemKey] || { review_id: review.id, section_key: sectionKey, item_key: itemKey, value: null }), ...patch } };
       return next;
@@ -183,19 +194,23 @@ export function useProjectReview(projectId: string | null) {
       await supabase.from('project_review_answers').upsert(current as any, { onConflict: 'review_id,item_key' });
       setSaving(false);
     }, 600);
-  }, [review, user]);
+  }, [review, user, touchStarted]);
+
 
   const addRow = useCallback(async (sectionKey: string, data: Record<string, any> = {}) => {
     if (!review) return;
+    void touchStarted();
     const sort = rows.filter(r => r.section_key === sectionKey).length;
     const { data: inserted } = await supabase.from('project_review_rows')
       .insert({ review_id: review.id, section_key: sectionKey, data, sort_order: sort, created_by: user?.id ?? null })
       .select().single();
     if (inserted) setRows(prev => [...prev, inserted as any]);
-  }, [review, rows, user]);
+  }, [review, rows, user, touchStarted]);
 
   const updateRow = useCallback((rowId: string, data: Record<string, any>) => {
+    void touchStarted();
     setRows(prev => prev.map(r => r.id === rowId ? { ...r, data: { ...r.data, ...data } } : r));
+
     const key = `row:${rowId}`;
     if (timers.current[key]) clearTimeout(timers.current[key]);
     timers.current[key] = setTimeout(async () => {
@@ -205,7 +220,8 @@ export function useProjectReview(projectId: string | null) {
       await supabase.from('project_review_rows').update({ data: row.data }).eq('id', rowId);
       setSaving(false);
     }, 600);
-  }, []);
+  }, [touchStarted]);
+
 
   const rowsRef = useRef<RowRecord[]>([]);
   useEffect(() => { rowsRef.current = rows; }, [rows]);

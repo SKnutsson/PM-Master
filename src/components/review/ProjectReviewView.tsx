@@ -34,7 +34,7 @@ export function ProjectReviewView() {
   const [search, setSearch] = useState('');
   const [activeSection, setActiveSection] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const [openSections, setOpenSections] = useState<string[]>(['attendees']);
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
   const { overview, loading: overviewLoading, reload: reloadOverview } = useReviewOverview();
   const project = projects.find(p => p.id === projectId) || null;
@@ -47,7 +47,12 @@ export function ProjectReviewView() {
 
   const sectionRows = (key: string) => rows.filter(r => r.section_key === key);
 
-  const isSectionDone = (s: ReviewSection): boolean => {
+  /** Manuell markering: avsnittet är genomgånget även om inget fyllts i. */
+  const ackKey = (key: string) => `${key}.__reviewed`;
+  const isSectionAcked = (key: string) => answers[ackKey(key)]?.value === 'Ja';
+  const toggleAck = (key: string, next: boolean) => setAnswer(key, ackKey(key), { value: next ? 'Ja' : '' });
+
+  const isSectionFilled = (s: ReviewSection): boolean => {
     if (s.kind === 'table') {
       const rs = sectionRows(s.key);
       if (rs.length === 0) return false;
@@ -65,6 +70,9 @@ export function ProjectReviewView() {
     });
     return requiredOk && answered >= Math.ceil(fields.length * 0.8);
   };
+
+  const isSectionDone = (s: ReviewSection): boolean => isSectionFilled(s) || isSectionAcked(s.key);
+
 
   const progress = useMemo(() => {
     const total = sections.length;
@@ -211,7 +219,7 @@ export function ProjectReviewView() {
       {!projectId && (
         overviewLoading
           ? <div className="flex flex-1 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-          : <ReviewOverviewList projects={projects as any} overview={overview} onOpen={setProjectId} />
+          : <ReviewOverviewList projects={projects.filter(p => overview[p.id]) as any} overview={overview} onOpen={setProjectId} />
       )}
 
       {projectId && loading && (
@@ -336,18 +344,37 @@ export function ProjectReviewView() {
             {/* Sections */}
             <Accordion type="multiple" value={openSections} onValueChange={setOpenSections} className="space-y-3">
               {filteredSections.map(s => {
-                const done = isSectionDone(s);
+                const filled = isSectionFilled(s);
+                const acked = isSectionAcked(s.key);
+                const done = filled || acked;
                 return (
                   <AccordionItem key={s.key} value={s.key} id={`sec-${s.key}`} className="rounded-lg border bg-card px-4">
                     <AccordionTrigger className="py-3 hover:no-underline">
                       <div className="flex flex-1 items-center gap-2 pr-3">
                         <span className="text-sm font-semibold">{s.title}</span>
                         {done
-                          ? <Badge className="bg-status-completed/15 text-status-completed border-status-completed/30 text-[10px]">Genomgången</Badge>
+                          ? <Badge className="bg-status-completed/15 text-status-completed border-status-completed/30 text-[10px]">
+                              {filled ? 'Genomgången' : 'Genomgången (utan noteringar)'}
+                            </Badge>
                           : <Badge variant="outline" className="text-[10px] text-muted-foreground">Ej komplett</Badge>}
                         {s.kind === 'table' && <span className="text-[11px] text-muted-foreground">{sectionRows(s.key).length} rader</span>}
+                        <span
+                          role="checkbox"
+                          aria-checked={acked}
+                          tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); toggleAck(s.key, !acked); }}
+                          onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); toggleAck(s.key, !acked); } }}
+                          className={cn(
+                            'ml-auto flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors',
+                            acked ? 'border-status-completed/40 bg-status-completed/10 text-status-completed' : 'text-muted-foreground hover:bg-accent',
+                          )}
+                        >
+                          <CircleCheck className={cn('h-3.5 w-3.5', !acked && 'opacity-40')} />
+                          Genomgånget
+                        </span>
                       </div>
                     </AccordionTrigger>
+
                     <AccordionContent className="pb-4">
                       {s.kind === 'table' ? (
                         <div className="space-y-4">
