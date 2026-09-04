@@ -39,6 +39,8 @@ export function ProjectReviewView() {
   const [activeSection, setActiveSection] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [openSections, setOpenSections] = useState<string[]>([]);
+  // Alltid komprimerat när man öppnar ett projekt (ny eller påbörjad genomgång)
+  useEffect(() => { setOpenSections([]); }, [projectId]);
 
   const { overview, loading: overviewLoading, reload: reloadOverview } = useReviewOverview();
   const project = projects.find(p => p.id === projectId) || null;
