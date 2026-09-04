@@ -199,15 +199,18 @@ export function useProjectReview(projectId: string | null) {
 
   const addRow = useCallback(async (sectionKey: string, data: Record<string, any> = {}) => {
     if (!review) return;
+    void touchStarted();
     const sort = rows.filter(r => r.section_key === sectionKey).length;
     const { data: inserted } = await supabase.from('project_review_rows')
       .insert({ review_id: review.id, section_key: sectionKey, data, sort_order: sort, created_by: user?.id ?? null })
       .select().single();
     if (inserted) setRows(prev => [...prev, inserted as any]);
-  }, [review, rows, user]);
+  }, [review, rows, user, touchStarted]);
 
   const updateRow = useCallback((rowId: string, data: Record<string, any>) => {
+    void touchStarted();
     setRows(prev => prev.map(r => r.id === rowId ? { ...r, data: { ...r.data, ...data } } : r));
+
     const key = `row:${rowId}`;
     if (timers.current[key]) clearTimeout(timers.current[key]);
     timers.current[key] = setTimeout(async () => {
