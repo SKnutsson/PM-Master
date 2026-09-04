@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
 import { CrmQuoteSheet } from './CrmQuoteSheet';
-import { SALESPEOPLE, QUOTE_STATUSES, COUNTRIES, CITIES, formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
+import { SALESPEOPLE, QUOTE_STATUSES, COUNTRIES, formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -19,7 +19,6 @@ export function CrmQuotesView() {
   const [status, setStatus] = useState<string>('all');
   const [probability, setProbability] = useState<string>('all');
   const [country, setCountry] = useState<string>('all');
-  const [city, setCity] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<CrmQuote | null>(null);
 
@@ -29,7 +28,6 @@ export function CrmQuotesView() {
       if (status !== 'all' && q.status !== status) return false;
       if (probability !== 'all' && String(q.probability) !== probability) return false;
       if (country !== 'all' && q.country !== country) return false;
-      if (city !== 'all' && q.city !== city) return false;
       if (search) {
         const s = search.toLowerCase();
         const hay = [q.customer_name, q.project_arena, q.product, q.quote_number, q.comment, q.city].join(' ').toLowerCase();
@@ -37,7 +35,7 @@ export function CrmQuotesView() {
       }
       return true;
     });
-  }, [quotes, salesperson, status, probability, country, city, search]);
+  }, [quotes, salesperson, status, probability, country, search]);
 
   const openNew = () => { setEditing(null); setSheetOpen(true); };
   const openEdit = (q: CrmQuote) => { setEditing(q); setSheetOpen(true); };
@@ -54,16 +52,15 @@ export function CrmQuotesView() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             <div className="relative md:col-span-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Sök kund, projekt, produkt…" className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input placeholder="Sök kund, projekt, ort…" className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <FilterSelect label="Säljare" value={salesperson} onChange={setSalesperson} options={SALESPEOPLE as readonly string[]} />
             <FilterSelect label="Status" value={status} onChange={setStatus} options={QUOTE_STATUSES as readonly string[]} />
             <FilterSelect label="Sannolikhet" value={probability} onChange={setProbability} options={['1', '2', '3', '4', '5']} />
             <FilterSelect label="Land" value={country} onChange={setCountry} options={COUNTRIES as readonly string[]} />
-            <FilterSelect label="Ort" value={city} onChange={setCity} options={CITIES as readonly string[]} />
           </div>
         </CardContent>
       </Card>

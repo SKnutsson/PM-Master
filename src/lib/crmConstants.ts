@@ -2,37 +2,6 @@ export const SALESPEOPLE = ['Mikael', 'Martin', 'Bertil', 'Samuel'] as const;
 
 export const COUNTRIES = ['Sverige', 'Danmark', 'Norge', 'Finland', 'Övriga'] as const;
 
-export const CITIES = [
-  'Stockholm',
-  'Göteborg',
-  'Malmö',
-  'Uppsala',
-  'Linköping',
-  'Örebro',
-  'Västerås',
-  'Norrköping',
-  'Helsingborg',
-  'Jönköping',
-  'Umeå',
-  'Lund',
-  'Borås',
-  'Sundsvall',
-  'Gävle',
-  'Karlstad',
-  'Eskilstuna',
-  'Södertälje',
-  'Täby',
-  'Halmstad',
-  'Luleå',
-  'Kristianstad',
-  'Östersund',
-  'Nyköping',
-  'Skellefteå',
-  'Växjö',
-  'Kalmar',
-  'Annan',
-] as const;
-
 export const PRODUCTS = [
   'Teleskopläktare',
   'Stadion Comfort',
