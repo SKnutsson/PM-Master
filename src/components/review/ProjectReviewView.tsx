@@ -510,29 +510,45 @@ export function ProjectReviewView() {
                 <CardTitle className="text-sm">Godkännande (sign-off)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {signoffs.sort((a, b) => a.role.localeCompare(b.role)).map(s => (
-                  <div key={s.id} className={cn('rounded-lg border p-3', s.approved && 'border-status-completed/40 bg-status-completed/5')}>
-                    <p className="text-sm font-medium">{s.role}</p>
-                    <p className="mb-2 text-xs text-muted-foreground">{s.statement}</p>
-                    <div className="flex flex-wrap items-center gap-3 text-xs">
-                      <span>Namn: <strong>{s.approved_name || '–'}</strong></span>
-                      <span>Datum: <strong>{s.approved_at ? new Date(s.approved_at).toLocaleString('sv-SE') : '–'}</strong></span>
-                      {s.approved ? (
-                        <Button size="sm" variant="outline" className="gap-2 h-7" onClick={() => setSignoff(s.role, false, currentUserName)}>
+                <div className={cn('rounded-lg border p-3', mainSignoff?.approved && 'border-status-completed/40 bg-status-completed/5')}>
+                  <p className="mb-2 text-xs text-muted-foreground">{SIGNOFF_STATEMENT}</p>
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                    {mainSignoff?.approved ? (
+                      <>
+                        <span>Godkänd av: <strong>{mainSignoff.approved_name || '–'}</strong></span>
+                        <span>Datum: <strong>{mainSignoff.approved_at ? new Date(mainSignoff.approved_at).toLocaleString('sv-SE') : '–'}</strong></span>
+                        <Button size="sm" variant="outline" className="gap-2 h-7" onClick={() => setSignoff(SIGNOFF_ROLE, false, currentUserName)}>
                           <RotateCcw className="h-3.5 w-3.5" />Återkalla
                         </Button>
-                      ) : (
-                        <Button size="sm" className="gap-2 h-7" disabled={!canApprove}
-                          onClick={() => setSignoff(s.role, true, currentUserName)}>
-                          <ShieldCheck className="h-3.5 w-3.5" />Godkänn som {currentUserName}
-                        </Button>
-                      )}
-                    </div>
+                      </>
+                    ) : (
+                      <Button size="sm" className="gap-2 h-7" disabled={!canApprove}
+                        onClick={() => setSignoff(SIGNOFF_ROLE, true, currentUserName)}>
+                        <ShieldCheck className="h-3.5 w-3.5" />Godkänn som {currentUserName}
+                      </Button>
+                    )}
                   </div>
-                ))}
+                  {mainSignoff?.approved && (
+                    <div className="mt-3 border-t pt-2">
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Närvarande som deltagit i genomgången</p>
+                      {attendeeNames.length === 0
+                        ? <p className="text-xs text-muted-foreground">Inga deltagare registrerade.</p>
+                        : (
+                          <ul className="grid gap-0.5 text-xs sm:grid-cols-2">
+                            {attendeeNames.map((n, i) => (
+                              <li key={i} className="flex items-center gap-1.5">
+                                <CircleCheck className="h-3 w-3 text-status-completed" />{n}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                    </div>
+                  )}
+                </div>
                 {!canApprove && <p className="text-xs text-destructive">Genomgången kan inte slutligt godkännas medan kritiska kontrollpunkter saknas.</p>}
               </CardContent>
             </Card>
+
 
             {/* Audit log */}
             <Card>
