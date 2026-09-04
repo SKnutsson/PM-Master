@@ -183,6 +183,16 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             <Input value={form.customer_name || ''} onChange={(e) => upd('customer_name', e.target.value)} />
           </Field>
 
+          <Field label="Kontaktperson">
+            <Input placeholder="Namn" value={form.contact_name || ''} onChange={(e) => upd('contact_name', e.target.value)} />
+          </Field>
+          <Field label="Telefon">
+            <Input placeholder="070-123 45 67" value={form.contact_phone || ''} onChange={(e) => upd('contact_phone', e.target.value)} />
+          </Field>
+          <Field label="E-post" className="col-span-2">
+            <Input type="email" placeholder="namn@foretag.se" value={form.contact_email || ''} onChange={(e) => upd('contact_email', e.target.value)} />
+          </Field>
+
           <Field label="Land">
             <Select value={form.country || ''} onValueChange={(v) => upd('country', v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
