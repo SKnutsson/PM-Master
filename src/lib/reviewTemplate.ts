@@ -367,10 +367,12 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
   ],
 };
 
+export const SIGNOFF_ROLE = 'Godkännande av projektgenomgång';
+export const SIGNOFF_STATEMENT =
+  'Samtliga närvarande intygar att alla förutsättningar, handlingar och frågor har gåtts igenom och att projektet kan gå vidare till projektgenomförande.';
+
 export const SIGNOFF_ROLES: { role: string; statement: string }[] = [
-  { role: 'Säljare', statement: 'Jag intygar att projektets sålda omfattning, kommersiella villkor och kundens krav har gåtts igenom.' },
-  { role: 'Konstruktionschef', statement: 'Jag intygar att tekniska förutsättningar, handlingar och konstruktionsrelaterade frågor har gåtts igenom.' },
-  { role: 'Projektledare', statement: 'Jag intygar att projektet är tillräckligt dokumenterat för att gå vidare till projektgenomförande.' },
+  { role: SIGNOFF_ROLE, statement: SIGNOFF_STATEMENT },
 ];
 
 export function riskLevel(p?: string, c?: string): { value: number; level: string } {
