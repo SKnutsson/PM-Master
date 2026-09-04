@@ -75,7 +75,7 @@ export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
           <span>Projekt</span><span>Kund</span><span>Genomgång</span><span>Öppna punkter</span><span className="text-right">Åtgärd</span>
         </div>
 
-        {visible.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">Inga projekt matchar filtret.</p>}
+        {visible.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">Inga projektgenomgångar ännu – välj ett projekt i rullistan högst upp för att starta en.</p>}
 
         {visible.map(({ project: p, entry, points, state }) => {
           const isOpen = expanded.includes(p.id);
