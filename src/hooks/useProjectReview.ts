@@ -258,12 +258,8 @@ export function useProjectReview(projectId: string | null) {
   const deleteReview = useCallback(async () => {
     if (!review) return false;
     const rid = review.id;
-    await Promise.all([
-      supabase.from('project_review_answers').delete().eq('review_id', rid),
-      supabase.from('project_review_rows').delete().eq('review_id', rid),
-      supabase.from('project_review_signoffs').delete().eq('review_id', rid),
-      supabase.from('project_review_events').delete().eq('review_id', rid),
-    ]);
+    // Underliggande tabeller raderas via ON DELETE CASCADE
+
     const { error } = await supabase.from('project_reviews').delete().eq('id', rid);
     if (error) return false;
     setReview(null); setAnswers({}); setRows([]); setSignoffs([]); setEvents([]);
