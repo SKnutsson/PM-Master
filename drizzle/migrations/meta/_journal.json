@@ -15,6 +15,13 @@
       "when": 1788512749526,
       "tag": "0001_crm_quotes_contact_and_pdf",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788512769759,
+      "tag": "0002_quote_pdfs_storage_policies",
+      "breakpoints": true
     }
   ]
 }
