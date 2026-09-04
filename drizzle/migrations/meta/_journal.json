@@ -8,6 +8,13 @@
       "when": 1788421784305,
       "tag": "0000_create_project_review",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788512749526,
+      "tag": "0001_crm_quotes_contact_and_pdf",
+      "breakpoints": true
     }
   ]
 }
