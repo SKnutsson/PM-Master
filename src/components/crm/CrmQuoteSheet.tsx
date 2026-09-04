@@ -211,7 +211,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             <Input placeholder="2026 Q3 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} />
           </Field>
 
-          <Field label="Föreskrivare">
+          <Field label="Föreskriven">
             <div className="flex h-10 items-center gap-2">
               <Switch checked={!!form.prescriber} onCheckedChange={(v) => upd('prescriber', v)} />
               <span className="text-sm text-muted-foreground">{form.prescriber ? 'Ja' : 'Nej'}</span>
