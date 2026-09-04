@@ -108,6 +108,38 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
     onOpenChange(false);
   };
 
+  const handlePdfUpload = async (file: File) => {
+    if (file.type !== 'application/pdf') {
+      toast.error('Endast PDF-filer kan bifogas');
+      return;
+    }
+    setUploading(true);
+    const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, '_')}`;
+    const { error } = await supabase.storage.from('quote-pdfs').upload(path, file, {
+      contentType: 'application/pdf',
+      upsert: false,
+    });
+    setUploading(false);
+    if (error) {
+      toast.error('Kunde inte ladda upp: ' + error.message);
+      return;
+    }
+    setForm((f) => ({ ...f, pdf_path: path, pdf_name: file.name }));
+    toast.success('PDF bifogad – kom ihåg att spara');
+  };
+
+  const openPdf = async () => {
+    if (!form.pdf_path) return;
+    const { data, error } = await supabase.storage.from('quote-pdfs').createSignedUrl(form.pdf_path, 3600);
+    if (error || !data) return toast.error('Kunde inte öppna filen');
+    window.open(data.signedUrl, '_blank');
+  };
+
+  const removePdf = async () => {
+    if (form.pdf_path) await supabase.storage.from('quote-pdfs').remove([form.pdf_path]);
+    setForm((f) => ({ ...f, pdf_path: null, pdf_name: null }));
+  };
+
   const handleDelete = async () => {
     if (!quote) return;
     if (!confirm('Ta bort denna offert?')) return;
