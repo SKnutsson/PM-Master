@@ -220,7 +220,8 @@ export function useProjectReview(projectId: string | null) {
       await supabase.from('project_review_rows').update({ data: row.data }).eq('id', rowId);
       setSaving(false);
     }, 600);
-  }, []);
+  }, [touchStarted]);
+
 
   const rowsRef = useRef<RowRecord[]>([]);
   useEffect(() => { rowsRef.current = rows; }, [rows]);
