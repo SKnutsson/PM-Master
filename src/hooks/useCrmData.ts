@@ -11,6 +11,7 @@ export interface CrmQuote {
   customer_id: string | null;
   customer_name: string;
   country: string;
+  city: string | null;
   project_arena: string;
   product: string;
   quantity_spec: string;

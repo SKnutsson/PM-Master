@@ -266,6 +266,7 @@ export type Database = {
       crm_quotes: {
         Row: {
           amount: number
+          city: string | null
           comment: string | null
           contact_email: string | null
           contact_name: string | null
@@ -293,6 +294,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          city?: string | null
           comment?: string | null
           contact_email?: string | null
           contact_name?: string | null
@@ -320,6 +322,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          city?: string | null
           comment?: string | null
           contact_email?: string | null
           contact_name?: string | null
