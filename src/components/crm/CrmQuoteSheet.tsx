@@ -40,6 +40,11 @@ const emptyQuote = (): Partial<CrmQuote> => ({
   status: 'Öppen',
   next_followup: null,
   comment: '',
+  contact_name: '',
+  contact_phone: '',
+  contact_email: '',
+  pdf_path: null,
+  pdf_name: null,
 });
 
 export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
