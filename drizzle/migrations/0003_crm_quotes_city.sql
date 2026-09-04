@@ -1,0 +1,1 @@
+ALTER TABLE public.crm_quotes ADD COLUMN city text;
