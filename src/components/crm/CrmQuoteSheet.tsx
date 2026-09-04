@@ -30,6 +30,7 @@ const emptyQuote = (): Partial<CrmQuote> => ({
   responsible: '',
   customer_name: '',
   country: 'Sverige',
+  city: '',
   project_arena: '',
   product: '',
   quantity_spec: '',
@@ -77,6 +78,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       responsible: form.responsible || '',
       customer_name: form.customer_name || '',
       country: form.country || '',
+      city: form.city || null,
       project_arena: form.project_arena || '',
       product: form.product || '',
       quantity_spec: form.quantity_spec || '',
@@ -199,7 +201,13 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
               <SelectContent>{COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
           </Field>
-          <Field label="Projekt / Arena">
+          <Field label="Ort">
+            <Select value={form.city || ''} onValueChange={(v) => upd('city', v)}>
+              <SelectTrigger><SelectValue placeholder="Välj ort" /></SelectTrigger>
+              <SelectContent>{CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+            </Select>
+          </Field>
+          <Field label="Projekt / Arena" className="col-span-2">
             <Input value={form.project_arena || ''} onChange={(e) => upd('project_arena', e.target.value)} />
           </Field>
 
