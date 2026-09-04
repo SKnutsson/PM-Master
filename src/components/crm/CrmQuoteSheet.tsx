@@ -52,6 +52,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
   const [form, setForm] = useState<Partial<CrmQuote>>(emptyQuote());
   const [newComment, setNewComment] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setForm(quote ? { ...quote } : emptyQuote());
