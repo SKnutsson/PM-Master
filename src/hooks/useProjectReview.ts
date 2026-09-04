@@ -254,8 +254,25 @@ export function useProjectReview(projectId: string | null) {
     setEvents((refreshed.data as any) || []);
   }, [review, signoffs, user, logEvent]);
 
+  /** Raderar hela projektgenomgången permanent (inkl. svar, rader, sign-off och historik). */
+  const deleteReview = useCallback(async () => {
+    if (!review) return false;
+    const rid = review.id;
+    await Promise.all([
+      supabase.from('project_review_answers').delete().eq('review_id', rid),
+      supabase.from('project_review_rows').delete().eq('review_id', rid),
+      supabase.from('project_review_signoffs').delete().eq('review_id', rid),
+      supabase.from('project_review_events').delete().eq('review_id', rid),
+    ]);
+    const { error } = await supabase.from('project_reviews').delete().eq('id', rid);
+    if (error) return false;
+    setReview(null); setAnswers({}); setRows([]); setSignoffs([]); setEvents([]);
+    return true;
+  }, [review]);
+
   return {
     review, template, answers, rows, signoffs, events, loading, saving,
     createReview, updateReview, setAnswer, addRow, updateRow, deleteRow, setSignoff, logEvent, reload: load,
+    deleteReview,
   };
 }
