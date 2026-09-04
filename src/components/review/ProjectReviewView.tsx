@@ -579,16 +579,7 @@ export function ProjectReviewView() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function HeaderField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <div>
-      <label className="mb-1 block text-[11px] font-medium text-muted-foreground">{label}</label>
-      <Input className="h-8 text-sm" value={value} onChange={e => onChange(e.target.value)} />
-    <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Radera projektgenomgången?</AlertDialogTitle>
@@ -616,6 +607,15 @@ function HeaderField({ label, value, onChange }: { label: string; value: string;
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function HeaderField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="mb-1 block text-[11px] font-medium text-muted-foreground">{label}</label>
+      <Input className="h-8 text-sm" value={value} onChange={e => onChange(e.target.value)} />
     </div>
   );
 }
