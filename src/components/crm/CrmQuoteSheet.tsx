@@ -258,6 +258,31 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             <DatePick value={form.next_followup || undefined} onChange={(v) => upd('next_followup', v)} clearable />
           </Field>
 
+          <Field label="Offert (PDF)" className="col-span-2">
+            {form.pdf_path ? (
+              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <button type="button" onClick={openPdf} className="flex-1 truncate text-left text-sm hover:underline">
+                  {form.pdf_name || 'Offert.pdf'}
+                </button>
+                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={removePdf}>
+                  Ta bort
+                </Button>
+              </div>
+            ) : (
+              <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground hover:bg-muted/40">
+                <Upload className="h-4 w-4" />
+                {uploading ? 'Laddar upp…' : 'Bifoga PDF'}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePdfUpload(f); e.target.value = ''; }}
+                />
+              </label>
+            )}
+          </Field>
+
           <Field label="Ny kommentar" className="col-span-2">
             <Textarea
               value={newComment}
