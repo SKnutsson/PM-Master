@@ -359,69 +359,9 @@ export function Dashboard() {
       </div>
 
 
-      {/* ── ROW 4: Project Status + Events — side by side ── */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        {/* Project Status */}
-        <motion.div variants={itemVariants}>
-          <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Check className="h-4 w-4 text-primary" />
-                Projektstatus
-              </CardTitle>
-              <CardDescription className="text-xs">Framsteg per aktivt projekt</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 overflow-auto">
-              {activeProjects.length === 0 ?
-              <p className="text-center text-sm text-muted-foreground py-6 px-4">Inga projekt ännu.</p> :
+      {/* ── ROW 4: Events ── */}
+      <div className="grid gap-4 grid-cols-1">
 
-              <div className="divide-y divide-border/30">
-                  <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-5 py-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                    <span>Projekt</span>
-                    <span className="text-center w-20">Aktiviteter</span>
-                    <span className="text-right w-24">Framsteg</span>
-                  </div>
-                  {activeProjects.
-                map((project) => {
-                  const completed = project.activities.filter((a) => a.status === 'Slutförd').length;
-                  const total = project.activities.length;
-                  const progress = total > 0 ? Math.round(completed / total * 100) : 0;
-                  return { project, completed, total, progress };
-                }).
-                sort((a, b) => b.progress - a.progress).
-                map(({ project, completed, total, progress }) => {
-                  const hasWarning = project.activities.some((a) => a.hasWarning);
-                  return (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="grid grid-cols-[1fr_auto_auto] gap-3 items-center px-5 py-2.5 hover:bg-muted/30 transition-colors cursor-default">
-                      
-                          <div className="flex items-center gap-2 min-w-0">
-                            {hasWarning && <AlertTriangle className="h-3.5 w-3.5 text-status-delayed shrink-0" />}
-                            <span className="text-sm font-medium truncate">{project.code} – {project.name}</span>
-                          </div>
-                          <span className="text-sm text-muted-foreground text-center w-20">{completed}/{total}</span>
-                          <div className="flex items-center gap-2 justify-end w-24">
-                            <div className="h-2 w-14 overflow-hidden rounded-full bg-muted">
-                              <motion.div
-                            className="h-full bg-primary rounded-full"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 0.8, ease: 'easeOut' }} />
-                          
-                            </div>
-                            <span className="text-sm font-semibold w-8 text-right">{progress}%</span>
-                          </div>
-                        </motion.div>);
-
-                })}
-                </div>
-              }
-            </CardContent>
-          </Card>
-        </motion.div>
 
         {/* Events */}
         <motion.div variants={itemVariants}>
