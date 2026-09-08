@@ -219,23 +219,26 @@ export function Dashboard() {
       {/* ── ROW 1: Key figures (plain) ── */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         {[
-          { label: 'Aktiva projekt', value: activeProjects.length, icon: FolderKanban, tone: 'text-primary' },
-          { label: 'Försenade aktiviteter', value: delayedActivities, icon: AlertTriangle, tone: 'text-status-delayed' },
-          { label: 'Risk för försening', value: atRiskActivities, icon: Clock, tone: 'text-status-risk' },
+          { label: 'Aktiva projekt', value: activeProjects.length, icon: FolderKanban, tone: 'text-primary', bg: 'bg-primary/10', ring: 'border-primary/30' },
+          { label: 'Försenade aktiviteter', value: delayedActivities, icon: AlertTriangle, tone: 'text-status-delayed', bg: 'bg-status-delayed/10', ring: 'border-status-delayed/30' },
+          { label: 'Risk för försening', value: atRiskActivities, icon: Clock, tone: 'text-status-risk', bg: 'bg-status-risk/10', ring: 'border-status-risk/30' },
         ].map((s) => (
           <motion.div key={s.label} variants={itemVariants}>
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-card px-4 py-3 h-full">
+            <div className={`flex items-center justify-between gap-3 rounded-xl border ${s.ring} ${s.bg} px-4 py-3 h-full`}>
               <div className="min-w-0">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</p>
-                <p className="text-3xl font-bold leading-tight tabular-nums">
+                <p className={`text-3xl font-bold leading-tight tabular-nums ${s.tone}`}>
                   <AnimatedNumber value={s.value} />
                 </p>
               </div>
-              <s.icon className={`h-5 w-5 shrink-0 ${s.tone}`} />
+              <span className={`rounded-lg p-2 ${s.bg} ${s.tone}`}>
+                <s.icon className="h-5 w-5 shrink-0" />
+              </span>
             </div>
           </motion.div>
         ))}
       </div>
+
 
       {/* ── ROW 2: Projektflöde board ── */}
       <motion.div variants={itemVariants}>
@@ -247,65 +250,77 @@ export function Dashboard() {
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
             {projectsByPhase.map(({ phase, projects: phaseProjects }, idx) => {
               const config = phaseConfig[phase];
+              const PhaseIcon = config.icon;
               return (
                 <motion.div
                   key={phase}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.06 }}
-                  className="rounded-xl bg-muted/40 p-3">
-                  <div className="mb-2.5 flex items-center justify-between gap-2 px-1">
+                  className="overflow-hidden rounded-xl border border-border/40"
+                  style={{ backgroundColor: `color-mix(in srgb, ${config.accent} 8%, transparent)` }}>
+                  <div
+                    className="flex items-center justify-between gap-2 px-3 py-2 text-white"
+                    style={{ backgroundColor: config.accent }}>
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: config.accent }} />
+                      <PhaseIcon className="h-4 w-4 shrink-0" />
                       <h3 className="font-semibold text-sm truncate">{phase}</h3>
                     </div>
-                    <span className="rounded-md bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">
+                    <span className="rounded-md bg-white/20 px-2 py-0.5 text-xs font-semibold tabular-nums">
                       {phaseProjects.length}
                     </span>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-3">
                     {phaseProjects.length === 0 ? (
                       <p className="py-6 text-center text-xs text-muted-foreground italic">Inga projekt i denna fas</p>
                     ) : (
                       phaseProjects.map((p, i) => {
-                        const phaseActs = p.activities.filter((a) => a.phase === phase);
-                        const done = phaseActs.filter((a) => a.status === 'Slutförd').length;
-                        const total = phaseActs.length;
+                        const acts = p.activities;
+                        const done = acts.filter((a) => a.status === 'Slutförd').length;
+                        const total = acts.length;
                         const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-                        const isDelayed = phaseActs.some((a) => a.status === 'Försenad');
-                        const isRisk = !isDelayed && phaseActs.some((a) => a.status === 'Risk för försening');
+                        const delayed = acts.filter((a) => a.status === 'Försenad').length;
+                        const risk = acts.filter((a) => a.status === 'Risk för försening').length;
                         return (
                           <motion.div
                             key={p.id}
                             initial={{ opacity: 0, x: -6 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.03 }}
-                            className="rounded-lg border border-border/40 bg-card px-3 py-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+                            className="rounded-lg border border-border/40 bg-card px-3 py-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 border-l-4"
+                            style={{ borderLeftColor: config.accent }}>
                             <p className="text-[11px] font-medium text-muted-foreground tabular-nums">{p.code}</p>
                             <p className="text-sm font-bold truncate" title={p.name}>{p.name}</p>
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                              {isDelayed ? (
-                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-status-delayed">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-status-delayed" />Försenad
-                                </span>
-                              ) : isRisk ? (
-                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-status-risk">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-status-risk" />Risk
-                                </span>
-                              ) : (
-                                <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
-                                  <motion.div
-                                    className="h-full rounded-full"
-                                    style={{ backgroundColor: config.accent }}
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
-                                    transition={{ duration: 0.7, ease: 'easeOut' }} />
-                                </div>
-                              )}
-                              <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">
-                                {isDelayed || isRisk ? `${done} / ${total}` : `${progress}%`}
+
+                            <div className="mt-2 flex items-center gap-2">
+                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                <motion.div
+                                  className="h-full rounded-full"
+                                  style={{ backgroundColor: config.accent }}
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${progress}%` }}
+                                  transition={{ duration: 0.7, ease: 'easeOut' }} />
+                              </div>
+                              <span className="text-[11px] font-semibold tabular-nums shrink-0" style={{ color: config.accent }}>
+                                {progress}%
                               </span>
+                            </div>
+
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-status-completed/15 px-2 py-0.5 text-[10px] font-medium text-status-completed tabular-nums">
+                                <Check className="h-3 w-3" />{done} / {total} klara
+                              </span>
+                              {delayed > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-status-delayed/15 px-2 py-0.5 text-[10px] font-medium text-status-delayed tabular-nums">
+                                  <AlertTriangle className="h-3 w-3" />{delayed} försenad{delayed > 1 ? 'e' : ''}
+                                </span>
+                              )}
+                              {risk > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-status-risk/15 px-2 py-0.5 text-[10px] font-medium text-status-risk tabular-nums">
+                                  <Clock className="h-3 w-3" />{risk} i riskzon
+                                </span>
+                              )}
                             </div>
                           </motion.div>
                         );
@@ -316,6 +331,7 @@ export function Dashboard() {
               );
             })}
           </div>
+
         </div>
       </motion.div>
 
@@ -359,69 +375,9 @@ export function Dashboard() {
       </div>
 
 
-      {/* ── ROW 4: Project Status + Events — side by side ── */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        {/* Project Status */}
-        <motion.div variants={itemVariants}>
-          <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Check className="h-4 w-4 text-primary" />
-                Projektstatus
-              </CardTitle>
-              <CardDescription className="text-xs">Framsteg per aktivt projekt</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0 flex-1 overflow-auto">
-              {activeProjects.length === 0 ?
-              <p className="text-center text-sm text-muted-foreground py-6 px-4">Inga projekt ännu.</p> :
+      {/* ── ROW 4: Events ── */}
+      <div className="grid gap-4 grid-cols-1">
 
-              <div className="divide-y divide-border/30">
-                  <div className="grid grid-cols-[1fr_auto_auto] gap-3 px-5 py-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                    <span>Projekt</span>
-                    <span className="text-center w-20">Aktiviteter</span>
-                    <span className="text-right w-24">Framsteg</span>
-                  </div>
-                  {activeProjects.
-                map((project) => {
-                  const completed = project.activities.filter((a) => a.status === 'Slutförd').length;
-                  const total = project.activities.length;
-                  const progress = total > 0 ? Math.round(completed / total * 100) : 0;
-                  return { project, completed, total, progress };
-                }).
-                sort((a, b) => b.progress - a.progress).
-                map(({ project, completed, total, progress }) => {
-                  const hasWarning = project.activities.some((a) => a.hasWarning);
-                  return (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="grid grid-cols-[1fr_auto_auto] gap-3 items-center px-5 py-2.5 hover:bg-muted/30 transition-colors cursor-default">
-                      
-                          <div className="flex items-center gap-2 min-w-0">
-                            {hasWarning && <AlertTriangle className="h-3.5 w-3.5 text-status-delayed shrink-0" />}
-                            <span className="text-sm font-medium truncate">{project.code} – {project.name}</span>
-                          </div>
-                          <span className="text-sm text-muted-foreground text-center w-20">{completed}/{total}</span>
-                          <div className="flex items-center gap-2 justify-end w-24">
-                            <div className="h-2 w-14 overflow-hidden rounded-full bg-muted">
-                              <motion.div
-                            className="h-full bg-primary rounded-full"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            transition={{ duration: 0.8, ease: 'easeOut' }} />
-                          
-                            </div>
-                            <span className="text-sm font-semibold w-8 text-right">{progress}%</span>
-                          </div>
-                        </motion.div>);
-
-                })}
-                </div>
-              }
-            </CardContent>
-          </Card>
-        </motion.div>
 
         {/* Events */}
         <motion.div variants={itemVariants}>
