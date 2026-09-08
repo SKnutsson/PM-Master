@@ -272,231 +272,148 @@ export function Dashboard() {
         </Button>
       </div>
 
-      {/* ── ROW 1: Compact Hero Stat Cards ── */}
+      {/* ── ROW 1: Key figures (plain) ── */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-        {/* Aktiva projekt — dark petrol */}
-        <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] px-4 py-3 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
-            <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/5 -translate-y-6 translate-x-6" />
-            <div className="relative z-10 flex items-center justify-between gap-3">
+        {[
+          { label: 'Aktiva projekt', value: activeProjects.length, icon: FolderKanban, tone: 'text-primary' },
+          { label: 'Försenade aktiviteter', value: delayedActivities, icon: AlertTriangle, tone: 'text-status-delayed' },
+          { label: 'Risk för försening', value: atRiskActivities, icon: Clock, tone: 'text-status-risk' },
+        ].map((s) => (
+          <motion.div key={s.label} variants={itemVariants}>
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-card px-4 py-3 h-full">
               <div className="min-w-0">
-                <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Aktiva projekt</p>
-                <p className="text-3xl font-bold text-white leading-tight tabular-nums">
-                  <AnimatedNumber value={activeProjects.length} />
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</p>
+                <p className="text-3xl font-bold leading-tight tabular-nums">
+                  <AnimatedNumber value={s.value} />
                 </p>
               </div>
-              <div className="rounded-lg p-2 bg-white/10 backdrop-blur-sm shrink-0">
-                <FolderKanban className="h-5 w-5 text-white/80" />
-              </div>
+              <s.icon className={`h-5 w-5 shrink-0 ${s.tone}`} />
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ))}
+      </div>
 
-        {/* Resursöversikt — teal, expandable */}
-        <motion.div variants={itemVariants}>
-          <div
-            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)] shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg cursor-pointer h-full"
-            onClick={() => setShowResourceList(!showResourceList)}
-          >
-            <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/5 -translate-y-6 translate-x-6" />
-            <div className="relative z-10 px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Resurser denna vecka</p>
-                  <p className="text-3xl font-bold text-white leading-tight tabular-nums">
-                    <AnimatedNumber value={resourceSummary.activeThisWeek} />
-                    <span className="text-sm font-normal text-white/50 ml-1.5">bokade</span>
-                  </p>
-                </div>
-                <div className={`rounded-lg p-2 bg-white/10 backdrop-blur-sm shrink-0 transition-all ${showResourceList ? 'bg-white/20' : ''}`}>
-                  <ChevronDown className={`h-5 w-5 text-white/80 transition-transform duration-200 ${showResourceList ? 'rotate-180' : ''}`} />
-                </div>
-              </div>
-            </div>
-            <AnimatePresence>
-              {showResourceList && (
+      {/* ── ROW 2: Projektflöde board ── */}
+      <motion.div variants={itemVariants}>
+        <div className="rounded-xl border border-border/50 bg-card p-4">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-lg font-semibold tracking-tight">Projektflöde</h2>
+            <span className="text-xs text-muted-foreground">Konstruktion → Produktion → Montage</span>
+          </div>
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+            {projectsByPhase.map(({ phase, projects: phaseProjects }, idx) => {
+              const config = phaseConfig[phase];
+              return (
                 <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="overflow-hidden relative z-10"
-                >
-                  <div className="px-4 pb-3 space-y-1">
-                    {resourceSummary.activeInstallers.length > 0 ? (
-                      resourceSummary.activeInstallers.map((inst, i) => (
-                        <div key={i} className="flex items-center justify-between py-1 px-2 rounded-md hover:bg-white/10 text-xs">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="font-semibold text-white truncate">{inst.name}</span>
-                            <span className="text-white/40">·</span>
-                            <span className="text-white/50 truncate">{inst.company}</span>
-                          </div>
-                          <span className="text-white/60 text-[11px] ml-2 shrink-0 text-right truncate max-w-[260px]" title={inst.projects.join(', ')}>{inst.projects.join(', ') || '–'}</span>
-                        </div>
-                      ))
+                  key={phase}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.06 }}
+                  className="rounded-xl bg-muted/40 p-3">
+                  <div className="mb-2.5 flex items-center justify-between gap-2 px-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: config.accent }} />
+                      <h3 className="font-semibold text-sm truncate">{phase}</h3>
+                    </div>
+                    <span className="rounded-md bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">
+                      {phaseProjects.length}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {phaseProjects.length === 0 ? (
+                      <p className="py-6 text-center text-xs text-muted-foreground italic">Inga projekt i denna fas</p>
                     ) : (
-                      <p className="text-xs text-white/50 py-2 text-center">Inga montörer planerade denna vecka</p>
+                      phaseProjects.map((p, i) => {
+                        const phaseActs = p.activities.filter((a) => a.phase === phase);
+                        const done = phaseActs.filter((a) => a.status === 'Slutförd').length;
+                        const total = phaseActs.length;
+                        const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+                        const isDelayed = phaseActs.some((a) => a.status === 'Försenad');
+                        const isRisk = !isDelayed && phaseActs.some((a) => a.status === 'Risk för försening');
+                        return (
+                          <motion.div
+                            key={p.id}
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.03 }}
+                            className="rounded-lg border border-border/40 bg-card px-3 py-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+                            <p className="text-[11px] font-medium text-muted-foreground tabular-nums">{p.code}</p>
+                            <p className="text-sm font-bold truncate" title={p.name}>{p.name}</p>
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              {isDelayed ? (
+                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-status-delayed">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-status-delayed" />Försenad
+                                </span>
+                              ) : isRisk ? (
+                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-status-risk">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-status-risk" />Risk
+                                </span>
+                              ) : (
+                                <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                                  <motion.div
+                                    className="h-full rounded-full"
+                                    style={{ backgroundColor: config.accent }}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${progress}%` }}
+                                    transition={{ duration: 0.7, ease: 'easeOut' }} />
+                                </div>
+                              )}
+                              <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">
+                                {isDelayed || isRisk ? `${done} / ${total}` : `${progress}%`}
+                              </span>
+                            </div>
+                          </motion.div>
+                        );
+                      })
                     )}
                   </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
+              );
+            })}
           </div>
-        </motion.div>
+        </div>
+      </motion.div>
 
-        {/* Försenade — red with inline list */}
-        <motion.div variants={itemVariants}>
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[hsl(0_45%_42%)] via-[hsl(20_55%_42%)] to-[hsl(38_75%_45%)] px-4 py-3 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full">
-            <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-white/5 -translate-y-6 translate-x-6" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Försenade & i riskzon</p>
-                  <div className="flex items-baseline gap-3 mt-0.5">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-white leading-none tabular-nums">
-                        <AnimatedNumber value={delayedActivities} />
-                      </span>
-                      <span className="text-[10px] uppercase tracking-wider text-white/60">försenade</span>
-                    </div>
-                    <span className="text-white/30">·</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-white/95 leading-none tabular-nums">
-                        <AnimatedNumber value={atRiskActivities} />
-                      </span>
-                      <span className="text-[10px] uppercase tracking-wider text-white/60">i risk</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-lg p-2 bg-white/10 backdrop-blur-sm shrink-0">
-                  <AlertTriangle className="h-5 w-5 text-white/80" />
-                </div>
-              </div>
-              {attentionActivities.length > 0 && (
-                <div className="mt-2 space-y-0.5 max-h-28 overflow-y-auto pr-1">
-                  {attentionActivities
-                    .sort((a, b) => (a.status === 'Försenad' ? -1 : 1) - (b.status === 'Försenad' ? -1 : 1))
-                    .map((a, i) => {
+      {/* ── ROW 3: Försenade / I riskzonen — separated, plain ── */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        {[
+          { title: 'Försenade aktiviteter', items: delayedList, dot: 'bg-status-delayed', text: 'text-status-delayed', empty: 'Inga försenade aktiviteter' },
+          { title: 'I riskzonen', items: riskList, dot: 'bg-status-risk', text: 'text-status-risk', empty: 'Inga aktiviteter i riskzonen' },
+        ].map((block) => (
+          <motion.div key={block.title} variants={itemVariants}>
+            <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <span className={`h-2 w-2 rounded-full ${block.dot}`} />
+                  {block.title}
+                  <span className="ml-1 text-xs font-normal text-muted-foreground tabular-nums">{block.items.length}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 overflow-auto p-0">
+                {block.items.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-muted-foreground italic">{block.empty}</p>
+                ) : (
+                  <div className="divide-y divide-border/30">
+                    {block.items.map((a) => {
                       const project = projects.find((p) => p.activities.some((act) => act.id === a.id));
-                      const isDelayed = a.status === 'Försenad';
                       return (
-                        <div key={i} className="flex items-center gap-1.5 text-[11px] text-white/80 leading-snug">
-                          <span
-                            className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${isDelayed ? 'bg-white' : 'bg-amber-300'}`}
-                            title={isDelayed ? 'Försenad' : 'Risk för försening'}
-                          />
-                          <span className="truncate">
-                            {a.name}{project ? ` – ${project.code} ${project.name}` : ''}
+                        <div key={a.id} className="flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-muted/30 transition-colors">
+                          <span className="text-sm font-medium truncate">{a.name}</span>
+                          <span className="text-xs text-muted-foreground truncate shrink-0 max-w-[45%]">
+                            {project ? `${project.code} – ${project.name}` : ''}
                           </span>
                         </div>
                       );
                     })}
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Försäljningsöversikt + Måluppfyllnad flyttade till CRM Dashboard */}
-
-      {/* ── ROW 3: Phase Cards — sequential with arrows, grid aligned with row 1 ── */}
-      <motion.div variants={itemVariants}>
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-          {projectsByPhase.map(({ phase, projects: phaseProjects }, idx) => {
-            const config = phaseConfig[phase];
-            const PhaseIcon = config.icon;
-            const isLast = idx === projectsByPhase.length - 1;
-
-            return (
-              <motion.div
-                key={phase}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: idx * 0.08, type: 'spring' as const, stiffness: 300, damping: 26 }}
-                className="relative rounded-xl overflow-visible shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 group border border-border/30 flex flex-col">
-
-                {/* Phase header */}
-                <div className={`${config.bg} px-5 py-4 relative overflow-hidden rounded-t-xl`}>
-                  <div className="absolute inset-0 opacity-[0.08]" style={{
-                    backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.4) 0%, transparent 60%)'
-                  }} />
-                  <div className="flex items-center gap-3 relative z-10">
-                    <div className="rounded-lg p-2.5 bg-white/15 backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
-                      <PhaseIcon className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Fas {idx + 1}</span>
-                      </div>
-                      <h3 className="font-bold text-white text-xl">{phase}</h3>
-                      <p className="text-white/50 text-sm">
-                        <AnimatedNumber value={phaseProjects.length} /> projekt
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Project list */}
-                <div className="bg-card px-4 py-3 flex-1 rounded-b-xl">
-                  {phaseProjects.length === 0 ?
-                  <p className="text-sm text-muted-foreground py-3 text-center italic">Inga pågående projekt</p> :
-
-                  <div className="space-y-1">
-                    {phaseProjects.map((p, i) =>
-                    <Tooltip key={p.id} delayDuration={200}>
-                      <TooltipTrigger asChild>
-                        <motion.div
-                          initial={{ opacity: 0, x: -6 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: i * 0.04 }}
-                          className="rounded-lg px-3 py-2 text-sm cursor-default transition-all hover:bg-muted/50 border border-transparent hover:border-border/40">
-
-                              <span className="font-semibold text-foreground/60">{p.code}</span>
-                              <span className="text-muted-foreground mx-2">–</span>
-                              <span className="font-semibold text-secondary-foreground">{p.name}</span>
-                            </motion.div>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p className="font-medium">{p.name}</p>
-                        <p className="text-xs text-muted-foreground">{p.customer}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    )}
-                    </div>
-                  }
-                </div>
-
-                {/* Arrow overlay positioned in the grid gap so card widths stay equal */}
-                {!isLast && (
-                  <div
-                    className="hidden sm:flex items-center justify-center absolute top-1/2 -translate-y-1/2 -right-[18px] z-10 pointer-events-none bg-background rounded-full"
-                    aria-hidden
-                  >
-                    <ArrowRight className="h-6 w-6 text-primary/70" strokeWidth={2.5} />
                   </div>
                 )}
-              </motion.div>);
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
 
-          })}
-        </div>
-      </motion.div>
-
-      {/* ── Project map ── */}
-      <motion.div variants={itemVariants}>
-        <Card className="border-border/50 bg-card/90 overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <MapPin className="h-4 w-4 text-primary" />
-              Projektkarta
-            </CardTitle>
-            <CardDescription className="text-xs">Geografisk översikt av alla projekt</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ProjectMap projects={activeProjects} height={380} />
-          </CardContent>
-        </Card>
-      </motion.div>
 
       {/* ── ROW 4: Project Status + Events — side by side ── */}
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
