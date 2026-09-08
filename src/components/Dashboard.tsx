@@ -2,7 +2,6 @@ import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FolderKanban,
-  ChevronDown,
   Clock,
   AlertTriangle,
   Printer,
@@ -10,32 +9,24 @@ import {
   Factory,
   Wrench,
   Check,
-  ChartNoAxesColumnIncreasing,
   X,
-  TrendingUp,
   Activity,
   ArrowUpRight,
   ArrowDownRight,
-  ArrowRight,
-  MapPin,
   Plus,
   RefreshCw,
-  MessageSquare,
-  Users } from
+  MessageSquare } from
 'lucide-react';
-import { ProjectMap } from './ProjectMap';
-import { YearNavigator } from './YearNavigator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Phase } from '@/data/projectData';
+
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
