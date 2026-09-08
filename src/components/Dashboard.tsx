@@ -247,65 +247,77 @@ export function Dashboard() {
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
             {projectsByPhase.map(({ phase, projects: phaseProjects }, idx) => {
               const config = phaseConfig[phase];
+              const PhaseIcon = config.icon;
               return (
                 <motion.div
                   key={phase}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.06 }}
-                  className="rounded-xl bg-muted/40 p-3">
-                  <div className="mb-2.5 flex items-center justify-between gap-2 px-1">
+                  className="overflow-hidden rounded-xl border border-border/40"
+                  style={{ backgroundColor: `color-mix(in srgb, ${config.accent} 8%, transparent)` }}>
+                  <div
+                    className="flex items-center justify-between gap-2 px-3 py-2 text-white"
+                    style={{ backgroundColor: config.accent }}>
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: config.accent }} />
+                      <PhaseIcon className="h-4 w-4 shrink-0" />
                       <h3 className="font-semibold text-sm truncate">{phase}</h3>
                     </div>
-                    <span className="rounded-md bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground tabular-nums">
+                    <span className="rounded-md bg-white/20 px-2 py-0.5 text-xs font-semibold tabular-nums">
                       {phaseProjects.length}
                     </span>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 p-3">
                     {phaseProjects.length === 0 ? (
                       <p className="py-6 text-center text-xs text-muted-foreground italic">Inga projekt i denna fas</p>
                     ) : (
                       phaseProjects.map((p, i) => {
-                        const phaseActs = p.activities.filter((a) => a.phase === phase);
-                        const done = phaseActs.filter((a) => a.status === 'Slutförd').length;
-                        const total = phaseActs.length;
+                        const acts = p.activities;
+                        const done = acts.filter((a) => a.status === 'Slutförd').length;
+                        const total = acts.length;
                         const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-                        const isDelayed = phaseActs.some((a) => a.status === 'Försenad');
-                        const isRisk = !isDelayed && phaseActs.some((a) => a.status === 'Risk för försening');
+                        const delayed = acts.filter((a) => a.status === 'Försenad').length;
+                        const risk = acts.filter((a) => a.status === 'Risk för försening').length;
                         return (
                           <motion.div
                             key={p.id}
                             initial={{ opacity: 0, x: -6 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.03 }}
-                            className="rounded-lg border border-border/40 bg-card px-3 py-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+                            className="rounded-lg border border-border/40 bg-card px-3 py-2.5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 border-l-4"
+                            style={{ borderLeftColor: config.accent }}>
                             <p className="text-[11px] font-medium text-muted-foreground tabular-nums">{p.code}</p>
                             <p className="text-sm font-bold truncate" title={p.name}>{p.name}</p>
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                              {isDelayed ? (
-                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-status-delayed">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-status-delayed" />Försenad
-                                </span>
-                              ) : isRisk ? (
-                                <span className="flex items-center gap-1.5 text-[11px] font-medium text-status-risk">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-status-risk" />Risk
-                                </span>
-                              ) : (
-                                <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
-                                  <motion.div
-                                    className="h-full rounded-full"
-                                    style={{ backgroundColor: config.accent }}
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
-                                    transition={{ duration: 0.7, ease: 'easeOut' }} />
-                                </div>
-                              )}
-                              <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">
-                                {isDelayed || isRisk ? `${done} / ${total}` : `${progress}%`}
+
+                            <div className="mt-2 flex items-center gap-2">
+                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                <motion.div
+                                  className="h-full rounded-full"
+                                  style={{ backgroundColor: config.accent }}
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${progress}%` }}
+                                  transition={{ duration: 0.7, ease: 'easeOut' }} />
+                              </div>
+                              <span className="text-[11px] font-semibold tabular-nums shrink-0" style={{ color: config.accent }}>
+                                {progress}%
                               </span>
+                            </div>
+
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-status-completed/15 px-2 py-0.5 text-[10px] font-medium text-status-completed tabular-nums">
+                                <Check className="h-3 w-3" />{done} / {total} klara
+                              </span>
+                              {delayed > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-status-delayed/15 px-2 py-0.5 text-[10px] font-medium text-status-delayed tabular-nums">
+                                  <AlertTriangle className="h-3 w-3" />{delayed} försenad{delayed > 1 ? 'e' : ''}
+                                </span>
+                              )}
+                              {risk > 0 && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-status-risk/15 px-2 py-0.5 text-[10px] font-medium text-status-risk tabular-nums">
+                                  <Clock className="h-3 w-3" />{risk} i riskzon
+                                </span>
+                              )}
                             </div>
                           </motion.div>
                         );
@@ -316,6 +328,7 @@ export function Dashboard() {
               );
             })}
           </div>
+
         </div>
       </motion.div>
 
