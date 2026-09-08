@@ -219,23 +219,26 @@ export function Dashboard() {
       {/* ── ROW 1: Key figures (plain) ── */}
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
         {[
-          { label: 'Aktiva projekt', value: activeProjects.length, icon: FolderKanban, tone: 'text-primary' },
-          { label: 'Försenade aktiviteter', value: delayedActivities, icon: AlertTriangle, tone: 'text-status-delayed' },
-          { label: 'Risk för försening', value: atRiskActivities, icon: Clock, tone: 'text-status-risk' },
+          { label: 'Aktiva projekt', value: activeProjects.length, icon: FolderKanban, tone: 'text-primary', bg: 'bg-primary/10', ring: 'border-primary/30' },
+          { label: 'Försenade aktiviteter', value: delayedActivities, icon: AlertTriangle, tone: 'text-status-delayed', bg: 'bg-status-delayed/10', ring: 'border-status-delayed/30' },
+          { label: 'Risk för försening', value: atRiskActivities, icon: Clock, tone: 'text-status-risk', bg: 'bg-status-risk/10', ring: 'border-status-risk/30' },
         ].map((s) => (
           <motion.div key={s.label} variants={itemVariants}>
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-card px-4 py-3 h-full">
+            <div className={`flex items-center justify-between gap-3 rounded-xl border ${s.ring} ${s.bg} px-4 py-3 h-full`}>
               <div className="min-w-0">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</p>
-                <p className="text-3xl font-bold leading-tight tabular-nums">
+                <p className={`text-3xl font-bold leading-tight tabular-nums ${s.tone}`}>
                   <AnimatedNumber value={s.value} />
                 </p>
               </div>
-              <s.icon className={`h-5 w-5 shrink-0 ${s.tone}`} />
+              <span className={`rounded-lg p-2 ${s.bg} ${s.tone}`}>
+                <s.icon className="h-5 w-5 shrink-0" />
+              </span>
             </div>
           </motion.div>
         ))}
       </div>
+
 
       {/* ── ROW 2: Projektflöde board ── */}
       <motion.div variants={itemVariants}>
