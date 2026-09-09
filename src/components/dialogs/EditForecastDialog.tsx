@@ -135,7 +135,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
   const totalAmount = Object.values(forecast.months || {}).reduce((s, v) => s + (v || 0), 0);
 
   const handleMonthChange = (month: string, value: string) => {
-    setMonthAmounts(prev => ({ ...prev, [month]: value }));
+    setMonthAmounts(prev => ({ ...prev, [`${selectedYear}-${month}`]: value }));
   };
 
   return (
@@ -219,7 +219,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
                       type="number"
                       step="0.01"
                       min="0"
-                      value={monthAmounts[m] || ''}
+                      value={monthAmounts[`${selectedYear}-${m}`] || ''}
                       onChange={(e) => handleMonthChange(m, e.target.value)}
                       placeholder="0"
                       className="h-8 text-sm"
