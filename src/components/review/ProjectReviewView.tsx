@@ -95,8 +95,18 @@ export function ProjectReviewView() {
       .forEach(r => list.push({ point: `Obeslutad avvikelse: ${String(r.data.difference || '').slice(0, 80)}`, category: 'Avvikelser', source: `${r.data.source1 || ''} / ${r.data.source2 || ''}` }));
     sectionRows('verbal').filter(r => r.data.written_confirmation === 'Nej')
       .forEach(r => list.push({ point: `Obekräftad muntlig överenskommelse: ${String(r.data.what || '').slice(0, 80)}`, category: 'Överenskommelser', source: r.data.by_whom || '' }));
-    sectionRows('options').filter(r => r.data.in_order !== 'Ja' && r.data.status !== 'Avböjd')
-      .forEach(r => list.push({ point: `Option ej beslutad: ${r.data.number || ''} ${r.data.description || ''}`.trim(), category: 'Optioner', source: r.data.decision_deadline ? `Beslut senast ${r.data.decision_deadline}` : '' }));
+    sectionRows('options').filter(r => r.data.status !== 'Beställd')
+      .forEach(r => list.push({ point: `Option ej beställd: ${String(r.data.description || '').slice(0, 80)}`, category: 'Optioner', source: '' }));
+    // Checklistpunkter som markerats för uppföljning
+    Object.values(answers).filter((a: any) => a?.status === 'Ja').forEach((a: any) => {
+      const sec = sections.find(x => x.key === a.section_key);
+      const field = (sec?.fields || []).find(f => `${a.section_key}.${f.key}` === a.item_key);
+      list.push({
+        point: `Uppföljning: ${field?.label || a.item_key}${a.comment ? ` – ${a.comment}` : ''}`,
+        category: sec?.title || a.section_key,
+        source: '',
+      });
+    });
     // Punkter som manuellt markerats för uppföljning
     rows.filter(r => r.section_key !== 'open_points' && r.data.followup === 'Ja').forEach(r => {
       const sec = sections.find(x => x.key === r.section_key);
