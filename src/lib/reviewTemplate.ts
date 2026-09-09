@@ -79,15 +79,13 @@ function q(key: string, label: string, type: FieldType = 'yesnona', extra: Parti
 /** Uppföljningskolumn som finns på alla tabellsektioner */
 const FOLLOWUP: ReviewField[] = [
   { key: 'followup', label: 'Kräver uppföljning', type: 'yesno' },
-  { key: 'followup_note', label: 'Uppföljning – vad?', type: 'text' },
-  { key: 'followup_responsible', label: 'Uppföljningsansvarig', type: 'person' },
-  { key: 'followup_deadline', label: 'Uppföljning senast', type: 'date' },
+  { key: 'followup_note', label: 'Notering', type: 'text' },
 ];
 
 export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
   name: 'Standardmall – Projektgenomgång',
   projectType: 'Standardprojekt',
-  version: 3,
+  version: 4,
   sections: [
     {
       key: 'attendees',
@@ -127,16 +125,8 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       countsTowardProgress: true,
       addLabel: 'Lägg till option',
       columns: [
-        { key: 'number', label: 'Optionsnummer', type: 'text', required: true },
-        { key: 'description', label: 'Beskrivning', type: 'textarea', required: true },
-        { key: 'price', label: 'Pris', type: 'number' },
-        { key: 'in_order', label: 'Ingår i order', type: 'yesno' },
-        { key: 'precondition', label: 'Förutsättning', type: 'text' },
-        { key: 'decision_deadline', label: 'Beslut senast', type: 'date' },
-        { key: 'impact_schedule', label: 'Påverkan tidplan', type: 'text' },
-        { key: 'responsible', label: 'Ansvarig', type: 'person' },
-        { key: 'status', label: 'Status', type: 'select', options: ['Ej beställd', 'Offererad', 'Beställd', 'Avböjd', 'Utgången'] },
-        ...FOLLOWUP,
+        { key: 'description', label: 'Benämning', type: 'text', required: true },
+        { key: 'status', label: 'Status', type: 'select', options: ['Ej beställd', 'Beställd'] },
       ],
     },
     {
@@ -148,10 +138,8 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       description: 'Registrera ska-krav, bör-krav och sådant som ingår ej. Markera "Kräver uppföljning" om punkten ska hamna i öppna punkter.',
       columns: [
         { key: 'req_type', label: 'Typ av krav', type: 'select', options: ['Ska-krav', 'Bör-krav', 'Ingår ej'], required: true },
-        { key: 'requirement', label: 'Krav', type: 'textarea', required: true },
-        { key: 'source', label: 'Källa', type: 'select', options: SOURCES },
+        { key: 'requirement', label: 'Kravbeskrivning', type: 'textarea', required: true },
         { key: 'document', label: 'Dokument', type: 'text' },
-        { key: 'comment', label: 'Kommentar', type: 'textarea' },
         ...FOLLOWUP,
       ],
     },
@@ -206,24 +194,6 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
         { key: 'status', label: 'Status', type: 'select', options: ['Ej påbörjad', 'Pågår', 'Klar', 'Försenad'] },
         { key: 'dependency', label: 'Beroende', type: 'text' },
         { key: 'critical', label: 'Kritisk', type: 'yesno' },
-        { key: 'comment', label: 'Kommentar', type: 'textarea' },
-        ...FOLLOWUP,
-      ],
-    },
-    {
-      key: 'regulations',
-      title: 'Regelverk',
-      kind: 'table',
-      countsTowardProgress: true,
-      addLabel: 'Lägg till krav/regelverk',
-      description: 'Ange endast de krav som faktiskt gäller för projektet och var kravet kommer ifrån.',
-      columns: [
-        { key: 'area', label: 'Område', type: 'select', options: ['Byggregler', 'Arbetsmiljökrav', 'Brandskydd', 'Tillgänglighet', 'Akustik', 'El', 'VVS', 'Miljökrav', 'CE/märkning', 'SS/EN-standard', 'Kundspecifik standard', 'Övrig föreskrift'], required: true },
-        { key: 'requirement', label: 'Krav/standard', type: 'text', required: true },
-        { key: 'source', label: 'Var kommer kravet ifrån?', type: 'select', options: SOURCES, required: true },
-        { key: 'document', label: 'Dokument/avsnitt', type: 'text' },
-        { key: 'applies', label: 'Gäller för projektet', type: 'yesnona' },
-        { key: 'responsible', label: 'Ansvarig', type: 'person' },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
         ...FOLLOWUP,
       ],

@@ -119,13 +119,11 @@ export async function generateProjectReport(project: Project): Promise<void> {
     { data: allocs },
     { data: dailies },
     { data: docs },
-    { data: ataItems },
   ] = await Promise.all([
     supabase.from('project_kpi_metrics').select('*').eq('project_id', project.id).order('created_at'),
     supabase.from('project_resource_allocations').select('*, installers(name, company)').eq('project_id', project.id).order('start_date'),
     supabase.from('daily_resource_entries').select('*, installers(name, company)').eq('project_id', project.id).order('date'),
     supabase.from('documentation_items').select('*').eq('project_id', project.id).order('sort_order'),
-    supabase.from('ata_items').select('*').eq('project_id', project.id).order('date'),
   ]);
 
   // ==== Resursplanering – allokeringar ====
@@ -253,41 +251,6 @@ export async function generateProjectReport(project: Project): Promise<void> {
     y = (doc as any).lastAutoTable.finalY + 6;
   }
 
-  // ==== ÄTA ====
-  if (ataItems && ataItems.length) {
-    y = sectionTitle(doc, y, 'ÄTA – Ändringar, Tillägg, Avgående');
-    autoTable(doc, {
-      startY: y,
-      head: [['Datum', 'Titel', 'Typ', 'Status', 'Timmar', 'Material', 'Belopp']],
-      body: ataItems.map((a: any) => [
-        fmtDate(a.date),
-        (a.title || '–').slice(0, 40),
-        a.ata_type || '–',
-        a.status || '–',
-        a.hours ?? '–',
-        a.material_cost != null ? `${a.material_cost} kr` : '–',
-        a.amount != null ? `${a.amount} kr` : '–',
-      ]),
-      styles: { fontSize: 8, cellPadding: 1.5 },
-      headStyles: { fillColor: BRAND.dark, textColor: 255 },
-      alternateRowStyles: { fillColor: BRAND.rowAlt },
-    });
-    y = (doc as any).lastAutoTable.finalY + 4;
-
-    const withDesc = (ataItems as any[]).filter(a => a.description);
-    if (withDesc.length) {
-      y = sectionTitle(doc, y, 'ÄTA – Beskrivningar');
-      autoTable(doc, {
-        startY: y,
-        head: [['Datum', 'Titel', 'Beskrivning']],
-        body: withDesc.map((a: any) => [fmtDate(a.date), a.title || '–', a.description]),
-        styles: { fontSize: 8, cellPadding: 1.5 },
-        headStyles: { fillColor: BRAND.dark, textColor: 255 },
-        alternateRowStyles: { fillColor: BRAND.rowAlt },
-      });
-      y = (doc as any).lastAutoTable.finalY + 6;
-    }
-  }
 
   // ==== Footer ====
   const total = (doc as any).internal.getNumberOfPages();

@@ -25,7 +25,6 @@ import {
   ListChecks,
   TrendingUp,
   Wrench,
-  FileSpreadsheet,
   FileText,
   Users,
   PieChart } from
@@ -36,7 +35,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 export type View =
   | 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources'
   | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks'
-  | 'services' | 'ata' | 'project-review'
+  | 'services' | 'project-review'
   | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats'
   | 'production';
 
@@ -54,7 +53,6 @@ const pmMainItems = [
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
   { id: 'resources-analytics' as View, label: 'Uppföljning', icon: TrendingUp },
-  { id: 'ata' as View, label: 'ÄTA', icon: FileSpreadsheet },
 ];
 
 const crmTopItems = [{ id: 'crm-dashboard' as View, label: 'Dashboard', icon: LayoutDashboard }];
