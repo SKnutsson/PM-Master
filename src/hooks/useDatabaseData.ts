@@ -645,6 +645,85 @@ export function useDatabaseData() {
       });
     }
 
+    // Log plain field changes (project name, product, salesperson, notes)
+    if (currentForecast) {
+      const fieldChanges: { field: string; from?: string; to?: string }[] = [];
+      const cmp = (field: string, oldVal?: string, newVal?: string) => {
+        if (newVal === undefined) return;
+        const a = (oldVal || '').trim();
+        const b = (newVal || '').trim();
+        if (a !== b) fieldChanges.push({ field, from: a, to: b });
+      };
+      cmp('Projektnamn', currentForecast.project, updates.project);
+      cmp('Produkt', currentForecast.product, updates.product);
+      cmp('Säljare', currentForecast.salesPerson, updates.salesPerson);
+      cmp('Anteckning', currentForecast.notes, updates.notes);
+      for (const c of fieldChanges) {
+        await logForecastEvent({
+          forecastId: forecastId,
+          eventType: 'field_change',
+          projectName: updates.project || currentForecast.project,
+          productName: updates.product || currentForecast.product,
+          oldValue: c.from || '—',
+          newValue: c.to || '—',
+          details: c.field,
+        });
+      }
+    }
+
+    // Log amount changes per month (added / removed / adjusted)
+    if (updates.monthEntries && currentForecast) {
+      const key = (m: string, y: number) => `${m} ${y}`;
+      const oldMap = new Map<string, number>();
+      (currentForecast.monthEntries || []).filter(e => e.amount > 0)
+        .forEach(e => oldMap.set(key(e.month, e.year), e.amount));
+      const newMap = new Map<string, number>();
+      updates.monthEntries.filter(e => e.amount > 0)
+        .forEach(e => newMap.set(key(e.month, e.year), e.amount));
+
+      const removedKeys = [...oldMap.keys()].filter(k => !newMap.has(k));
+      const addedKeys = [...newMap.keys()].filter(k => !oldMap.has(k));
+      const isMove = removedKeys.length > 0 && addedKeys.length > 0;
+
+      for (const [k, v] of newMap) {
+        const oldVal = oldMap.get(k);
+        if (oldVal !== undefined && Math.abs(oldVal - v) > 0.0001) {
+          await logForecastEvent({
+            forecastId: forecastId,
+            eventType: 'amount_change',
+            projectName: updates.project || currentForecast.project,
+            productName: updates.product || currentForecast.product,
+            oldValue: `${oldVal.toFixed(2)} MSEK`,
+            newValue: `${v.toFixed(2)} MSEK`,
+            details: k,
+          });
+        }
+      }
+
+      if (!isMove) {
+        for (const k of addedKeys) {
+          await logForecastEvent({
+            forecastId: forecastId,
+            eventType: 'amount_added',
+            projectName: updates.project || currentForecast.project,
+            productName: updates.product || currentForecast.product,
+            newValue: `${(newMap.get(k) || 0).toFixed(2)} MSEK`,
+            details: k,
+          });
+        }
+        for (const k of removedKeys) {
+          await logForecastEvent({
+            forecastId: forecastId,
+            eventType: 'amount_removed',
+            projectName: updates.project || currentForecast.project,
+            productName: updates.product || currentForecast.product,
+            oldValue: `${(oldMap.get(k) || 0).toFixed(2)} MSEK`,
+            details: k,
+          });
+        }
+      }
+    }
+
     // Log month move events (with year, e.g. "Feb 2026 → Jun 2027")
     if (updates.monthEntries && currentForecast) {
       const fmtKey = (m: string, y: number) => `${m} ${y}`;
