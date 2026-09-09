@@ -31,6 +31,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useProjectDataContext, ExtendedSalesForecast, DealStatus, ForecastMonthEntry } from '@/contexts/ProjectDataContext';
+import { ForecastChangelog } from '@/components/ForecastChangelog';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthLabels: { [key: string]: string } = {
@@ -237,6 +238,8 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
                 onChange={(e) => setNotes(e.target.value)}
               />
             </div>
+
+            {open && <ForecastChangelog forecastId={forecast.id} />}
           </div>
           <DialogFooter className="flex justify-between">
             <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
