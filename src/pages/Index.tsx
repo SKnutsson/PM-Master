@@ -2,13 +2,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { MfaVerification } from '@/components/auth/MfaVerification';
 import { MainLayout } from '@/components/MainLayout';
+import { AppUpdateDialog } from '@/components/AppUpdateDialog';
 import { useAppVersionCheck } from '@/hooks/useAppVersionCheck';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const { isAuthenticated, isLoading, mfaRequired } = useAuth();
-  useAppVersionCheck(isAuthenticated);
-
+  const updateAvailable = useAppVersionCheck(isAuthenticated);
 
   if (isLoading) {
     return (
@@ -26,7 +26,12 @@ const Index = () => {
     return <AuthPage />;
   }
 
-  return <MainLayout />;
+  return (
+    <>
+      <MainLayout />
+      <AppUpdateDialog open={updateAvailable} />
+    </>
+  );
 };
 
 export default Index;
