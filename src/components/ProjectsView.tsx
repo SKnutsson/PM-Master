@@ -11,7 +11,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Project } from '@/data/projectData';
 import { AddProjectDialog } from './dialogs/AddProjectDialog';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
-import { ProjectTasksList } from './ProjectTasksList';
 import { geocodeAddress } from '@/lib/geocode';
 import { generateProjectReport } from '@/lib/projectReport';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -292,9 +291,6 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
                         <span className="text-foreground whitespace-pre-wrap break-words">{project.notes}</span>
                       </div>
                     )}
-                    <div className="border-t border-border/30 pt-2">
-                      <ProjectTasksList projectId={project.id} />
-                    </div>
                   </div>
                 )}
               </CardContent>
