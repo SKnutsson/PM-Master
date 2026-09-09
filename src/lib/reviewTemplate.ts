@@ -79,9 +79,7 @@ function q(key: string, label: string, type: FieldType = 'yesnona', extra: Parti
 /** Uppföljningskolumn som finns på alla tabellsektioner */
 const FOLLOWUP: ReviewField[] = [
   { key: 'followup', label: 'Kräver uppföljning', type: 'yesno' },
-  { key: 'followup_note', label: 'Uppföljning – vad?', type: 'text' },
-  { key: 'followup_responsible', label: 'Uppföljningsansvarig', type: 'person' },
-  { key: 'followup_deadline', label: 'Uppföljning senast', type: 'date' },
+  { key: 'followup_note', label: 'Notering', type: 'text' },
 ];
 
 export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
