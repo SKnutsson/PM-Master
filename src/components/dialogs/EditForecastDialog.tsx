@@ -75,55 +75,48 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
       setDealStatus(forecast.dealStatus);
       setNotes(forecast.notes || '');
       setSalesPerson(forecast.salesPerson || '');
-      
+
       // Determine initial year from monthEntries
       const years = (forecast.monthEntries || []).map(e => e.year);
       const initialYear = years.length > 0 ? years[0] : 2026;
       setSelectedYear(initialYear);
-      
-      // Initialize month amounts for the selected year
-      updateMonthAmountsForYear(initialYear);
+
+      // Load amounts for ALL years so edits survive year switching
+      const amounts: { [key: string]: string } = {};
+      (forecast.monthEntries || []).forEach(e => {
+        amounts[`${e.year}-${e.month}`] = e.amount.toString();
+      });
+      setMonthAmounts(amounts);
     }
   }, [open, forecast]);
 
-  const updateMonthAmountsForYear = (year: number) => {
-    const amounts: { [key: string]: string } = {};
-    months.forEach(m => {
-      const entry = (forecast.monthEntries || []).find(e => e.month === m && e.year === year);
-      amounts[m] = entry ? entry.amount.toString() : '';
-    });
-    setMonthAmounts(amounts);
-  };
-
   const handleYearChange = (year: number) => {
     setSelectedYear(year);
-    updateMonthAmountsForYear(year);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Build monthEntries with year
+
+    // Build monthEntries for every year the user has touched
     const monthEntries: ForecastMonthEntry[] = [];
     const newMonths: { [key: string]: number } = {};
-    Object.entries(monthAmounts).forEach(([month, amount]) => {
+    Object.entries(monthAmounts).forEach(([key, amount]) => {
       const num = parseFloat(amount);
-      if (!isNaN(num) && num > 0) {
-        newMonths[month] = num;
-        monthEntries.push({ month, year: selectedYear, amount: num });
-      }
+      if (isNaN(num) || num <= 0) return;
+      const sep = key.indexOf('-');
+      const year = Number(key.slice(0, sep));
+      const month = key.slice(sep + 1);
+      if (!year || !months.includes(month)) return;
+      monthEntries.push({ month, year, amount: num });
+      if (year === selectedYear) newMonths[month] = num;
     });
-
-    // Also keep entries from other years
-    const otherYearEntries = (forecast.monthEntries || []).filter(e => e.year !== selectedYear);
-    const allEntries = [...otherYearEntries, ...monthEntries];
 
     if (project.trim() && product.trim()) {
       await updateForecast(forecast.id, {
         project: project.trim(),
         product: product.trim(),
         months: newMonths,
-        monthEntries: allEntries,
+        monthEntries,
         dealStatus,
         notes: notes.trim() || '',
         salesPerson: salesPerson.trim() || undefined,
@@ -131,6 +124,7 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
       setOpen(false);
     }
   };
+
 
   const handleDelete = async () => {
     await deleteForecast(forecast.id);
