@@ -138,10 +138,8 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       description: 'Registrera ska-krav, bör-krav och sådant som ingår ej. Markera "Kräver uppföljning" om punkten ska hamna i öppna punkter.',
       columns: [
         { key: 'req_type', label: 'Typ av krav', type: 'select', options: ['Ska-krav', 'Bör-krav', 'Ingår ej'], required: true },
-        { key: 'requirement', label: 'Krav', type: 'textarea', required: true },
-        { key: 'source', label: 'Källa', type: 'select', options: SOURCES },
+        { key: 'requirement', label: 'Kravbeskrivning', type: 'textarea', required: true },
         { key: 'document', label: 'Dokument', type: 'text' },
-        { key: 'comment', label: 'Kommentar', type: 'textarea' },
         ...FOLLOWUP,
       ],
     },
