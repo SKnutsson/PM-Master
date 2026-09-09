@@ -163,7 +163,14 @@ export function ForecastView() {
     // Only include forecasts that have at least one entry in the selected period
     const monthOrder = months.reduce((acc, m, i) => ({ ...acc, [m]: i }), {} as Record<string, number>);
     let forecastsInPeriod = filteredForecast.
-    filter((f) => Object.values(f.months).some((v) => v > 0)).
+    filter((f) =>
+      Object.values(f.months).some((v) => v > 0) ||
+      // Keep rows that were moved away from a month in this period so the
+      // yellow "flyttad" cell is still visible in the original year.
+      (f.scheduleHistory || []).some((h) =>
+        displayMonths.some((dm) => h.originalMonth === dm.month && h.originalYear === dm.year)
+      )
+    ).
     sort((a, b) => {
       const getEarliest = (f: typeof a) => {
         const entries = (f.monthEntries || []).filter((e) => e.amount > 0);
