@@ -43,19 +43,19 @@ function HeroCard({
 }: { label: string; value: number | string; suffix?: string; icon: any; gradient: string }) {
   return (
     <motion.div variants={itemVariants}>
-      <div className={`relative overflow-hidden rounded-xl ${gradient} p-6 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full`}>
-        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-        <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 translate-y-8 -translate-x-8" />
-        <div className="relative z-10 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-white/60 uppercase tracking-wider">{label}</p>
-            <p className="text-5xl font-bold text-white mt-1">
+      <div className={`relative overflow-hidden rounded-xl ${gradient} p-4 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full`}>
+        <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/5 -translate-y-8 translate-x-8" />
+        <div className="absolute bottom-0 left-0 w-14 h-14 rounded-full bg-white/5 translate-y-5 -translate-x-5" />
+        <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium text-white/60 uppercase tracking-wider">{label}</p>
+            <p className="text-3xl font-bold text-white mt-0.5 truncate">
               {typeof value === 'number' ? <AnimatedNumber value={value} /> : value}
-              {suffix && <span className="text-lg font-normal text-white/50 ml-1.5">{suffix}</span>}
+              {suffix && <span className="text-sm font-normal text-white/50 ml-1">{suffix}</span>}
             </p>
           </div>
-          <div className="rounded-xl p-3 bg-white/10 backdrop-blur-sm">
-            <Icon className="h-7 w-7 text-white/80" />
+          <div className="rounded-lg p-2.5 bg-white/10 backdrop-blur-sm shrink-0">
+            <Icon className="h-5 w-5 text-white/80" />
           </div>
         </div>
       </div>
