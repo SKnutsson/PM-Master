@@ -15,28 +15,17 @@ import { CrmDashboard } from './crm/CrmDashboard';
 import { CrmQuotesView } from './crm/CrmQuotesView';
 import { CrmCustomersView } from './crm/CrmCustomersView';
 import { CrmStatsView } from './crm/CrmStatsView';
-import { ProductionModule } from './production/ProductionModule';
 import { ProjectDataProvider } from '@/contexts/ProjectDataContext';
 import { useAppMode } from '@/contexts/AppModeContext';
 
 export function MainLayout() {
   const { mode } = useAppMode();
-  const [currentView, setCurrentView] = useState<View>(
-    mode === 'crm' ? 'crm-dashboard' : mode === 'production' ? 'production' : 'dashboard'
-  );
+  const [currentView, setCurrentView] = useState<View>(mode === 'crm' ? 'crm-dashboard' : 'dashboard');
 
   // When mode changes, jump to that mode's default view
   useEffect(() => {
-    setCurrentView(mode === 'crm' ? 'crm-dashboard' : mode === 'production' ? 'production' : 'dashboard');
+    setCurrentView(mode === 'crm' ? 'crm-dashboard' : 'dashboard');
   }, [mode]);
-
-  // Apply theme class on <html> per module (blue for production)
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('theme-production', mode === 'production');
-    return () => { root.classList.remove('theme-production'); };
-  }, [mode]);
-
 
   const renderView = () => {
     switch (currentView) {
@@ -55,7 +44,6 @@ export function MainLayout() {
       case 'crm-quotes': return <CrmQuotesView />;
       case 'crm-customers': return <CrmCustomersView />;
       case 'crm-stats': return <CrmStatsView />;
-      case 'production': return <ProductionModule />;
       default: return <Dashboard />;
     }
   };
