@@ -125,16 +125,8 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       countsTowardProgress: true,
       addLabel: 'Lägg till option',
       columns: [
-        { key: 'number', label: 'Optionsnummer', type: 'text', required: true },
-        { key: 'description', label: 'Beskrivning', type: 'textarea', required: true },
-        { key: 'price', label: 'Pris', type: 'number' },
-        { key: 'in_order', label: 'Ingår i order', type: 'yesno' },
-        { key: 'precondition', label: 'Förutsättning', type: 'text' },
-        { key: 'decision_deadline', label: 'Beslut senast', type: 'date' },
-        { key: 'impact_schedule', label: 'Påverkan tidplan', type: 'text' },
-        { key: 'responsible', label: 'Ansvarig', type: 'person' },
-        { key: 'status', label: 'Status', type: 'select', options: ['Ej beställd', 'Offererad', 'Beställd', 'Avböjd', 'Utgången'] },
-        ...FOLLOWUP,
+        { key: 'description', label: 'Benämning', type: 'text', required: true },
+        { key: 'status', label: 'Status', type: 'select', options: ['Ej beställd', 'Beställd'] },
       ],
     },
     {
