@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * Hämtar index.html i bakgrunden och jämför vilken app-bundle som serveras.
- * Skiljer den sig från den som körs laddas sidan om automatiskt, så att
- * användaren alltid får senaste versionen utan att behöva refresha manuellt.
+ * Skiljer den sig från den som körs returneras true, och appen kan visa en
+ * ruta som uppmanar användaren att ladda om till senaste versionen.
  */
-const CHECK_INTERVAL_MS = 10 * 60 * 1000;
+const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 function currentBundle(): string | null {
   const el = document.querySelector<HTMLScriptElement>('script[type="module"][src]');
@@ -23,19 +23,20 @@ async function latestBundle(): Promise<string | null> {
   }
 }
 
-export function useAppVersionCheck(enabled: boolean) {
-  const reloaded = useRef(false);
+export function useAppVersionCheck(enabled: boolean): boolean {
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const found = useRef(false);
 
   useEffect(() => {
     if (!enabled || import.meta.env.DEV) return;
 
     const check = async () => {
-      if (reloaded.current || document.hidden) return;
+      if (found.current || document.hidden) return;
       const running = currentBundle();
       const latest = await latestBundle();
       if (running && latest && running !== latest) {
-        reloaded.current = true;
-        window.location.reload();
+        found.current = true;
+        setUpdateAvailable(true);
       }
     };
 
@@ -47,4 +48,6 @@ export function useAppVersionCheck(enabled: boolean) {
       document.removeEventListener('visibilitychange', check);
     };
   }, [enabled]);
+
+  return updateAvailable;
 }
