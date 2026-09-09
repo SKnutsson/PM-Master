@@ -85,7 +85,7 @@ const FOLLOWUP: ReviewField[] = [
 export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
   name: 'Standardmall – Projektgenomgång',
   projectType: 'Standardprojekt',
-  version: 3,
+  version: 4,
   sections: [
     {
       key: 'attendees',
@@ -194,24 +194,6 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
         { key: 'status', label: 'Status', type: 'select', options: ['Ej påbörjad', 'Pågår', 'Klar', 'Försenad'] },
         { key: 'dependency', label: 'Beroende', type: 'text' },
         { key: 'critical', label: 'Kritisk', type: 'yesno' },
-        { key: 'comment', label: 'Kommentar', type: 'textarea' },
-        ...FOLLOWUP,
-      ],
-    },
-    {
-      key: 'regulations',
-      title: 'Regelverk',
-      kind: 'table',
-      countsTowardProgress: true,
-      addLabel: 'Lägg till krav/regelverk',
-      description: 'Ange endast de krav som faktiskt gäller för projektet och var kravet kommer ifrån.',
-      columns: [
-        { key: 'area', label: 'Område', type: 'select', options: ['Byggregler', 'Arbetsmiljökrav', 'Brandskydd', 'Tillgänglighet', 'Akustik', 'El', 'VVS', 'Miljökrav', 'CE/märkning', 'SS/EN-standard', 'Kundspecifik standard', 'Övrig föreskrift'], required: true },
-        { key: 'requirement', label: 'Krav/standard', type: 'text', required: true },
-        { key: 'source', label: 'Var kommer kravet ifrån?', type: 'select', options: SOURCES, required: true },
-        { key: 'document', label: 'Dokument/avsnitt', type: 'text' },
-        { key: 'applies', label: 'Gäller för projektet', type: 'yesnona' },
-        { key: 'responsible', label: 'Ansvarig', type: 'person' },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
         ...FOLLOWUP,
       ],
