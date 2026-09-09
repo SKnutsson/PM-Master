@@ -2,10 +2,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { MfaVerification } from '@/components/auth/MfaVerification';
 import { MainLayout } from '@/components/MainLayout';
+import { useAppVersionCheck } from '@/hooks/useAppVersionCheck';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const { isAuthenticated, isLoading, mfaRequired } = useAuth();
+  useAppVersionCheck(isAuthenticated);
+
 
   if (isLoading) {
     return (
