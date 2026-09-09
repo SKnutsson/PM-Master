@@ -279,9 +279,8 @@ export function Dashboard() {
                         const acts = p.activities;
                         const done = acts.filter((a) => a.status === 'Slutförd').length;
                         const total = acts.length;
-                        const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-                        const delayed = acts.filter((a) => a.status === 'Försenad').length;
-                        const risk = acts.filter((a) => a.status === 'Risk för försening').length;
+                        const delayedActs = acts.filter((a) => a.status === 'Försenad');
+                        const riskActs = acts.filter((a) => a.status === 'Risk för försening');
                         return (
                           <motion.div
                             key={p.id}
@@ -293,38 +292,32 @@ export function Dashboard() {
                             <p className="text-[11px] font-medium text-muted-foreground tabular-nums">{p.code}</p>
                             <p className="text-sm font-bold truncate" title={p.name}>{p.name}</p>
 
-                            <div className="mt-2 flex items-center gap-2">
-                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                                <motion.div
-                                  className="h-full rounded-full"
-                                  style={{ backgroundColor: config.accent }}
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${progress}%` }}
-                                  transition={{ duration: 0.7, ease: 'easeOut' }} />
-                              </div>
-                              <span className="text-[11px] font-semibold tabular-nums shrink-0" style={{ color: config.accent }}>
-                                {progress}%
-                              </span>
-                            </div>
-
                             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                               <span className="inline-flex items-center gap-1 rounded-full bg-status-completed/15 px-2 py-0.5 text-[10px] font-medium text-status-completed tabular-nums">
                                 <Check className="h-3 w-3" />{done} / {total} klara
                               </span>
-                              {delayed > 0 && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-status-delayed/15 px-2 py-0.5 text-[10px] font-medium text-status-delayed tabular-nums">
-                                  <AlertTriangle className="h-3 w-3" />{delayed} försenad{delayed > 1 ? 'e' : ''}
-                                </span>
-                              )}
-                              {risk > 0 && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-status-risk/15 px-2 py-0.5 text-[10px] font-medium text-status-risk tabular-nums">
-                                  <Clock className="h-3 w-3" />{risk} i riskzon
-                                </span>
-                              )}
                             </div>
+
+                            {(delayedActs.length > 0 || riskActs.length > 0) && (
+                              <div className="mt-2 space-y-1 border-t border-border/30 pt-2">
+                                {delayedActs.map((a) => (
+                                  <div key={a.id} className="flex items-start gap-1.5 text-[10px] text-status-delayed">
+                                    <AlertTriangle className="h-3 w-3 shrink-0 mt-px" />
+                                    <span className="truncate" title={a.name}>{a.name}</span>
+                                  </div>
+                                ))}
+                                {riskActs.map((a) => (
+                                  <div key={a.id} className="flex items-start gap-1.5 text-[10px] text-status-risk">
+                                    <Clock className="h-3 w-3 shrink-0 mt-px" />
+                                    <span className="truncate" title={a.name}>{a.name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </motion.div>
                         );
                       })
+
                     )}
                   </div>
                 </motion.div>

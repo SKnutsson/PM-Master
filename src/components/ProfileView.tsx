@@ -373,13 +373,6 @@ export function ProfileView() {
               </div>
               <Switch checked={editCanAccessCrm} onCheckedChange={setEditCanAccessCrm} />
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm">Åtkomst produktionsflöden</Label>
-                <p className="text-xs text-muted-foreground">Ser modulen för att visualisera och optimera produktionsflöden</p>
-              </div>
-              <Switch checked={editCanAccessProduction} onCheckedChange={setEditCanAccessProduction} />
-            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Avbryt</Button>

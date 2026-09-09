@@ -6,7 +6,6 @@ import { useTheme } from 'next-themes';
 import { useAppMode } from '@/contexts/AppModeContext';
 import { ModeSwitcher } from './ModeSwitcher';
 import alfingLogo from '@/assets/alfing-seating-logo-green.png';
-import alfingDarkLogo from '@/assets/alfing-logo-dark.png.asset.json';
 
 import {
   LayoutDashboard,
@@ -36,8 +35,7 @@ export type View =
   | 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources'
   | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks'
   | 'services' | 'project-review'
-  | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats'
-  | 'production';
+  | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats';
 
 interface SidebarProps {
   currentView: View;
@@ -64,9 +62,6 @@ const crmMainItems = [
   { id: 'crm-stats' as View, label: 'Statistik', icon: PieChart },
 ];
 
-const productionTopItems = [{ id: 'production' as View, label: 'Flödeskarta', icon: LayoutDashboard }];
-const productionMainItems: { id: View; label: string; icon: any }[] = [];
-
 const bottomNavItems = [{ id: 'profile' as View, label: 'Profil', icon: UserCircle }];
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -76,8 +71,8 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const { mode } = useAppMode();
   const isDark = theme === 'dark';
 
-  const topItems = mode === 'crm' ? crmTopItems : mode === 'production' ? productionTopItems : pmTopItems;
-  const mainItems = mode === 'crm' ? crmMainItems : mode === 'production' ? productionMainItems : pmMainItems;
+  const topItems = mode === 'crm' ? crmTopItems : pmTopItems;
+  const mainItems = mode === 'crm' ? crmMainItems : pmMainItems;
 
   const renderNavItem = (item: { id: View; label: string; icon: any }) => {
     const isActive = currentView === item.id;
@@ -121,12 +116,9 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
       className="relative flex h-screen flex-col border-r border-sidebar-border bg-sidebar">
 
       {/* Logo */}
-      <div className={cn(
-        "flex h-16 items-center gap-3 border-b border-sidebar-border px-4",
-        mode === 'production' && "bg-[hsl(210_55%_10%)]"
-      )}>
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
         <img
-          src={mode === 'production' ? alfingDarkLogo.url : alfingLogo}
+          src={alfingLogo}
           alt="Alfing"
           className={cn("shrink-0 rounded object-contain", isCollapsed ? "h-9 w-9" : "h-9 w-auto max-w-[140px]")} />
       </div>

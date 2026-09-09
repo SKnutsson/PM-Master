@@ -192,7 +192,7 @@ export function CrmDashboard() {
           <Flame className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Sannolikhetsöversikt</h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
           {stats.probBuckets.map((b, idx) => {
             const c = probColors[b.n];
             const share = stats.pipelineValue > 0 ? (b.value / stats.pipelineValue) * 100 : 0;
@@ -202,22 +202,23 @@ export function CrmDashboard() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.05, type: 'spring' as const, stiffness: 300, damping: 26 }}
-                className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${c.bg} p-5 shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg group`}
+                className={`relative overflow-hidden rounded-lg bg-gradient-to-br ${c.bg} px-2.5 py-2 shadow-sm transition-all duration-300 hover:shadow-md group`}
               >
-                <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/5 -translate-y-8 translate-x-8" />
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-medium text-white/60 uppercase tracking-wider">{c.label}</span>
-                    <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full ${c.ring} backdrop-blur-sm text-white text-sm font-bold`}>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[9px] font-medium text-white/70 uppercase tracking-wide truncate">{c.label}</span>
+                    <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${c.ring} text-white text-[9px] font-bold`}>
                       {b.n}
                     </span>
                   </div>
-                  <div className="text-3xl font-bold text-white tabular-nums">
-                    <AnimatedNumber value={b.count} />
+                  <div className="mt-0.5 flex items-baseline gap-1">
+                    <span className="text-lg font-bold leading-none text-white tabular-nums">
+                      <AnimatedNumber value={b.count} />
+                    </span>
+                    <span className="text-[9px] text-white/60">offerter</span>
                   </div>
-                  <div className="text-xs text-white/60">offerter</div>
-                  <div className="mt-3 text-sm font-semibold text-white tabular-nums">{formatSEK(b.value)} kr</div>
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-white/15 overflow-hidden">
+                  <div className="mt-0.5 text-[11px] font-semibold text-white tabular-nums">{formatSEK(b.value)} kr</div>
+                  <div className="mt-1 h-1 w-full rounded-full bg-white/15 overflow-hidden">
                     <motion.div
                       className="h-full bg-white/70 rounded-full"
                       initial={{ width: 0 }}
@@ -230,6 +231,7 @@ export function CrmDashboard() {
             );
           })}
         </div>
+
       </motion.div>
 
       {/* ── ROW 4: Followups + Per seller side by side ── */}

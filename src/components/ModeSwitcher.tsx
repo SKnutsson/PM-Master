@@ -1,4 +1,4 @@
-import { ClipboardList, Briefcase, Factory } from 'lucide-react';
+import { ClipboardList, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppMode, AppMode } from '@/contexts/AppModeContext';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,23 +12,17 @@ interface Props {
 const allOpts: { id: AppMode; label: string; icon: typeof ClipboardList }[] = [
   { id: 'pm', label: 'Projekt', icon: ClipboardList },
   { id: 'crm', label: 'CRM', icon: Briefcase },
-  { id: 'production', label: 'Produktion', icon: Factory },
 ];
 
 export function ModeSwitcher({ collapsed }: Props) {
   const { mode, setMode } = useAppMode();
-  const { canAccessCrm, canAccessProduction, loading } = usePermissions();
-  const opts = allOpts.filter((o) => {
-    if (o.id === 'crm') return canAccessCrm;
-    if (o.id === 'production') return canAccessProduction;
-    return true;
-  });
+  const { canAccessCrm, loading } = usePermissions();
+  const opts = allOpts.filter((o) => (o.id === 'crm' ? canAccessCrm : true));
 
   useEffect(() => {
     if (loading) return;
     if (mode === 'crm' && !canAccessCrm) setMode('pm');
-    if (mode === 'production' && !canAccessProduction) setMode('pm');
-  }, [loading, mode, canAccessCrm, canAccessProduction, setMode]);
+  }, [loading, mode, canAccessCrm, setMode]);
 
   if (opts.length <= 1) return null;
 
@@ -61,7 +55,7 @@ export function ModeSwitcher({ collapsed }: Props) {
   }
 
   return (
-    <div className={cn('grid gap-1 rounded-lg bg-sidebar-accent/40 p-1', opts.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
+    <div className="grid grid-cols-2 gap-1 rounded-lg bg-sidebar-accent/40 p-1">
       {opts.map((o) => {
         const active = mode === o.id;
         return (
