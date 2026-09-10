@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 
 
 export interface CrmQuote {
@@ -73,8 +74,13 @@ export function useCrmData() {
 
   useEffect(() => {
     refresh();
-    // Focus refetch removed to minimize Cloud usage. Call `refresh` manually.
   }, []);
+
+  // Realtid: offerter, kunder och kontakter uppdateras hos alla användare
+  useRealtimeSync('crm-data', ['crm_quotes', 'crm_customers', 'crm_contacts'], () => {
+    refresh();
+  });
+
 
 
   return { quotes, customers, contacts, loading, refresh };

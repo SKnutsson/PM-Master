@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 
 import { 
   projects as initialProjects, 
@@ -872,6 +873,19 @@ export function useDatabaseData() {
     setForecastEvents(prev => prev.filter(e => e.id !== eventId));
   }, []);
 
+  // Realtidsuppdatering mellan användare (tyst omladdning, ingen laddningsspinner)
+  useRealtimeSync(
+    'pm-core',
+    ['projects', 'activities', 'forecasts', 'forecast_months', 'forecast_events', 'schedule_history', 'sales_targets'],
+    () => {
+      if (suppressReloadRef.current) return;
+      loadProjects();
+      loadForecasts();
+      loadForecastEvents();
+      loadSalesTargets();
+    },
+  );
+
   return {
     projects,
     forecast,
@@ -895,5 +909,6 @@ export function useDatabaseData() {
     updateProjectOrder,
     updateActivityOrder,
     addCustomEvent: logForecastEvent,
+    refresh: loadData,
   };
 }
