@@ -108,6 +108,10 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       toast.error('Kunde inte spara: ' + res.error.message);
       return;
     }
+    if (pendingPdfDelete.length) {
+      await supabase.storage.from('quote-pdfs').remove(pendingPdfDelete);
+      setPendingPdfDelete([]);
+    }
     toast.success(quote ? 'Offert uppdaterad' : 'Offert skapad');
     onSaved?.();
     onOpenChange(false);
