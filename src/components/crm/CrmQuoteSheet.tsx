@@ -138,9 +138,12 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
     window.open(data.signedUrl, '_blank');
   };
 
-  const removePdf = async () => {
-    if (form.pdf_path) await supabase.storage.from('quote-pdfs').remove([form.pdf_path]);
+  const removePdf = () => {
+    if (!form.pdf_path) return;
+    if (!confirm('Ta bort bifogad PDF? Filen raderas när du sparar offerten.')) return;
+    setPendingPdfDelete((p) => [...p, form.pdf_path as string]);
     setForm((f) => ({ ...f, pdf_path: null, pdf_name: null }));
+    toast.info('PDF tas bort när du sparar');
   };
 
   const handleDelete = async () => {

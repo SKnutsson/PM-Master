@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { DEFAULT_REVIEW_TEMPLATE } from '@/lib/reviewTemplate';
 
 export interface OverviewPoint {
   /** Vad punkten gäller */
@@ -43,13 +44,35 @@ export function useReviewOverview() {
     });
 
     if (list.length) {
-      const { data: rows } = await supabase
-        .from('project_review_rows')
-        .select('review_id, section_key, data')
-        .in('review_id', list.map((r: any) => r.id));
+      const ids = list.map((r: any) => r.id);
+      const [{ data: rows }, { data: answers }] = await Promise.all([
+        supabase
+          .from('project_review_rows')
+          .select('review_id, section_key, data')
+          .in('review_id', ids),
+        supabase
+          .from('project_review_answers')
+          .select('review_id, section_key, item_key, status, comment')
+          .in('review_id', ids)
+          .eq('status', 'Ja'),
+      ]);
 
       const byReview: Record<string, string> = {};
       list.forEach((r: any) => { byReview[r.id] = r.project_id; });
+
+      (answers || []).forEach((a: any) => {
+        const projectId = byReview[a.review_id];
+        const entry = projectId ? map[projectId] : null;
+        if (!entry) return;
+        const section = DEFAULT_REVIEW_TEMPLATE.sections.find(s => s.key === a.section_key);
+        const field = (section?.fields || []).find((f: any) => `${a.section_key}.${f.key}` === a.item_key);
+        entry.points.push({
+          text: `${field?.label || a.item_key}${a.comment ? ` – ${a.comment}` : ''}`,
+          category: a.section_key,
+          status: 'Uppföljning',
+          kind: 'followup',
+        });
+      });
 
       (rows || []).forEach((row: any) => {
         const projectId = byReview[row.review_id];
