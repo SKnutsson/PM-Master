@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useProfiles, getDisplayName } from '@/hooks/useProfiles';
 import { UserAvatar, NameAvatar } from '@/components/UserAvatar';
 import { UserSelect } from '@/components/UserSelect';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 
 interface DocumentationItem {
   id: string;
@@ -89,6 +90,9 @@ export function DocumentationPlanView() {
   useEffect(() => {
     fetchItems();
   }, []);
+
+  // Realtid: ändringar från andra användare syns direkt
+  useRealtimeSync('documentation-items', ['documentation_items'], () => { fetchItems(); });
 
   const fetchItems = async () => {
     const { data, error } = await supabase
