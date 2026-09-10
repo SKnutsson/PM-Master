@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * Hämtar index.html i bakgrunden och jämför vilken app-bundle som serveras.
- * Skiljer den sig från den som körs returneras true, och appen kan visa en
- * ruta som uppmanar användaren att ladda om till senaste versionen.
+ * Skiljer den sig från den som körs returneras true, och appen visar en notis
+ * där användaren själv väljer när sidan ska laddas om. Ingen automatisk reload
+ * sker, så pågående formulärifyllning kan aldrig gå förlorad.
  */
-const CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const CHECK_INTERVAL_MS = 60 * 1000;
 
 function currentBundle(): string | null {
   const el = document.querySelector<HTMLScriptElement>('script[type="module"][src]');
@@ -29,6 +30,13 @@ export function useAppVersionCheck(enabled: boolean): boolean {
 
   useEffect(() => {
     if (!enabled || import.meta.env.DEV) return;
+
+    // Rensa gamla service workers/caches så att ingen kör en inaktuell version.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations?.().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      }).catch(() => undefined);
+    }
 
     const check = async () => {
       if (found.current || document.hidden) return;
