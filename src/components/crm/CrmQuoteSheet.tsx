@@ -54,10 +54,12 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
   const [newComment, setNewComment] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [pendingPdfDelete, setPendingPdfDelete] = useState<string[]>([]);
 
   useEffect(() => {
     setForm(quote ? { ...quote } : emptyQuote());
     setNewComment('');
+    setPendingPdfDelete([]);
   }, [quote, open]);
 
   const upd = (k: keyof CrmQuote, v: any) => setForm((f) => ({ ...f, [k]: v }));
