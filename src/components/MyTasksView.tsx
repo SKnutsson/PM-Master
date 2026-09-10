@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Plus, MoreHorizontal, CalendarIcon, Trash2, Inbox, Folder, User as UserIcon, Send, X, GripVertical, MessageSquare } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useProjectDataContext } from '@/contexts/ProjectDataContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -117,6 +118,12 @@ export function MyTasksView() {
     },
     enabled: !!user,
   });
+
+  // Realtid: uppgifter och buckets uppdateras direkt för alla användare
+  useRealtimeSync('tasks-board', ['tasks', 'task_buckets'], () => {
+    qc.invalidateQueries({ queryKey: ['tasks-all'] });
+    qc.invalidateQueries({ queryKey: ['task-buckets'] });
+  }, !!user);
 
   // ---- Mutations ----
   const ensureBucket = async (ownerId: string, projectId: string | null, fallbackName: string) => {

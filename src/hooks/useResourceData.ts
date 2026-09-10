@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 
 
 export interface Installer {
@@ -366,6 +367,12 @@ export function useResourceData() {
     await supabase.from('project_installers').update(payload).eq('id', projectInstallerId);
     setProjectInstallers(prev => prev.map(p => p.id === projectInstallerId ? { ...p, ...updates } as ProjectInstaller : p));
   }, []);
+
+  useRealtimeSync(
+    'resource-data',
+    ['installers', 'project_installers', 'daily_resource_entries', 'resource_estimations'],
+    () => { loadAll(); },
+  );
 
   return {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
