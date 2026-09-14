@@ -89,7 +89,7 @@ export const TECHNICAL_DEFAULT_CONDITIONS = [
 export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
   name: 'Standardmall – Projektgenomgång',
   projectType: 'Standardprojekt',
-  version: 6,
+  version: 7,
   sections: [
     {
       key: 'attendees',
@@ -155,10 +155,11 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       title: 'Teknisk specifikation',
       kind: 'table',
       countsTowardProgress: true,
-      addLabel: 'Lägg till förutsättning',
-      description: 'Lägg till de tekniska förutsättningar som ska gås igenom i projektet.',
+      addLabel: 'Lägg till specifikation',
+      description: 'Gå igenom varje specifikation, notera vad som gäller och markera om något ska följas upp.',
       columns: [
-        { key: 'condition', label: 'Förutsättning', type: 'textarea', required: true },
+        { key: 'condition', label: 'Specifikation', type: 'text', required: true },
+        { key: 'note', label: 'Notering', type: 'text' },
         ...FOLLOWUP,
       ],
     },
