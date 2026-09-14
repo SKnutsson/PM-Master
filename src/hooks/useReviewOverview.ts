@@ -88,6 +88,7 @@ export function useReviewOverview() {
             entry.points.push({
               text: String(d.point || '').trim() || 'Öppen punkt',
               category: d.category || 'Öppna punkter',
+              sectionKey: 'open_points',
               responsible: d.responsible,
               deadline: d.deadline,
               status: d.status || 'Öppen',
