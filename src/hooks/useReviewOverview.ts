@@ -54,7 +54,7 @@ export function useReviewOverview() {
           .in('review_id', ids),
         supabase
           .from('project_review_answers')
-          .select('review_id, section_key, item_key, status, comment')
+          .select('review_id, section_key, item_key, status, comment, responsible')
           .in('review_id', ids)
           .eq('status', 'Ja'),
       ]);
