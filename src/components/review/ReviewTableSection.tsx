@@ -80,7 +80,13 @@ export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, r
 
               <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-4">
                 {cols.map(col => (
-                  <div key={col.key} className={cn(col.type === 'textarea' && 'md:col-span-2')}>
+                  <div
+                    key={col.key}
+                    className={cn(
+                      col.type === 'textarea' && 'md:col-span-2',
+                      col.key === 'followup_responsible' && !isFollowup(row.data) && 'hidden',
+                    )}
+                  >
                     <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
                       {col.label}{col.required && <span className="text-destructive"> *</span>}
                     </label>
