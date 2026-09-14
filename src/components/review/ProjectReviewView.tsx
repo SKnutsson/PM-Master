@@ -40,6 +40,7 @@ export function ProjectReviewView() {
   const [activeSection, setActiveSection] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [openSections, setOpenSections] = useState<string[]>([]);
+  const [pendingSection, setPendingSection] = useState<string | null>(null);
   // Alltid komprimerat när man öppnar ett projekt (ny eller påbörjad genomgång)
   useEffect(() => { setOpenSections([]); }, [projectId]);
 
