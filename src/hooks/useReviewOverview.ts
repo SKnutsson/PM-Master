@@ -98,10 +98,15 @@ export function useReviewOverview() {
           return;
         }
         if (d.followup === 'Ja' || d.followup === true) {
+          const section = DEFAULT_REVIEW_TEMPLATE.sections.find(s => s.key === row.section_key);
+          const firstCol = (section?.columns || [])[0];
+          const main = firstCol ? String(d[firstCol.key] ?? '').trim() : '';
+          const note = String(d.followup_note || '').trim();
           const fallback = Object.values(d).find(v => typeof v === 'string' && v.trim()) as string | undefined;
           entry.points.push({
-            text: String(d.followup_note || fallback || '').slice(0, 120) || 'Kräver uppföljning',
+            text: ([main, note].filter(Boolean).join(' – ') || String(fallback || '').slice(0, 120) || 'Kräver uppföljning'),
             category: row.section_key,
+            sectionKey: row.section_key,
             responsible: d.followup_responsible,
             deadline: d.followup_deadline,
             status: 'Uppföljning',
