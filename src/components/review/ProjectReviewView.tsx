@@ -52,6 +52,15 @@ export function ProjectReviewView() {
   } = useProjectReview(projectId || null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Öppna och skrolla till det avsnitt man klickade på i översikten
+  useEffect(() => {
+    if (!pendingSection || !review) return;
+    const key = pendingSection;
+    setOpenSections(prev => prev.includes(key) ? prev : [...prev, key]);
+    setPendingSection(null);
+    setTimeout(() => document.getElementById(`sec-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }, [pendingSection, review]);
+
   const sections = template.sections;
 
   const sectionRows = (key: string) => rows.filter(r => r.section_key === key);
