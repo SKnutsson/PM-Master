@@ -94,7 +94,11 @@ export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, r
                     <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
                       {col.label}{col.required && <span className="text-destructive"> *</span>}
                     </label>
-                    {col.type === 'attachment' ? (
+                    {row.data.locked && col.key === (cols[0]?.key) ? (
+                      <p className="flex h-8 items-center rounded-md bg-muted/50 px-2 text-xs font-medium">
+                        {String(row.data[col.key] ?? '')}
+                      </p>
+                    ) : col.type === 'attachment' ? (
                       <ReviewFileAttachment
                         reviewId={reviewId}
                         rowId={row.id}

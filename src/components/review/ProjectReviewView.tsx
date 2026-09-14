@@ -74,6 +74,10 @@ export function ProjectReviewView() {
     if (s.kind === 'table') {
       const rs = sectionRows(s.key);
       if (rs.length === 0) return false;
+      // Förifyllda rader (t.ex. Teknisk specifikation) räknas först när de fått notering eller uppföljning
+      if (rs.some(r => r.data.locked)) {
+        return rs.every(r => !!r.data.note || r.data.followup === true || r.data.followup === 'Ja' || !!r.data.followup_note);
+      }
       return rs.every(r => (s.columns || []).filter(c => c.required).every(c => !!r.data[c.key]));
     }
     const fields = s.fields || [];

@@ -145,7 +145,7 @@ export function useProjectReview(projectId: string | null) {
       TECHNICAL_DEFAULT_CONDITIONS.map((condition, i) => ({
         review_id: (data as any).id,
         section_key: 'technical',
-        data: { condition },
+        data: { condition, locked: true },
         sort_order: i,
         created_by: user?.id ?? null,
       })) as any,
