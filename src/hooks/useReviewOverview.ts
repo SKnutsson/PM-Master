@@ -71,6 +71,8 @@ export function useReviewOverview() {
         entry.points.push({
           text: `${field?.label || a.item_key}${a.comment ? ` – ${a.comment}` : ''}`,
           category: a.section_key,
+          sectionKey: a.section_key,
+          responsible: a.responsible,
           status: 'Uppföljning',
           kind: 'followup',
         });
