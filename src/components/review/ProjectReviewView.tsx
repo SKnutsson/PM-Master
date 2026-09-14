@@ -518,8 +518,12 @@ export function ProjectReviewView() {
                                       <label className="flex h-8 items-center gap-2 text-xs text-muted-foreground">
                                         <Checkbox checked={a?.status === 'Ja'} onCheckedChange={(checked) => setAnswer(s.key, key, { status: checked === true ? 'Ja' : 'Nej' })} />
                                         Kräver uppföljning
-                                      </label>
-                                    )}
+                                       </label>
+                                     )}
+                                     {s.hideTraceability && a?.status === 'Ja' && (
+                                       <Input className="h-8 text-xs" placeholder="Ansvarig för uppföljning"
+                                         value={a?.responsible ?? ''} onChange={e => setAnswer(s.key, key, { responsible: e.target.value })} />
+                                     )}
                                     {s.hideTraceability && !s.followupCheckbox && (
                                       <div>
                                         <Select value={a?.status || '__none'} onValueChange={(v) => setAnswer(s.key, key, { status: v === '__none' ? '' : v })}>
