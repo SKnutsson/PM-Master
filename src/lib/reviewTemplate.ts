@@ -17,6 +17,8 @@ export type FieldType =
   | 'person'
   | 'scope'
   | 'status';
+  | 'checkbox'
+  | 'attachment';
 
 export interface ReviewField {
   key: string;
@@ -43,6 +45,8 @@ export interface ReviewSection {
   hideTraceability?: boolean;
   /** Sektioner som räknas in i "huvudområden genomgångna" */
   countsTowardProgress?: boolean;
+  /** Visar uppföljning som en kryssruta i checklistvyn. */
+  followupCheckbox?: boolean;
 }
 
 export interface ReviewTemplate {
@@ -58,12 +62,6 @@ const SOURCES = [
 ];
 
 
-const TIMELINE_ACTIVITIES = [
-  'Projekteringsstart', 'Konstruktionsstart', 'Kundgranskning', 'Bygghandling klar',
-  'Produktionsstart', 'Inköpsdeadline', 'Leveransdatum', 'Montagestart', 'Delmål',
-  'Färdigställande', 'Slutbesiktning', 'Garantibesiktning',
-];
-
 export const REVIEW_STATUSES = [
   'Ej påbörjad', 'Pågår', 'Väntar på komplettering', 'Klar för intern granskning',
   'Godkänd', 'Kräver åtgärd',
@@ -78,14 +76,14 @@ function q(key: string, label: string, type: FieldType = 'yesnona', extra: Parti
 
 /** Uppföljningskolumn som finns på alla tabellsektioner */
 const FOLLOWUP: ReviewField[] = [
-  { key: 'followup', label: 'Kräver uppföljning', type: 'yesno' },
-  { key: 'followup_note', label: 'Notering', type: 'text' },
+  { key: 'followup', label: 'Kräver uppföljning', type: 'checkbox' },
+  { key: 'followup_note', label: 'Kommentar', type: 'text' },
 ];
 
 export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
   name: 'Standardmall – Projektgenomgång',
   projectType: 'Standardprojekt',
-  version: 4,
+  version: 5,
   sections: [
     {
       key: 'attendees',
@@ -114,6 +112,7 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
         { key: 'doc_number', label: 'Dokumentnummer', type: 'text' },
         { key: 'doc_date', label: 'Datum', type: 'date' },
         { key: 'reviewed', label: 'Genomgången', type: 'yesno' },
+        { key: 'attachment', label: 'Fil', type: 'attachment' },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
         ...FOLLOWUP,
       ],
@@ -125,8 +124,10 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       countsTowardProgress: true,
       addLabel: 'Lägg till option',
       columns: [
-        { key: 'description', label: 'Benämning', type: 'text', required: true },
+        { key: 'option', label: 'Option', type: 'text', required: true },
+        { key: 'description', label: 'Beskrivning', type: 'textarea' },
         { key: 'status', label: 'Status', type: 'select', options: ['Ej beställd', 'Beställd'] },
+        ...FOLLOWUP,
       ],
     },
     {
@@ -146,21 +147,13 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
     {
       key: 'technical',
       title: 'Teknisk specifikation',
-      kind: 'checklist',
+      kind: 'table',
       countsTowardProgress: true,
-      hideTraceability: true,
-      description: 'Teknisk genomgång av projektets förutsättningar.',
-      fields: [
-        q('geo_measures', 'Mått', 'text'), q('geo_tolerances', 'Toleranser', 'text'),
-        q('geo_cc', 'CC-mått', 'text'), q('geo_heights', 'Höjder', 'text'),
-        q('geo_levels', 'Nivåer', 'text'), q('geo_survey', 'Inmätning', 'yesnona'),
-        q('geo_existing', 'Befintliga förhållanden', 'textarea'),
-        q('mat_colors', 'Kulörer', 'text'), q('mat_laminate', 'Laminat', 'text'),
-        q('mat_fabric', 'Tyg', 'text'), q('mat_special', 'Specialmaterial', 'text'),
-        q('con_weld_class', 'Svetsklasser', 'text'),
-        q('con_quality_class', 'Kvalitetsklasser', 'text'), q('con_pulltest', 'Dragprov', 'yesnona'),
-        q('con_testing', 'Provning', 'yesnona'), q('con_dimensioning', 'Dimensioneringskrav', 'text'),
-        q('con_tolerances', 'Toleranser (konstruktion)', 'text'),
+      addLabel: 'Lägg till förutsättning',
+      description: 'Lägg till de tekniska förutsättningar som ska gås igenom i projektet.',
+      columns: [
+        { key: 'condition', label: 'Förutsättning', type: 'textarea', required: true },
+        ...FOLLOWUP,
       ],
     },
     {
@@ -188,14 +181,11 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       addLabel: 'Lägg till aktivitet',
       description: 'Passerade datum som ej är klara markeras automatiskt som kritiska.',
       columns: [
-        { key: 'activity', label: 'Aktivitet', type: 'select', options: TIMELINE_ACTIVITIES, required: true },
-        { key: 'date', label: 'Datum', type: 'date' },
-        { key: 'responsible', label: 'Ansvarig', type: 'person' },
-        { key: 'status', label: 'Status', type: 'select', options: ['Ej påbörjad', 'Pågår', 'Klar', 'Försenad'] },
-        { key: 'dependency', label: 'Beroende', type: 'text' },
-        { key: 'critical', label: 'Kritisk', type: 'yesno' },
+        { key: 'activity', label: 'Aktivitet', type: 'text', required: true },
+        { key: 'date', label: 'Datum', type: 'text' },
+        { key: 'document', label: 'Hänvisat dokument', type: 'text' },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
-        ...FOLLOWUP,
+        { key: 'followup', label: 'Kräver uppföljning', type: 'checkbox' },
       ],
     },
     {
@@ -204,6 +194,7 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       kind: 'checklist',
       countsTowardProgress: true,
       hideTraceability: true,
+      followupCheckbox: true,
       description: 'Ange vilka kommunikationskanaler som gäller i projektet.',
       fields: [
         q('channels', 'Kommunikationskanaler', 'textarea'),
@@ -231,25 +222,6 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       ],
     },
     {
-      key: 'verbal',
-      title: 'Muntliga överenskommelser',
-      kind: 'table',
-      countsTowardProgress: true,
-      addLabel: 'Lägg till överenskommelse',
-      columns: [
-        { key: 'what', label: 'Vad har kommunicerats?', type: 'textarea', required: true },
-        { key: 'by_whom', label: 'Av vem?', type: 'text' },
-        { key: 'to_whom', label: 'Till vem?', type: 'text' },
-        { key: 'date', label: 'Datum', type: 'date' },
-        { key: 'written_confirmation', label: 'Finns skriftlig bekräftelse?', type: 'yesno' },
-        { key: 'affects_scope', label: 'Påverkar omfattning?', type: 'yesno' },
-        { key: 'affects_price', label: 'Påverkar pris?', type: 'yesno' },
-        { key: 'affects_schedule', label: 'Påverkar tidplan?', type: 'yesno' },
-        { key: 'responsible', label: 'Ansvarig', type: 'person' },
-        ...FOLLOWUP,
-      ],
-    },
-    {
       key: 'open_points',
       title: 'Öppna punkter',
       kind: 'table',
@@ -265,43 +237,6 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
         { key: 'priority', label: 'Prioritet', type: 'select', options: ['Låg', 'Normal', 'Hög', 'Kritisk'] },
         { key: 'status', label: 'Status', type: 'select', options: [...OPEN_POINT_STATUSES] },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
-      ],
-    },
-    {
-      key: 'decisions',
-      title: 'Beslut',
-      kind: 'table',
-      countsTowardProgress: true,
-      addLabel: 'Lägg till beslut',
-      columns: [
-        { key: 'decision', label: 'Beslut', type: 'textarea', required: true },
-        { key: 'date', label: 'Datum', type: 'date' },
-        { key: 'participants', label: 'Deltagare', type: 'text' },
-        { key: 'decision_maker', label: 'Beslutsfattare', type: 'person', required: true },
-        { key: 'basis', label: 'Underlag', type: 'text' },
-        { key: 'consequence', label: 'Konsekvens', type: 'textarea' },
-        { key: 'comment', label: 'Kommentar', type: 'textarea' },
-        ...FOLLOWUP,
-      ],
-    },
-    {
-      key: 'changes',
-      title: 'Ändringar',
-      kind: 'table',
-      countsTowardProgress: true,
-      addLabel: 'Lägg till ändring',
-      columns: [
-        { key: 'what', label: 'Vad ändras?', type: 'textarea', required: true },
-        { key: 'original', label: 'Ursprunglig lösning', type: 'textarea' },
-        { key: 'new', label: 'Ny lösning', type: 'textarea' },
-        { key: 'reason', label: 'Orsak', type: 'textarea' },
-        { key: 'initiator', label: 'Initierad av', type: 'select', options: ['Kund', 'Internt'] },
-        { key: 'affects_price', label: 'Pris påverkas?', type: 'yesno' },
-        { key: 'affects_schedule', label: 'Tidplan påverkas?', type: 'yesno' },
-        { key: 'ata_required', label: 'ÄTA krävs?', type: 'yesno' },
-        { key: 'approved_by', label: 'Godkänd av', type: 'person' },
-        { key: 'date', label: 'Datum', type: 'date' },
-        ...FOLLOWUP,
       ],
     },
   ],
