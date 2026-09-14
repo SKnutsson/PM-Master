@@ -12,7 +12,7 @@ interface ProjectLike { id: string; code?: string | null; name: string; customer
 interface Props {
   projects: ProjectLike[];
   overview: Record<string, ReviewOverviewEntry>;
-  onOpen: (projectId: string) => void;
+  onOpen: (projectId: string, sectionKey?: string) => void;
 }
 
 type Filter = 'all' | 'none' | 'open' | 'complete';
