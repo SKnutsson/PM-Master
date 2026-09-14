@@ -196,7 +196,7 @@ export function ProjectReviewView() {
 
   const exportPdf = () => {
     if (!project || !review) return;
-    generateReviewSummaryPdf({ project, review, sections, answers, rows, signoffs, progress });
+    generateReviewSummaryPdf({ project, review, sections, answers, rows, signoffs, progress, openPoints: allOpenPoints });
     toast({ title: 'Sammanfattning exporterad', description: 'PDF har skapats.' });
   };
 
@@ -411,6 +411,11 @@ export function ProjectReviewView() {
                             </Badge>
                           : <Badge variant="outline" className="text-[10px] text-muted-foreground">Ej komplett</Badge>}
                         {s.kind === 'table' && <span className="text-[11px] text-muted-foreground">{sectionRows(s.key).length} rader</span>}
+                        {sectionFollowupCount(s.key) > 0 && (
+                          <Badge className="gap-1 border-status-risk/30 bg-status-risk/15 text-[10px] text-status-risk">
+                            <AlertTriangle className="h-3 w-3" />{sectionFollowupCount(s.key)} att följa upp
+                          </Badge>
+                        )}
                         <span
                           role="checkbox"
                           aria-checked={acked}
