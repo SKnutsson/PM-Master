@@ -92,7 +92,7 @@ export function useReviewOverview() {
           }
           return;
         }
-        if (d.followup === 'Ja') {
+        if (d.followup === 'Ja' || d.followup === true) {
           const fallback = Object.values(d).find(v => typeof v === 'string' && v.trim()) as string | undefined;
           entry.points.push({
             text: String(d.followup_note || fallback || '').slice(0, 120) || 'Kräver uppföljning',

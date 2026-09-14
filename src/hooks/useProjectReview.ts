@@ -73,27 +73,11 @@ export function useProjectReview(projectId: string | null) {
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const template: ReviewTemplate = useMemo(() => {
-    if (review?.template_snapshot?.length && review.template_version === DEFAULT_REVIEW_TEMPLATE.version) {
+    if (review?.template_snapshot?.length) {
       return { ...DEFAULT_REVIEW_TEMPLATE, sections: review.template_snapshot as ReviewSection[], version: review.template_version };
     }
     return DEFAULT_REVIEW_TEMPLATE;
   }, [review]);
-
-  // Uppgradera äldre genomgångar till senaste mallversionen
-  useEffect(() => {
-    if (!review || review.template_version === DEFAULT_REVIEW_TEMPLATE.version) return;
-    const id = review.id;
-    (async () => {
-      await supabase.from('project_reviews').update({
-        template_version: DEFAULT_REVIEW_TEMPLATE.version,
-        template_snapshot: DEFAULT_REVIEW_TEMPLATE.sections as any,
-      }).eq('id', id);
-      setReview(prev => prev && prev.id === id
-        ? { ...prev, template_version: DEFAULT_REVIEW_TEMPLATE.version, template_snapshot: DEFAULT_REVIEW_TEMPLATE.sections as ReviewSection[] }
-        : prev);
-    })();
-  }, [review]);
-
 
   const logEvent = useCallback(async (reviewId: string, action: string, target?: string, details: any = {}) => {
     await supabase.from('project_review_events').insert({
@@ -227,10 +211,25 @@ export function useProjectReview(projectId: string | null) {
   useEffect(() => { rowsRef.current = rows; }, [rows]);
 
   const deleteRow = useCallback(async (rowId: string) => {
+    const row = rowsRef.current.find(r => r.id === rowId);
     setRows(prev => prev.filter(r => r.id !== rowId));
-    await supabase.from('project_review_rows').delete().eq('id', rowId);
+    const { error } = await supabase.from('project_review_rows').delete().eq('id', rowId);
+    if (!error && row?.data?.attachment_path) {
+      await supabase.storage.from('project-review-attachments').remove([String(row.data.attachment_path)]);
+    }
     if (review) await logEvent(review.id, 'Rad borttagen', rowId);
   }, [review, logEvent]);
+
+  const saveRowNow = useCallback(async (rowId: string, data: Record<string, any>) => {
+    const row = rowsRef.current.find(r => r.id === rowId);
+    if (!row) return false;
+    const nextData = { ...row.data, ...data };
+    setRows(prev => prev.map(r => r.id === rowId ? { ...r, data: nextData } : r));
+    setSaving(true);
+    const { error } = await supabase.from('project_review_rows').update({ data: nextData }).eq('id', rowId);
+    setSaving(false);
+    return !error;
+  }, []);
 
   const setSignoff = useCallback(async (role: string, approved: boolean, name: string) => {
     if (!review) return;
@@ -258,17 +257,23 @@ export function useProjectReview(projectId: string | null) {
   const deleteReview = useCallback(async () => {
     if (!review) return false;
     const rid = review.id;
+    const attachmentPaths = rows
+      .map(row => row.data?.attachment_path)
+      .filter((path): path is string => typeof path === 'string' && path.length > 0);
     // Underliggande tabeller raderas via ON DELETE CASCADE
 
     const { error } = await supabase.from('project_reviews').delete().eq('id', rid);
     if (error) return false;
+    if (attachmentPaths.length) {
+      await supabase.storage.from('project-review-attachments').remove(attachmentPaths);
+    }
     setReview(null); setAnswers({}); setRows([]); setSignoffs([]); setEvents([]);
     return true;
-  }, [review]);
+  }, [review, rows]);
 
   return {
     review, template, answers, rows, signoffs, events, loading, saving,
-    createReview, updateReview, setAnswer, addRow, updateRow, deleteRow, setSignoff, logEvent, reload: load,
+    createReview, updateReview, setAnswer, addRow, updateRow, saveRowNow, deleteRow, setSignoff, logEvent, reload: load,
     deleteReview,
   };
 }

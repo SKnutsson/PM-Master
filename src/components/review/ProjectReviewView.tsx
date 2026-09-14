@@ -28,6 +28,7 @@ import { ReviewTableSection } from './ReviewTableSection';
 import { generateReviewSummaryPdf } from '@/lib/reviewReport';
 import { ReviewOverviewList } from './ReviewOverviewList';
 import { useReviewOverview } from '@/hooks/useReviewOverview';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export function ProjectReviewView() {
   const { projects } = useProjectDataContext();
@@ -46,7 +47,7 @@ export function ProjectReviewView() {
   const project = projects.find(p => p.id === projectId) || null;
   const {
     review, template, answers, rows, signoffs, events, loading, saving,
-    createReview, updateReview, setAnswer, addRow, updateRow, deleteRow, setSignoff, deleteReview,
+    createReview, updateReview, setAnswer, addRow, updateRow, saveRowNow, deleteRow, setSignoff, deleteReview,
   } = useProjectReview(projectId || null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -93,10 +94,8 @@ export function ProjectReviewView() {
     const list: { point: string; category: string; source: string }[] = [];
     sectionRows('deviations').filter(r => !r.data.decision)
       .forEach(r => list.push({ point: `Obeslutad avvikelse: ${String(r.data.difference || '').slice(0, 80)}`, category: 'Avvikelser', source: `${r.data.source1 || ''} / ${r.data.source2 || ''}` }));
-    sectionRows('verbal').filter(r => r.data.written_confirmation === 'Nej')
-      .forEach(r => list.push({ point: `Obekräftad muntlig överenskommelse: ${String(r.data.what || '').slice(0, 80)}`, category: 'Överenskommelser', source: r.data.by_whom || '' }));
     sectionRows('options').filter(r => r.data.status !== 'Beställd')
-      .forEach(r => list.push({ point: `Option ej beställd: ${String(r.data.description || '').slice(0, 80)}`, category: 'Optioner', source: '' }));
+      .forEach(r => list.push({ point: `Option ej beställd: ${String(r.data.option || r.data.description || '').slice(0, 80)}`, category: 'Optioner', source: '' }));
     // Checklistpunkter som markerats för uppföljning
     Object.values(answers).filter((a: any) => a?.status === 'Ja').forEach((a: any) => {
       const sec = sections.find(x => x.key === a.section_key);
@@ -108,7 +107,7 @@ export function ProjectReviewView() {
       });
     });
     // Punkter som manuellt markerats för uppföljning
-    rows.filter(r => r.section_key !== 'open_points' && r.data.followup === 'Ja').forEach(r => {
+    rows.filter(r => r.section_key !== 'open_points' && (r.data.followup === true || r.data.followup === 'Ja')).forEach(r => {
       const sec = sections.find(x => x.key === r.section_key);
       const firstCol = (sec?.columns || [])[0];
       const label = r.data.followup_note || (firstCol ? String(r.data[firstCol.key] ?? '') : '');
@@ -342,7 +341,7 @@ export function ProjectReviewView() {
                     <Input type="date" className="h-8 text-sm" value={review.review_date ?? ''} onChange={e => updateReview({ review_date: e.target.value })} />
                   </div>
                   <HeaderField label="Ansvarig säljare" value={header.sales_person ?? project?.salesPerson ?? ''} onChange={v => setHeader('sales_person', v)} />
-                  <HeaderField label="Konstruktionschef" value={header.design_lead ?? ''} onChange={v => setHeader('design_lead', v)} />
+                  <HeaderField label={review.template_version >= 5 ? 'Ansvarig konstruktör' : 'Konstruktionschef'} value={header.design_lead ?? ''} onChange={v => setHeader('design_lead', v)} />
                   <HeaderField label="Projektledare" value={header.project_manager ?? project?.projectManager ?? ''} onChange={v => setHeader('project_manager', v)} />
                   <div>
                     <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Version</label>
@@ -402,6 +401,8 @@ export function ProjectReviewView() {
                             rows={sectionRows(s.key)}
                             onAdd={() => addRow(s.key)}
                             onUpdate={updateRow}
+                            reviewId={review.id}
+                            onSaveNow={saveRowNow}
                             onDelete={deleteRow}
                           />
                           {s.key === 'open_points' && derivedOpenPoints.length > 0 && (
@@ -473,7 +474,13 @@ export function ProjectReviewView() {
                                         <Input className="h-8 text-xs" placeholder="Ansvarig" value={a?.responsible ?? ''} onChange={e => setAnswer(s.key, key, { responsible: e.target.value })} />
                                       </>
                                     )}
-                                    {s.hideTraceability && (
+                                    {s.hideTraceability && s.followupCheckbox && (
+                                      <label className="flex h-8 items-center gap-2 text-xs text-muted-foreground">
+                                        <Checkbox checked={a?.status === 'Ja'} onCheckedChange={(checked) => setAnswer(s.key, key, { status: checked === true ? 'Ja' : 'Nej' })} />
+                                        Kräver uppföljning
+                                      </label>
+                                    )}
+                                    {s.hideTraceability && !s.followupCheckbox && (
                                       <div>
                                         <Select value={a?.status || '__none'} onValueChange={(v) => setAnswer(s.key, key, { status: v === '__none' ? '' : v })}>
                                           <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Kräver uppföljning" /></SelectTrigger>

@@ -5,6 +5,7 @@ import { ReviewFieldInput } from './ReviewFieldInput';
 import { ReviewSection, riskLevel } from '@/lib/reviewTemplate';
 import { RowRecord } from '@/hooks/useProjectReview';
 import { cn } from '@/lib/utils';
+import { ReviewFileAttachment } from './ReviewFileAttachment';
 
 interface Props {
   section: ReviewSection;
@@ -12,6 +13,8 @@ interface Props {
   onAdd: () => void;
   onUpdate: (rowId: string, data: Record<string, any>) => void;
   onDelete: (rowId: string) => void;
+  reviewId: string;
+  onSaveNow: (rowId: string, data: Record<string, any>) => Promise<boolean>;
   filter?: string;
 }
 
@@ -23,7 +26,7 @@ function rowWarning(section: ReviewSection, data: Record<string, any>): string |
   return null;
 }
 
-export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, filter }: Props) {
+export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, reviewId, onSaveNow, filter }: Props) {
   const cols = section.columns || [];
   const visible = filter
     ? rows.filter(r => JSON.stringify(r.data).toLowerCase().includes(filter.toLowerCase()))
@@ -81,12 +84,22 @@ export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, f
                     <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
                       {col.label}{col.required && <span className="text-destructive"> *</span>}
                     </label>
-                    <ReviewFieldInput
-                      field={col}
-                      value={row.data[col.key]}
-                      onChange={(v) => onUpdate(row.id, { [col.key]: v })}
-                      compact
-                    />
+                    {col.type === 'attachment' ? (
+                      <ReviewFileAttachment
+                        reviewId={reviewId}
+                        rowId={row.id}
+                        name={row.data.attachment_name}
+                        path={row.data.attachment_path}
+                        onSave={(data) => onSaveNow(row.id, data)}
+                      />
+                    ) : (
+                      <ReviewFieldInput
+                        field={col}
+                        value={row.data[col.key]}
+                        onChange={(v) => onUpdate(row.id, { [col.key]: v })}
+                        compact
+                      />
+                    )}
                   </div>
                 ))}
               </div>

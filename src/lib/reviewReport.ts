@@ -62,7 +62,7 @@ export function generateReviewSummaryPdf(opts: {
       ['Datum för genomgång', String(review.review_date ?? '–'), 'Version', String(review.version)],
       ['Status', review.status, 'Färdigställt', `${progress.percent}% (${progress.done}/${progress.total})`],
       ['Ansvarig säljare', String(h.sales_person ?? project.salesPerson ?? '–'), 'Projektledare', String(h.project_manager ?? project.projectManager ?? '–')],
-      ['Konstruktionschef', String(h.design_lead ?? '–'), 'Produktionsansvarig', String(h.production_lead ?? '–')],
+      [review.template_version >= 5 ? 'Ansvarig konstruktör' : 'Konstruktionschef', String(h.design_lead ?? '–'), 'Produktionsansvarig', String(h.production_lead ?? '–')],
     ],
   });
   y = (doc as any).lastAutoTable.finalY + 8;
@@ -80,7 +80,11 @@ export function generateReviewSummaryPdf(opts: {
         headStyles: { fillColor: BRAND.dark },
         head: [[...cols.map(c => c.label), ...(section.key === 'risks' ? ['Riskvärde'] : [])]],
         body: secRows.map(r => [
-          ...cols.map(c => String(r.data[c.key] ?? '–')),
+          ...cols.map(c => {
+            if (c.type === 'attachment') return String(r.data.attachment_name ?? '–');
+            if (c.type === 'checkbox') return r.data[c.key] === true || r.data[c.key] === 'Ja' ? 'Ja' : 'Nej';
+            return String(r.data[c.key] ?? '–');
+          }),
           ...(section.key === 'risks' ? [String(riskLevel(r.data.probability, r.data.consequence).value)] : []),
         ]),
       });

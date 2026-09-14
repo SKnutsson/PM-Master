@@ -1,6 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { UserSelect } from '@/components/UserSelect';
 import { useProfiles } from '@/hooks/useProfiles';
 import { ReviewField } from '@/lib/reviewTemplate';
@@ -27,6 +28,14 @@ export function ReviewFieldInput({ field, value, onChange, compact, className }:
     field.type === 'yesnona' ? YESNONA :
     field.type === 'scope' ? SCOPE :
     field.options || [];
+
+  if (field.type === 'checkbox') {
+    return (
+      <div className={cn('flex h-8 items-center', className)}>
+        <Checkbox checked={value === true || value === 'Ja'} onCheckedChange={(checked) => onChange(checked === true)} />
+      </div>
+    );
+  }
 
   if (field.type === 'person') {
     return (
