@@ -32,8 +32,9 @@ export function generateReviewSummaryPdf(opts: {
   rows: RowRecord[];
   signoffs: SignoffRecord[];
   progress: { percent: number; done: number; total: number };
+  openPoints?: { point: string; category: string; responsible?: string; deadline?: string; status?: string }[];
 }) {
-  const { project, review, sections, answers, rows, signoffs, progress } = opts;
+  const { project, review, sections, answers, rows, signoffs, progress, openPoints = [] } = opts;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
 
