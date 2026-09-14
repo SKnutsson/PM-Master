@@ -112,6 +112,17 @@ export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, r
                     )}
                   </div>
                 ))}
+                {isFollowup(row.data) && !cols.some(c => c.key === 'followup_responsible') && (
+                  <div>
+                    <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Ansvarig för uppföljning</label>
+                    <ReviewFieldInput
+                      field={{ key: 'followup_responsible', label: 'Ansvarig för uppföljning', type: 'person' }}
+                      value={row.data.followup_responsible}
+                      onChange={(v) => onUpdate(row.id, { followup_responsible: v })}
+                      compact
+                    />
+                  </div>
+                )}
               </div>
             </div>
           );
