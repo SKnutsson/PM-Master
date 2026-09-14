@@ -23,6 +23,12 @@ function sectionTitle(key: string) {
 }
 
 export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
+  const { profiles } = useProfiles();
+  const nameOf = (value?: string | null) => {
+    if (!value) return '';
+    const p = profiles.find(pr => pr.user_id === value);
+    return p ? getDisplayName(p) : value;
+  };
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [expanded, setExpanded] = useState<string[]>([]);
