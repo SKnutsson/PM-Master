@@ -6,6 +6,8 @@ export interface OverviewPoint {
   /** Vad punkten gäller */
   text: string;
   category: string;
+  /** Avsnittsnyckel i mallen, används för att hoppa direkt till avsnittet */
+  sectionKey: string;
   responsible?: string | null;
   deadline?: string | null;
   status?: string | null;
