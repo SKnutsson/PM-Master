@@ -18,6 +18,10 @@ interface Props {
   filter?: string;
 }
 
+function isFollowup(data: Record<string, any>) {
+  return data?.followup === true || data?.followup === 'Ja';
+}
+
 function rowWarning(section: ReviewSection, data: Record<string, any>): string | null {
   if (section.key === 'open_points' && data.status === 'Klar' && !data.responsible) return 'Kan inte vara klar utan ansvarig';
   if (section.key === 'timeline' && data.date && data.status !== 'Klar' && new Date(data.date) < new Date(new Date().toDateString())) return 'Passerad deadline';
