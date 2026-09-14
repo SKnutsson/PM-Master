@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { DEFAULT_REVIEW_TEMPLATE } from '@/lib/reviewTemplate';
 import { ReviewOverviewEntry } from '@/hooks/useReviewOverview';
+import { useProfiles, getDisplayName } from '@/hooks/useProfiles';
 
 interface ProjectLike { id: string; code?: string | null; name: string; customer?: string | null; projectManager?: string | null }
 

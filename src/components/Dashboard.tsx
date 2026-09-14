@@ -292,11 +292,6 @@ export function Dashboard() {
                             <p className="text-[11px] font-medium text-muted-foreground tabular-nums">{p.code}</p>
                             <p className="text-sm font-bold truncate" title={p.name}>{p.name}</p>
 
-                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-status-completed/15 px-2 py-0.5 text-[10px] font-medium text-status-completed tabular-nums">
-                                <Check className="h-3 w-3" />{done} / {total} klara
-                              </span>
-                            </div>
 
                             {(delayedActs.length > 0 || riskActs.length > 0) && (
                               <div className="mt-2 space-y-1 border-t border-border/30 pt-2">
