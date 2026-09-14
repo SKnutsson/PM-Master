@@ -16,7 +16,7 @@ export type FieldType =
   | 'yesnona'
   | 'person'
   | 'scope'
-  | 'status';
+  | 'status'
   | 'checkbox'
   | 'attachment';
 
