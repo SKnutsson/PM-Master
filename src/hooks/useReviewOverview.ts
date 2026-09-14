@@ -6,6 +6,8 @@ export interface OverviewPoint {
   /** Vad punkten gäller */
   text: string;
   category: string;
+  /** Avsnittsnyckel i mallen, används för att hoppa direkt till avsnittet */
+  sectionKey: string;
   responsible?: string | null;
   deadline?: string | null;
   status?: string | null;
@@ -52,7 +54,7 @@ export function useReviewOverview() {
           .in('review_id', ids),
         supabase
           .from('project_review_answers')
-          .select('review_id, section_key, item_key, status, comment')
+          .select('review_id, section_key, item_key, status, comment, responsible')
           .in('review_id', ids)
           .eq('status', 'Ja'),
       ]);
@@ -69,6 +71,8 @@ export function useReviewOverview() {
         entry.points.push({
           text: `${field?.label || a.item_key}${a.comment ? ` – ${a.comment}` : ''}`,
           category: a.section_key,
+          sectionKey: a.section_key,
+          responsible: a.responsible,
           status: 'Uppföljning',
           kind: 'followup',
         });
@@ -84,6 +88,7 @@ export function useReviewOverview() {
             entry.points.push({
               text: String(d.point || '').trim() || 'Öppen punkt',
               category: d.category || 'Öppna punkter',
+              sectionKey: 'open_points',
               responsible: d.responsible,
               deadline: d.deadline,
               status: d.status || 'Öppen',
@@ -93,10 +98,15 @@ export function useReviewOverview() {
           return;
         }
         if (d.followup === 'Ja' || d.followup === true) {
+          const section = DEFAULT_REVIEW_TEMPLATE.sections.find(s => s.key === row.section_key);
+          const firstCol = (section?.columns || [])[0];
+          const main = firstCol ? String(d[firstCol.key] ?? '').trim() : '';
+          const note = String(d.followup_note || '').trim();
           const fallback = Object.values(d).find(v => typeof v === 'string' && v.trim()) as string | undefined;
           entry.points.push({
-            text: String(d.followup_note || fallback || '').slice(0, 120) || 'Kräver uppföljning',
+            text: ([main, note].filter(Boolean).join(' – ') || String(fallback || '').slice(0, 120) || 'Kräver uppföljning'),
             category: row.section_key,
+            sectionKey: row.section_key,
             responsible: d.followup_responsible,
             deadline: d.followup_deadline,
             status: 'Uppföljning',

@@ -40,6 +40,7 @@ export function ProjectReviewView() {
   const [activeSection, setActiveSection] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [openSections, setOpenSections] = useState<string[]>([]);
+  const [pendingSection, setPendingSection] = useState<string | null>(null);
   // Alltid komprimerat när man öppnar ett projekt (ny eller påbörjad genomgång)
   useEffect(() => { setOpenSections([]); }, [projectId]);
 
@@ -50,6 +51,15 @@ export function ProjectReviewView() {
     createReview, updateReview, setAnswer, addRow, updateRow, saveRowNow, deleteRow, setSignoff, deleteReview,
   } = useProjectReview(projectId || null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Öppna och skrolla till det avsnitt man klickade på i översikten
+  useEffect(() => {
+    if (!pendingSection || !review) return;
+    const key = pendingSection;
+    setOpenSections(prev => prev.includes(key) ? prev : [...prev, key]);
+    setPendingSection(null);
+    setTimeout(() => document.getElementById(`sec-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  }, [pendingSection, review]);
 
   const sections = template.sections;
 
@@ -91,11 +101,11 @@ export function ProjectReviewView() {
 
   /** Automatiskt insamlade öppna punkter från hela genomgången */
   const derivedOpenPoints = useMemo(() => {
-    const list: { point: string; category: string; source: string }[] = [];
+    const list: { point: string; category: string; source: string; responsible?: string }[] = [];
     sectionRows('deviations').filter(r => !r.data.decision)
-      .forEach(r => list.push({ point: `Obeslutad avvikelse: ${String(r.data.difference || '').slice(0, 80)}`, category: 'Avvikelser', source: `${r.data.source1 || ''} / ${r.data.source2 || ''}` }));
+      .forEach(r => list.push({ point: `Obeslutad avvikelse: ${String(r.data.difference || '').slice(0, 80)}`, category: 'Avvikelser', source: `${r.data.source1 || ''} / ${r.data.source2 || ''}`, responsible: r.data.responsible }));
     sectionRows('options').filter(r => r.data.status !== 'Beställd')
-      .forEach(r => list.push({ point: `Option ej beställd: ${String(r.data.option || r.data.description || '').slice(0, 80)}`, category: 'Optioner', source: '' }));
+      .forEach(r => list.push({ point: `Option ej beställd: ${String(r.data.option || r.data.description || '').slice(0, 80)}`, category: 'Optioner', source: '', responsible: r.data.followup_responsible }));
     // Checklistpunkter som markerats för uppföljning
     Object.values(answers).filter((a: any) => a?.status === 'Ja').forEach((a: any) => {
       const sec = sections.find(x => x.key === a.section_key);
@@ -104,6 +114,7 @@ export function ProjectReviewView() {
         point: `Uppföljning: ${field?.label || a.item_key}${a.comment ? ` – ${a.comment}` : ''}`,
         category: sec?.title || a.section_key,
         source: '',
+        responsible: a.responsible,
       });
     });
     // Punkter som manuellt markerats för uppföljning
@@ -115,11 +126,45 @@ export function ProjectReviewView() {
         point: `Uppföljning: ${String(label || sec?.title || '').slice(0, 100)}`,
         category: sec?.title || r.section_key,
         source: '',
+        responsible: r.data.followup_responsible,
       });
     });
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, answers]);
+
+  /** Antal punkter att följa upp i ett specifikt avsnitt */
+  const sectionFollowupCount = (key: string) => {
+    if (key === 'open_points') return sectionRows('open_points').filter(r => r.data.status !== 'Klar').length;
+    const rowCount = rows.filter(r => r.section_key === key && (r.data.followup === true || r.data.followup === 'Ja')).length;
+    const answerCount = Object.values(answers).filter((a: any) => a?.section_key === key && a?.status === 'Ja').length;
+    return rowCount + answerCount;
+  };
+
+  const resolveName = (value?: string | null) => {
+    if (!value) return '';
+    const p = profiles.find(pr => pr.user_id === value);
+    return p ? getDisplayName(p) : value;
+  };
+
+  /** Alla öppna punkter (manuella + automatiskt identifierade) för export */
+  const allOpenPoints = useMemo(() => ([
+    ...sectionRows('open_points').filter(r => r.data.status !== 'Klar').map(r => ({
+      point: String(r.data.point || '–'),
+      category: String(r.data.category || 'Öppna punkter'),
+      responsible: resolveName(r.data.responsible),
+      deadline: r.data.deadline || '',
+      status: r.data.status || 'Öppen',
+    })),
+    ...derivedOpenPoints.map(p => ({
+      point: p.point,
+      category: p.category,
+      responsible: resolveName(p.responsible),
+      deadline: '',
+      status: 'Uppföljning',
+    })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ]), [rows, derivedOpenPoints, profiles]);
 
   /** Slutkontroll */
   const gate = useMemo(() => {
@@ -161,7 +206,7 @@ export function ProjectReviewView() {
 
   const exportPdf = () => {
     if (!project || !review) return;
-    generateReviewSummaryPdf({ project, review, sections, answers, rows, signoffs, progress });
+    generateReviewSummaryPdf({ project, review, sections, answers, rows, signoffs, progress, openPoints: allOpenPoints });
     toast({ title: 'Sammanfattning exporterad', description: 'PDF har skapats.' });
   };
 
@@ -237,7 +282,11 @@ export function ProjectReviewView() {
       {!projectId && (
         overviewLoading
           ? <div className="flex flex-1 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-          : <ReviewOverviewList projects={projects.filter(p => overview[p.id]) as any} overview={overview} onOpen={setProjectId} />
+          : <ReviewOverviewList
+              projects={projects.filter(p => overview[p.id]) as any}
+              overview={overview}
+              onOpen={(id, sectionKey) => { setPendingSection(sectionKey ?? null); setProjectId(id); }}
+            />
       )}
 
       {projectId && loading && (
@@ -376,6 +425,11 @@ export function ProjectReviewView() {
                             </Badge>
                           : <Badge variant="outline" className="text-[10px] text-muted-foreground">Ej komplett</Badge>}
                         {s.kind === 'table' && <span className="text-[11px] text-muted-foreground">{sectionRows(s.key).length} rader</span>}
+                        {sectionFollowupCount(s.key) > 0 && (
+                          <Badge className="gap-1 border-status-risk/30 bg-status-risk/15 text-[10px] text-status-risk">
+                            <AlertTriangle className="h-3 w-3" />{sectionFollowupCount(s.key)} att följa upp
+                          </Badge>
+                        )}
                         <span
                           role="checkbox"
                           aria-checked={acked}
@@ -478,8 +532,12 @@ export function ProjectReviewView() {
                                       <label className="flex h-8 items-center gap-2 text-xs text-muted-foreground">
                                         <Checkbox checked={a?.status === 'Ja'} onCheckedChange={(checked) => setAnswer(s.key, key, { status: checked === true ? 'Ja' : 'Nej' })} />
                                         Kräver uppföljning
-                                      </label>
-                                    )}
+                                       </label>
+                                     )}
+                                     {s.hideTraceability && a?.status === 'Ja' && (
+                                       <Input className="h-8 text-xs" placeholder="Ansvarig för uppföljning"
+                                         value={a?.responsible ?? ''} onChange={e => setAnswer(s.key, key, { responsible: e.target.value })} />
+                                     )}
                                     {s.hideTraceability && !s.followupCheckbox && (
                                       <div>
                                         <Select value={a?.status || '__none'} onValueChange={(v) => setAnswer(s.key, key, { status: v === '__none' ? '' : v })}>

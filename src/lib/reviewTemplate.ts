@@ -78,12 +78,18 @@ function q(key: string, label: string, type: FieldType = 'yesnona', extra: Parti
 const FOLLOWUP: ReviewField[] = [
   { key: 'followup', label: 'Kräver uppföljning', type: 'checkbox' },
   { key: 'followup_note', label: 'Kommentar', type: 'text' },
+  { key: 'followup_responsible', label: 'Ansvarig för uppföljning', type: 'person' },
+];
+
+/** Förifyllda punkter i Teknisk specifikation vid ny genomgång (kan tas bort/utökas) */
+export const TECHNICAL_DEFAULT_CONDITIONS = [
+  'Längd', 'Höjd', 'CC-mått', 'Rader', 'Inmätning', 'Kulörer', 'Tyg', 'Laminat', 'Golv',
 ];
 
 export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
   name: 'Standardmall – Projektgenomgång',
   projectType: 'Standardprojekt',
-  version: 5,
+  version: 6,
   sections: [
     {
       key: 'attendees',
@@ -186,6 +192,7 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
         { key: 'document', label: 'Hänvisat dokument', type: 'text' },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
         { key: 'followup', label: 'Kräver uppföljning', type: 'checkbox' },
+        { key: 'followup_responsible', label: 'Ansvarig för uppföljning', type: 'person' },
       ],
     },
     {

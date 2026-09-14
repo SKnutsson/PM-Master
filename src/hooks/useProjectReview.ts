@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { DEFAULT_REVIEW_TEMPLATE, ReviewSection, ReviewTemplate, SIGNOFF_ROLES } from '@/lib/reviewTemplate';
+import { DEFAULT_REVIEW_TEMPLATE, ReviewSection, ReviewTemplate, SIGNOFF_ROLES, TECHNICAL_DEFAULT_CONDITIONS } from '@/lib/reviewTemplate';
 
 export interface ReviewRecord {
   id: string;
@@ -140,6 +140,16 @@ export function useProjectReview(projectId: string | null) {
     const seeds = SIGNOFF_ROLES.map(s => ({ review_id: (data as any).id, role: s.role, statement: s.statement }));
     const { data: so } = await supabase.from('project_review_signoffs').insert(seeds).select();
     setSignoffs((so as any) || []);
+    // Förifyllda punkter i Teknisk specifikation
+    await supabase.from('project_review_rows').insert(
+      TECHNICAL_DEFAULT_CONDITIONS.map((condition, i) => ({
+        review_id: (data as any).id,
+        section_key: 'technical',
+        data: { condition },
+        sort_order: i,
+        created_by: user?.id ?? null,
+      })) as any,
+    );
     await logEvent((data as any).id, 'Projektgenomgång skapad');
     await load((data as any).id);
     return data as any as ReviewRecord;

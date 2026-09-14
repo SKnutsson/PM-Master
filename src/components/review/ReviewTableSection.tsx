@@ -18,6 +18,10 @@ interface Props {
   filter?: string;
 }
 
+function isFollowup(data: Record<string, any>) {
+  return data?.followup === true || data?.followup === 'Ja';
+}
+
 function rowWarning(section: ReviewSection, data: Record<string, any>): string | null {
   if (section.key === 'open_points' && data.status === 'Klar' && !data.responsible) return 'Kan inte vara klar utan ansvarig';
   if (section.key === 'timeline' && data.date && data.status !== 'Klar' && new Date(data.date) < new Date(new Date().toDateString())) return 'Passerad deadline';
@@ -80,7 +84,13 @@ export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, r
 
               <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-4">
                 {cols.map(col => (
-                  <div key={col.key} className={cn(col.type === 'textarea' && 'md:col-span-2')}>
+                  <div
+                    key={col.key}
+                    className={cn(
+                      col.type === 'textarea' && 'md:col-span-2',
+                      col.key === 'followup_responsible' && !isFollowup(row.data) && 'hidden',
+                    )}
+                  >
                     <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
                       {col.label}{col.required && <span className="text-destructive"> *</span>}
                     </label>
@@ -102,6 +112,17 @@ export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, r
                     )}
                   </div>
                 ))}
+                {isFollowup(row.data) && !cols.some(c => c.key === 'followup_responsible') && (
+                  <div>
+                    <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Ansvarig för uppföljning</label>
+                    <ReviewFieldInput
+                      field={{ key: 'followup_responsible', label: 'Ansvarig för uppföljning', type: 'person' }}
+                      value={row.data.followup_responsible}
+                      onChange={(v) => onUpdate(row.id, { followup_responsible: v })}
+                      compact
+                    />
+                  </div>
+                )}
               </div>
             </div>
           );

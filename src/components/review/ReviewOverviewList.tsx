@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { DEFAULT_REVIEW_TEMPLATE } from '@/lib/reviewTemplate';
 import { ReviewOverviewEntry } from '@/hooks/useReviewOverview';
+import { useProfiles, getDisplayName } from '@/hooks/useProfiles';
 
 interface ProjectLike { id: string; code?: string | null; name: string; customer?: string | null; projectManager?: string | null }
 
 interface Props {
   projects: ProjectLike[];
   overview: Record<string, ReviewOverviewEntry>;
-  onOpen: (projectId: string) => void;
+  onOpen: (projectId: string, sectionKey?: string) => void;
 }
 
 type Filter = 'all' | 'none' | 'open' | 'complete';
@@ -22,6 +23,12 @@ function sectionTitle(key: string) {
 }
 
 export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
+  const { profiles } = useProfiles();
+  const nameOf = (value?: string | null) => {
+    if (!value) return '';
+    const p = profiles.find(pr => pr.user_id === value);
+    return p ? getDisplayName(p) : value;
+  };
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [expanded, setExpanded] = useState<string[]>([]);
@@ -123,17 +130,33 @@ export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
               </div>
 
               {isOpen && points.length > 0 && (
-                <div className="space-y-1 bg-muted/30 px-10 py-2">
+                <div className="space-y-1.5 border-t bg-muted/30 px-6 py-3">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-status-risk">
+                    <CircleAlert className="h-3.5 w-3.5" />{points.length} punkter att följa upp
+                  </p>
                   {points.map((pt, i) => (
-                    <div key={i} className="flex flex-wrap items-center gap-2 rounded border bg-card px-2 py-1 text-xs">
-                      <Badge variant="outline" className={cn('text-[10px]', pt.kind === 'followup' && 'border-status-risk/40 text-status-risk')}>
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onOpen(p.id, pt.sectionKey); }}
+                      className="flex w-full items-start gap-3 rounded-md border-l-4 border-l-status-risk border bg-card px-3 py-2 text-left text-xs transition-colors hover:bg-accent/60"
+                    >
+                      <Badge variant="outline" className={cn('shrink-0 text-[10px]', pt.kind === 'followup' && 'border-status-risk/40 text-status-risk')}>
                         {pt.kind === 'followup' ? 'Uppföljning' : 'Öppen punkt'}
                       </Badge>
-                      <span className="text-muted-foreground">[{sectionTitle(pt.category)}]</span>
-                      <span className="flex-1">{pt.text}</span>
-                      {pt.responsible && <span className="text-muted-foreground">Ansvarig: {pt.responsible}</span>}
-                      {pt.deadline && <span className="text-muted-foreground">Senast: {pt.deadline}</span>}
-                    </div>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-medium">{pt.text}</span>
+                        <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                          <span>{sectionTitle(pt.sectionKey || pt.category)}</span>
+                          <span className={cn(!pt.responsible && 'text-destructive')}>
+                            Ansvarig: {nameOf(pt.responsible) || 'saknas'}
+                          </span>
+                          {pt.deadline && <span>Senast: {pt.deadline}</span>}
+                          {pt.status && <span>{pt.status}</span>}
+                        </span>
+                      </span>
+                      <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    </button>
                   ))}
                 </div>
               )}

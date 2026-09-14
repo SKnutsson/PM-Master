@@ -32,8 +32,9 @@ export function generateReviewSummaryPdf(opts: {
   rows: RowRecord[];
   signoffs: SignoffRecord[];
   progress: { percent: number; done: number; total: number };
+  openPoints?: { point: string; category: string; responsible?: string; deadline?: string; status?: string }[];
 }) {
-  const { project, review, sections, answers, rows, signoffs, progress } = opts;
+  const { project, review, sections, answers, rows, signoffs, progress, openPoints = [] } = opts;
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
 
@@ -132,6 +133,18 @@ export function generateReviewSummaryPdf(opts: {
     doc.text(lines, 15, y + 2);
     y += lines.length * 4.5 + 8;
   }
+
+  y = title(doc, y, `Öppna punkter och uppföljningar (${openPoints.length})`);
+  autoTable(doc, {
+    startY: y, theme: 'striped',
+    styles: { fontSize: 8, cellPadding: 1.6, overflow: 'linebreak' },
+    headStyles: { fillColor: [200, 130, 40] as [number, number, number] },
+    head: [['Punkt', 'Avsnitt', 'Ansvarig', 'Deadline', 'Status']],
+    body: openPoints.length
+      ? openPoints.map(p => [p.point, p.category, p.responsible || '–', p.deadline || '–', p.status || '–'])
+      : [['Inga öppna punkter', '–', '–', '–', '–']],
+  });
+  y = (doc as any).lastAutoTable.finalY + 8;
 
   y = title(doc, y, 'Godkännanden');
   autoTable(doc, {
