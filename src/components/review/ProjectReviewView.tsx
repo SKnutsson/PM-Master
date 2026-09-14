@@ -341,7 +341,7 @@ export function ProjectReviewView() {
                     <Input type="date" className="h-8 text-sm" value={review.review_date ?? ''} onChange={e => updateReview({ review_date: e.target.value })} />
                   </div>
                   <HeaderField label="Ansvarig säljare" value={header.sales_person ?? project?.salesPerson ?? ''} onChange={v => setHeader('sales_person', v)} />
-                  <HeaderField label="Ansvarig konstruktör" value={header.design_lead ?? ''} onChange={v => setHeader('design_lead', v)} />
+                  <HeaderField label={review.template_version >= 5 ? 'Ansvarig konstruktör' : 'Konstruktionschef'} value={header.design_lead ?? ''} onChange={v => setHeader('design_lead', v)} />
                   <HeaderField label="Projektledare" value={header.project_manager ?? project?.projectManager ?? ''} onChange={v => setHeader('project_manager', v)} />
                   <div>
                     <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Version</label>

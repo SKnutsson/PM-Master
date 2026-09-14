@@ -62,7 +62,7 @@ export function generateReviewSummaryPdf(opts: {
       ['Datum för genomgång', String(review.review_date ?? '–'), 'Version', String(review.version)],
       ['Status', review.status, 'Färdigställt', `${progress.percent}% (${progress.done}/${progress.total})`],
       ['Ansvarig säljare', String(h.sales_person ?? project.salesPerson ?? '–'), 'Projektledare', String(h.project_manager ?? project.projectManager ?? '–')],
-      ['Ansvarig konstruktör', String(h.design_lead ?? '–'), 'Produktionsansvarig', String(h.production_lead ?? '–')],
+      [review.template_version >= 5 ? 'Ansvarig konstruktör' : 'Konstruktionschef', String(h.design_lead ?? '–'), 'Produktionsansvarig', String(h.production_lead ?? '–')],
     ],
   });
   y = (doc as any).lastAutoTable.finalY + 8;

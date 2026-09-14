@@ -257,13 +257,19 @@ export function useProjectReview(projectId: string | null) {
   const deleteReview = useCallback(async () => {
     if (!review) return false;
     const rid = review.id;
+    const attachmentPaths = rows
+      .map(row => row.data?.attachment_path)
+      .filter((path): path is string => typeof path === 'string' && path.length > 0);
     // Underliggande tabeller raderas via ON DELETE CASCADE
 
     const { error } = await supabase.from('project_reviews').delete().eq('id', rid);
     if (error) return false;
+    if (attachmentPaths.length) {
+      await supabase.storage.from('project-review-attachments').remove(attachmentPaths);
+    }
     setReview(null); setAnswers({}); setRows([]); setSignoffs([]); setEvents([]);
     return true;
-  }, [review]);
+  }, [review, rows]);
 
   return {
     review, template, answers, rows, signoffs, events, loading, saving,
