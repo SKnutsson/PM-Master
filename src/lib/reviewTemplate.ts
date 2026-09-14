@@ -192,6 +192,7 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
         { key: 'document', label: 'Hänvisat dokument', type: 'text' },
         { key: 'comment', label: 'Kommentar', type: 'textarea' },
         { key: 'followup', label: 'Kräver uppföljning', type: 'checkbox' },
+        { key: 'followup_responsible', label: 'Ansvarig för uppföljning', type: 'person' },
       ],
     },
     {
