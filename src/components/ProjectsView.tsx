@@ -57,6 +57,7 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
   const [confirmText, setConfirmText] = useState('');
   const [generatingReport, setGeneratingReport] = useState(false);
   const [editData, setEditData] = useState({
+    code: project.code || '',
     customer: project.customer || '',
     projectManager: project.projectManager || '',
     salesPerson: project.salesPerson || '',
@@ -103,8 +104,12 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
   };
 
   const handleSave = async () => {
+    if (!editData.code.trim()) {
+      toast.error('Projektnummer får inte vara tomt.');
+      return;
+    }
     setSavingEdit(true);
-    const updates: Partial<Project> = { ...editData };
+    const updates: Partial<Project> = { ...editData, code: editData.code.trim() };
     if ((editData.address || '').trim() !== (project.address || '').trim()) {
       if (editData.address.trim()) {
         const geo = await geocodeAddress(editData.address);
@@ -129,6 +134,7 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
   const handleStartEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     setEditData({
+      code: project.code || '',
       customer: project.customer || '',
       projectManager: project.projectManager || '',
       salesPerson: project.salesPerson || '',
@@ -226,6 +232,10 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
                 {isEditing ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-muted-foreground">Projektnummer</label>
+                        <Input className="h-8 text-sm font-mono" value={editData.code} onChange={(e) => setEditData((p) => ({ ...p, code: e.target.value }))} placeholder="t.ex. 10040" />
+                      </div>
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Kund</label>
                         <Input className="h-8 text-sm" value={editData.customer} onChange={(e) => setEditData((p) => ({ ...p, customer: e.target.value }))} placeholder="Kundnamn" />

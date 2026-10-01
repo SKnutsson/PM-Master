@@ -412,6 +412,7 @@ export function useDatabaseData() {
       updated_at: new Date().toISOString(),
     };
     if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.code !== undefined) updateData.code = updates.code;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.customer !== undefined) updateData.customer = updates.customer;
     if (updates.projectManager !== undefined) updateData.project_manager = updates.projectManager;
