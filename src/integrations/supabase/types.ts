@@ -289,6 +289,7 @@ export type Database = {
           quote_number: string
           responsible: string | null
           salesperson: string | null
+          source_updated_date: string | null
           status: string
           updated_at: string
         }
@@ -317,6 +318,7 @@ export type Database = {
           quote_number: string
           responsible?: string | null
           salesperson?: string | null
+          source_updated_date?: string | null
           status?: string
           updated_at?: string
         }
@@ -345,6 +347,7 @@ export type Database = {
           quote_number?: string
           responsible?: string | null
           salesperson?: string | null
+          source_updated_date?: string | null
           status?: string
           updated_at?: string
         }
