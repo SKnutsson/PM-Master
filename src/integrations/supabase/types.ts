@@ -2029,6 +2029,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_crm: { Args: { _user_id: string }; Returns: boolean }
       can_access_production: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
