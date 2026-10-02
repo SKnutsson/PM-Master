@@ -8,12 +8,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
 import { CrmQuoteSheet } from './CrmQuoteSheet';
-import { SALESPEOPLE, QUOTE_STATUSES, COUNTRIES, formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
+import { formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 
 export function CrmQuotesView() {
-  const { quotes, loading } = useCrmData();
+  const { quotes, loading, refresh } = useCrmData();
   const [search, setSearch] = useState('');
   const [salesperson, setSalesperson] = useState<string>('all');
   const [status, setStatus] = useState<string>('all');
@@ -21,6 +20,10 @@ export function CrmQuotesView() {
   const [country, setCountry] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<CrmQuote | null>(null);
+
+  const salespeople = useMemo(() => [...new Set(quotes.map((q) => q.salesperson).filter(Boolean))].sort(), [quotes]);
+  const statuses = useMemo(() => [...new Set(quotes.map((q) => q.status).filter(Boolean))].sort(), [quotes]);
+  const countries = useMemo(() => [...new Set(quotes.map((q) => q.country).filter(Boolean))].sort(), [quotes]);
 
   const filtered = useMemo(() => {
     return quotes.filter((q) => {
@@ -30,7 +33,7 @@ export function CrmQuotesView() {
       if (country !== 'all' && q.country !== country) return false;
       if (search) {
         const s = search.toLowerCase();
-        const hay = [q.customer_name, q.project_arena, q.product, q.quote_number, q.comment, q.city].join(' ').toLowerCase();
+        const hay = [q.customer_name, q.project_arena, q.product, q.quote_number, q.comment, q.city, q.responsible].join(' ').toLowerCase();
         if (!hay.includes(s)) return false;
       }
       return true;
@@ -57,10 +60,10 @@ export function CrmQuotesView() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Sök kund, projekt, ort…" className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
-            <FilterSelect label="Säljare" value={salesperson} onChange={setSalesperson} options={SALESPEOPLE as readonly string[]} />
-            <FilterSelect label="Status" value={status} onChange={setStatus} options={QUOTE_STATUSES as readonly string[]} />
+            <FilterSelect label="Säljare" value={salesperson} onChange={setSalesperson} options={salespeople} />
+            <FilterSelect label="Status" value={status} onChange={setStatus} options={statuses} />
             <FilterSelect label="Sannolikhet" value={probability} onChange={setProbability} options={['1', '2', '3', '4', '5']} />
-            <FilterSelect label="Land" value={country} onChange={setCountry} options={COUNTRIES as readonly string[]} />
+            <FilterSelect label="Land" value={country} onChange={setCountry} options={countries} />
           </div>
         </CardContent>
       </Card>
@@ -85,7 +88,7 @@ export function CrmQuotesView() {
                   className={cn('cursor-pointer border-t border-border transition-colors', statusRowClass(q.status))}
                 >
                   <td className="px-3 py-2 whitespace-nowrap">{q.quote_date}</td>
-                  <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{q.updated_at ? format(new Date(q.updated_at), 'yyyy-MM-dd') : ''}</td>
+                   <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{q.source_updated_date || '—'}</td>
                   <td className="px-3 py-2 whitespace-nowrap">{q.salesperson}</td>
                   <td className="px-3 py-2 font-medium">{q.customer_name}{q.project_arena && <div className="text-xs text-muted-foreground">{q.project_arena}</div>}</td>
                   <td className="px-3 py-2 whitespace-nowrap">{q.country}</td>
@@ -114,7 +117,7 @@ export function CrmQuotesView() {
         </div>
       </Card>
 
-      <CrmQuoteSheet open={sheetOpen} onOpenChange={setSheetOpen} quote={editing} />
+      <CrmQuoteSheet open={sheetOpen} onOpenChange={setSheetOpen} quote={editing} onSaved={refresh} />
     </motion.div>
   );
 }

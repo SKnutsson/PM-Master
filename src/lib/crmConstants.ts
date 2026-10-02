@@ -1,6 +1,6 @@
-export const SALESPEOPLE = ['Mikael', 'Martin', 'Bertil', 'Samuel'] as const;
+export const SALESPEOPLE = ['Arne', 'Bertil', 'Christian', 'Katarina', 'Kent', 'Martin', 'Mikael', 'Samuel'] as const;
 
-export const COUNTRIES = ['Sverige', 'Danmark', 'Norge', 'Finland', 'Övriga'] as const;
+export const COUNTRIES = ['Sverige', 'Danmark', 'Norge', 'Finland', 'Holland', 'Övriga'] as const;
 
 export const PRODUCTS = [
   'Teleskopläktare',
