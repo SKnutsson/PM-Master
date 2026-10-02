@@ -7,6 +7,7 @@ export interface CrmQuote {
   id: string;
   quote_number: string;
   quote_date: string;
+  source_updated_date: string | null;
   salesperson: string;
   responsible: string;
   customer_id: string | null;
@@ -62,7 +63,7 @@ export function useCrmData() {
 
   const refresh = async () => {
     const [q, c, ct] = await Promise.all([
-      supabase.from('crm_quotes').select('*').order('updated_at', { ascending: false }),
+      supabase.from('crm_quotes').select('*').order('quote_date', { ascending: false }),
       supabase.from('crm_customers').select('*').order('name'),
       supabase.from('crm_contacts').select('*'),
     ]);
