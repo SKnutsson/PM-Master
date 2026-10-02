@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, FileText, Upload } from 'lucide-react';
+import { CalendarIcon, FileText, Upload, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,6 +26,7 @@ interface Props {
 
 const emptyQuote = (): Partial<CrmQuote> => ({
   quote_date: format(new Date(), 'yyyy-MM-dd'),
+  source_updated_date: null,
   salesperson: '',
   responsible: '',
   customer_name: '',
@@ -76,6 +77,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
     const payload: any = {
       quote_date: form.quote_date,
+      source_updated_date: form.source_updated_date || null,
       salesperson: form.salesperson || '',
       responsible: form.responsible || '',
       customer_name: form.customer_name || '',
@@ -164,115 +166,67 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{quote ? `Offert ${quote.quote_number}` : 'Ny offert'}</SheetTitle>
+      <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-[1180px]">
+        <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
+          <SheetTitle>{quote ? `Redigera offert ${quote.quote_number}` : 'Ny offert'}</SheetTitle>
+          <p className="text-sm text-muted-foreground">Uppgifterna sparas i PM Master och uppdateras direkt för alla användare.</p>
         </SheetHeader>
 
-        <div className="grid grid-cols-2 gap-4 mt-6">
-          <Field label="Datum">
-            <DatePick value={form.quote_date} onChange={(v) => upd('quote_date', v)} />
-          </Field>
-          <Field label="Offert Nr">
-            <Input value={form.quote_number || ''} placeholder="Auto" onChange={(e) => upd('quote_number', e.target.value)} />
-          </Field>
-
-          <Field label="Säljare">
-            <Select value={form.salesperson || ''} onValueChange={(v) => upd('salesperson', v)}>
-              <SelectTrigger><SelectValue placeholder="Välj" /></SelectTrigger>
-              <SelectContent>{SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
-          <Field label="Ansvarig">
-            <Select value={form.responsible || ''} onValueChange={(v) => upd('responsible', v)}>
-              <SelectTrigger><SelectValue placeholder="Välj" /></SelectTrigger>
-              <SelectContent>{SALESPEOPLE.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
-
-          <Field label="Kund" className="col-span-2">
-            <Input value={form.customer_name || ''} onChange={(e) => upd('customer_name', e.target.value)} />
-          </Field>
-
-          <Field label="Kontaktperson">
-            <Input placeholder="Namn" value={form.contact_name || ''} onChange={(e) => upd('contact_name', e.target.value)} />
-          </Field>
-          <Field label="Telefon">
-            <Input placeholder="070-123 45 67" value={form.contact_phone || ''} onChange={(e) => upd('contact_phone', e.target.value)} />
-          </Field>
-          <Field label="E-post" className="col-span-2">
-            <Input type="email" placeholder="namn@foretag.se" value={form.contact_email || ''} onChange={(e) => upd('contact_email', e.target.value)} />
-          </Field>
-
-          <Field label="Land">
-            <Select value={form.country || ''} onValueChange={(v) => upd('country', v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
-          <Field label="Ort">
-            <Input placeholder="Ange ort" value={form.city || ''} onChange={(e) => upd('city', e.target.value)} />
-          </Field>
-          <Field label="Projekt / Arena" className="col-span-2">
-            <Input value={form.project_arena || ''} onChange={(e) => upd('project_arena', e.target.value)} />
-          </Field>
-
-          <Field label="Produkt" className="col-span-2">
-            <Select value={form.product || ''} onValueChange={(v) => upd('product', v)}>
-              <SelectTrigger><SelectValue placeholder="Välj produkt" /></SelectTrigger>
-              <SelectContent>{PRODUCTS.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
-
-          <Field label="Antal / Specifikation" className="col-span-2">
-            <Input value={form.quantity_spec || ''} onChange={(e) => upd('quantity_spec', e.target.value)} />
-          </Field>
-
-          <Field label="Offertbelopp (SEK)">
-            <Input type="number" value={form.amount ? String(form.amount) : ''} placeholder="0" onChange={(e) => upd('amount', e.target.value === '' ? 0 : Number(e.target.value))} />
-          </Field>
-          <Field label="Leveranstid">
-            <Input placeholder="2026 Q3 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} />
-          </Field>
-
-          <Field label="Föreskriven">
-            <div className="flex h-10 items-center gap-2">
-              <Switch checked={!!form.prescriber} onCheckedChange={(v) => upd('prescriber', v)} />
-              <span className="text-sm text-muted-foreground">{form.prescriber ? 'Ja' : 'Nej'}</span>
+        <div className="grid gap-8 px-6 py-5 lg:grid-cols-2">
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Offertdatum"><DatePick value={form.quote_date} onChange={(v) => upd('quote_date', v)} /></Field>
+              <Field label="Uppdaterad"><DatePick value={form.source_updated_date} onChange={(v) => upd('source_updated_date', v)} clearable /></Field>
             </div>
-          </Field>
-          <Field label="Status">
-            <Select value={form.status || 'Öppen'} onValueChange={(v) => upd('status', v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{QUOTE_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
+            <Field label="Offertnummer"><Input value={form.quote_number || ''} placeholder="Skapas automatiskt" onChange={(e) => upd('quote_number', e.target.value)} /></Field>
+            <Field label="Säljare">
+              <PersonSelect value={form.salesperson || ''} onChange={(v) => upd('salesperson', v)} />
+            </Field>
+            <Field label="Leveranstid"><Input placeholder="2027 Q1 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} /></Field>
+            <Field label="Sannolikhet">
+              <Select value={String(form.probability || 3)} onValueChange={(v) => upd('probability', Number(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n} – {n === 1 ? 'lägst' : n === 5 ? 'högst' : ''}</SelectItem>)}</SelectContent>
+              </Select>
+            </Field>
+            <Field label="Föreskriven">
+              <div className="flex h-10 items-center gap-3 rounded-md border border-border px-3">
+                <Switch checked={!!form.prescriber} onCheckedChange={(v) => upd('prescriber', v)} />
+                <span className="text-sm">{form.prescriber ? 'Ja' : 'Nej'}</span>
+              </div>
+            </Field>
+            <Field label="Ansvarig"><PersonSelect value={form.responsible || ''} onChange={(v) => upd('responsible', v)} /></Field>
+            <Field label="Status">
+              <Select value={form.status || 'Öppen'} onValueChange={(v) => upd('status', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{QUOTE_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            </Field>
+            <Field label="Ny kommentar">
+              <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Skriv en ny daterad kommentar" rows={4} />
+            </Field>
+            {form.comment && <Field label="Kommentarshistorik"><div className="max-h-52 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-muted/30 p-3 text-sm leading-relaxed">{form.comment}</div></Field>}
+            <Field label="Nästa uppföljning"><DatePick value={form.next_followup} onChange={(v) => upd('next_followup', v)} clearable /></Field>
+          </div>
 
-          <Field label="Sannolikhet (1–5)" className="col-span-2">
-            <div className="flex gap-2">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => upd('probability', n)}
-                  className={cn(
-                    'h-10 w-10 rounded-md border text-sm font-semibold transition-all',
-                    form.probability === n
-                      ? 'bg-primary text-primary-foreground border-primary scale-105'
-                      : 'border-border text-muted-foreground hover:bg-muted'
-                  )}
-                >
-                  {n}
-                </button>
-              ))}
+          <div className="space-y-4">
+            <Field label="Kund"><Input value={form.customer_name || ''} onChange={(e) => upd('customer_name', e.target.value)} /></Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Ort"><Input placeholder="Ange ort" value={form.city || ''} onChange={(e) => upd('city', e.target.value)} /></Field>
+              <Field label="Land">
+                <Select value={form.country || ''} onValueChange={(v) => upd('country', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+              </Field>
             </div>
-          </Field>
-
-          <Field label="Nästa uppföljning" className="col-span-2">
-            <DatePick value={form.next_followup || undefined} onChange={(v) => upd('next_followup', v)} clearable />
-          </Field>
-
-          <Field label="Offert (PDF)" className="col-span-2">
+            <Field label="Projekt / arena"><Input value={form.project_arena || ''} onChange={(e) => upd('project_arena', e.target.value)} /></Field>
+            <Field label="Kontaktperson"><Input placeholder="Namn" value={form.contact_name || ''} onChange={(e) => upd('contact_name', e.target.value)} /></Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Telefon"><Input placeholder="070-123 45 67" value={form.contact_phone || ''} onChange={(e) => upd('contact_phone', e.target.value)} /></Field>
+              <Field label="E-post"><Input type="email" placeholder="namn@foretag.se" value={form.contact_email || ''} onChange={(e) => upd('contact_email', e.target.value)} /></Field>
+            </div>
+            <Field label="Produkt"><Input list="crm-product-options" value={form.product || ''} onChange={(e) => upd('product', e.target.value)} placeholder="En eller flera produkter, separera med |" /><datalist id="crm-product-options">{PRODUCTS.map((p) => <option key={p} value={p} />)}</datalist></Field>
+            <Field label="Antal / specifikation"><Input value={form.quantity_spec || ''} onChange={(e) => upd('quantity_spec', e.target.value)} /></Field>
+            <Field label="Offertbelopp (SEK)"><Input type="number" value={form.amount === undefined ? '' : String(form.amount)} placeholder="0" onChange={(e) => upd('amount', e.target.value === '' ? 0 : Number(e.target.value))} /></Field>
+            <Field label="Offert (PDF)">
             {form.pdf_path ? (
               <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
                 <FileText className="h-4 w-4 text-primary" />
@@ -296,30 +250,14 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
               </label>
             )}
           </Field>
-
-          <Field label="Ny kommentar" className="col-span-2">
-            <Textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Skriv en ny kommentar (sparas med datum + namn)"
-              rows={3}
-            />
-          </Field>
-
-          {form.comment && (
-            <Field label="Kommentarshistorik" className="col-span-2">
-              <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-muted/30 p-3 text-xs leading-relaxed">
-                {form.comment}
-              </div>
-            </Field>
-          )}
+          </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-between gap-2 border-t border-border pt-4">
+        <div className="sticky bottom-0 flex items-center justify-between gap-2 border-t border-border bg-background px-6 py-4">
           <div>
             {quote && (
-              <Button variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={handleDelete}>
-                Ta bort
+              <Button variant="ghost" className="gap-2 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+                <Trash2 className="h-4 w-4" /> Ta bort
               </Button>
             )}
           </div>
@@ -342,8 +280,13 @@ function Field({ label, children, className }: { label: string; children: React.
   );
 }
 
+function PersonSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const options = value && !SALESPEOPLE.includes(value as typeof SALESPEOPLE[number]) ? [value, ...SALESPEOPLE] : SALESPEOPLE;
+  return <Select value={value} onValueChange={onChange}><SelectTrigger><SelectValue placeholder="Välj" /></SelectTrigger><SelectContent>{options.map((person) => <SelectItem key={person} value={person}>{person}</SelectItem>)}</SelectContent></Select>;
+}
+
 function DatePick({ value, onChange, clearable }: { value?: string | null; onChange: (v: string | null) => void; clearable?: boolean }) {
-  const d = value ? new Date(value) : undefined;
+  const d = value ? parseISO(value) : undefined;
   return (
     <Popover>
       <PopoverTrigger asChild>
