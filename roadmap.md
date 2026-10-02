@@ -4,4 +4,4 @@
 - [x] Add the original CRM update date to offers.
 - [x] Redesign the offer list and edit view.
 - [x] Replace existing offers with the validated import.
-- [ ] Verify totals and the offer workflow.
+- [x] Verify totals and the offer workflow.

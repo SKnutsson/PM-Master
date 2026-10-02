@@ -77,7 +77,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
     const payload: any = {
       quote_date: form.quote_date,
-      source_updated_date: form.source_updated_date || null,
+      source_updated_date: format(new Date(), 'yyyy-MM-dd'),
       salesperson: form.salesperson || '',
       responsible: form.responsible || '',
       customer_name: form.customer_name || '',

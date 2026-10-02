@@ -10,7 +10,6 @@ import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
 import { CrmQuoteSheet } from './CrmQuoteSheet';
 import { formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 
 export function CrmQuotesView() {
   const { quotes, loading, refresh } = useCrmData();
@@ -89,7 +88,7 @@ export function CrmQuotesView() {
                   className={cn('cursor-pointer border-t border-border transition-colors', statusRowClass(q.status))}
                 >
                   <td className="px-3 py-2 whitespace-nowrap">{q.quote_date}</td>
-                   <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{q.source_updated_date || (q.updated_at ? format(new Date(q.updated_at), 'yyyy-MM-dd') : '')}</td>
+                   <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{q.source_updated_date || '—'}</td>
                   <td className="px-3 py-2 whitespace-nowrap">{q.salesperson}</td>
                   <td className="px-3 py-2 font-medium">{q.customer_name}{q.project_arena && <div className="text-xs text-muted-foreground">{q.project_arena}</div>}</td>
                   <td className="px-3 py-2 whitespace-nowrap">{q.country}</td>
