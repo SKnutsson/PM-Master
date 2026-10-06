@@ -49,7 +49,7 @@ function HeroCard({
         <div className="relative z-10 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[11px] font-medium text-white/60 uppercase tracking-wider">{label}</p>
-            <p className="text-3xl font-bold text-white mt-0.5 truncate">
+            <p className="dashboard-metric text-3xl text-white mt-0.5 truncate">
               {typeof value === 'number' ? <AnimatedNumber value={value} /> : value}
               {suffix && <span className="text-sm font-normal text-white/50 ml-1">{suffix}</span>}
             </p>
@@ -212,12 +212,12 @@ export function CrmDashboard() {
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-baseline gap-1">
-                    <span className="text-lg font-bold leading-none text-white tabular-nums">
+                    <span className="dashboard-metric text-lg leading-none text-white">
                       <AnimatedNumber value={b.count} />
                     </span>
                     <span className="text-[9px] text-white/60">offerter</span>
                   </div>
-                  <div className="mt-0.5 text-[11px] font-semibold text-white tabular-nums">{formatSEK(b.value)} kr</div>
+                  <div className="dashboard-metric mt-0.5 text-sm text-white">{formatSEK(b.value)} kr</div>
                   <div className="mt-1 h-1 w-full rounded-full bg-white/15 overflow-hidden">
                     <motion.div
                       className="h-full bg-white/70 rounded-full"
@@ -267,7 +267,7 @@ export function CrmDashboard() {
                           <p className="text-xs text-muted-foreground truncate">{q.product} · {q.salesperson}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-semibold tabular-nums">{formatSEK(q.amount)} kr</p>
+                          <p className="dashboard-metric text-base">{formatSEK(q.amount)} kr</p>
                           <Badge variant="outline" className="text-[10px] mt-0.5 text-destructive border-destructive/40 bg-destructive/10">
                             {q.next_followup}
                           </Badge>
@@ -308,7 +308,7 @@ export function CrmDashboard() {
                         >
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-sm font-semibold">{s.name}</span>
-                            <div className="flex items-center gap-3 text-sm tabular-nums">
+                            <div className="dashboard-metric flex items-center gap-3 text-base">
                               <span className="text-muted-foreground">{s.count} st</span>
                               <span className="font-semibold">{formatSEK(s.value)} kr</span>
                             </div>
