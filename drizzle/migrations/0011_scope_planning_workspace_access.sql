@@ -1,0 +1,18 @@
+ALTER POLICY "Authenticated can delete daily_resource_entries" ON public.daily_resource_entries USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated can read daily_resource_entries" ON public.daily_resource_entries USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated can insert daily_resource_entries" ON public.daily_resource_entries WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated can update daily_resource_entries" ON public.daily_resource_entries USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid()))) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can delete forecasts" ON public.forecasts USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can read forecasts" ON public.forecasts USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can insert forecasts" ON public.forecasts WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can update forecasts" ON public.forecasts USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid()))) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can delete tasks" ON public.tasks USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can read tasks" ON public.tasks USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can insert tasks" ON public.tasks WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can update tasks" ON public.tasks USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid()))) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER TABLE public.daily_resource_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forecasts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.daily_resource_entries, public.forecasts, public.tasks FROM anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.daily_resource_entries, public.forecasts, public.tasks TO authenticated;
+GRANT ALL ON public.daily_resource_entries, public.forecasts, public.tasks TO service_role;
