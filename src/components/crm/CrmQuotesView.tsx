@@ -149,15 +149,25 @@ export function CrmQuotesView() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
-                {['Datum', 'Uppd.', 'Säljare', 'Kund', 'Land', 'Ort', 'Offert nr', 'Produkt', 'Antal/Spec', 'Lev. tid', 'Föresk.', 'Sannol.', 'Belopp', 'Ansvarig', 'Uppföljning', 'Status', 'Kommentar'].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium whitespace-nowrap">{h}</th>
+                {COLUMNS.map((c) => (
+                  <th
+                    key={c.key}
+                    onClick={() => toggleSort(c.key)}
+                    className="px-3 py-2 text-left font-medium whitespace-nowrap cursor-pointer select-none hover:text-foreground transition-colors"
+                    title="Klicka för att sortera"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {c.label}
+                      {sortKey === c.key && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                    </span>
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && <tr><td colSpan={17} className="p-8 text-center text-muted-foreground">Laddar…</td></tr>}
               {!loading && filtered.length === 0 && <tr><td colSpan={17} className="p-8 text-center text-muted-foreground">Inga offerter matchar filtren.</td></tr>}
-              {filtered.map((q) => (
+              {sorted.map((q) => (
                 <tr
                   key={q.id}
                   onClick={() => openEdit(q)}
