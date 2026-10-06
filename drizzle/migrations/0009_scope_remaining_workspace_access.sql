@@ -1,0 +1,17 @@
+ALTER POLICY "auth delete ata" ON public.ata_items USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "auth update ata" ON public.ata_items USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid()))) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "auth insert ata" ON public.ata_items WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "auth read ata" ON public.ata_items USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated can delete forecast_events" ON public.forecast_events USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated can insert forecast_events" ON public.forecast_events WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated can read forecast_events" ON public.forecast_events USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can delete lifecycle_nodes" ON public.lifecycle_nodes USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can update lifecycle_nodes" ON public.lifecycle_nodes USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid()))) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can insert lifecycle_nodes" ON public.lifecycle_nodes WITH CHECK (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER POLICY "Authenticated users can read lifecycle_nodes" ON public.lifecycle_nodes USING (EXISTS (SELECT 1 FROM public.profiles p WHERE p.user_id = (SELECT auth.uid())));
+ALTER TABLE public.ata_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forecast_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.lifecycle_nodes ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.ata_items, public.forecast_events, public.lifecycle_nodes FROM anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.ata_items, public.forecast_events, public.lifecycle_nodes TO authenticated;
+GRANT ALL ON public.ata_items, public.forecast_events, public.lifecycle_nodes TO service_role;
