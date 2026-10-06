@@ -1,8 +1,8 @@
 # Roadmap
 
-- [ ] Open follow-up quotes from CRM dashboard and color overdue follow-up dates.
-- [ ] Remove dashboard heading icons and use rectangular colored forecast statuses.
-- [ ] Verify changes and secure the three listed shared-workspace tables.
+- [x] Open follow-up quotes from CRM dashboard and color overdue follow-up dates (matching quote opened; 352 overdue and 27 upcoming cells verified).
+- [x] Remove dashboard heading icons and use rectangular colored forecast statuses (no heading icons; 40 rectangular status labels verified).
+- [x] Verify changes and secure the three listed shared-workspace tables (live policies checked; no browser errors).
 
 - [x] Add and verify multi-select status, salesperson and product-type filters in all quotes (combined selection: 70 matches; reset: 525).
 - [x] Address listed KPI, service deviation and profile security findings with verified workspace-profile policies while preserving shared collaboration.
