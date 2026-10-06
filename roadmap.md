@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Add and verify multi-select status, salesperson and product-type filters in all quotes.
+- [ ] Address listed KPI, service deviation and profile security findings while preserving shared collaboration.
+
 - [x] Apply stripped-down reference theme throughout workspace tabs.
 - [x] Simplify forecast summary and make the annual target clearly editable (save verified).
 - [x] Add selectable quote product groups with separate amounts and update product analytics; legacy unknown allocations remain unallocated.
