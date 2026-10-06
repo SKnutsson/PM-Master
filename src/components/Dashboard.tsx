@@ -227,7 +227,7 @@ export function Dashboard() {
             <div className={`flex items-center justify-between gap-3 rounded-xl border ${s.ring} ${s.bg} px-4 py-3 h-full`}>
               <div className="min-w-0">
                 <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</p>
-                <p className={`text-3xl font-bold leading-tight tabular-nums ${s.tone}`}>
+                <p className={`dashboard-metric text-3xl leading-tight ${s.tone}`}>
                   <AnimatedNumber value={s.value} />
                 </p>
               </div>
@@ -266,7 +266,7 @@ export function Dashboard() {
                       <PhaseIcon className="h-4 w-4 shrink-0" />
                       <h3 className="font-semibold text-sm truncate">{phase}</h3>
                     </div>
-                    <span className="rounded-md bg-white/20 px-2 py-0.5 text-xs font-semibold tabular-nums">
+                    <span className="dashboard-metric rounded-md bg-white/20 px-2 py-0.5 text-base">
                       {phaseProjects.length}
                     </span>
                   </div>

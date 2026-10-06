@@ -88,7 +88,7 @@ export function SalesOverviewPanel({ salesPersonFilter = null }: SalesOverviewPa
               <div className="flex items-center gap-2">
                 <YearNavigator value={chartPeriod} onChange={setChartPeriod} />
                 <div className="text-right ml-2">
-                  <p className="text-3xl font-bold text-primary">
+                  <p className="dashboard-metric text-3xl text-primary">
                     <AnimatedNumber value={chartYearTotal} decimals={1} duration={1200} />
                   </p>
                   <p className="text-xs text-muted-foreground">Total MSEK</p>
@@ -164,13 +164,13 @@ export function SalesOverviewPanel({ salesPersonFilter = null }: SalesOverviewPa
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-bold text-primary">
+                    <span className="dashboard-metric text-3xl text-primary">
                       <AnimatedNumber value={Math.round(pct)} duration={1400} />%
                     </span>
                   </div>
                 </div>
                 <div className="text-center space-y-0.5">
-                  <p className="text-sm font-semibold">{takenTotal.toFixed(1)} / {salesTarget.toFixed(1)} MSEK</p>
+                  <p className="dashboard-metric text-lg">{takenTotal.toFixed(1)} / {salesTarget.toFixed(1)} MSEK</p>
                   <p className="text-xs text-muted-foreground">
                     {pct >= 100 ? <span className="text-status-completed font-medium">Mål uppnått! 🎉</span> : <>Kvar: {(salesTarget - takenTotal).toFixed(1)} MSEK</>}
                   </p>

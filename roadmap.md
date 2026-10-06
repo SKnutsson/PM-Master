@@ -1,5 +1,10 @@
 # Roadmap
 
+- [x] Uppercase headings and apply Bebas Neue to dashboard metrics.
+- [x] Compact project rows and add rectangular product labels (40px desktop rows verified).
+- [x] Allow multiple probability selections in all quotes and verify filtering (4 + 5 returns 105 offers; reset returns 525).
+- [x] Address current shared-workspace security findings with profile-backed access, retaining collaboration.
+
 - [x] Map and validate all legacy offer rows.
 - [x] Add the original CRM update date to offers.
 - [x] Redesign the offer list and edit view.
