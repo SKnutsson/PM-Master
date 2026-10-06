@@ -91,7 +91,8 @@ export function CrmDashboard() {
     const open = quotes.filter((q) => q.status === 'Öppen');
     const pipelineValue = open.reduce((s, q) => s + Number(q.amount || 0), 0);
     const monthStart = startOfMonth(new Date());
-    const ordersThisMonth = quotes.filter((q) => q.status === 'Order' && new Date(q.updated_at) >= monthStart).length;
+    // Räknas bara när statusen faktiskt ändrats till Order denna månad (importerade offerter saknar ändringsdatum)
+    const ordersThisMonth = quotes.filter((q) => q.status === 'Order' && (q as any).status_changed_at && new Date((q as any).status_changed_at) >= monthStart).length;
     const last12 = subMonths(new Date(), 12);
     const recent = quotes.filter((q) => new Date(q.quote_date) >= last12 && q.status !== 'Öppen' && q.status !== 'Pausad');
     const wins = recent.filter((q) => q.status === 'Order').length;

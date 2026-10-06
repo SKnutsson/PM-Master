@@ -145,9 +145,9 @@ export function CrmQuotesView() {
       </div>
 
       <div className="reference-list">
-        <div className="overflow-x-auto">
+        <div className="overflow-auto max-h-[calc(100vh-16rem)]">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="sticky top-0 z-10 bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 {COLUMNS.map((c) => (
                   <th
