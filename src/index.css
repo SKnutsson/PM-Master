@@ -281,13 +281,13 @@
 
 /* Shared reference treatment for list-based workspaces. */
 @layer components {
-  main h1, main h2, [role="dialog"] h2 {
+  main h1[class], main h2[class], [role="dialog"] h2 {
     font-family: "Bebas Neue", var(--font-sans);
     font-weight: 400;
     letter-spacing: 0;
   }
-  main h1 { font-size: 2.5rem; line-height: 1.1; color: hsl(var(--primary)); }
-  main h2 { font-size: 1.5rem; line-height: 1.2; }
+  main h1[class] { font-size: 2.5rem; line-height: 1.1; color: hsl(var(--primary)); }
+  main h2[class] { font-size: 1.5rem; line-height: 1.2; }
   .list-page { width: 100%; max-width: none; }
   .list-page > div:first-child { gap: 1rem; flex-wrap: wrap; }
   .list-page > div:first-child > div:first-child { flex: 1; min-width: 0; }
@@ -308,11 +308,11 @@
   .reference-list .list-record > div:first-child { min-height: 56px; }
 }
 
-main h1, main h2, [role="dialog"] h2 {
+main h1[class], main h2[class], [role="dialog"] h2 {
   font-family: "Bebas Neue", var(--font-sans);
   font-weight: 400;
   letter-spacing: 0;
 }
-main h1 { font-size: 2.5rem; line-height: 1.1; color: hsl(var(--primary)); }
-main h2 { font-size: 1.5rem; line-height: 1.2; }
+main h1[class] { font-size: 2.5rem; line-height: 1.1; color: hsl(var(--primary)); }
+main h2[class] { font-size: 1.5rem; line-height: 1.2; }
 .reference-list > div:nth-child(even) > .list-record { background: hsl(var(--list-stripe)); }
