@@ -292,6 +292,7 @@ export type Database = {
           salesperson: string | null
           source_updated_date: string | null
           status: string
+          status_changed_at: string | null
           updated_at: string
         }
         Insert: {
@@ -322,6 +323,7 @@ export type Database = {
           salesperson?: string | null
           source_updated_date?: string | null
           status?: string
+          status_changed_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -352,6 +354,7 @@ export type Database = {
           salesperson?: string | null
           source_updated_date?: string | null
           status?: string
+          status_changed_at?: string | null
           updated_at?: string
         }
         Relationships: [

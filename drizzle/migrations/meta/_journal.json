@@ -92,6 +92,13 @@
       "when": 1791277581128,
       "tag": "0012_scope_kpi_service_profiles_workspace",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791282666725,
+      "tag": "0013_quote_status_changed_at_and_rls",
+      "breakpoints": true
     }
   ]
 }
