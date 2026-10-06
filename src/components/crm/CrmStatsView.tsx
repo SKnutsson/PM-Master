@@ -242,6 +242,7 @@ export function CrmStatsView() {
             </div>
             <div className="grid gap-1 border-t border-border pt-3 text-xs sm:grid-cols-2">
               {productShare.map((p, i) => <div key={p.name} className="flex items-start gap-2"><span className="mt-0.5 h-2.5 w-2.5 shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} /><span>{p.name} · {p.pct.toFixed(0)}%</span></div>)}
+            </div>
           </CardContent>
         </Card>
 
