@@ -149,15 +149,15 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
   return (
     <motion.div variants={itemVariants}>
       <Card className={cn(
-        "list-record group overflow-hidden",
+        "list-record project-record group overflow-hidden",
         isArchived && "opacity-75",
         isExpanded && "border-primary/40 shadow-sm"
       )}>
         <CardHeader
-          className="py-3 px-4 cursor-pointer select-none"
+          className="py-1.5 px-3 space-y-0 cursor-pointer select-none"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <div className="grid items-center gap-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_112px]">
+          <div className="grid grid-cols-[minmax(0,1fr)_112px] items-center gap-x-3 gap-y-1 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_112px]">
             {/* Title */}
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-primary/70 shrink-0">
@@ -178,7 +178,9 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
 
             {/* Aligned meta columns */}
             <MetaCell icon={Briefcase} value={project.customer} />
-            <MetaCell icon={ShoppingBag} value={project.product} />
+            <div className="hidden lg:block min-w-0">
+              {project.product ? <span className="product-label" title={project.product}>{project.product}</span> : <span className="text-xs text-muted-foreground">–</span>}
+            </div>
             <MetaCell icon={User} value={project.projectManager} />
             <MetaCell icon={User} value={project.salesPerson} />
 
@@ -212,9 +214,9 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
           </div>
 
           {/* mobile/tablet inline meta */}
-          <div className="lg:hidden mt-2 flex items-center gap-3 flex-wrap pl-6">
+          <div className="lg:hidden mt-1 flex items-center gap-x-3 gap-y-1 flex-wrap pl-6">
             {project.customer && <span className="text-[11px] text-muted-foreground"><span className="text-muted-foreground/70">Kund:</span> <span className="text-foreground">{project.customer}</span></span>}
-            {project.product && <span className="text-[11px] text-muted-foreground"><span className="text-muted-foreground/70">Produkt:</span> <span className="text-foreground">{project.product}</span></span>}
+            {project.product && <span className="product-label">{project.product}</span>}
             {project.projectManager && <span className="text-[11px] text-muted-foreground"><span className="text-muted-foreground/70">PL:</span> <span className="text-foreground">{project.projectManager}</span></span>}
           </div>
         </CardHeader>
@@ -372,7 +374,7 @@ export function ProjectsView() {
       className="reference-list"
     >
       {projectList.length > 0 && (
-        <div className="list-heading hidden lg:grid items-center gap-3 px-4 py-3 grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_112px]">
+        <div className="list-heading hidden lg:grid items-center gap-3 px-3 py-2 grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_112px]">
           <div className="pl-6">Projekt</div>
           <div>Kund</div>
           <div>Produkt</div>

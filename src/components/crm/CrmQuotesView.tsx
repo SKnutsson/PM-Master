@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
 import { CrmQuoteSheet } from './CrmQuoteSheet';
 import { formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
@@ -15,7 +16,7 @@ export function CrmQuotesView() {
   const [search, setSearch] = useState('');
   const [salesperson, setSalesperson] = useState<string>('all');
   const [status, setStatus] = useState<string>('all');
-  const [probability, setProbability] = useState<string>('all');
+  const [probabilities, setProbabilities] = useState<number[]>([]);
   const [country, setCountry] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<CrmQuote | null>(null);
@@ -28,7 +29,7 @@ export function CrmQuotesView() {
     return quotes.filter((q) => {
       if (salesperson !== 'all' && q.salesperson !== salesperson) return false;
       if (status !== 'all' && q.status !== status) return false;
-      if (probability !== 'all' && String(q.probability) !== probability) return false;
+      if (probabilities.length > 0 && !probabilities.includes(q.probability)) return false;
       if (country !== 'all' && q.country !== country) return false;
       if (search) {
         const s = search.toLowerCase();
@@ -37,7 +38,7 @@ export function CrmQuotesView() {
       }
       return true;
     });
-  }, [quotes, salesperson, status, probability, country, search]);
+  }, [quotes, salesperson, status, probabilities, country, search]);
 
   const openNew = () => { setEditing(null); setSheetOpen(true); };
   const openEdit = (q: CrmQuote) => { setEditing(q); setSheetOpen(true); };
@@ -61,7 +62,25 @@ export function CrmQuotesView() {
             </div>
             <FilterSelect label="Säljare" value={salesperson} onChange={setSalesperson} options={salespeople} />
             <FilterSelect label="Status" value={status} onChange={setStatus} options={statuses} />
-            <FilterSelect label="Sannolikhet" value={probability} onChange={setProbability} options={['1', '2', '3', '4', '5']} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="justify-between gap-2 font-normal min-w-0" aria-label="Filtrera sannolikheter">
+                  <span className="truncate">Sannolikhet: {probabilities.length === 0 ? 'Alla' : [...probabilities].sort().join(', ')}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuCheckboxItem checked={probabilities.length === 0} onCheckedChange={() => setProbabilities([])} onSelect={(event) => event.preventDefault()}>
+                  Sannolikhet: Alla
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <DropdownMenuCheckboxItem key={value} checked={probabilities.includes(value)} onSelect={(event) => event.preventDefault()} onCheckedChange={(checked) => setProbabilities((current) => checked ? [...current, value] : current.filter((p) => p !== value))}>
+                    {value}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <FilterSelect label="Land" value={country} onChange={setCountry} options={countries} />
           </div>
         </div>
