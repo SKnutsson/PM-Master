@@ -250,7 +250,6 @@ export function Dashboard() {
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
             {projectsByPhase.map(({ phase, projects: phaseProjects }, idx) => {
               const config = phaseConfig[phase];
-              const PhaseIcon = config.icon;
               return (
                 <motion.div
                   key={phase}
@@ -263,7 +262,6 @@ export function Dashboard() {
                     className="flex items-center justify-between gap-2 px-3 py-2 text-white"
                     style={{ backgroundColor: config.accent }}>
                     <div className="flex items-center gap-2 min-w-0">
-                      <PhaseIcon className="h-4 w-4 shrink-0" />
                       <h3 className="font-semibold text-sm truncate">{phase}</h3>
                     </div>
                     <span className="dashboard-metric rounded-md bg-white/20 px-2 py-0.5 text-base">
@@ -333,7 +331,6 @@ export function Dashboard() {
             <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <span className={`h-2 w-2 rounded-full ${block.dot}`} />
                   {block.title}
                   <span className="ml-1 text-xs font-normal text-muted-foreground tabular-nums">{block.items.length}</span>
                 </CardTitle>
@@ -374,7 +371,6 @@ export function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-primary" />
                     Senaste händelser
                   </CardTitle>
                   <CardDescription className="text-xs">Ändringar i projekt och prognos</CardDescription>

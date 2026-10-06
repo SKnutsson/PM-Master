@@ -99,6 +99,13 @@
       "when": 1791282666725,
       "tag": "0013_quote_status_changed_at_and_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791293948415,
+      "tag": "0014_scope_followup_related_workspace_tables",
+      "breakpoints": true
     }
   ]
 }

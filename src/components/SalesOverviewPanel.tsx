@@ -143,7 +143,6 @@ export function SalesOverviewPanel({ salesPersonFilter = null }: SalesOverviewPa
         <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
           <CardHeader className="pb-1">
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
               Måluppfyllnad
             </CardTitle>
             <CardDescription className="text-xs">Order & Fakturerad vs mål {periodLabel}</CardDescription>
