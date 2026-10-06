@@ -382,7 +382,7 @@ export function ForecastView() {
                           </td>
                           <td className="py-0 px-3 text-muted-foreground border-b border-border/40 text-sm">{item.product}</td>
                           <td className="py-0 px-3 border-b border-border/40">
-                            <span className={cn("inline-flex items-center leading-none px-2.5 whitespace-nowrap text-xs font-semibold text-left mx-0 py-[5px] rounded-full",
+                            <span className={cn("inline-flex items-center leading-none px-2.5 whitespace-nowrap text-xs font-semibold text-left mx-0 py-[5px] rounded-none uppercase",
 
                             getStatusColor(item.dealStatus)
                             )}>

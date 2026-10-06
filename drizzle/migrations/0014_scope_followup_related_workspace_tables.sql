@@ -1,0 +1,18 @@
+ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_review_signoffs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forecast_months ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.activities, public.project_review_signoffs, public.forecast_months FROM anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.activities, public.project_review_signoffs, public.forecast_months TO authenticated;
+GRANT ALL ON public.activities, public.project_review_signoffs, public.forecast_months TO service_role;
+ALTER POLICY "Authenticated users can delete activities" ON public.activities TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated users can insert activities" ON public.activities TO authenticated WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated users can read activities" ON public.activities TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated users can update activities" ON public.activities TO authenticated USING (public.has_workspace_profile(auth.uid())) WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY prs_delete ON public.project_review_signoffs TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY prs_insert ON public.project_review_signoffs TO authenticated WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY prs_select ON public.project_review_signoffs TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY prs_update ON public.project_review_signoffs TO authenticated USING (public.has_workspace_profile(auth.uid())) WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated users can delete forecast_months" ON public.forecast_months TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated users can insert forecast_months" ON public.forecast_months TO authenticated WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated users can read forecast_months" ON public.forecast_months TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated users can update forecast_months" ON public.forecast_months TO authenticated USING (public.has_workspace_profile(auth.uid())) WITH CHECK (public.has_workspace_profile(auth.uid()));
