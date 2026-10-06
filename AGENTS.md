@@ -6,3 +6,4 @@
 - Scope shared project-resource and documentation access to authenticated users with a workspace profile; collaboration remains shared rather than owner-only.
 - Store explicit quote product allocations atomically on the quote and validate their sum against the total; keep a legacy product label for compatibility and never infer unknown multi-product amounts.
 - Scope the flat reference theme to the shared workspace shell so every tab follows it without changing the authentication screen.
+- Use a security-definer workspace-profile check for shared profile reads to avoid recursive profile policies while keeping collaboration limited to workspace members.

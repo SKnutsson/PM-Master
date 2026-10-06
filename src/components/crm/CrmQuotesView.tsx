@@ -15,8 +15,9 @@ import { getQuoteProducts } from '@/lib/quoteProducts';
 export function CrmQuotesView() {
   const { quotes, loading, refresh } = useCrmData();
   const [search, setSearch] = useState('');
-  const [salesperson, setSalesperson] = useState<string>('all');
-  const [status, setStatus] = useState<string>('all');
+  const [selectedSalespeople, setSelectedSalespeople] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [probabilities, setProbabilities] = useState<number[]>([]);
   const [country, setCountry] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -25,11 +26,13 @@ export function CrmQuotesView() {
   const salespeople = useMemo(() => [...new Set(quotes.map((q) => q.salesperson).filter(Boolean))].sort(), [quotes]);
   const statuses = useMemo(() => [...new Set(quotes.map((q) => q.status).filter(Boolean))].sort(), [quotes]);
   const countries = useMemo(() => [...new Set(quotes.map((q) => q.country).filter(Boolean))].sort(), [quotes]);
+  const products = useMemo(() => [...new Set(quotes.flatMap((q) => getQuoteProducts(q).map((p) => p.product)))].sort(), [quotes]);
 
   const filtered = useMemo(() => {
     return quotes.filter((q) => {
-      if (salesperson !== 'all' && q.salesperson !== salesperson) return false;
-      if (status !== 'all' && q.status !== status) return false;
+      if (selectedSalespeople.length > 0 && !selectedSalespeople.includes(q.salesperson)) return false;
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(q.status)) return false;
+      if (selectedProducts.length > 0 && !getQuoteProducts(q).some((p) => selectedProducts.includes(p.product))) return false;
       if (probabilities.length > 0 && !probabilities.includes(q.probability)) return false;
       if (country !== 'all' && q.country !== country) return false;
       if (search) {
@@ -39,7 +42,7 @@ export function CrmQuotesView() {
       }
       return true;
     });
-  }, [quotes, salesperson, status, probabilities, country, search]);
+  }, [quotes, selectedSalespeople, selectedStatuses, selectedProducts, probabilities, country, search]);
 
   const openNew = () => { setEditing(null); setSheetOpen(true); };
   const openEdit = (q: CrmQuote) => { setEditing(q); setSheetOpen(true); };
@@ -56,13 +59,14 @@ export function CrmQuotesView() {
 
       <div>
         <div className="py-2">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
             <div className="relative md:col-span-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Sök kund, projekt, ort…" className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
-            <FilterSelect label="Säljare" value={salesperson} onChange={setSalesperson} options={salespeople} />
-            <FilterSelect label="Status" value={status} onChange={setStatus} options={statuses} />
+            <MultiFilter label="Säljare" selected={selectedSalespeople} onChange={setSelectedSalespeople} options={salespeople} />
+            <MultiFilter label="Status" selected={selectedStatuses} onChange={setSelectedStatuses} options={statuses} />
+            <MultiFilter label="Produkttyp" selected={selectedProducts} onChange={setSelectedProducts} options={products} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="justify-between gap-2 font-normal min-w-0" aria-label="Filtrera sannolikheter">
@@ -138,6 +142,31 @@ export function CrmQuotesView() {
 
       <CrmQuoteSheet open={sheetOpen} onOpenChange={setSheetOpen} quote={editing} onSaved={refresh} />
     </motion.div>
+  );
+}
+
+function MultiFilter({ label, selected, onChange, options }: { label: string; selected: string[]; onChange: (values: string[]) => void; options: readonly string[] }) {
+  const selection = selected.length === 0 ? 'Alla' : selected.join(', ');
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="justify-between gap-2 font-normal min-w-0" aria-label={`Filtrera ${label.toLowerCase()}`} title={`${label}: ${selection}`}>
+          <span className="truncate">{label}: {selection}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="max-h-80 max-w-[calc(100vw-2rem)] overflow-y-auto">
+        <DropdownMenuCheckboxItem checked={selected.length === 0} onCheckedChange={() => onChange([])} onSelect={(event) => event.preventDefault()}>
+          {label}: Alla
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuSeparator />
+        {options.map((option) => (
+          <DropdownMenuCheckboxItem key={option} checked={selected.includes(option)} onSelect={(event) => event.preventDefault()} onCheckedChange={(checked) => onChange(checked ? [...selected, option] : selected.filter((value) => value !== option))}>
+            {option}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
