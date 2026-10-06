@@ -52,7 +52,7 @@ export function MainLayout() {
     <ProjectDataProvider>
       <div className="flex h-screen overflow-hidden bg-background">
         <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1 overflow-auto overflow-x-auto">
+        <main className="workspace-theme flex-1 overflow-auto overflow-x-auto">
           {renderView()}
         </main>
       </div>

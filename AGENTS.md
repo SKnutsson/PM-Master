@@ -4,3 +4,5 @@
 - Use the shared reference-list, list-heading and list-record styles for list-based workspaces so column headers and flat expandable rows remain consistent across modules.
 - Load heading fonts from bundled font packages at the application entry point to avoid remote font requests and ensure consistent rendering.
 - Scope shared project-resource and documentation access to authenticated users with a workspace profile; collaboration remains shared rather than owner-only.
+- Store explicit quote product allocations atomically on the quote and validate their sum against the total; keep a legacy product label for compatibility and never infer unknown multi-product amounts.
+- Scope the flat reference theme to the shared workspace shell so every tab follows it without changing the authentication screen.

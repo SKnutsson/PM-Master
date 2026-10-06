@@ -340,3 +340,13 @@ main h2[class] { font-size: 1.5rem; line-height: 1.2; }
   overflow-wrap: anywhere;
   vertical-align: middle;
 }
+
+/* Quote-tool treatment shared by every workspace tab, not the login page. */
+.workspace-theme { letter-spacing: 0; }
+.workspace-theme .workspace-card { border-radius: 2px; box-shadow: none; }
+.workspace-theme :is(.rounded-xl, .rounded-2xl) { border-radius: 4px; }
+.workspace-theme :is(.shadow-sm, .shadow-md, .shadow-lg, .shadow-xl) { box-shadow: none; }
+.workspace-theme :is(.bg-gradient-to-br, .bg-gradient-to-r, .gradient-card) { background-image: none; }
+.workspace-theme h3 { font-size: 1.25rem; line-height: 1.2; }
+.workspace-theme label { text-transform: uppercase; letter-spacing: 0; }
+.workspace-theme .tracking-wider, .workspace-theme .tracking-wide, .workspace-theme .tracking-tight { letter-spacing: 0; }

@@ -71,6 +71,13 @@
       "when": 1791276627883,
       "tag": "0009_scope_remaining_workspace_access",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791276983631,
+      "tag": "0010_quote_product_allocations",
+      "breakpoints": true
     }
   ]
 }
