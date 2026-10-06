@@ -85,6 +85,13 @@
       "when": 1791277209975,
       "tag": "0011_scope_planning_workspace_access",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791277581128,
+      "tag": "0012_scope_kpi_service_profiles_workspace",
+      "breakpoints": true
     }
   ]
 }

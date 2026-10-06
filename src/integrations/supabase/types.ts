@@ -2041,6 +2041,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_workspace_profile: { Args: { _user_id: string }; Returns: boolean }
       is_authenticated: { Args: never; Returns: boolean }
     }
     Enums: {
