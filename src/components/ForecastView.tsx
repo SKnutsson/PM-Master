@@ -1,6 +1,6 @@
 import { useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Package, AlertTriangle, Loader2, Printer, ChartNoAxesColumnIncreasing, Trophy, Target, Pencil, Check as CheckIcon, Filter } from 'lucide-react';
+import { Loader2, Printer, Pencil, Filter, Save } from 'lucide-react';
 import { YearNavigator } from './YearNavigator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { StatusLegend } from './StatusLegend';
+import { toast } from 'sonner';
 
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -217,19 +218,6 @@ export function ForecastView() {
     return { ...item, cumulative };
   });
 
-  const bestMonth = Object.entries(filteredMonthlyTotals).reduce(
-    (best, [month, value]) => value > best.value ? { month, value } : best,
-    { month: '', value: 0 }
-  );
-
-  const activeDeals = filteredForecast.filter((f) => f.dealStatus !== 'Förlorad').length;
-  const lostDealsList = filteredForecast.filter((f) => f.dealStatus === 'Förlorad');
-  const lostDeals = lostDealsList.length;
-  const lostDealsValue = lostDealsList.reduce(
-    (sum, f) => sum + Object.values(f.months).reduce((s, v) => s + v, 0),
-    0
-  );
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -246,116 +234,45 @@ export function ForecastView() {
           <p className="text-muted-foreground">Översikt av budgeterad försäljning per månad</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          {(() => {
-            const yr = selectedPeriod === 'rolling12' ? new Date().getFullYear() : parseInt(selectedPeriod);
-            const currentTarget = salesTargets[yr] || 0;
-            return (
-              <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card/60 px-2.5 py-1.5">
-                <Target className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Mål {yr}:</span>
-                {editingTarget ? (
-                  <>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      value={targetInput}
-                      onChange={(e) => setTargetInput(e.target.value)}
-                      placeholder="MSEK"
-                      className="w-20 h-6 text-xs"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={async () => {
-                        const val = parseFloat(targetInput);
-                        if (!isNaN(val) && val >= 0) await setSalesTarget(yr, val);
-                        setEditingTarget(false);
-                      }}>
-                      <CheckIcon className="h-3 w-3" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-xs font-bold">{currentTarget > 0 ? `${currentTarget.toFixed(1)} MSEK` : 'Ej satt'}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => {
-                        setTargetInput(currentTarget > 0 ? String(currentTarget) : '');
-                        setEditingTarget(true);
-                      }}>
-                      <Pencil className="h-2.5 w-2.5" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            );
-          })()}
           <YearNavigator
             value={selectedPeriod}
-            onChange={(v) => setSelectedPeriod((v === 'rolling' ? 'rolling12' : v) as PeriodView)}
+            onChange={(v) => { setSelectedPeriod((v === 'rolling' ? 'rolling12' : v) as PeriodView); setEditingTarget(false); }}
             includeRolling
           />
           <AddForecastDialog />
         </div>
       </div>
 
-      {/* Summary Cards — compact */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <motion.div variants={itemVariants} className="flex">
-          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Total budget</p>
-              <p className="text-xl font-bold text-white leading-tight mt-0.5">{filteredYearTotal.toFixed(1)} MSEK</p>
-              <p className="text-[10px] text-white/40">Exkl. förlorade</p>
-            </div>
-            <div className="rounded-md p-1.5 bg-white/10">
-              <ChartNoAxesColumnIncreasing className="h-4 w-4 text-white/80" />
-            </div>
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-4 border-y border-border py-4">
+        <div>
+          <p className="text-xs uppercase text-muted-foreground">Total budget</p>
+          <p className="dashboard-metric text-3xl text-primary">{filteredYearTotal.toFixed(1)} MSEK</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div>
+            <p className="text-xs uppercase text-muted-foreground">Årsmål {selectedPeriod === 'rolling12' ? new Date().getFullYear() : selectedPeriod}</p>
+            <p className="dashboard-metric text-3xl">{(salesTargets[selectedPeriod === 'rolling12' ? new Date().getFullYear() : Number(selectedPeriod)] || 0).toFixed(1)} MSEK</p>
           </div>
-        </motion.div>
-
-        <motion.div variants={itemVariants} className="flex">
-          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_55%_26%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Bästa månad</p>
-              <p className="text-xl font-bold text-white leading-tight mt-0.5 truncate">{monthLabels[bestMonth.month] || '-'}</p>
-              <p className="text-[10px] text-white/40">{bestMonth.value.toFixed(1)} MSEK</p>
+          {editingTarget ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Input aria-label="Årsmål i MSEK" type="number" min="0" step="0.1" value={targetInput} onChange={(e) => setTargetInput(e.target.value)} className="w-28" />
+              <span className="text-xs text-muted-foreground">MSEK</span>
+              <Button className="gap-1" onClick={async () => {
+                const value = Number(targetInput);
+                if (!targetInput.trim() || !Number.isFinite(value) || value < 0) { toast.error('Ange ett giltigt mål i MSEK'); return; }
+                try {
+                  await setSalesTarget(selectedPeriod === 'rolling12' ? new Date().getFullYear() : Number(selectedPeriod), value);
+                  setEditingTarget(false);
+                  toast.success('Årsmål sparat');
+                } catch { toast.error('Kunde inte spara årsmålet'); }
+              }}><Save className="h-4 w-4" />Spara mål</Button>
+              <Button variant="outline" onClick={() => setEditingTarget(false)}>Avbryt</Button>
             </div>
-            <div className="rounded-md p-1.5 bg-white/10">
-              <Trophy className="h-4 w-4 text-white/80" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div variants={itemVariants} className="flex">
-          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(160_25%_50%)] to-[hsl(160_20%_38%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Försäljning per månad</p>
-              <p className="text-xl font-bold text-white leading-tight mt-0.5">{(displayMonths.length > 0 ? filteredYearTotal / displayMonths.length : 0).toFixed(1)} MSEK</p>
-              <p className="text-[10px] text-white/40">Snitt {displayMonths.length} mån</p>
-            </div>
-            <div className="rounded-md p-1.5 bg-white/10">
-              <Package className="h-4 w-4 text-white/80" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div variants={itemVariants} className="flex">
-          <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[hsl(0_45%_45%)] to-[hsl(0_40%_32%)] px-4 py-3 shadow-sm w-full flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[10px] font-medium text-white/60 uppercase tracking-wider">Förlorade affärer</p>
-              <p className="text-xl font-bold text-white leading-tight mt-0.5">{lostDeals} st</p>
-              <p className="text-[10px] text-white/60">{lostDealsValue.toFixed(1)} MSEK</p>
-            </div>
-            <div className="rounded-md p-1.5 bg-white/10">
-              <AlertTriangle className="h-4 w-4 text-white/80" />
-            </div>
-          </div>
-        </motion.div>
+          ) : <Button variant="outline" className="gap-2" onClick={() => {
+            setTargetInput(String(salesTargets[selectedPeriod === 'rolling12' ? new Date().getFullYear() : Number(selectedPeriod)] || 0));
+            setEditingTarget(true);
+          }}><Pencil className="h-4 w-4" />Ändra årsmål</Button>}
+        </div>
       </div>
 
       {/* Forecast Table */}

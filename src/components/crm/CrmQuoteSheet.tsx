@@ -9,13 +9,15 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, FileText, Upload, Trash2 } from 'lucide-react';
+import { CalendarIcon, FileText, Upload, Trash2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { CrmQuote } from '@/hooks/useCrmData';
 import { SALESPEOPLE, COUNTRIES, PRODUCTS, QUOTE_STATUSES } from '@/lib/crmConstants';
+import { getQuoteProducts, productAllocationError, ProductAllocation } from '@/lib/quoteProducts';
+import { formatSEK } from '@/lib/crmConstants';
 
 interface Props {
   open: boolean;
@@ -56,16 +58,27 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [pendingPdfDelete, setPendingPdfDelete] = useState<string[]>([]);
+  const [productRows, setProductRows] = useState<ProductAllocation[]>([]);
+  const [productsChanged, setProductsChanged] = useState(false);
 
   useEffect(() => {
     setForm(quote ? { ...quote } : emptyQuote());
     setNewComment('');
     setPendingPdfDelete([]);
+    setProductRows(quote ? getQuoteProducts(quote) : [{ product: '', amount: 0 }]);
+    setProductsChanged(false);
   }, [quote, open]);
 
   const upd = (k: keyof CrmQuote, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const changeProducts = (rows: ProductAllocation[]) => { setProductRows(rows); setProductsChanged(true); };
+  const allocated = productRows.reduce((sum, row) => sum + (row.amount ?? 0), 0);
+  const allocationDifference = Number(form.amount || 0) - allocated;
+  const productOptions = [...new Set([...PRODUCTS, ...productRows.map((r) => r.product).filter(Boolean)])];
 
   const handleSave = async () => {
+    const mustAllocate = !quote || productsChanged || !!quote.product_allocations || Number(form.amount) !== Number(quote.amount);
+    const allocationError = mustAllocate ? productAllocationError(productRows, Number(form.amount || 0)) : null;
+    if (allocationError) { toast.error(allocationError); return; }
     setSaving(true);
     let combinedComment = form.comment || '';
     if (newComment.trim()) {
@@ -77,14 +90,15 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
     const payload: any = {
       quote_date: form.quote_date,
-      source_updated_date: format(new Date(), 'yyyy-MM-dd'),
+      source_updated_date: form.source_updated_date || null,
       salesperson: form.salesperson || '',
       responsible: form.responsible || '',
       customer_name: form.customer_name || '',
       country: form.country || '',
       city: form.city || null,
       project_arena: form.project_arena || '',
-      product: form.product || '',
+      product: mustAllocate ? productRows.map((r) => r.product).join(' | ') : form.product || '',
+      product_allocations: mustAllocate ? productRows : null,
       quantity_spec: form.quantity_spec || '',
       amount: Number(form.amount || 0),
       delivery_time: form.delivery_time || '',
@@ -169,7 +183,6 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-[1180px]">
         <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
           <SheetTitle>{quote ? `Redigera offert ${quote.quote_number}` : 'Ny offert'}</SheetTitle>
-          <p className="text-sm text-muted-foreground">Uppgifterna sparas i PM Master och uppdateras direkt för alla användare.</p>
         </SheetHeader>
 
         <div className="grid gap-8 px-6 py-5 lg:grid-cols-2">
@@ -223,7 +236,25 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
               <Field label="Telefon"><Input placeholder="070-123 45 67" value={form.contact_phone || ''} onChange={(e) => upd('contact_phone', e.target.value)} /></Field>
               <Field label="E-post"><Input type="email" placeholder="namn@foretag.se" value={form.contact_email || ''} onChange={(e) => upd('contact_email', e.target.value)} /></Field>
             </div>
-            <Field label="Produkt"><Input list="crm-product-options" value={form.product || ''} onChange={(e) => upd('product', e.target.value)} placeholder="En eller flera produkter, separera med |" /><datalist id="crm-product-options">{PRODUCTS.map((p) => <option key={p} value={p} />)}</datalist></Field>
+            <Field label="Produktgrupper">
+              <div className="border border-border">
+                <div className="grid grid-cols-[minmax(0,1fr)_130px_32px] gap-2 bg-muted px-2 py-2 text-xs uppercase text-muted-foreground"><span>Produktgrupp</span><span>Belopp (SEK)</span><span /></div>
+                {productRows.map((row, index) => (
+                  <div key={index} className="grid grid-cols-[minmax(0,1fr)_130px_32px] items-center gap-2 border-t border-border p-2">
+                    <Select value={row.product} onValueChange={(product) => changeProducts(productRows.map((r, i) => i === index ? { ...r, product } : r))}>
+                      <SelectTrigger aria-label={`Produktgrupp ${index + 1}`} className="min-w-0"><SelectValue placeholder="Välj produktgrupp" /></SelectTrigger>
+                      <SelectContent>{productOptions.filter((p) => p === row.product || !productRows.some((r) => r.product === p)).map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <Input aria-label={`Produktbelopp ${index + 1}`} type="number" min="0" step="0.01" value={row.amount ?? ''} placeholder="Ej fördelat" onChange={(e) => changeProducts(productRows.map((r, i) => i === index ? { ...r, amount: e.target.value === '' ? null : Number(e.target.value) } : r))} />
+                    <Button size="icon" variant="ghost" title="Ta bort produktgrupp" aria-label={`Ta bort produktgrupp ${index + 1}`} onClick={() => changeProducts(productRows.filter((_, i) => i !== index))}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                ))}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border p-2">
+                  <Button variant="outline" size="sm" className="gap-1" onClick={() => changeProducts([...productRows, { product: '', amount: null }])}><Plus className="h-3 w-3" />Produktgrupp</Button>
+                  <span className={cn('text-xs', Math.abs(allocationDifference) > 0.01 ? 'text-destructive' : 'text-primary')}>Fördelat: {formatSEK(allocated)} kr · Kvar: {formatSEK(allocationDifference)} kr</span>
+                </div>
+              </div>
+            </Field>
             <Field label="Antal / specifikation"><Input value={form.quantity_spec || ''} onChange={(e) => upd('quantity_spec', e.target.value)} /></Field>
             <Field label="Offertbelopp (SEK)"><Input type="number" value={form.amount === undefined ? '' : String(form.amount)} placeholder="0" onChange={(e) => upd('amount', e.target.value === '' ? 0 : Number(e.target.value))} /></Field>
             <Field label="Offert (PDF)">

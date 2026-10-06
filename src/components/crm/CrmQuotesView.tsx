@@ -10,6 +10,7 @@ import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
 import { CrmQuoteSheet } from './CrmQuoteSheet';
 import { formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
 import { cn } from '@/lib/utils';
+import { getQuoteProducts } from '@/lib/quoteProducts';
 
 export function CrmQuotesView() {
   const { quotes, loading, refresh } = useCrmData();
@@ -112,7 +113,7 @@ export function CrmQuotesView() {
                   <td className="px-3 py-2 whitespace-nowrap">{q.country}</td>
                   <td className="px-3 py-2 whitespace-nowrap">{q.city || '—'}</td>
                   <td className="px-3 py-2 whitespace-nowrap font-mono text-xs">{q.quote_number}</td>
-                  <td className="px-3 py-2 whitespace-nowrap">{q.product}</td>
+                   <td className="px-3 py-2"><div className="flex flex-wrap gap-1 min-w-40">{getQuoteProducts(q).map((p) => <span key={p.product} className="product-label" title={p.amount === null ? 'Belopp ej fördelat' : `${formatSEK(p.amount)} kr`}>{p.product}</span>)}</div></td>
                   <td className="px-3 py-2 max-w-[160px] truncate" title={q.quantity_spec}>{q.quantity_spec}</td>
                   <td className="px-3 py-2 whitespace-nowrap">{q.delivery_time}</td>
                   <td className="px-3 py-2">{q.prescriber ? '✓' : '–'}</td>

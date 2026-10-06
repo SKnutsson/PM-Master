@@ -283,6 +283,7 @@ export type Database = {
           prescriber: boolean
           probability: number
           product: string | null
+          product_allocations: Json | null
           project_arena: string | null
           quantity_spec: string | null
           quote_date: string
@@ -312,6 +313,7 @@ export type Database = {
           prescriber?: boolean
           probability?: number
           product?: string | null
+          product_allocations?: Json | null
           project_arena?: string | null
           quantity_spec?: string | null
           quote_date?: string
@@ -341,6 +343,7 @@ export type Database = {
           prescriber?: boolean
           probability?: number
           product?: string | null
+          product_allocations?: Json | null
           project_arena?: string | null
           quantity_spec?: string | null
           quote_date?: string

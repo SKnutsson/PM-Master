@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Briefcase, TrendingUp, Percent, Trophy } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { getQuoteProducts } from '@/lib/quoteProducts';
 
 const PIE_COLORS = [
   'hsl(var(--primary))',
@@ -106,20 +107,25 @@ export function CrmStatsView() {
   const byProduct = useMemo(() => {
     const map = new Map<string, { product: string; count: number; value: number; wins: number; closed: number }>();
     filtered.forEach((q) => {
-      const k = q.product || '—';
-      const cur = map.get(k) || { product: k, count: 0, value: 0, wins: 0, closed: 0 };
-      cur.count += 1;
-      cur.value += Number(q.amount || 0);
-      if (q.status === 'Order' || q.status === 'Avböjd' || q.status === 'Förlorad') cur.closed += 1;
-      if (q.status === 'Order') cur.wins += 1;
-      map.set(k, cur);
+      const products = getQuoteProducts(q);
+      const add = (product: string, amount: number, count: number) => {
+        const cur = map.get(product) || { product, count: 0, value: 0, wins: 0, closed: 0 };
+        cur.count += count;
+        cur.value += amount;
+        if (count && (q.status === 'Order' || q.status === 'Avböjd' || q.status === 'Förlorad')) cur.closed += 1;
+        if (count && q.status === 'Order') cur.wins += 1;
+        map.set(product, cur);
+      };
+      products.forEach((p) => add(p.product, p.amount ?? 0, 1));
+      if (!products.length) add('Ej kategoriserat', Number(q.amount || 0), 1);
+      else if (products.some((p) => p.amount === null)) add('Ej fördelat mellan produktgrupper', Number(q.amount || 0), 0);
     });
     return Array.from(map.values()).sort((a, b) => b.value - a.value);
   }, [filtered]);
 
   const productShare = useMemo(() => {
     const total = byProduct.reduce((s, p) => s + p.count, 0);
-    return byProduct.map((p) => ({
+    return byProduct.filter((p) => p.count > 0).map((p) => ({
       name: p.product,
       value: p.count,
       pct: total ? (p.count / total) * 100 : 0,
@@ -189,17 +195,11 @@ export function CrmStatsView() {
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={byMonth}>
-                <defs>
-                  <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.95} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${(v / 1_000_000).toFixed(1)} M`} />
                 <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} formatter={(v: any) => [`${formatSEK(Number(v))} kr`, 'Offertvolym']} />
-                <Bar dataKey="value" name="Offertvolym (kr)" fill="url(#volGrad)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Offertvolym (kr)" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -211,7 +211,7 @@ export function CrmStatsView() {
         <Card className="border-border/50">
           <CardHeader>
             <CardTitle className="text-lg">Produktmix – andel av offerter</CardTitle>
-            <CardDescription>Procentuell fördelning per produktkategori</CardDescription>
+            <CardDescription>Andel produktgrupper i offerterna</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-80">
@@ -222,9 +222,9 @@ export function CrmStatsView() {
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
-                    cy="50%"
+                     cy="45%"
                     innerRadius={70}
-                    outerRadius={115}
+                     outerRadius={95}
                     paddingAngle={2}
                     label={(d: any) => `${d.pct.toFixed(0)}%`}
                     labelLine={false}
@@ -237,9 +237,11 @@ export function CrmStatsView() {
                     contentStyle={tooltipStyle}
                     formatter={(v: any, n: any, p: any) => [`${v} st (${p.payload.pct.toFixed(1)}%)`, n]}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
+            </div>
+            <div className="grid gap-1 border-t border-border pt-3 text-xs sm:grid-cols-2">
+              {productShare.map((p, i) => <div key={p.name} className="flex items-start gap-2"><span className="mt-0.5 h-2.5 w-2.5 shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} /><span>{p.name} · {p.pct.toFixed(0)}%</span></div>)}
             </div>
           </CardContent>
         </Card>
@@ -250,12 +252,12 @@ export function CrmStatsView() {
             <CardDescription>Totalt offererat värde per kategori (MSEK)</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80">
+            <div style={{ height: Math.max(320, productValueShare.length * 44) }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={productValueShare} layout="vertical" margin={{ left: 20 }}>
+                <BarChart data={productValueShare} layout="vertical" margin={{ left: 10, right: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                   <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} width={130} />
+                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} width={180} interval={0} />
                   <Tooltip contentStyle={tooltipStyle} formatter={(v: any) => [`${v} MSEK`, 'Värde']} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
                   <Bar dataKey="value" radius={[0, 6, 6, 0]}>
                     {productValueShare.map((_, i) => (
@@ -352,13 +354,12 @@ export function CrmStatsView() {
 function KpiCard({ icon: Icon, label, value, accent = 'primary' }: { icon: any; label: string; value: string; accent?: string }) {
   return (
     <Card className="border-border/50 overflow-hidden relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
       <CardContent className="p-5 relative">
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
           <Icon className={`h-4 w-4 text-${accent}`} />
         </div>
-        <div className="text-3xl font-bold tabular-nums">{value}</div>
+        <div className="dashboard-metric text-3xl">{value}</div>
       </CardContent>
     </Card>
   );

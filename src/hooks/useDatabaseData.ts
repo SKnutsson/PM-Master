@@ -96,7 +96,7 @@ export function useDatabaseData() {
       .upsert({ year, target_msek: targetMsek }, { onConflict: 'year' });
     if (error) {
       console.error('Error setting sales target:', error);
-      return;
+      throw error;
     }
     setSalesTargets(prev => ({ ...prev, [year]: targetMsek }));
   }, []);
