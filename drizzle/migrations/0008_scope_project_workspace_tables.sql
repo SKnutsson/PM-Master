@@ -1,0 +1,18 @@
+DROP POLICY IF EXISTS "Authenticated can read project_installers" ON public.project_installers;
+DROP POLICY IF EXISTS "Authenticated can insert project_installers" ON public.project_installers;
+DROP POLICY IF EXISTS "Authenticated can update project_installers" ON public.project_installers;
+DROP POLICY IF EXISTS "Authenticated can delete project_installers" ON public.project_installers;
+CREATE POLICY "Workspace members can access project installers" ON public.project_installers FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid())) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid()));
+DROP POLICY IF EXISTS "Authenticated can read resource_estimations" ON public.resource_estimations;
+DROP POLICY IF EXISTS "Authenticated can insert resource_estimations" ON public.resource_estimations;
+DROP POLICY IF EXISTS "Authenticated can update resource_estimations" ON public.resource_estimations;
+DROP POLICY IF EXISTS "Authenticated can delete resource_estimations" ON public.resource_estimations;
+CREATE POLICY "Workspace members can access resource estimations" ON public.resource_estimations FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid())) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid()));
+DROP POLICY IF EXISTS "Authenticated can read documentation_items" ON public.documentation_items;
+DROP POLICY IF EXISTS "Authenticated can insert documentation_items" ON public.documentation_items;
+DROP POLICY IF EXISTS "Authenticated can update documentation_items" ON public.documentation_items;
+DROP POLICY IF EXISTS "Authenticated can delete documentation_items" ON public.documentation_items;
+CREATE POLICY "Workspace members can access documentation items" ON public.documentation_items FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid())) WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE user_id = auth.uid()));
+REVOKE ALL ON public.project_installers, public.resource_estimations, public.documentation_items FROM anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.project_installers, public.resource_estimations, public.documentation_items TO authenticated;
+GRANT ALL ON public.project_installers, public.resource_estimations, public.documentation_items TO service_role;

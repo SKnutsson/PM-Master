@@ -236,7 +236,7 @@ function ServiceTable({ services, onOpen, onChange }: { services: Service[]; onO
     if (error) toast.error(error.message); else { toast.success('Service borttagen'); onChange?.(); }
   };
   return (
-    <div className="border rounded-md overflow-hidden">
+    <div className="reference-list">
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -588,7 +588,7 @@ function ContractsPanel({ contracts, onChange, services }: { contracts: ServiceC
         <div className="px-4 pb-3 text-xs text-muted-foreground">
           Aktiva avtal genererar automatiskt återkommande servicar i tidslinjen utifrån återkommandeintervallet.
         </div>
-        <div className="border-t overflow-x-auto">
+        <div className="reference-list border-t">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">

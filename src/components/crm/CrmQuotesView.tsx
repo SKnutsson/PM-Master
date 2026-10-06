@@ -4,7 +4,6 @@ import { Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
 import { CrmQuoteSheet } from './CrmQuoteSheet';
@@ -44,7 +43,7 @@ export function CrmQuotesView() {
   const openEdit = (q: CrmQuote) => { setEditing(q); setSheetOpen(true); };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 space-y-4 min-w-[1200px]">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="list-page p-4 md:p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Alla offerter</h1>
@@ -53,8 +52,8 @@ export function CrmQuotesView() {
         <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Ny offert</Button>
       </div>
 
-      <Card>
-        <CardContent className="p-4">
+      <div>
+        <div className="py-2">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
             <div className="relative md:col-span-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -65,10 +64,10 @@ export function CrmQuotesView() {
             <FilterSelect label="Sannolikhet" value={probability} onChange={setProbability} options={['1', '2', '3', '4', '5']} />
             <FilterSelect label="Land" value={country} onChange={setCountry} options={countries} />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="overflow-hidden">
+      <div className="reference-list">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
@@ -115,7 +114,7 @@ export function CrmQuotesView() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
 
       <CrmQuoteSheet open={sheetOpen} onOpenChange={setSheetOpen} quote={editing} onSaved={refresh} />
     </motion.div>

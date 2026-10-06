@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Mail, Phone, Building2, MapPin, Trash2, Calendar as CalendarIcon, User as UserIcon, X } from 'lucide-react';
+import { Plus, Mail, Phone, Building2, MapPin, Trash2, Calendar as CalendarIcon, User as UserIcon, X, ChevronDown, ChevronRight, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +37,7 @@ const emptyForm = (): FormState => ({
 export function CrmCustomersView() {
   const { customers, contacts, quotes, refresh } = useCrmData();
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<string[]>([]);
   const [editing, setEditing] = useState<CrmCustomer | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm());
   const [newContact, setNewContact] = useState({ name: '', email: '', phone: '', role: '' });
@@ -83,7 +83,7 @@ export function CrmCustomersView() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 space-y-4">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="list-page p-4 md:p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Kunder</h1>
@@ -92,40 +92,27 @@ export function CrmCustomersView() {
         <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" /> Ny kund</Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="reference-list">
+        <div className="list-heading grid min-w-[850px] grid-cols-[2fr_1.5fr_1fr_1.3fr_1fr_72px] items-center gap-4 px-4"><span>Kund</span><span>Projekt</span><span>Ort / Land</span><span>Produkt</span><span>Säljare</span><span /></div>
         {customers.map((c) => {
           const cContacts = contacts.filter((x) => x.customer_id === c.id);
           const cQuotes = quotes.filter((q) => q.customer_id === c.id || q.customer_name === c.name);
           const products = Array.isArray(c.products) ? c.products : [];
           return (
-            <Card key={c.id} className="overflow-hidden hover:shadow-md transition-shadow">
-              <div className="bg-gradient-to-r from-primary/10 to-transparent p-4 border-b border-border">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-lg leading-tight">{c.name}</h3>
-                    {c.arena && <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5"><Building2 className="h-3 w-3" /> {c.arena}</p>}
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <MapPin className="h-3 w-3" /> {[c.city, c.country].filter(Boolean).join(', ') || '—'}
-                    </p>
-                    {c.salesperson && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5"><UserIcon className="h-3 w-3" /> Säljare: {c.salesperson}</p>}
-                    {(c.visit_date || c.next_followup) && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <CalendarIcon className="h-3 w-3" />
-                        {c.visit_date && <>Besök: {c.visit_date}</>}
-                        {c.visit_date && c.next_followup && <span className="mx-1">·</span>}
-                        {c.next_followup && <>Uppf: {c.next_followup}</>}
-                      </p>
-                    )}
-                  </div>
-                  <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>Redigera</Button>
-                </div>
-                {products.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {products.map((p) => <Badge key={p} variant="secondary" className="text-[10px]">{p}</Badge>)}
-                  </div>
-                )}
+            <div key={c.id} className="list-record min-w-[850px]">
+              <div className="grid grid-cols-[2fr_1.5fr_1fr_1.3fr_1fr_72px] items-center gap-4 px-4 py-3 text-sm">
+                <Button variant="ghost" className="h-auto justify-start gap-2 p-0 text-left text-primary hover:bg-transparent" onClick={() => setExpanded(v => v.includes(c.id) ? v.filter(id => id !== c.id) : [...v, c.id])} aria-expanded={expanded.includes(c.id)}>
+                  {expanded.includes(c.id) ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                  <span className="whitespace-normal break-words">{c.name}</span>
+                </Button>
+                <span className="break-words">{c.arena || '—'}</span>
+                <span className="text-muted-foreground">{[c.city, c.country].filter(Boolean).join(', ') || '—'}</span>
+                <span className="flex flex-wrap gap-1">{products.map(p => <Badge key={String(p)} variant="secondary" className="rounded-none text-[10px]">{String(p)}</Badge>)}</span>
+                <span>{c.salesperson || '—'}</span>
+                <Button size="icon" variant="ghost" title="Redigera kund" aria-label={`Redigera ${c.name}`} onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
               </div>
-              <CardContent className="p-4 space-y-3">
+              {expanded.includes(c.id) && <div className="border-t p-4 grid gap-6 md:grid-cols-3">
+
                 <div>
                   <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Kontaktpersoner</div>
                   {cContacts.length === 0 && <p className="text-xs text-muted-foreground italic">Inga kontakter</p>}
@@ -169,8 +156,8 @@ export function CrmCustomersView() {
                     ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>}
+            </div>
           );
         })}
       </div>

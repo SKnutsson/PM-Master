@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 168 30% 12%;
 
-    --primary: 160 55% 36%;
+    --primary: 172 64% 30%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 160 20% 90%;
@@ -31,9 +31,14 @@
 
     --border: 160 15% 84%;
     --input: 160 15% 88%;
-    --ring: 160 55% 36%;
+    --ring: 172 64% 30%;
 
     --radius: 0.5rem;
+
+    --list-header: 194 41% 16%;
+    --list-header-foreground: 0 0% 100%;
+    --list-stripe: 0 0% 97%;
+    --list-hover: 172 20% 93%;
 
     /* Status Colors */
     --status-not-started: 217 70% 55%;
@@ -50,11 +55,11 @@
     --chart-5: 130 45% 44%;
 
     /* Sidebar */
-    --sidebar-background: 160 30% 18%;
+    --sidebar-background: 194 41% 16%;
     --sidebar-foreground: 160 20% 88%;
     --sidebar-primary: 160 55% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 25% 24%;
+    --sidebar-accent: 194 30% 22%;
     --sidebar-accent-foreground: 160 20% 92%;
     --sidebar-border: 160 25% 22%;
     --sidebar-ring: 160 55% 50%;
@@ -125,6 +130,11 @@
     --sidebar-accent-foreground: 160 20% 92%;
     --sidebar-border: 168 25% 14%;
     --sidebar-ring: 160 55% 42%;
+
+    --list-header: 194 41% 16%;
+    --list-header-foreground: 0 0% 100%;
+    --list-stripe: 168 25% 10%;
+    --list-hover: 168 25% 15%;
 
     /* Custom gradients */
     --gradient-primary: linear-gradient(135deg, hsl(160 55% 42%) 0%, hsl(145 50% 35%) 100%);
@@ -268,3 +278,41 @@
     width: 100% !important;
   }
 }
+
+/* Shared reference treatment for list-based workspaces. */
+@layer components {
+  main h1[class], main h2[class], [role="dialog"] h2 {
+    font-family: "Bebas Neue", var(--font-sans);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  main h1[class] { font-size: 2.5rem; line-height: 1.1; color: hsl(var(--primary)); }
+  main h2[class] { font-size: 1.5rem; line-height: 1.2; }
+  .list-page { width: 100%; max-width: none; }
+  .list-page > div:first-child { gap: 1rem; flex-wrap: wrap; }
+  .list-page > div:first-child > div:first-child { flex: 1; min-width: 0; }
+  .list-page > div:first-child h1 { display: flex; align-items: center; gap: 1.5rem; }
+  .list-page > div:first-child h1::after { content: ""; height: 1px; flex: 1; background: hsl(var(--border)); }
+  .list-heading, .reference-list thead, .reference-list thead tr {
+    background: hsl(var(--list-header)); color: hsl(var(--list-header-foreground));
+  }
+  .list-heading { min-height: 44px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0; }
+  .reference-list { border-radius: 0; border: 0; box-shadow: none; overflow-x: auto; background: hsl(var(--card)); }
+  .reference-list thead th { color: hsl(var(--list-header-foreground)); height: 44px; font-size: 11px; text-transform: uppercase; letter-spacing: 0; }
+  .reference-list tbody tr { background: hsl(var(--card)); border-bottom: 1px solid hsl(var(--border)); }
+  .reference-list tbody tr:nth-child(odd), .reference-list .list-record:nth-child(even) { background: hsl(var(--list-stripe)); }
+  .reference-list tbody tr:hover, .reference-list .list-record:hover { background: hsl(var(--list-hover)); }
+  .reference-list tbody td { padding-top: 12px; padding-bottom: 12px; }
+  .reference-list .list-record { border: 0; border-bottom: 1px solid hsl(var(--border)); border-radius: 0; box-shadow: none; background: hsl(var(--card)); }
+  .reference-list .list-record:last-child { border-bottom: 0; }
+  .reference-list .list-record > div:first-child { min-height: 56px; }
+}
+
+main h1[class], main h2[class], [role="dialog"] h2 {
+  font-family: "Bebas Neue", var(--font-sans);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+main h1[class] { font-size: 2.5rem; line-height: 1.1; color: hsl(var(--primary)); }
+main h2[class] { font-size: 1.5rem; line-height: 1.2; }
+.reference-list > div:nth-child(even) > .list-record { background: hsl(var(--list-stripe)); }

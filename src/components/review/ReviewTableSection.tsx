@@ -44,7 +44,7 @@ export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, r
         <p className="text-sm text-muted-foreground italic py-2">Inga rader registrerade.</p>
       )}
 
-      <div className="space-y-2">
+      <div className="reference-list">
         {visible.map((row, idx) => {
           const warn = rowWarning(section, row.data);
           const risk = section.key === 'risks' ? riskLevel(row.data.probability, row.data.consequence) : null;
@@ -52,7 +52,7 @@ export function ReviewTableSection({ section, rows, onAdd, onUpdate, onDelete, r
             <div
               key={row.id}
               className={cn(
-                'rounded-lg border bg-card p-3',
+                'list-record border bg-card p-3',
                 warn ? 'border-destructive/40' : 'border-border',
                 risk && risk.level === 'Kritisk' && 'border-destructive',
               )}
