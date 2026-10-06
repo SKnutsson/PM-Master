@@ -39,23 +39,21 @@ function AnimatedNumber({ value, duration = 900, decimals = 0 }: { value: number
 
 // Hero card matching Projektledning Dashboard style
 function HeroCard({
-  label, value, suffix, icon: Icon, gradient,
-}: { label: string; value: number | string; suffix?: string; icon: any; gradient: string }) {
+  label, value, suffix, icon: Icon,
+}: { label: string; value: number | string; suffix?: string; icon: any }) {
   return (
     <motion.div variants={itemVariants}>
-      <div className={`relative overflow-hidden rounded-xl ${gradient} p-4 shadow-md transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg h-full`}>
-        <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/5 -translate-y-8 translate-x-8" />
-        <div className="absolute bottom-0 left-0 w-14 h-14 rounded-full bg-white/5 translate-y-5 -translate-x-5" />
+      <div className="border-y border-border py-3 h-full">
         <div className="relative z-10 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-medium text-white/60 uppercase tracking-wider">{label}</p>
-            <p className="dashboard-metric text-3xl text-white mt-0.5 truncate">
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
+            <p className="dashboard-metric text-3xl text-foreground mt-0.5 truncate">
               {typeof value === 'number' ? <AnimatedNumber value={value} /> : value}
-              {suffix && <span className="text-sm font-normal text-white/50 ml-1">{suffix}</span>}
+              {suffix && <span className="text-sm font-normal text-muted-foreground ml-1">{suffix}</span>}
             </p>
           </div>
-          <div className="rounded-lg p-2.5 bg-white/10 backdrop-blur-sm shrink-0">
-            <Icon className="h-5 w-5 text-white/80" />
+          <div className="rounded-lg p-2.5 bg-muted backdrop-blur-sm shrink-0">
+            <Icon className="h-5 w-5 text-primary" />
           </div>
         </div>
       </div>
@@ -64,12 +62,12 @@ function HeroCard({
 }
 
 // Probability bucket color per level (1-5)
-const probColors: Record<number, { bg: string; ring: string; label: string }> = {
-  1: { bg: 'from-[hsl(0_45%_45%)] to-[hsl(0_40%_35%)]', ring: 'bg-white/15', label: 'Mycket låg' },
-  2: { bg: 'from-[hsl(25_75%_50%)] to-[hsl(25_70%_40%)]', ring: 'bg-white/15', label: 'Låg' },
-  3: { bg: 'from-[hsl(180_45%_40%)] to-[hsl(180_50%_30%)]', ring: 'bg-white/15', label: 'Medel' },
-  4: { bg: 'from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)]', ring: 'bg-white/15', label: 'Hög' },
-  5: { bg: 'from-[hsl(142_71%_38%)] to-[hsl(145_70%_28%)]', ring: 'bg-white/15', label: 'Mycket hög' },
+const probColors: Record<number, { tone: string; label: string }> = {
+  1: { tone: 'border-destructive', label: 'Mycket låg' },
+  2: { tone: 'border-status-in-progress', label: 'Låg' },
+  3: { tone: 'border-chart-4', label: 'Medel' },
+  4: { tone: 'border-primary', label: 'Hög' },
+  5: { tone: 'border-status-completed', label: 'Mycket hög' },
 };
 
 export function CrmDashboard() {
@@ -158,26 +156,22 @@ export function CrmDashboard() {
           label="Aktiva offerter"
           value={stats.open.length}
           icon={Briefcase}
-          gradient="bg-gradient-to-br from-[hsl(168_30%_16%)] to-[hsl(168_40%_10%)]"
         />
         <HeroCard
           label="Offertstock"
           value={formatMSEK(stats.pipelineValue)}
           suffix="MSEK"
           icon={TrendingUp}
-          gradient="bg-gradient-to-br from-[hsl(160_55%_36%)] to-[hsl(160_50%_24%)]"
         />
         <HeroCard
           label="Order denna månad"
           value={stats.ordersThisMonth}
           icon={CheckCircle2}
-          gradient="bg-gradient-to-br from-[hsl(142_71%_38%)] to-[hsl(145_70%_28%)]"
         />
         <HeroCard
           label="Win rate 12 mån"
           value={`${stats.winRate.toFixed(0)}%`}
           icon={Percent}
-          gradient="bg-gradient-to-br from-[hsl(180_50%_38%)] to-[hsl(180_55%_24%)]"
         />
       </div>
 
@@ -202,25 +196,25 @@ export function CrmDashboard() {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.05, type: 'spring' as const, stiffness: 300, damping: 26 }}
-                className={`relative overflow-hidden rounded-lg bg-gradient-to-br ${c.bg} px-2.5 py-2 shadow-sm transition-all duration-300 hover:shadow-md group`}
+                className={`border-t-2 ${c.tone} bg-card px-2.5 py-2 group`}
               >
                 <div className="relative z-10">
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-[9px] font-medium text-white/70 uppercase tracking-wide truncate">{c.label}</span>
-                    <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full ${c.ring} text-white text-[9px] font-bold`}>
+                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide truncate">{c.label}</span>
+                    <span className="inline-flex h-5 w-5 items-center justify-center bg-muted text-foreground text-xs">
                       {b.n}
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-baseline gap-1">
-                    <span className="dashboard-metric text-lg leading-none text-white">
+                    <span className="dashboard-metric text-lg leading-none text-foreground">
                       <AnimatedNumber value={b.count} />
                     </span>
-                    <span className="text-[9px] text-white/60">offerter</span>
+                    <span className="text-[9px] text-muted-foreground">offerter</span>
                   </div>
-                  <div className="dashboard-metric mt-0.5 text-sm text-white">{formatSEK(b.value)} kr</div>
-                  <div className="mt-1 h-1 w-full rounded-full bg-white/15 overflow-hidden">
+                  <div className="dashboard-metric mt-0.5 text-sm text-foreground">{formatSEK(b.value)} kr</div>
+                  <div className="mt-1 h-1 w-full rounded-full bg-muted overflow-hidden">
                     <motion.div
-                      className="h-full bg-white/70 rounded-full"
+                      className="h-full bg-primary rounded-full"
                       initial={{ width: 0 }}
                       animate={{ width: `${share}%` }}
                       transition={{ duration: 0.9, ease: 'easeOut' }}
@@ -315,7 +309,7 @@ export function CrmDashboard() {
                           </div>
                           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
                             <motion.div
-                              className="h-full bg-gradient-to-r from-primary to-[hsl(160_55%_50%)] rounded-full"
+                              className="h-full bg-primary rounded-full"
                               initial={{ width: 0 }}
                               animate={{ width: `${pct}%` }}
                               transition={{ duration: 0.8, ease: 'easeOut' }}
