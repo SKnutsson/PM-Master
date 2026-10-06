@@ -11,6 +11,7 @@ import { CrmQuoteSheet } from './CrmQuoteSheet';
 import { formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
 import { cn } from '@/lib/utils';
 import { getQuoteProducts } from '@/lib/quoteProducts';
+import { format } from 'date-fns';
 
 const COLUMNS: { key: string; label: string }[] = [
   { key: 'quote_date', label: 'Datum' },
@@ -45,6 +46,7 @@ function sortValue(q: CrmQuote, key: string): string | number {
 
 export function CrmQuotesView() {
   const { quotes, loading, refresh } = useCrmData();
+  const today = format(new Date(), 'yyyy-MM-dd');
   const [search, setSearch] = useState('');
   const [selectedSalespeople, setSelectedSalespeople] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -189,7 +191,7 @@ export function CrmQuotesView() {
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap font-semibold tabular-nums">{formatSEK(q.amount)}</td>
                   <td className="px-3 py-2 whitespace-nowrap">{q.responsible}</td>
-                  <td className="px-3 py-2 whitespace-nowrap">{q.next_followup || '—'}</td>
+                  <td className={cn('px-3 py-2 whitespace-nowrap', q.next_followup && (q.next_followup < today ? 'followup-overdue' : 'followup-upcoming'))} title={q.next_followup && q.next_followup < today ? 'Uppföljningsdatum passerat' : undefined}>{q.next_followup || '—'}</td>
                   <td className="px-3 py-2">
                     <Badge variant="outline" className={cn('text-xs', statusBadgeClass(q.status))}>{q.status}</Badge>
                   </td>

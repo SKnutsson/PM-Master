@@ -1,7 +1,9 @@
 import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCrmData } from '@/hooks/useCrmData';
+import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
+import { CrmQuoteSheet } from './CrmQuoteSheet';
+import { Button } from '@/components/ui/button';
 import { formatMSEK, formatSEK, SALESPEOPLE } from '@/lib/crmConstants';
 import { TrendingUp, Briefcase, CheckCircle2, Percent, Flame, Users, Clock, ArrowUpRight } from 'lucide-react';
 import { format, startOfMonth, subMonths } from 'date-fns';
@@ -71,7 +73,9 @@ const probColors: Record<number, { tone: string; label: string }> = {
 };
 
 export function CrmDashboard() {
-  const { quotes: allQuotes } = useCrmData();
+  const { quotes: allQuotes, refresh } = useCrmData();
+  const [editing, setEditing] = useState<CrmQuote | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const { canSeeAllSalespeople, linkedSalesperson } = usePermissions();
   const [sellerFilter, setSellerFilter] = useState<string>('all');
 
@@ -101,7 +105,7 @@ export function CrmDashboard() {
     const today = format(new Date(), 'yyyy-MM-dd');
     const followups = open
       .filter((q) => q.next_followup && q.next_followup <= today)
-      .sort((a, b) => (a.next_followup! < b.next_followup! ? -1 : 1));
+      .sort((a, b) => (a.next_followup || '').localeCompare(b.next_followup || ''));
 
     const probBuckets = [1, 2, 3, 4, 5].map((n) => {
       const items = open.filter((q) => q.probability === n);
@@ -184,7 +188,6 @@ export function CrmDashboard() {
       {/* ── ROW 3: Probability buckets — Phase-card style ── */}
       <motion.div variants={itemVariants}>
         <div className="flex items-center gap-2 mb-3">
-          <Flame className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Sannolikhetsöversikt</h2>
         </div>
         <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
@@ -235,7 +238,6 @@ export function CrmDashboard() {
           <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Clock className="h-4 w-4 text-primary" />
                 Offerter att följa upp
               </CardTitle>
               <CardDescription className="text-xs">Försenade uppföljningar sorterade efter datum</CardDescription>
@@ -252,8 +254,9 @@ export function CrmDashboard() {
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.03 }}
-                        className="flex items-center gap-3 px-5 py-3 hover:bg-muted/40 transition-colors cursor-default group"
+                        className="w-full"
                       >
+                        <Button variant="ghost" className="h-auto w-full justify-start gap-3 rounded-none px-5 py-3 text-left font-normal whitespace-normal" aria-label={`Öppna offert ${q.quote_number} – ${q.customer_name}`} onClick={() => { setEditing(q); setSheetOpen(true); }}>
                         <div className="rounded-full p-2 bg-destructive/10 text-destructive shrink-0">
                           <Clock className="h-3.5 w-3.5" />
                         </div>
@@ -267,6 +270,7 @@ export function CrmDashboard() {
                             {q.next_followup}
                           </Badge>
                         </div>
+                        </Button>
                       </motion.div>
                     ))}
                   </AnimatePresence>
@@ -281,7 +285,6 @@ export function CrmDashboard() {
             <Card className="border-border/50 bg-card/90 h-full flex flex-col overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Users className="h-4 w-4 text-primary" />
                   Per säljare
                 </CardTitle>
                 <CardDescription className="text-xs">Aktiv offertstock per person</CardDescription>
@@ -326,6 +329,7 @@ export function CrmDashboard() {
           </motion.div>
         )}
       </div>
+      <CrmQuoteSheet open={sheetOpen} onOpenChange={setSheetOpen} quote={editing} onSaved={refresh} />
     </motion.div>
   );
 }
