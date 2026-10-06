@@ -260,8 +260,11 @@ export function ForecastView() {
               <Button className="gap-1" onClick={async () => {
                 const value = Number(targetInput);
                 if (!targetInput.trim() || !Number.isFinite(value) || value < 0) { toast.error('Ange ett giltigt mål i MSEK'); return; }
-                await setSalesTarget(selectedPeriod === 'rolling12' ? new Date().getFullYear() : Number(selectedPeriod), value);
-                setEditingTarget(false);
+                try {
+                  await setSalesTarget(selectedPeriod === 'rolling12' ? new Date().getFullYear() : Number(selectedPeriod), value);
+                  setEditingTarget(false);
+                  toast.success('Årsmål sparat');
+                } catch { toast.error('Kunde inte spara årsmålet'); }
               }}><Save className="h-4 w-4" />Spara mål</Button>
               <Button variant="outline" onClick={() => setEditingTarget(false)}>Avbryt</Button>
             </div>
