@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Search, ChevronDown } from 'lucide-react';
+import { Plus, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,37 @@ import { formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants'
 import { cn } from '@/lib/utils';
 import { getQuoteProducts } from '@/lib/quoteProducts';
 
+const COLUMNS: { key: string; label: string }[] = [
+  { key: 'quote_date', label: 'Datum' },
+  { key: 'source_updated_date', label: 'Uppd.' },
+  { key: 'salesperson', label: 'Säljare' },
+  { key: 'customer_name', label: 'Kund' },
+  { key: 'country', label: 'Land' },
+  { key: 'city', label: 'Ort' },
+  { key: 'quote_number', label: 'Offert nr' },
+  { key: 'product', label: 'Produkt' },
+  { key: 'quantity_spec', label: 'Antal/Spec' },
+  { key: 'delivery_time', label: 'Lev. tid' },
+  { key: 'prescriber', label: 'Föresk.' },
+  { key: 'probability', label: 'Sannol.' },
+  { key: 'amount', label: 'Belopp' },
+  { key: 'responsible', label: 'Ansvarig' },
+  { key: 'next_followup', label: 'Uppföljning' },
+  { key: 'status', label: 'Status' },
+  { key: 'comment', label: 'Kommentar' },
+];
+
+function sortValue(q: CrmQuote, key: string): string | number {
+  switch (key) {
+    case 'product':
+      return getQuoteProducts(q).map((p) => p.product).join(', ');
+    case 'prescriber':
+      return q.prescriber ? 1 : 0;
+    default:
+      return (q as unknown as Record<string, string | number>)[key] ?? '';
+  }
+}
+
 export function CrmQuotesView() {
   const { quotes, loading, refresh } = useCrmData();
   const [search, setSearch] = useState('');
@@ -22,6 +53,8 @@ export function CrmQuotesView() {
   const [country, setCountry] = useState<string>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<CrmQuote | null>(null);
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   const salespeople = useMemo(() => [...new Set(quotes.map((q) => q.salesperson).filter(Boolean))].sort(), [quotes]);
   const statuses = useMemo(() => [...new Set(quotes.map((q) => q.status).filter(Boolean))].sort(), [quotes]);
@@ -43,6 +76,26 @@ export function CrmQuotesView() {
       return true;
     });
   }, [quotes, selectedSalespeople, selectedStatuses, selectedProducts, probabilities, country, search]);
+
+  const sorted = useMemo(() => {
+    if (!sortKey) return filtered;
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      const av = sortValue(a, sortKey);
+      const bv = sortValue(b, sortKey);
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? ''), 'sv') * dir;
+    });
+  }, [filtered, sortKey, sortDir]);
+
+  const toggleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
 
   const openNew = () => { setEditing(null); setSheetOpen(true); };
   const openEdit = (q: CrmQuote) => { setEditing(q); setSheetOpen(true); };
@@ -96,15 +149,25 @@ export function CrmQuotesView() {
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
-                {['Datum', 'Uppd.', 'Säljare', 'Kund', 'Land', 'Ort', 'Offert nr', 'Produkt', 'Antal/Spec', 'Lev. tid', 'Föresk.', 'Sannol.', 'Belopp', 'Ansvarig', 'Uppföljning', 'Status', 'Kommentar'].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium whitespace-nowrap">{h}</th>
+                {COLUMNS.map((c) => (
+                  <th
+                    key={c.key}
+                    onClick={() => toggleSort(c.key)}
+                    className="px-3 py-2 text-left font-medium whitespace-nowrap cursor-pointer select-none hover:text-foreground transition-colors"
+                    title="Klicka för att sortera"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {c.label}
+                      {sortKey === c.key && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                    </span>
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading && <tr><td colSpan={17} className="p-8 text-center text-muted-foreground">Laddar…</td></tr>}
               {!loading && filtered.length === 0 && <tr><td colSpan={17} className="p-8 text-center text-muted-foreground">Inga offerter matchar filtren.</td></tr>}
-              {filtered.map((q) => (
+              {sorted.map((q) => (
                 <tr
                   key={q.id}
                   onClick={() => openEdit(q)}
