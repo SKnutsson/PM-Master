@@ -1,5 +1,10 @@
 # Roadmap
 
+- [ ] Apply stripped-down reference theme throughout workspace tabs.
+- [ ] Simplify forecast summary and make the annual target clearly editable.
+- [ ] Add selectable quote product groups with separate amounts and update product analytics.
+- [ ] Verify workflows and address current workspace security findings.
+
 - [x] Uppercase headings and apply Bebas Neue to dashboard metrics.
 - [x] Compact project rows and add rectangular product labels (40px desktop rows verified).
 - [x] Allow multiple probability selections in all quotes and verify filtering (4 + 5 returns 105 offers; reset returns 525).
