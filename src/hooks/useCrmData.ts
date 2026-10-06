@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
+import type { ProductAllocation } from '@/lib/quoteProducts';
 
 
 export interface CrmQuote {
@@ -16,6 +17,7 @@ export interface CrmQuote {
   city: string | null;
   project_arena: string;
   product: string;
+  product_allocations: ProductAllocation[] | null;
   quantity_spec: string;
   amount: number;
   delivery_time: string;
