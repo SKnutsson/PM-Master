@@ -207,7 +207,8 @@ export function DocumentationPlanView() {
   );
 
   const renderProjectList = (projectList: typeof projects, isArchivedSection: boolean) => (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="reference-list">
+      <div className="list-heading flex items-center justify-between px-4"><span>Projekt</span><span>Dokument / Åtgärd</span></div>
       {projectList.map(project => {
         const projectItems = filteredItems.filter(i => i.project_id === project.id);
         const allProjectItems = items.filter(i => i.project_id === project.id);
@@ -216,7 +217,7 @@ export function DocumentationPlanView() {
 
         return (
           <Card key={project.id} className={cn(
-            "group transition-all border-border/60 hover:border-primary/30 hover:shadow-sm overflow-hidden",
+            "list-record group overflow-hidden",
             hasOverdue && "border-destructive/40",
             isArchivedSection && "opacity-75",
             isExpanded && "border-primary/40 shadow-sm"
@@ -249,7 +250,7 @@ export function DocumentationPlanView() {
                         {statusFilter !== 'all' ? 'Inga dokument matchar filtret' : 'Inga dokument tillagda ännu'}
                       </p>
                     ) : (
-                      <div className="border rounded-md overflow-hidden">
+                      <div className="reference-list">
                         <table className="w-full text-sm table-fixed">
                           <thead>
                             <tr className="bg-muted/50 text-muted-foreground text-xs">
@@ -342,7 +343,7 @@ export function DocumentationPlanView() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-4 max-w-[1400px]">
+    <div className="list-page p-4 md:p-6 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>

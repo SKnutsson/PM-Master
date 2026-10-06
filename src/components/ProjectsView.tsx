@@ -149,7 +149,7 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
   return (
     <motion.div variants={itemVariants}>
       <Card className={cn(
-        "group transition-all border-border/60 hover:border-primary/30 hover:shadow-sm overflow-hidden",
+        "list-record group overflow-hidden",
         isArchived && "opacity-75",
         isExpanded && "border-primary/40 shadow-sm"
       )}>
@@ -157,13 +157,13 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
           className="py-3 px-4 cursor-pointer select-none"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          <div className="grid items-center gap-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_auto]">
+          <div className="grid items-center gap-3 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_112px]">
             {/* Title */}
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-primary/70 shrink-0">
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               </span>
-              <span className="text-xs font-mono text-muted-foreground tracking-wide shrink-0">
+              <span className="text-xs font-mono text-primary tracking-wide shrink-0">
                 {project.code}
               </span>
               <span className="font-semibold text-sm truncate">
@@ -185,26 +185,26 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
             {/* Actions */}
             <div className="flex items-center gap-0.5 shrink-0 justify-end">
               {!isArchived && (
-                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleStartEdit} title="Redigera">
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleStartEdit} title="Redigera">
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
               )}
               {isArchived ? (
-                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleRestore} title="Återställ">
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleRestore} title="Återställ">
                   <RotateCcw className="h-3.5 w-3.5" />
                 </Button>
               ) : (
-                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleArchive} title="Arkivera">
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleArchive} title="Arkivera">
                   <Archive className="h-3.5 w-3.5" />
                 </Button>
               )}
               {isAdmin && (
-                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleGenerateReport} disabled={generatingReport} title="Ladda ner PDF-rapport">
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-100 transition-opacity text-muted-foreground hover:text-primary" onClick={handleGenerateReport} disabled={generatingReport} title="Ladda ner PDF-rapport">
                   {generatingReport ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileDown className="h-3.5 w-3.5" />}
                 </Button>
               )}
               {isAdmin && (
-                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleOpenDelete} title="Ta bort projekt (permanent)">
+                <Button size="icon" variant="ghost" className="h-7 w-7 opacity-100 transition-opacity text-muted-foreground hover:text-destructive" onClick={handleOpenDelete} title="Ta bort projekt (permanent)">
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               )}
@@ -317,7 +317,7 @@ function ProjectCard({ project, onDeleteProject, onArchiveProject, onRestoreProj
               Radera projekt permanent?
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-2">
+              <div className="reference-list">
                 <p>
                   Du är på väg att radera <strong>{project.code} – {project.name}</strong> och
                   <strong> all tillhörande data</strong> (aktiviteter, resursplan, dokumentation, ÄTA, avvikelser, KPI).
@@ -369,10 +369,10 @@ export function ProjectsView() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-2"
+      className="reference-list"
     >
       {projectList.length > 0 && (
-        <div className="hidden lg:grid items-center gap-3 px-4 py-1.5 grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_auto] text-[10px] uppercase tracking-wider text-muted-foreground/70 font-medium">
+        <div className="list-heading hidden lg:grid items-center gap-3 px-4 py-3 grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))_112px]">
           <div className="pl-6">Projekt</div>
           <div>Kund</div>
           <div>Produkt</div>
@@ -406,7 +406,7 @@ export function ProjectsView() {
   );
 
   return (
-    <div className="p-4 md:p-6 space-y-4 max-w-[1400px]">
+    <div className="list-page p-4 md:p-6 space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Projekt</h1>
