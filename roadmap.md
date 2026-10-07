@@ -1,7 +1,7 @@
 # Roadmap
 
-- [ ] Simplify login branding and allow existing email/password users only; verify public signup is disabled.
-- [ ] Secure sales targets, quote comments and installers while preserving workspace collaboration.
+- [x] Simplify login branding and allow existing email/password users only; verified Bebas Neue rendering, no Google/signup controls, hosted signup disabled and email login enabled.
+- [x] Secure sales targets, quote comments and installers while preserving workspace collaboration; live policies verified.
 
 - [x] Open follow-up quotes from CRM dashboard and color overdue follow-up dates (matching quote opened; 352 overdue and 27 upcoming cells verified).
 - [x] Remove dashboard heading icons and use rectangular colored forecast statuses (no heading icons; 40 rectangular status labels verified).
