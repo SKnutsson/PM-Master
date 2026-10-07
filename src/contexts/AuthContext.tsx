@@ -12,7 +12,6 @@ interface AuthContextType {
   mfaRequired: boolean;
   mfaEnrolled: boolean;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null; mfaRequired?: boolean }>;
-  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   verifyMfaCode: (code: string, factorId: string) => Promise<{ error: AuthError | null }>;
   enrollMfa: () => Promise<{ qrCode: string; secret: string; factorId: string } | { error: AuthError }>;
@@ -124,20 +123,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
-    });
-
-    return { error };
-  };
-
   const signOut = async () => {
     clearSessionMarkers();
     await supabase.auth.signOut();
@@ -222,7 +207,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mfaRequired,
       mfaEnrolled,
       signIn,
-      signUp,
       signOut,
       verifyMfaCode,
       enrollMfa,
