@@ -358,3 +358,6 @@ main h2[class] { font-size: 1.5rem; line-height: 1.2; }
 .workspace-theme h3 { font-size: 1.25rem; line-height: 1.2; }
 .workspace-theme label { text-transform: uppercase; letter-spacing: 0; }
 .workspace-theme .tracking-wider, .workspace-theme .tracking-wide, .workspace-theme .tracking-tight { letter-spacing: 0; }
+
+.auth-brand-panel { background: hsl(var(--sidebar-background)); color: hsl(var(--sidebar-foreground)); }
+.auth-brand-title { font-family: "Bebas Neue", var(--font-sans); font-weight: 400; letter-spacing: 0; }
