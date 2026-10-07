@@ -1,0 +1,18 @@
+ALTER TABLE public.sales_targets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.crm_quote_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.installers ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.sales_targets, public.crm_quote_comments, public.installers FROM anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.sales_targets, public.crm_quote_comments, public.installers TO authenticated;
+GRANT ALL ON public.sales_targets, public.crm_quote_comments, public.installers TO service_role;
+ALTER POLICY "Authenticated can read sales_targets" ON public.sales_targets TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated can insert sales_targets" ON public.sales_targets TO authenticated WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated can update sales_targets" ON public.sales_targets TO authenticated USING (public.has_workspace_profile(auth.uid())) WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated can delete sales_targets" ON public.sales_targets TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "auth read crm_quote_comments" ON public.crm_quote_comments TO authenticated USING (public.has_workspace_profile(auth.uid()) AND public.can_access_crm(auth.uid()));
+ALTER POLICY "auth insert crm_quote_comments" ON public.crm_quote_comments TO authenticated WITH CHECK (public.has_workspace_profile(auth.uid()) AND public.can_access_crm(auth.uid()));
+ALTER POLICY "auth update crm_quote_comments" ON public.crm_quote_comments TO authenticated USING (public.has_workspace_profile(auth.uid()) AND public.can_access_crm(auth.uid())) WITH CHECK (public.has_workspace_profile(auth.uid()) AND public.can_access_crm(auth.uid()));
+ALTER POLICY "auth delete crm_quote_comments" ON public.crm_quote_comments TO authenticated USING (public.has_workspace_profile(auth.uid()) AND public.can_access_crm(auth.uid()));
+ALTER POLICY "Authenticated can read installers" ON public.installers TO authenticated USING (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated can insert installers" ON public.installers TO authenticated WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated can update installers" ON public.installers TO authenticated USING (public.has_workspace_profile(auth.uid())) WITH CHECK (public.has_workspace_profile(auth.uid()));
+ALTER POLICY "Authenticated can delete installers" ON public.installers TO authenticated USING (public.has_workspace_profile(auth.uid()));
