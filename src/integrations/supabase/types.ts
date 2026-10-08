@@ -285,6 +285,7 @@ export type Database = {
           product: string | null
           product_allocations: Json | null
           project_arena: string | null
+          project_id: string | null
           quantity_spec: string | null
           quote_date: string
           quote_number: string
@@ -316,6 +317,7 @@ export type Database = {
           product?: string | null
           product_allocations?: Json | null
           project_arena?: string | null
+          project_id?: string | null
           quantity_spec?: string | null
           quote_date?: string
           quote_number: string
@@ -347,6 +349,7 @@ export type Database = {
           product?: string | null
           product_allocations?: Json | null
           project_arena?: string | null
+          project_id?: string | null
           quantity_spec?: string | null
           quote_date?: string
           quote_number?: string
@@ -363,6 +366,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "crm_customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_quotes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]

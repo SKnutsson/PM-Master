@@ -242,13 +242,13 @@ export function CrmDashboard() {
               </CardTitle>
               <CardDescription className="text-xs">Försenade uppföljningar sorterade efter datum</CardDescription>
             </CardHeader>
-            <CardContent className="p-0 flex-1 overflow-auto">
+            <CardContent className="p-0 flex-1 overflow-y-auto max-h-[560px]">
               {stats.followups.length === 0 ? (
                 <p className="px-6 py-8 text-center text-sm text-muted-foreground italic">Inga försenade uppföljningar 🎉</p>
               ) : (
                 <div className="divide-y divide-border/30">
                   <AnimatePresence>
-                    {stats.followups.slice(0, 12).map((q, idx) => (
+                    {stats.followups.map((q, idx) => (
                       <motion.div
                         key={q.id}
                         initial={{ opacity: 0, x: -8 }}
