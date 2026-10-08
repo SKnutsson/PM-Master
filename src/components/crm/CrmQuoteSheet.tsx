@@ -60,6 +60,9 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
   const [pendingPdfDelete, setPendingPdfDelete] = useState<string[]>([]);
   const [productRows, setProductRows] = useState<ProductAllocation[]>([]);
   const [productsChanged, setProductsChanged] = useState(false);
+  const [projects, setProjects] = useState<{ id: string; name: string; code: string | null; status: string }[]>([]);
+  const [projectCode, setProjectCode] = useState('');
+  const [createProject, setCreateProject] = useState(false);
 
   useEffect(() => {
     setForm(quote ? { ...quote } : emptyQuote());
@@ -67,6 +70,11 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
     setPendingPdfDelete([]);
     setProductRows(quote ? getQuoteProducts(quote) : [{ product: '', amount: 0 }]);
     setProductsChanged(false);
+    setProjectCode('');
+    setCreateProject(false);
+    if (open) {
+      supabase.from('projects').select('id, name, code, status').order('code', { ascending: false }).then(({ data }) => setProjects((data as any) || []));
+    }
   }, [quote, open]);
 
   const upd = (k: keyof CrmQuote, v: any) => setForm((f) => ({ ...f, [k]: v }));
@@ -112,8 +120,28 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       contact_email: form.contact_email || null,
       pdf_path: form.pdf_path || null,
       pdf_name: form.pdf_name || null,
+      project_id: form.project_id || null,
     };
     if (form.quote_number) payload.quote_number = form.quote_number;
+
+    if (payload.status === 'Order' && !payload.project_id && createProject) {
+      if (!projectCode.trim()) { setSaving(false); toast.error('Ange projektnummer för att skapa projektet'); return; }
+      const { data: maxRow } = await supabase.from('projects').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle();
+      const { data: created, error: projectError } = await supabase.from('projects').insert({
+        name: payload.project_arena || payload.customer_name || 'Nytt projekt',
+        customer: payload.customer_name || '',
+        code: projectCode.trim(),
+        department: 'Projektledare',
+        status: 'Pågår',
+        sales_person: payload.salesperson || null,
+        product: payload.product || null,
+        address: payload.city || null,
+        sort_order: (maxRow?.sort_order ?? 0) + 1,
+      }).select('id').single();
+      if (projectError || !created) { setSaving(false); toast.error('Kunde inte skapa projekt: ' + (projectError?.message || '')); return; }
+      payload.project_id = created.id;
+      toast.success(`Projekt ${projectCode.trim()} skapat i PM Master`);
+    }
 
     const res = quote
       ? await supabase.from('crm_quotes').update(payload).eq('id', quote.id)
@@ -215,6 +243,24 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
                 <SelectContent>{QUOTE_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
+            <Field label="Kopplat projekt i PM Master">
+              <Select value={form.project_id || '__none__'} onValueChange={(v) => { upd('project_id', v === '__none__' ? null : v); if (v !== '__none__') setCreateProject(false); }}>
+                <SelectTrigger aria-label="Kopplat projekt"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Inget kopplat projekt</SelectItem>
+                  {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.code ? `${p.code} – ` : ''}{p.name}{p.status === 'Avslutat' ? ' (arkiverat)' : ''}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
+            {form.status === 'Order' && !form.project_id && (
+              <div className="space-y-3 border-l-2 border-primary bg-muted/30 p-3">
+                <Field label="Projektnummer"><Input inputMode="numeric" placeholder="t.ex. 10081" value={projectCode} onChange={(e) => setProjectCode(e.target.value)} /></Field>
+                <label className="flex items-center gap-3 text-sm">
+                  <Switch checked={createProject} onCheckedChange={setCreateProject} aria-label="Skapa projekt i PM Master" />
+                  Skapa projekt i PM Master när offerten sparas
+                </label>
+              </div>
+            )}
             <Field label="Ny kommentar">
               <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Skriv en ny daterad kommentar" rows={4} />
             </Field>

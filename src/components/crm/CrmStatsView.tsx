@@ -11,7 +11,8 @@ import { formatSEK, SALESPEOPLE } from '@/lib/crmConstants';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Briefcase, TrendingUp, Percent, Trophy } from 'lucide-react';
+import { Briefcase, TrendingUp, Percent, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getQuoteProducts } from '@/lib/quoteProducts';
 
@@ -40,6 +41,10 @@ export function CrmStatsView() {
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [sellerFilter, setSellerFilter] = useState<string>('all');
+  const yearMatch = /^(\d{4})-01-01$/.exec(from);
+  const yearShown = yearMatch && to === `${yearMatch[1]}-12-31` ? Number(yearMatch[1]) : null;
+  const isRolling = from === defaultFrom && to === defaultTo;
+  const setYear = (y: number) => { setFrom(`${y}-01-01`); setTo(`${y}-12-31`); };
 
   // Enforce own-data-only for users without manager privileges
   useEffect(() => {
@@ -166,6 +171,15 @@ export function CrmStatsView() {
               Visar endast: <span className="font-semibold">{linkedSalesperson}</span>
             </div>
           )}
+          <div>
+            <Label className="text-xs">Period</Label>
+            <div className="flex h-10 items-center gap-1">
+              <Button variant="outline" size="icon" aria-label="Föregående år" onClick={() => setYear((yearShown ?? new Date().getFullYear()) - 1)}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant={yearShown !== null ? 'default' : 'outline'} className="min-w-[72px]" onClick={() => setYear(yearShown ?? new Date().getFullYear())}>{yearShown ?? 'År'}</Button>
+              <Button variant="outline" size="icon" aria-label="Nästa år" onClick={() => setYear((yearShown ?? new Date().getFullYear()) + 1)}><ChevronRight className="h-4 w-4" /></Button>
+              <Button variant={isRolling ? 'default' : 'outline'} onClick={() => { setFrom(defaultFrom); setTo(defaultTo); }}>Rullande 12 mån</Button>
+            </div>
+          </div>
           <div>
             <Label className="text-xs">Från</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
