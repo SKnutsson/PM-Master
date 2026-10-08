@@ -113,6 +113,13 @@
       "when": 1791348363992,
       "tag": "0015_scope_login_workspace_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791454831143,
+      "tag": "0016_quote_project_link_and_scope_policies",
+      "breakpoints": true
     }
   ]
 }
