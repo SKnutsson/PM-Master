@@ -9,3 +9,4 @@
 - Use a security-definer workspace-profile check for shared profile reads to avoid recursive profile policies while keeping collaboration limited to workspace members.
 
 - Keep the landing entry delegated to the shared authentication screen and enforce disabled public signup in hosted auth settings, not just hidden controls, to prevent alternate registration paths.
+- Link CRM quotes to PM Master projects via crm_quotes.project_id (nullable, set null on project delete) so archived projects keep their quote link.
