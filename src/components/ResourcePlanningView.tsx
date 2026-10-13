@@ -319,15 +319,27 @@ export function ResourcePlanningView() {
       const totalH = entry ? entry.plannedWorkHours + entry.plannedTravelHours : 0;
       const cellKey = `${projectInstallerId}|${day.dateStr}`;
       const isDropTarget = dropTargetKey === cellKey && dragEntryId !== null;
+      const inSel = !!sel && sel.piId === projectInstallerId && i >= Math.min(sel.start, sel.end) && i <= Math.max(sel.start, sel.end);
       return (
         <div
           key={i}
           className={cn(
-            'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors',
+            'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors select-none',
             isWeekend && 'bg-muted/40',
-            isDropTarget && 'bg-primary/20 ring-1 ring-inset ring-primary'
+            isDropTarget && 'bg-primary/20 ring-1 ring-inset ring-primary',
+            inSel && 'bg-primary/25 ring-1 ring-inset ring-primary'
           )}
           style={{ width: colWidth, minWidth: colWidth }}
+          onMouseDown={(e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            setMenuPos(null);
+            setSelecting(true);
+            setSel({ piId: projectInstallerId, projectId, installerId: installerId || null, start: i, end: i });
+          }}
+          onMouseEnter={() => {
+            if (selecting && sel?.piId === projectInstallerId) setSel({ ...sel, end: i });
+          }}
           onDragOver={(e) => {
             if (!dragEntryId) return;
             e.preventDefault();
@@ -354,8 +366,8 @@ export function ResourcePlanningView() {
             } catch {
               toast.error('Kunde inte flytta tiden');
             }
-          }}
-          onClick={() => openDailyDialog(projectId, day.dateStr, projectInstallerId)}>
+          }}>
+
 
           {entry && totalH > 0 &&
           <Tooltip>
