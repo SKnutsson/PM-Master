@@ -373,8 +373,9 @@ export function ResourcePlanningView() {
           <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className={cn('absolute inset-0.5 flex flex-col gap-px cursor-grab active:cursor-grabbing', dragEntryId === entry.id && 'opacity-40')}
+                  className={cn('absolute inset-0.5 flex flex-col gap-px cursor-grab active:cursor-grabbing', dragEntryId === entry.id && 'opacity-40', entry.isPreliminary && 'opacity-70 outline-dashed outline-1 outline-foreground/60 rounded-sm')}
                   draggable
+                  onMouseDown={(e) => e.stopPropagation()}
                   onDragStart={(e) => {
                     e.stopPropagation();
                     e.dataTransfer.effectAllowed = 'copyMove';
@@ -382,11 +383,15 @@ export function ResourcePlanningView() {
                     setDragEntryId(entry.id);
                   }}
                   onDragEnd={() => { setDragEntryId(null); setDropTargetKey(null); setDragCopy(false); }}
-                  onClick={(e) => e.stopPropagation()}
-                  onDoubleClick={() => openDailyDialog(projectId, day.dateStr, projectInstallerId)}>
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSel({ piId: projectInstallerId, projectId, installerId: installerId || null, start: i, end: i });
+                    setMenuPos({ x: e.clientX, y: e.clientY });
+                  }}
+                  onDoubleClick={() => { setMenuPos(null); setSel(null); openDailyDialog(projectId, day.dateStr, projectInstallerId); }}>
                   {entry.plannedWorkHours > 0 &&
-                <div className={cn('flex-1 rounded-sm flex items-center justify-center', getBarColor(status))}>
-                      <span className="text-[8px] font-bold text-white">{entry.plannedWorkHours}h</span>
+                <div className={cn('flex-1 rounded-sm flex items-center justify-center', getBarColor(status), entry.isPreliminary && 'bg-stripes')}>
+                      <span className="text-[8px] font-bold text-white">{entry.isPreliminary ? 'P ' : ''}{entry.plannedWorkHours}h</span>
                     </div>
                 }
                   {entry.plannedTravelHours > 0 &&
@@ -397,10 +402,10 @@ export function ResourcePlanningView() {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
-                <p>{entry.installerName} – {day.dateStr}</p>
+                <p>{entry.installerName} – {day.dateStr}{entry.isPreliminary ? ' · PRELIMINÄR' : ''}</p>
                 <p>Arbete: {entry.plannedWorkHours}h</p>
                 <p>Resa: {entry.plannedTravelHours}h</p>
-                <p className="text-muted-foreground mt-1">Dra för att flytta • Ctrl+dra för att kopiera • dubbelklicka för att redigera</p>
+                <p className="text-muted-foreground mt-1">Klicka för snabbval • Dra för att flytta • Ctrl+dra för att kopiera • dubbelklicka för detaljer</p>
               </TooltipContent>
             </Tooltip>
           }
