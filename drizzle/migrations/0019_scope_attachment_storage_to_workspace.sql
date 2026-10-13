@@ -1,0 +1,12 @@
+DROP POLICY IF EXISTS "ata read" ON storage.objects;
+DROP POLICY IF EXISTS "ata update" ON storage.objects;
+DROP POLICY IF EXISTS "ata delete" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated can read project review attachments" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated can update project review attachments" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated can delete project review attachments" ON storage.objects;
+CREATE POLICY "Workspace members read ata attachments" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'ata-attachments' AND public.has_workspace_profile((select auth.uid())));
+CREATE POLICY "Workspace members update ata attachments" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'ata-attachments' AND public.has_workspace_profile((select auth.uid())));
+CREATE POLICY "Workspace members delete ata attachments" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'ata-attachments' AND public.has_workspace_profile((select auth.uid())));
+CREATE POLICY "Workspace members read review attachments" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'project-review-attachments' AND public.has_workspace_profile((select auth.uid())));
+CREATE POLICY "Workspace members update review attachments" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'project-review-attachments' AND public.has_workspace_profile((select auth.uid())));
+CREATE POLICY "Workspace members delete review attachments" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'project-review-attachments' AND public.has_workspace_profile((select auth.uid())));

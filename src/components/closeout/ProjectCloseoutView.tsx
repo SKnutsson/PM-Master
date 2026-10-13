@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { FileDown, Archive, Plus, Trash2 } from 'lucide-react';
+import { FileDown, Archive, Plus, Trash2, CircleCheck, CircleAlert, ShieldCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type Deviation = { description: string; type: string; amount: string };
 type CloseoutData = {
@@ -122,11 +123,32 @@ export function ProjectCloseoutView() {
 
   const sorted = useMemo(() => [...projects].sort((a, b) => (a.code ?? '').localeCompare(b.code ?? '', 'sv', { numeric: true })), [projects]);
 
+  const [active, setActive] = useState('deviations');
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const keys = [...CLOSEOUT_SECTIONS.map(s => s.key), 'signoff'];
+    const onScroll = () => {
+      let cur = keys[0];
+      for (const k of keys) {
+        const n = document.getElementById(`co-${k}`);
+        if (n && n.getBoundingClientRect().top - el.getBoundingClientRect().top <= 96) cur = k;
+      }
+      setActive(cur);
+    };
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [loaded, projectId]);
+  const goTo = (k: string) => document.getElementById(`co-${k}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
   return (
-    <div className="list-page p-6 space-y-4">
+    <div className="flex h-full flex-col">
+    <div className="list-page px-6 pt-6 pb-3 space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="list-heading text-3xl uppercase">Projektavslut</h1>
+          <h1 className="text-3xl">Projektavslut</h1>
           <p className="text-sm text-muted-foreground uppercase">Avvikelser, besiktning, efterkalkyl, erfarenheter och sign-off</p>
         </div>
         <div className="flex gap-2 items-center">
@@ -142,8 +164,28 @@ export function ProjectCloseoutView() {
 
       {!project && <p className="text-sm text-muted-foreground">Välj ett projekt för att starta projektavslutet.</p>}
 
+      </div>
       {project && loaded && (
-        <>
+        <div className="flex flex-1 overflow-hidden border-t">
+          <aside className="hidden w-60 shrink-0 overflow-y-auto border-r bg-muted/30 p-3 lg:block">
+            <p className="mb-2 px-2 text-[11px] font-semibold uppercase text-muted-foreground">Innehåll</p>
+            <nav className="space-y-0.5">
+              {CLOSEOUT_SECTIONS.map(s => {
+                const ok = s.items.every(i => data.checks[i.key]);
+                return (
+                  <button key={s.key} onClick={() => goTo(s.key)} className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent', active === s.key && 'bg-primary/10 font-semibold text-primary ring-1 ring-primary/30')}>
+                    {ok ? <CircleCheck className="h-3.5 w-3.5 shrink-0 text-status-completed" /> : <CircleAlert className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                    <span className="truncate">{s.title.replace(/^\d+\.\s*/, '')}</span>
+                  </button>
+                );
+              })}
+              <div className="my-2 border-t" />
+              <button onClick={() => goTo('signoff')} className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs font-medium transition-colors hover:bg-accent', active === 'signoff' && 'bg-primary/10 text-primary ring-1 ring-primary/30')}>
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-primary" />Slutlig sign-off
+              </button>
+            </nav>
+          </aside>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div className="workspace-card border p-3 flex items-center gap-4">
             <span className="text-sm uppercase font-medium">Klart</span>
             <div className="flex-1 h-2 bg-muted"><div className="h-2 bg-primary" style={{ width: `${percent}%` }} /></div>
@@ -151,7 +193,7 @@ export function ProjectCloseoutView() {
           </div>
 
           {CLOSEOUT_SECTIONS.map(s => (
-            <section key={s.key} className="workspace-card border">
+            <section key={s.key} id={`co-${s.key}`} className="workspace-card border scroll-mt-4">
               <h2 className="bg-[hsl(var(--list-header))] text-primary-foreground px-3 py-2 text-sm uppercase tracking-wide">{s.title}</h2>
               <div className="p-3 space-y-2">
                 {s.items.map(i => (
@@ -190,7 +232,7 @@ export function ProjectCloseoutView() {
             </section>
           ))}
 
-          <section className="workspace-card border">
+          <section id="co-signoff" className="workspace-card border scroll-mt-4">
             <h2 className="bg-[hsl(var(--list-header))] text-primary-foreground px-3 py-2 text-sm uppercase tracking-wide">5. Slutlig sign-off</h2>
             <div className="p-3 flex flex-wrap items-center gap-3">
               {signed.signed_off ? (
@@ -207,7 +249,8 @@ export function ProjectCloseoutView() {
               )}
             </div>
           </section>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

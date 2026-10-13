@@ -134,6 +134,13 @@
       "when": 1791886662691,
       "tag": "0018_project_closeouts_and_scope_services",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791893494938,
+      "tag": "0019_scope_attachment_storage_to_workspace",
+      "breakpoints": true
     }
   ]
 }

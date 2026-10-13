@@ -74,7 +74,14 @@ export function useProjectReview(projectId: string | null) {
 
   const template: ReviewTemplate = useMemo(() => {
     if (review?.template_snapshot?.length) {
-      return { ...DEFAULT_REVIEW_TEMPLATE, sections: review.template_snapshot as ReviewSection[], version: review.template_version };
+      const snap = [...(review.template_snapshot as ReviewSection[])];
+      // Nya avsnitt (t.ex. Fixturer) läggs till i befintliga genomgångar utan att ändra övriga avsnitt
+      if (!snap.some(s => s.key === 'fixtures')) {
+        const fx = DEFAULT_REVIEW_TEMPLATE.sections.find(s => s.key === 'fixtures');
+        const idx = snap.findIndex(s => s.key === 'technical');
+        if (fx) snap.splice(idx >= 0 ? idx + 1 : snap.length, 0, fx);
+      }
+      return { ...DEFAULT_REVIEW_TEMPLATE, sections: snap, version: review.template_version };
     }
     return DEFAULT_REVIEW_TEMPLATE;
   }, [review]);
