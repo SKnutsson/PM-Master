@@ -34,7 +34,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 export type View =
   | 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources'
   | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks'
-  | 'services' | 'project-review'
+  | 'services' | 'project-review' | 'project-closeout'
   | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats';
 
 interface SidebarProps {
@@ -43,10 +43,12 @@ interface SidebarProps {
 }
 
 const pmTopItems = [{ id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard }];
-const pmMainItems = [
-  { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
+const projectSubItems = [
+  { id: 'projects' as View, label: 'Alla projekt', icon: FolderKanban },
   { id: 'project-review' as View, label: 'Projektgenomgång', icon: ClipboardCheck },
-  { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
+  { id: 'project-closeout' as View, label: 'Projektavslut', icon: Flag },
+];
+const pmMainItems = [
   { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
@@ -62,7 +64,10 @@ const crmMainItems = [
   { id: 'crm-stats' as View, label: 'Statistik', icon: PieChart },
 ];
 
-const bottomNavItems = [{ id: 'profile' as View, label: 'Profil', icon: UserCircle }];
+const bottomNavItems = [
+  { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
+  { id: 'profile' as View, label: 'Profil', icon: UserCircle },
+];
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
