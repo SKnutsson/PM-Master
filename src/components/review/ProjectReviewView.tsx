@@ -246,9 +246,9 @@ export function ProjectReviewView() {
       {/* Top bar */}
       <div className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur px-6 py-3">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <ClipboardCheck className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-semibold">Projektgenomgång</h1>
+          <div className="mr-2">
+            <h1 className="text-3xl">Projektgenomgång</h1>
+            <p className="text-sm uppercase text-muted-foreground">Kontrakt, teknik, tidplan, öppna punkter och sign-off</p>
           </div>
           {projectId && (
             <Button size="sm" variant="ghost" className="gap-2 h-9" onClick={() => { setProjectId(''); reloadOverview(); }}>
@@ -419,16 +419,16 @@ export function ProjectReviewView() {
                 const acked = isSectionAcked(s.key);
                 const done = filled || acked;
                 return (
-                  <AccordionItem key={s.key} value={s.key} id={`sec-${s.key}`} className="rounded-lg border bg-card px-4">
-                    <AccordionTrigger className="py-3 hover:no-underline">
+                  <AccordionItem key={s.key} value={s.key} id={`sec-${s.key}`} className="workspace-card overflow-hidden border bg-card">
+                    <AccordionTrigger className="bg-[hsl(var(--list-header))] px-4 py-2 text-[hsl(var(--list-header-foreground))] hover:no-underline">
                       <div className="flex flex-1 items-center gap-2 pr-3">
-                        <span className="text-sm font-semibold">{s.title}</span>
+                        <span className="text-sm font-semibold uppercase">{s.title}</span>
                         {done
                           ? <Badge className="bg-status-completed/15 text-status-completed border-status-completed/30 text-[10px]">
                               {filled ? 'Genomgången' : 'Genomgången (utan noteringar)'}
                             </Badge>
-                          : <Badge variant="outline" className="text-[10px] text-muted-foreground">Ej komplett</Badge>}
-                        {s.kind === 'table' && <span className="text-[11px] text-muted-foreground">{sectionRows(s.key).length} rader</span>}
+                          : <Badge variant="outline" className="text-[10px] text-[hsl(var(--list-header-foreground))] opacity-70">Ej komplett</Badge>}
+                        {s.kind === 'table' && <span className="text-[11px] opacity-70">{sectionRows(s.key).length} rader</span>}
                         {sectionFollowupCount(s.key) > 0 && (
                           <Badge className="gap-1 border-status-risk/30 bg-status-risk/15 text-[10px] text-status-risk">
                             <AlertTriangle className="h-3 w-3" />{sectionFollowupCount(s.key)} att följa upp
@@ -441,8 +441,8 @@ export function ProjectReviewView() {
                           onClick={(e) => { e.stopPropagation(); toggleAck(s.key, !acked); }}
                           onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); toggleAck(s.key, !acked); } }}
                           className={cn(
-                            'ml-auto flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors',
-                            acked ? 'border-status-completed/40 bg-status-completed/10 text-status-completed' : 'text-muted-foreground hover:bg-accent',
+                            'ml-auto flex items-center gap-1.5 border px-2 py-1 text-[11px] uppercase transition-colors',
+                            acked ? 'border-status-completed/60 bg-status-completed/20 text-status-completed' : 'border-current/40 opacity-80 hover:opacity-100',
                           )}
                         >
                           <CircleCheck className={cn('h-3.5 w-3.5', !acked && 'opacity-40')} />
@@ -451,7 +451,7 @@ export function ProjectReviewView() {
                       </div>
                     </AccordionTrigger>
 
-                    <AccordionContent className="pb-4">
+                    <AccordionContent className="px-4 pb-4 pt-3">
                       {s.kind === 'table' ? (
                         <div className="space-y-4">
                           <ReviewTableSection

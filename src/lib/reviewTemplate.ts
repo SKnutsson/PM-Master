@@ -164,6 +164,19 @@ export const DEFAULT_REVIEW_TEMPLATE: ReviewTemplate = {
       ],
     },
     {
+      key: 'fixtures',
+      title: 'Fixturer',
+      kind: 'checklist',
+      countsTowardProgress: true,
+      hideTraceability: true,
+      followupCheckbox: true,
+      description: 'Ange om fixturer behöver tas fram för projektet.',
+      fields: [
+        q('fixtures_needed', 'Behöver fixturer göras?', 'yesno', { required: true }),
+        q('fixtures_description', 'Beskrivning av fixturer', 'textarea'),
+      ],
+    },
+    {
       key: 'existing',
       title: 'Befintliga förhållanden',
       kind: 'table',
