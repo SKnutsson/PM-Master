@@ -885,6 +885,65 @@ export function ResourcePlanningView() {
           </CardContent>
         </Card>
 
+        {/* Quick planning menu for selected day range */}
+        {sel && menuPos && !selecting && (() => {
+          const a = Math.min(sel.start, sel.end), b = Math.max(sel.start, sel.end);
+          const rangeDays = displayedDays.slice(a, b + 1);
+          const multi = rangeDays.length > 1;
+          const dates = rangeDays.filter((d) => !multi || (d.dayOfWeek !== 0 && d.dayOfWeek !== 6)).map((d) => d.dateStr);
+          const inRange = dailyEntries.filter((d) => d.projectInstallerId === sel.piId && rangeDays.some((r) => r.dateStr === d.date));
+          const prelimIds = inRange.filter((d) => d.isPreliminary).map((d) => d.id);
+          const confirmedIds = inRange.filter((d) => !d.isPreliminary).map((d) => d.id);
+          const label = multi
+            ? `${rangeDays[0].date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })} – ${rangeDays[rangeDays.length - 1].date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })} · ${dates.length} arbetsdagar`
+            : rangeDays[0].date.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' });
+          const run = async (fn: () => Promise<void>, msg: string) => {
+            try { await fn(); toast.success(msg); } catch { toast.error('Kunde inte spara'); }
+            closeQuickMenu();
+          };
+          const save = (prelim: boolean) => run(
+            () => bulkSetDailyEntries(sel.projectId, sel.piId, sel.installerId, dates, parseFloat(quickWork) || 0, parseFloat(quickTravel) || 0, prelim),
+            prelim ? `${dates.length} dag(ar) preliminärbokade` : `${dates.length} dag(ar) planerade`);
+          const left = Math.min(menuPos.x + 8, window.innerWidth - 248);
+          const top = Math.min(menuPos.y + 8, window.innerHeight - 260);
+          return (
+            <>
+              <div className="fixed inset-0 z-40" onMouseDown={closeQuickMenu} />
+              <div className="fixed z-50 w-60 border border-border bg-popover text-popover-foreground shadow-lg p-2 space-y-2" style={{ left, top }}>
+                <div className="text-[11px] font-semibold uppercase">{label}</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <label className="text-[10px] text-muted-foreground">Arbete h/dag
+                    <input type="number" min="0" step="0.5" value={quickWork} onChange={(e) => setQuickWork(e.target.value)} className="mt-0.5 w-full h-7 border border-input bg-background px-1.5 text-xs text-foreground" />
+                  </label>
+                  <label className="text-[10px] text-muted-foreground">Resa h/dag
+                    <input type="number" min="0" step="0.5" value={quickTravel} onChange={(e) => setQuickTravel(e.target.value)} className="mt-0.5 w-full h-7 border border-input bg-background px-1.5 text-xs text-foreground" />
+                  </label>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button size="sm" className="h-7 text-xs" onClick={() => save(false)}>Boka</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs border-dashed" onClick={() => save(true)}>Preliminärt</Button>
+                </div>
+                {prelimIds.length > 0 && (
+                  <Button size="sm" variant="secondary" className="h-7 text-xs w-full" onClick={() => run(() => setEntriesPreliminary(prelimIds, false), 'Bokning bekräftad')}>
+                    Bekräfta preliminära ({prelimIds.length})
+                  </Button>
+                )}
+                {confirmedIds.length > 0 && (
+                  <Button size="sm" variant="ghost" className="h-7 text-xs w-full" onClick={() => run(() => setEntriesPreliminary(confirmedIds, true), 'Markerad som preliminär')}>
+                    Gör preliminär ({confirmedIds.length})
+                  </Button>
+                )}
+                {inRange.length > 0 && (
+                  <Button size="sm" variant="ghost" className="h-7 text-xs w-full text-destructive hover:text-destructive" onClick={() => run(() => bulkSetDailyEntries(sel.projectId, sel.piId, sel.installerId, rangeDays.map((d) => d.dateStr), 0, 0, false), 'Dagar rensade')}>
+                    Rensa ({inRange.length})
+                  </Button>
+                )}
+                {multi && <p className="text-[9px] text-muted-foreground">Helger hoppas över.</p>}
+              </div>
+            </>
+          );
+        })()}
+
         {/* Daily Entry Dialog */}
         <DailyEntryDialog
           open={dailyDialogOpen}
