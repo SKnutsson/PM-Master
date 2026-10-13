@@ -26,7 +26,9 @@ import {
   Wrench,
   FileText,
   Users,
-  PieChart } from
+  PieChart,
+  Flag,
+  ChevronDown } from
 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -34,7 +36,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 export type View =
   | 'dashboard' | 'projects' | 'forecast' | 'timeline' | 'resources'
   | 'resources-analytics' | 'documentation' | 'profile' | 'my-tasks'
-  | 'services' | 'project-review'
+  | 'services' | 'project-review' | 'project-closeout'
   | 'crm-dashboard' | 'crm-quotes' | 'crm-customers' | 'crm-stats';
 
 interface SidebarProps {
@@ -43,10 +45,12 @@ interface SidebarProps {
 }
 
 const pmTopItems = [{ id: 'dashboard' as View, label: 'Dashboard', icon: LayoutDashboard }];
-const pmMainItems = [
-  { id: 'projects' as View, label: 'Projekt', icon: FolderKanban },
+const projectSubItems = [
+  { id: 'projects' as View, label: 'Alla projekt', icon: FolderKanban },
   { id: 'project-review' as View, label: 'Projektgenomgång', icon: ClipboardCheck },
-  { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
+  { id: 'project-closeout' as View, label: 'Projektavslut', icon: Flag },
+];
+const pmMainItems = [
   { id: 'timeline' as View, label: 'Ganttschema', icon: CalendarDays },
   { id: 'resources' as View, label: 'Resursplanering', icon: HardHat },
   { id: 'documentation' as View, label: 'Dokumentationsplan', icon: ClipboardList },
@@ -62,10 +66,14 @@ const crmMainItems = [
   { id: 'crm-stats' as View, label: 'Statistik', icon: PieChart },
 ];
 
-const bottomNavItems = [{ id: 'profile' as View, label: 'Profil', icon: UserCircle }];
+const bottomNavItems = [
+  { id: 'my-tasks' as View, label: 'Mina uppgifter', icon: ListChecks },
+  { id: 'profile' as View, label: 'Profil', icon: UserCircle },
+];
 
 export function Sidebar({ currentView, onViewChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(true);
   const { signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const { mode } = useAppMode();
@@ -135,9 +143,22 @@ export function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
         <div className="py-1.5"><div className="h-px bg-sidebar-border" /></div>
 
+        {mode !== 'crm' && (isCollapsed ? renderNavItems(projectSubItems) : (
+          <div>
+            <Button variant="ghost" onClick={() => setProjectsOpen(o => !o)}
+              className="w-full justify-start gap-3 px-3 py-2.5 text-sidebar-foreground hover:bg-sidebar-accent/50">
+              <FolderKanban className={cn('h-5 w-5 shrink-0', projectSubItems.some(i => i.id === currentView) && 'text-primary')} />
+              <span className="flex-1 text-left">Projekt</span>
+              <ChevronDown className={cn('h-4 w-4 transition-transform', !projectsOpen && '-rotate-90')} />
+            </Button>
+            {projectsOpen && <div className="ml-4 border-l border-sidebar-border pl-2 space-y-1">{renderNavItems(projectSubItems)}</div>}
+          </div>
+        ))}
+
         {renderNavItems(mainItems)}
 
-        <div className="py-1.5"><div className="h-px bg-sidebar-border" /></div>
+        <div className="pt-4 pb-1.5"><div className="h-px bg-sidebar-border" /></div>
+        {!isCollapsed && <p className="px-3 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Personligt</p>}
 
         {renderNavItems(bottomNavItems)}
       </nav>
