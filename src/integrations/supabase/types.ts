@@ -383,6 +383,7 @@ export type Database = {
           date: string
           id: string
           installer_id: string | null
+          is_preliminary: boolean
           planned_travel_hours: number
           planned_work_hours: number
           project_id: string
@@ -394,6 +395,7 @@ export type Database = {
           date: string
           id?: string
           installer_id?: string | null
+          is_preliminary?: boolean
           planned_travel_hours?: number
           planned_work_hours?: number
           project_id: string
@@ -405,6 +407,7 @@ export type Database = {
           date?: string
           id?: string
           installer_id?: string | null
+          is_preliminary?: boolean
           planned_travel_hours?: number
           planned_work_hours?: number
           project_id?: string
