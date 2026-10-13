@@ -40,6 +40,7 @@ export function MainLayout() {
       case 'profile': return <ProfileView />;
       case 'services': return <ServicesView />;
       case 'project-review': return <ProjectReviewView />;
+      case 'project-closeout': return <ProjectCloseoutView />;
       case 'crm-dashboard': return <CrmDashboard />;
       case 'crm-quotes': return <CrmQuotesView />;
       case 'crm-customers': return <CrmCustomersView />;
