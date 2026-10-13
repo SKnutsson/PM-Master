@@ -1,3 +1,4 @@
+import { ProjectCloseoutView } from '@/components/closeout/ProjectCloseoutView';
 import { useState, useEffect } from 'react';
 import { Sidebar, View } from './Sidebar';
 import { Dashboard } from './Dashboard';
