@@ -105,13 +105,29 @@ export function ResourcePlanningView() {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation, assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry, moveDailyEntry, updateHotel
+    upsertDailyEntry, moveDailyEntry, updateHotel, bulkSetDailyEntries, setEntriesPreliminary
   } = useResourceData();
 
   // Drag & drop state for moving planned days
   const [dragEntryId, setDragEntryId] = useState<string | null>(null);
   const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
   const [dragCopy, setDragCopy] = useState(false);
+
+  // Range selection (drag over several days) + quick action menu
+  const [sel, setSel] = useState<{ piId: string; projectId: string; installerId: string | null; start: number; end: number } | null>(null);
+  const [selecting, setSelecting] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [quickWork, setQuickWork] = useState('8');
+  const [quickTravel, setQuickTravel] = useState('0');
+
+  useEffect(() => {
+    if (!selecting) return;
+    const up = (e: MouseEvent) => { setSelecting(false); setMenuPos({ x: e.clientX, y: e.clientY }); };
+    window.addEventListener('mouseup', up);
+    return () => window.removeEventListener('mouseup', up);
+  }, [selecting]);
+
+  const closeQuickMenu = () => { setMenuPos(null); setSel(null); };
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('days');
