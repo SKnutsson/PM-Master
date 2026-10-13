@@ -429,13 +429,13 @@ export function ProjectReviewView() {
                         {sectionFollowupCount(s.key) > 0 && (
                           <span className="text-xs font-normal normal-case text-status-in-progress">{sectionFollowupCount(s.key)} att följa upp</span>
                         )}
-                        <label
-                          onClick={(e) => e.stopPropagation()}
+                        <span
+                          onClick={(e) => { e.stopPropagation(); toggleAck(s.key, !acked); }}
                           className="ml-auto flex cursor-pointer items-center gap-2 text-xs font-normal normal-case text-muted-foreground"
                         >
-                          <Checkbox checked={acked} onCheckedChange={(v) => toggleAck(s.key, !!v)} />
+                          <Checkbox checked={acked} className="pointer-events-none" />
                           Genomgånget
-                        </label>
+                        </span>
                       </div>
                     </AccordionTrigger>
 
