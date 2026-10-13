@@ -419,33 +419,21 @@ export function ProjectReviewView() {
                 const acked = isSectionAcked(s.key);
                 const done = filled || acked;
                 return (
-                  <AccordionItem key={s.key} value={s.key} id={`sec-${s.key}`} className="workspace-card overflow-hidden border bg-card">
-                    <AccordionTrigger className="bg-[hsl(var(--list-header))] px-4 py-2 text-[hsl(var(--list-header-foreground))] hover:no-underline">
-                      <div className="flex flex-1 items-center gap-2 pr-3">
-                        <span className="text-sm font-semibold uppercase">{s.title}</span>
+                  <AccordionItem key={s.key} value={s.key} id={`sec-${s.key}`} className="workspace-card overflow-hidden border-l-4 border bg-card" style={{ borderLeftColor: done ? 'hsl(var(--primary))' : 'hsl(var(--border))' }}>
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline [&>svg]:text-muted-foreground">
+                      <div className="flex flex-1 items-center gap-3 pr-3 font-sans">
                         {done
-                          ? <Badge className="bg-status-completed/15 text-status-completed border-status-completed/30 text-[10px]">
-                              {filled ? 'Genomgången' : 'Genomgången (utan noteringar)'}
-                            </Badge>
-                          : <Badge variant="outline" className="text-[10px] text-[hsl(var(--list-header-foreground))] opacity-70">Ej komplett</Badge>}
-                        {s.kind === 'table' && <span className="text-[11px] opacity-70">{sectionRows(s.key).length} rader</span>}
+                          ? <CircleCheck className="h-4 w-4 shrink-0 text-primary" />
+                          : <CircleAlert className="h-4 w-4 shrink-0 text-muted-foreground/60" />}
+                        <span className="text-sm font-semibold normal-case">{s.title}</span>
                         {sectionFollowupCount(s.key) > 0 && (
-                          <Badge className="gap-1 border-status-risk/30 bg-status-risk/15 text-[10px] text-status-risk">
-                            <AlertTriangle className="h-3 w-3" />{sectionFollowupCount(s.key)} att följa upp
-                          </Badge>
+                          <span className="text-xs font-normal normal-case text-status-in-progress">{sectionFollowupCount(s.key)} att följa upp</span>
                         )}
                         <span
-                          role="checkbox"
-                          aria-checked={acked}
-                          tabIndex={0}
                           onClick={(e) => { e.stopPropagation(); toggleAck(s.key, !acked); }}
-                          onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); toggleAck(s.key, !acked); } }}
-                          className={cn(
-                            'ml-auto flex items-center gap-1.5 border px-2 py-1 text-[11px] uppercase transition-colors',
-                            acked ? 'border-status-completed/60 bg-status-completed/20 text-status-completed' : 'border-current/40 opacity-80 hover:opacity-100',
-                          )}
+                          className="ml-auto flex cursor-pointer items-center gap-2 text-xs font-normal normal-case text-muted-foreground"
                         >
-                          <CircleCheck className={cn('h-3.5 w-3.5', !acked && 'opacity-40')} />
+                          <Checkbox checked={acked} className="pointer-events-none" />
                           Genomgånget
                         </span>
                       </div>
