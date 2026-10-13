@@ -127,6 +127,13 @@
       "when": 1791870150452,
       "tag": "0017_preliminary_bookings_and_scope_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791886662691,
+      "tag": "0018_project_closeouts_and_scope_services",
+      "breakpoints": true
     }
   ]
 }

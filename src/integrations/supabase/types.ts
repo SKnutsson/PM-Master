@@ -1103,6 +1103,47 @@ export type Database = {
         }
         Relationships: []
       }
+      project_closeouts: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          project_id: string
+          signed_at: string | null
+          signed_by_name: string | null
+          signed_off: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          project_id: string
+          signed_at?: string | null
+          signed_by_name?: string | null
+          signed_off?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          project_id?: string
+          signed_at?: string | null
+          signed_by_name?: string | null
+          signed_off?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_closeouts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_installers: {
         Row: {
           created_at: string
