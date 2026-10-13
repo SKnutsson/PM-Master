@@ -105,13 +105,29 @@ export function ResourcePlanningView() {
     installers, estimations, projectInstallers, dailyEntries, isLoading,
     addInstaller, updateInstaller, deleteInstaller,
     upsertEstimation, assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
-    upsertDailyEntry, moveDailyEntry, updateHotel
+    upsertDailyEntry, moveDailyEntry, updateHotel, bulkSetDailyEntries, setEntriesPreliminary
   } = useResourceData();
 
   // Drag & drop state for moving planned days
   const [dragEntryId, setDragEntryId] = useState<string | null>(null);
   const [dropTargetKey, setDropTargetKey] = useState<string | null>(null);
   const [dragCopy, setDragCopy] = useState(false);
+
+  // Range selection (drag over several days) + quick action menu
+  const [sel, setSel] = useState<{ piId: string; projectId: string; installerId: string | null; start: number; end: number } | null>(null);
+  const [selecting, setSelecting] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [quickWork, setQuickWork] = useState('8');
+  const [quickTravel, setQuickTravel] = useState('0');
+
+  useEffect(() => {
+    if (!selecting) return;
+    const up = (e: MouseEvent) => { setSelecting(false); setMenuPos({ x: e.clientX, y: e.clientY }); };
+    window.addEventListener('mouseup', up);
+    return () => window.removeEventListener('mouseup', up);
+  }, [selecting]);
+
+  const closeQuickMenu = () => { setMenuPos(null); setSel(null); };
 
   const [expandedProjects, setExpandedProjects] = useState<Set<string> | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('days');
@@ -319,15 +335,27 @@ export function ResourcePlanningView() {
       const totalH = entry ? entry.plannedWorkHours + entry.plannedTravelHours : 0;
       const cellKey = `${projectInstallerId}|${day.dateStr}`;
       const isDropTarget = dropTargetKey === cellKey && dragEntryId !== null;
+      const inSel = !!sel && sel.piId === projectInstallerId && i >= Math.min(sel.start, sel.end) && i <= Math.max(sel.start, sel.end);
       return (
         <div
           key={i}
           className={cn(
-            'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors',
+            'h-7 border-r border-border/30 relative cursor-pointer hover:bg-primary/10 transition-colors select-none',
             isWeekend && 'bg-muted/40',
-            isDropTarget && 'bg-primary/20 ring-1 ring-inset ring-primary'
+            isDropTarget && 'bg-primary/20 ring-1 ring-inset ring-primary',
+            inSel && 'bg-primary/25 ring-1 ring-inset ring-primary'
           )}
           style={{ width: colWidth, minWidth: colWidth }}
+          onMouseDown={(e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            setMenuPos(null);
+            setSelecting(true);
+            setSel({ piId: projectInstallerId, projectId, installerId: installerId || null, start: i, end: i });
+          }}
+          onMouseEnter={() => {
+            if (selecting && sel?.piId === projectInstallerId) setSel({ ...sel, end: i });
+          }}
           onDragOver={(e) => {
             if (!dragEntryId) return;
             e.preventDefault();
@@ -354,15 +382,16 @@ export function ResourcePlanningView() {
             } catch {
               toast.error('Kunde inte flytta tiden');
             }
-          }}
-          onClick={() => openDailyDialog(projectId, day.dateStr, projectInstallerId)}>
+          }}>
+
 
           {entry && totalH > 0 &&
           <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className={cn('absolute inset-0.5 flex flex-col gap-px cursor-grab active:cursor-grabbing', dragEntryId === entry.id && 'opacity-40')}
+                  className={cn('absolute inset-0.5 flex flex-col gap-px cursor-grab active:cursor-grabbing', dragEntryId === entry.id && 'opacity-40', entry.isPreliminary && 'opacity-70 outline-dashed outline-1 outline-foreground/60 rounded-sm')}
                   draggable
+                  onMouseDown={(e) => e.stopPropagation()}
                   onDragStart={(e) => {
                     e.stopPropagation();
                     e.dataTransfer.effectAllowed = 'copyMove';
@@ -370,11 +399,15 @@ export function ResourcePlanningView() {
                     setDragEntryId(entry.id);
                   }}
                   onDragEnd={() => { setDragEntryId(null); setDropTargetKey(null); setDragCopy(false); }}
-                  onClick={(e) => e.stopPropagation()}
-                  onDoubleClick={() => openDailyDialog(projectId, day.dateStr, projectInstallerId)}>
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSel({ piId: projectInstallerId, projectId, installerId: installerId || null, start: i, end: i });
+                    setMenuPos({ x: e.clientX, y: e.clientY });
+                  }}
+                  onDoubleClick={() => { setMenuPos(null); setSel(null); openDailyDialog(projectId, day.dateStr, projectInstallerId); }}>
                   {entry.plannedWorkHours > 0 &&
-                <div className={cn('flex-1 rounded-sm flex items-center justify-center', getBarColor(status))}>
-                      <span className="text-[8px] font-bold text-white">{entry.plannedWorkHours}h</span>
+                <div className={cn('flex-1 rounded-sm flex items-center justify-center', getBarColor(status), entry.isPreliminary && 'bg-stripes')}>
+                      <span className="text-[8px] font-bold text-white">{entry.isPreliminary ? 'P ' : ''}{entry.plannedWorkHours}h</span>
                     </div>
                 }
                   {entry.plannedTravelHours > 0 &&
@@ -385,10 +418,10 @@ export function ResourcePlanningView() {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
-                <p>{entry.installerName} – {day.dateStr}</p>
+                <p>{entry.installerName} – {day.dateStr}{entry.isPreliminary ? ' · PRELIMINÄR' : ''}</p>
                 <p>Arbete: {entry.plannedWorkHours}h</p>
                 <p>Resa: {entry.plannedTravelHours}h</p>
-                <p className="text-muted-foreground mt-1">Dra för att flytta • Ctrl+dra för att kopiera • dubbelklicka för att redigera</p>
+                <p className="text-muted-foreground mt-1">Klicka för snabbval • Dra för att flytta • Ctrl+dra för att kopiera • dubbelklicka för detaljer</p>
               </TooltipContent>
             </Tooltip>
           }
@@ -851,6 +884,65 @@ export function ResourcePlanningView() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Quick planning menu for selected day range */}
+        {sel && menuPos && !selecting && (() => {
+          const a = Math.min(sel.start, sel.end), b = Math.max(sel.start, sel.end);
+          const rangeDays = displayedDays.slice(a, b + 1);
+          const multi = rangeDays.length > 1;
+          const dates = rangeDays.filter((d) => !multi || (d.dayOfWeek !== 0 && d.dayOfWeek !== 6)).map((d) => d.dateStr);
+          const inRange = dailyEntries.filter((d) => d.projectInstallerId === sel.piId && rangeDays.some((r) => r.dateStr === d.date));
+          const prelimIds = inRange.filter((d) => d.isPreliminary).map((d) => d.id);
+          const confirmedIds = inRange.filter((d) => !d.isPreliminary).map((d) => d.id);
+          const label = multi
+            ? `${rangeDays[0].date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })} – ${rangeDays[rangeDays.length - 1].date.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })} · ${dates.length} arbetsdagar`
+            : rangeDays[0].date.toLocaleDateString('sv-SE', { weekday: 'short', day: 'numeric', month: 'short' });
+          const run = async (fn: () => Promise<void>, msg: string) => {
+            try { await fn(); toast.success(msg); } catch { toast.error('Kunde inte spara'); }
+            closeQuickMenu();
+          };
+          const save = (prelim: boolean) => run(
+            () => bulkSetDailyEntries(sel.projectId, sel.piId, sel.installerId, dates, parseFloat(quickWork) || 0, parseFloat(quickTravel) || 0, prelim),
+            prelim ? `${dates.length} dag(ar) preliminärbokade` : `${dates.length} dag(ar) planerade`);
+          const left = Math.min(menuPos.x + 8, window.innerWidth - 248);
+          const top = Math.min(menuPos.y + 8, window.innerHeight - 260);
+          return (
+            <>
+              <div className="fixed inset-0 z-40" onMouseDown={closeQuickMenu} />
+              <div className="fixed z-50 w-60 border border-border bg-popover text-popover-foreground shadow-lg p-2 space-y-2" style={{ left, top }}>
+                <div className="text-[11px] font-semibold uppercase">{label}</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <label className="text-[10px] text-muted-foreground">Arbete h/dag
+                    <input type="number" min="0" step="0.5" value={quickWork} onChange={(e) => setQuickWork(e.target.value)} className="mt-0.5 w-full h-7 border border-input bg-background px-1.5 text-xs text-foreground" />
+                  </label>
+                  <label className="text-[10px] text-muted-foreground">Resa h/dag
+                    <input type="number" min="0" step="0.5" value={quickTravel} onChange={(e) => setQuickTravel(e.target.value)} className="mt-0.5 w-full h-7 border border-input bg-background px-1.5 text-xs text-foreground" />
+                  </label>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button size="sm" className="h-7 text-xs" onClick={() => save(false)}>Boka</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs border-dashed" onClick={() => save(true)}>Preliminärt</Button>
+                </div>
+                {prelimIds.length > 0 && (
+                  <Button size="sm" variant="secondary" className="h-7 text-xs w-full" onClick={() => run(() => setEntriesPreliminary(prelimIds, false), 'Bokning bekräftad')}>
+                    Bekräfta preliminära ({prelimIds.length})
+                  </Button>
+                )}
+                {confirmedIds.length > 0 && (
+                  <Button size="sm" variant="ghost" className="h-7 text-xs w-full" onClick={() => run(() => setEntriesPreliminary(confirmedIds, true), 'Markerad som preliminär')}>
+                    Gör preliminär ({confirmedIds.length})
+                  </Button>
+                )}
+                {inRange.length > 0 && (
+                  <Button size="sm" variant="ghost" className="h-7 text-xs w-full text-destructive hover:text-destructive" onClick={() => run(() => bulkSetDailyEntries(sel.projectId, sel.piId, sel.installerId, rangeDays.map((d) => d.dateStr), 0, 0, false), 'Dagar rensade')}>
+                    Rensa ({inRange.length})
+                  </Button>
+                )}
+                {multi && <p className="text-[9px] text-muted-foreground">Helger hoppas över.</p>}
+              </div>
+            </>
+          );
+        })()}
 
         {/* Daily Entry Dialog */}
         <DailyEntryDialog

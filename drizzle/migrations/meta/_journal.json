@@ -120,6 +120,13 @@
       "when": 1791454831143,
       "tag": "0016_quote_project_link_and_scope_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791870150452,
+      "tag": "0017_preliminary_bookings_and_scope_policies",
+      "breakpoints": true
     }
   ]
 }

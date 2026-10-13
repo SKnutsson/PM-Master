@@ -40,6 +40,7 @@ export interface DailyResourceEntry {
   date: string;
   plannedWorkHours: number;
   plannedTravelHours: number;
+  isPreliminary?: boolean;
 }
 
 export function useResourceData() {
@@ -99,6 +100,7 @@ export function useResourceData() {
         installerName: d.installers?.name, installerCompany: d.installers?.company,
         date: d.date, plannedWorkHours: parseFloat(String(d.planned_work_hours)),
         plannedTravelHours: parseFloat(String(d.planned_travel_hours)),
+        isPreliminary: !!d.is_preliminary,
       })));
     }
   };
@@ -358,6 +360,34 @@ export function useResourceData() {
     setDailyEntries(prev => prev.filter(d => d.id !== id));
   }, []);
 
+  /** Set (or clear when hours are 0) the same planning for several days at once. */
+  const bulkSetDailyEntries = useCallback(async (
+    projectId: string, projectInstallerId: string, installerId: string | null,
+    dates: string[], workHours: number, travelHours: number, isPreliminary: boolean,
+  ) => {
+    const clear = workHours === 0 && travelHours === 0;
+    const existing = dailyEntries.filter(d => d.projectInstallerId === projectInstallerId && dates.includes(d.date));
+    if (existing.length) {
+      const { error } = await supabase.from('daily_resource_entries').delete().in('id', existing.map(e => e.id));
+      if (error) throw error;
+    }
+    if (!clear) {
+      const { error } = await supabase.from('daily_resource_entries').insert(dates.map(date => ({
+        project_id: projectId, installer_id: installerId, project_installer_id: projectInstallerId,
+        date, planned_work_hours: workHours, planned_travel_hours: travelHours, is_preliminary: isPreliminary,
+      })));
+      if (error) { await loadDailyEntries(); throw error; }
+    }
+    await loadDailyEntries();
+  }, [dailyEntries]);
+
+  const setEntriesPreliminary = useCallback(async (ids: string[], isPreliminary: boolean) => {
+    if (!ids.length) return;
+    setDailyEntries(prev => prev.map(d => ids.includes(d.id) ? { ...d, isPreliminary } : d));
+    const { error } = await supabase.from('daily_resource_entries').update({ is_preliminary: isPreliminary }).in('id', ids);
+    if (error) { await loadDailyEntries(); throw error; }
+  }, []);
+
 
   const updateHotel = useCallback(async (projectInstallerId: string, updates: { hotelStatus?: ProjectInstaller['hotelStatus']; hotelName?: string | null; hotelNotering?: string | null; }) => {
     const payload: any = {};
@@ -380,6 +410,7 @@ export function useResourceData() {
     upsertEstimation,
     assignInstaller, assignVacant, unassignInstaller, reassignInstaller,
     upsertDailyEntry, deleteDailyEntry, moveDailyEntry, updateHotel,
+    bulkSetDailyEntries, setEntriesPreliminary,
     refresh: loadAll,
   };
 }
