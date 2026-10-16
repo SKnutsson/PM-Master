@@ -29,6 +29,7 @@ import { generateReviewSummaryPdf } from '@/lib/reviewReport';
 import { ReviewOverviewList } from './ReviewOverviewList';
 import { useReviewOverview } from '@/hooks/useReviewOverview';
 import { Checkbox } from '@/components/ui/checkbox';
+import { NewReviewDialog } from './NewReviewDialog';
 
 export function ProjectReviewView() {
   const { projects } = useProjectDataContext();
@@ -51,6 +52,8 @@ export function ProjectReviewView() {
     createReview, updateReview, setAnswer, addRow, updateRow, saveRowNow, deleteRow, setSignoff, deleteReview,
   } = useProjectReview(projectId || null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
+  const [autoCreate, setAutoCreate] = useState(false);
 
   // Öppna och skrolla till det avsnitt man klickade på i översikten
   useEffect(() => {
@@ -255,14 +258,17 @@ export function ProjectReviewView() {
               <ArrowLeft className="h-4 w-4" />Alla projekt
             </Button>
           )}
-          <Select value={projectId} onValueChange={setProjectId}>
-            <SelectTrigger className="h-9 w-[280px]"><SelectValue placeholder="Välj projekt" /></SelectTrigger>
-            <SelectContent className="z-50 bg-popover max-h-[320px]">
-              {projects.map(p => (
-                <SelectItem key={p.id} value={p.id}>{p.code} – {p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {!projectId && (
+            <Button size="sm" className="ml-auto gap-2 h-9" onClick={() => setNewOpen(true)}>
+              <Plus className="h-4 w-4" />Skapa ny genomgång
+            </Button>
+          )}
+          <NewReviewDialog
+            open={newOpen}
+            onOpenChange={setNewOpen}
+            projects={projects.filter(p => !overview[p.id])}
+            onPick={(id) => { setAutoCreate(true); setProjectId(id); }}
+          />
           {review && (
             <>
               <div className="relative">
