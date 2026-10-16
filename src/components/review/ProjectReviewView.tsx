@@ -312,16 +312,7 @@ export function ProjectReviewView() {
                 Ingen projektgenomgång finns för {project?.code} – {project?.name}. Skapa en från gällande mall
                 ({template.name}, version {template.version}). Mallversionen låses till detta projekt.
               </p>
-              <Button className="gap-2" onClick={async () => {
-                const seed: Record<string, any> = {
-                  customer: autoValue('customer'),
-                  project_number: autoValue('code'),
-                  sales_person: autoValue('salesPerson'),
-                  project_manager: autoValue('projectManager'),
-                };
-                const r = await createReview(seed);
-                if (r) toast({ title: 'Projektgenomgång skapad' });
-              }}>
+              <Button className="gap-2" onClick={startReview}>
                 <Plus className="h-4 w-4" />Starta projektgenomgång
               </Button>
             </CardContent>
