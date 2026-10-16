@@ -73,7 +73,6 @@ export function ReviewOverviewList({ projects, overview, onOpen }: Props) {
             {label}
           </Button>
         ))}
-        <p className="ml-auto text-xs text-muted-foreground">Välj ett projekt i listan ovan för att lägga till en ny genomgång.</p>
       </div>
 
 

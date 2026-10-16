@@ -15,8 +15,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Legend, Cell,
 } from 'recharts';
-import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, AlertTriangle, Printer, Save, FolderOpen, FolderArchive } from 'lucide-react';
+import { Clock, TrendingUp, TrendingDown, Minus, Wrench, Car, CheckCircle2, Truck, ClipboardCheck, AlertTriangle, Printer, Save, FolderOpen, FolderArchive, ArrowLeft, ChevronRight } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FollowUpOverview } from './FollowUpOverview';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -274,28 +275,21 @@ export function ResourceAnalyticsView() {
       {/* Header + Project selector */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Resursanalys</h1>
-          <p className="text-sm text-muted-foreground">Jämför kalkyl mot utfall per projekt</p>
+          <h1 className="text-2xl font-bold tracking-tight">{selectedProjectId ? `${sortedProjects.find(p => p.id === selectedProjectId)?.code ?? ''} ${sortedProjects.find(p => p.id === selectedProjectId)?.name ?? ''}` : 'Uppföljning'}</h1>
+          <p className="text-sm text-muted-foreground">Timmar mot kalkyl, avvikelser och besiktningsanmärkningar per projekt</p>
         </div>
         <div className="flex items-center gap-2">
-          <Tabs value={archiveMode} onValueChange={(v) => { setArchiveMode(v as any); setSelectedProjectId(''); }}>
+          {!selectedProjectId && <Tabs value={archiveMode} onValueChange={(v) => { setArchiveMode(v as any); setSelectedProjectId(''); }}>
             <TabsList>
-              <TabsTrigger value="active" className="gap-1.5 text-xs"><FolderOpen className="h-3.5 w-3.5" />Aktiva</TabsTrigger>
-              <TabsTrigger value="archived" className="gap-1.5 text-xs"><FolderArchive className="h-3.5 w-3.5" />Arkiverade</TabsTrigger>
+              <TabsTrigger value="active" className="gap-1.5 text-xs"><FolderOpen className="h-3.5 w-3.5" />Pågående</TabsTrigger>
+              <TabsTrigger value="archived" className="gap-1.5 text-xs"><FolderArchive className="h-3.5 w-3.5" />Avslutade</TabsTrigger>
             </TabsList>
-          </Tabs>
-          <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
-            <SelectTrigger className="w-[280px] h-9">
-              <SelectValue placeholder="Välj ett projekt…" />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              {sortedProjects.map(p => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.code ? `${p.code} – ` : ''}{p.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          </Tabs>}
+          {selectedProjectId && (
+            <Button variant="ghost" size="sm" className="h-9 gap-1.5" onClick={() => setSelectedProjectId('')}>
+              <ArrowLeft className="h-4 w-4" />Alla projekt
+            </Button>
+          )}
           {selectedProjectId && (
             <Button variant="outline" size="sm" onClick={printReport} className="h-9">
               <Printer className="h-4 w-4 mr-1.5" /> Rapport
@@ -305,10 +299,13 @@ export function ResourceAnalyticsView() {
       </div>
 
       {!selectedProjectId && (
-        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-2">
-          <TrendingUp className="h-10 w-10 opacity-20" />
-          <p className="text-sm">Välj ett projekt för att se statistik</p>
-        </div>
+        <FollowUpOverview
+          projects={sortedProjects}
+          estimations={estimations}
+          dailyEntries={dailyEntries}
+          archiveMode={archiveMode}
+          onOpen={setSelectedProjectId}
+        />
       )}
 
       {selectedProjectId && !hasData && !isLoading && (
