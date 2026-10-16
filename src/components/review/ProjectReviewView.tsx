@@ -244,6 +244,24 @@ export function ProjectReviewView() {
     return () => el.removeEventListener('scroll', onScroll);
   }, [sections, review, openSections]);
 
+  const startReview = async () => {
+    const seed: Record<string, any> = {
+      customer: autoValue('customer'),
+      project_number: autoValue('code'),
+      sales_person: autoValue('salesPerson'),
+      project_manager: autoValue('projectManager'),
+    };
+    const r = await createReview(seed);
+    if (r) { toast({ title: 'Projektgenomgång skapad' }); reloadOverview(); }
+  };
+
+  useEffect(() => {
+    if (!autoCreate || !projectId || !project || loading) return;
+    setAutoCreate(false);
+    if (!review) startReview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCreate, projectId, project, loading, review]);
+
   return (
     <div className="flex h-full flex-col">
       {/* Top bar */}
