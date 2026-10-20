@@ -21,6 +21,38 @@ import { SALESPEOPLE, COUNTRIES, PRODUCTS, QUOTE_STATUSES } from '@/lib/crmConst
 import { getQuoteProducts, productAllocationError, ProductAllocation } from '@/lib/quoteProducts';
 import { formatSEK } from '@/lib/crmConstants';
 
+const isDroppable = (dt: DataTransfer) => dt.types.includes('Files') || dt.types.includes('text/uri-list') || dt.types.includes('text/plain');
+
+function droppedUrls(dt: DataTransfer): string[] {
+  const raw = dt.getData('text/uri-list') || dt.getData('text/plain') || '';
+  return [...new Set(raw.split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith('#') && /^https?:\/\//i.test(s)))].slice(0, 10);
+}
+
+async function fetchPdfFromUrl(url: string): Promise<File | null> {
+  const id = toast.loading('Hämtar PDF från ert system…');
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/import-quote-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${session?.access_token ?? ''}` },
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      toast.error(body.error || 'Kunde inte hämta PDF:en', { id });
+      return null;
+    }
+    const blob = await res.blob();
+    let name = decodeURIComponent(new URL(url).pathname.split('/').pop() || 'Offert.pdf');
+    if (!/\.pdf$/i.test(name)) name += '.pdf';
+    toast.success(`${name} hämtad`, { id });
+    return new File([blob], name, { type: 'application/pdf' });
+  } catch {
+    toast.error('Kunde inte hämta PDF:en', { id });
+    return null;
+  }
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -198,10 +230,21 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-[1180px]"
         onInteractOutside={event => { if (uploading || saving) event.preventDefault(); }}
         onEscapeKeyDown={event => { if (uploading || saving) event.preventDefault(); }}
-        onDragEnter={event => { if (!event.dataTransfer.types.includes('Files')) return; event.preventDefault(); dragDepth.current += 1; setDraggingFiles(true); }}
-        onDragOver={event => { if (!event.dataTransfer.types.includes('Files')) return; event.preventDefault(); event.dataTransfer.dropEffect = uploading || saving ? 'none' : 'copy'; }}
+        onDragEnter={event => { if (!isDroppable(event.dataTransfer)) return; event.preventDefault(); dragDepth.current += 1; setDraggingFiles(true); }}
+        onDragOver={event => { if (!isDroppable(event.dataTransfer)) return; event.preventDefault(); event.dataTransfer.dropEffect = uploading || saving ? 'none' : 'copy'; }}
         onDragLeave={event => { event.preventDefault(); dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDraggingFiles(false); }}
-        onDrop={event => { event.preventDefault(); dragDepth.current = 0; setDraggingFiles(false); if (uploading || saving) return; setDroppedFiles(Array.from(event.dataTransfer.files)); }}>
+        onDrop={event => {
+          event.preventDefault(); dragDepth.current = 0; setDraggingFiles(false); if (uploading || saving) return;
+          const files = Array.from(event.dataTransfer.files);
+          if (files.length) { setDroppedFiles(files); return; }
+          const urls = droppedUrls(event.dataTransfer);
+          if (!urls.length) return;
+          setUploading(true);
+          void Promise.all(urls.map(fetchPdfFromUrl)).then(results => {
+            const ok = results.filter((f): f is File => !!f);
+            if (ok.length) setDroppedFiles(ok);
+          }).finally(() => setUploading(false));
+        }}>
         {draggingFiles && <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-background/95 text-primary"><div className="flex items-center gap-3 text-xl"><Upload className="h-6 w-6" />Släpp PDF-filer här</div></div>}
         <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
           <SheetTitle>{quote ? `Redigera offert ${quote.quote_number}` : 'Ny offert'}</SheetTitle>
