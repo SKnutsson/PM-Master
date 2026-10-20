@@ -231,6 +231,41 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_quote_attachments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          path: string
+          quote_id: string
+          size: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          path: string
+          quote_id: string
+          size?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          path?: string
+          quote_id?: string
+          size?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_quote_attachments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "crm_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_quote_comments: {
         Row: {
           author: string | null
