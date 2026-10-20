@@ -21,6 +21,38 @@ import { SALESPEOPLE, COUNTRIES, PRODUCTS, QUOTE_STATUSES } from '@/lib/crmConst
 import { getQuoteProducts, productAllocationError, ProductAllocation } from '@/lib/quoteProducts';
 import { formatSEK } from '@/lib/crmConstants';
 
+const isDroppable = (dt: DataTransfer) => dt.types.includes('Files') || dt.types.includes('text/uri-list') || dt.types.includes('text/plain');
+
+function droppedUrls(dt: DataTransfer): string[] {
+  const raw = dt.getData('text/uri-list') || dt.getData('text/plain') || '';
+  return [...new Set(raw.split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith('#') && /^https?:\/\//i.test(s)))].slice(0, 10);
+}
+
+async function fetchPdfFromUrl(url: string): Promise<File | null> {
+  const id = toast.loading('Hämtar PDF från ert system…');
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/import-quote-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${session?.access_token ?? ''}` },
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      toast.error(body.error || 'Kunde inte hämta PDF:en', { id });
+      return null;
+    }
+    const blob = await res.blob();
+    let name = decodeURIComponent(new URL(url).pathname.split('/').pop() || 'Offert.pdf');
+    if (!/\.pdf$/i.test(name)) name += '.pdf';
+    toast.success(`${name} hämtad`, { id });
+    return new File([blob], name, { type: 'application/pdf' });
+  } catch {
+    toast.error('Kunde inte hämta PDF:en', { id });
+    return null;
+  }
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
