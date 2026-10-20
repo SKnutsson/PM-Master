@@ -156,10 +156,11 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
     if (res.error || !res.data) {
       setSaving(false);
-      toast.error('Kunde inte spara: ' + res.error.message);
+      toast.error('Kunde inte spara: ' + (res.error?.message || 'Offerten kunde inte hämtas'));
       return;
     }
     const savedId = res.data.id;
+    setDroppedFiles([]);
     setForm(current => ({ ...current, id: savedId, project_id: payload.project_id, comment: combinedComment }));
     setNewComment('');
     const failed: File[] = [];
@@ -305,7 +306,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
         <div className="sticky bottom-0 flex items-center justify-between gap-2 border-t border-border bg-background px-6 py-4">
           <div>
             {quote && (
-              <Button variant="ghost" className="gap-2 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+              <Button variant="ghost" disabled={uploading || saving} className="gap-2 text-destructive hover:bg-destructive/10" onClick={handleDelete}>
                 <Trash2 className="h-4 w-4" /> Ta bort
               </Button>
             )}
