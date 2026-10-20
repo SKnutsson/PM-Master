@@ -198,10 +198,21 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-[1180px]"
         onInteractOutside={event => { if (uploading || saving) event.preventDefault(); }}
         onEscapeKeyDown={event => { if (uploading || saving) event.preventDefault(); }}
-        onDragEnter={event => { if (!event.dataTransfer.types.includes('Files')) return; event.preventDefault(); dragDepth.current += 1; setDraggingFiles(true); }}
-        onDragOver={event => { if (!event.dataTransfer.types.includes('Files')) return; event.preventDefault(); event.dataTransfer.dropEffect = uploading || saving ? 'none' : 'copy'; }}
+        onDragEnter={event => { if (!isDroppable(event.dataTransfer)) return; event.preventDefault(); dragDepth.current += 1; setDraggingFiles(true); }}
+        onDragOver={event => { if (!isDroppable(event.dataTransfer)) return; event.preventDefault(); event.dataTransfer.dropEffect = uploading || saving ? 'none' : 'copy'; }}
         onDragLeave={event => { event.preventDefault(); dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDraggingFiles(false); }}
-        onDrop={event => { event.preventDefault(); dragDepth.current = 0; setDraggingFiles(false); if (uploading || saving) return; setDroppedFiles(Array.from(event.dataTransfer.files)); }}>
+        onDrop={event => {
+          event.preventDefault(); dragDepth.current = 0; setDraggingFiles(false); if (uploading || saving) return;
+          const files = Array.from(event.dataTransfer.files);
+          if (files.length) { setDroppedFiles(files); return; }
+          const urls = droppedUrls(event.dataTransfer);
+          if (!urls.length) return;
+          setUploading(true);
+          void Promise.all(urls.map(fetchPdfFromUrl)).then(results => {
+            const ok = results.filter((f): f is File => !!f);
+            if (ok.length) setDroppedFiles(ok);
+          }).finally(() => setUploading(false));
+        }}>
         {draggingFiles && <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-background/95 text-primary"><div className="flex items-center gap-3 text-xl"><Upload className="h-6 w-6" />Släpp PDF-filer här</div></div>}
         <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
           <SheetTitle>{quote ? `Redigera offert ${quote.quote_number}` : 'Ny offert'}</SheetTitle>
