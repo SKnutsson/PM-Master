@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, FileText, Upload, Trash2, Plus } from 'lucide-react';
+import { CalendarIcon, Upload, Trash2, Plus } from 'lucide-react';
+import { QuoteAttachments } from './QuoteAttachments';
+import { quoteAttachmentPath } from '@/lib/quoteAttachments';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,7 +59,10 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
   const [newComment, setNewComment] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [pendingPdfDelete, setPendingPdfDelete] = useState<string[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
+  const [draggingFiles, setDraggingFiles] = useState(false);
+  const dragDepth = useRef(0);
   const [productRows, setProductRows] = useState<ProductAllocation[]>([]);
   const [productsChanged, setProductsChanged] = useState(false);
   const [projects, setProjects] = useState<{ id: string; name: string; code: string | null; status: string }[]>([]);
@@ -67,7 +72,10 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
   useEffect(() => {
     setForm(quote ? { ...quote } : emptyQuote());
     setNewComment('');
-    setPendingPdfDelete([]);
+    setPendingFiles([]);
+    setDroppedFiles([]);
+    setDraggingFiles(false);
+    dragDepth.current = 0;
     setProductRows(quote ? getQuoteProducts(quote) : [{ product: '', amount: 0 }]);
     setProductsChanged(false);
     setProjectCode('');
@@ -118,8 +126,6 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       contact_name: form.contact_name || null,
       contact_phone: form.contact_phone || null,
       contact_email: form.contact_email || null,
-      pdf_path: form.pdf_path || null,
-      pdf_name: form.pdf_name || null,
       project_id: form.project_id || null,
     };
     if (form.quote_number) payload.quote_number = form.quote_number;
@@ -143,57 +149,37 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       toast.success(`Projekt ${projectCode.trim()} skapat i PM Master`);
     }
 
-    const res = quote
-      ? await supabase.from('crm_quotes').update(payload).eq('id', quote.id)
-      : await supabase.from('crm_quotes').insert(payload);
+    const currentId = form.id || quote?.id;
+    const res = currentId
+      ? await supabase.from('crm_quotes').update(payload).eq('id', currentId).select('id').single()
+      : await supabase.from('crm_quotes').insert(payload).select('id').single();
 
-    setSaving(false);
-    if (res.error) {
+    if (res.error || !res.data) {
+      setSaving(false);
       toast.error('Kunde inte spara: ' + res.error.message);
       return;
     }
-    if (pendingPdfDelete.length) {
-      await supabase.storage.from('quote-pdfs').remove(pendingPdfDelete);
-      setPendingPdfDelete([]);
+    const savedId = res.data.id;
+    setForm(current => ({ ...current, id: savedId, project_id: payload.project_id, comment: combinedComment }));
+    setNewComment('');
+    const failed: File[] = [];
+    for (const file of pendingFiles) {
+      const path = quoteAttachmentPath(savedId, file.name);
+      const uploaded = await supabase.storage.from('quote-pdfs').upload(path, file, { contentType: 'application/pdf' });
+      if (uploaded.error) { failed.push(file); toast.error(`${file.name}: ${uploaded.error.message}`); continue; }
+      const attached = await supabase.from('crm_quote_attachments').insert({ quote_id: savedId, name: file.name, path, size: file.size });
+      if (attached.error) {
+        await supabase.storage.from('quote-pdfs').remove([path]);
+        failed.push(file);
+        toast.error(`Kunde inte spara ${file.name}`);
+      }
     }
+    setPendingFiles(failed);
+    setSaving(false);
+    if (failed.length) { onSaved?.(); return; }
     toast.success(quote ? 'Offert uppdaterad' : 'Offert skapad');
     onSaved?.();
     onOpenChange(false);
-  };
-
-  const handlePdfUpload = async (file: File) => {
-    if (file.type !== 'application/pdf') {
-      toast.error('Endast PDF-filer kan bifogas');
-      return;
-    }
-    setUploading(true);
-    const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, '_')}`;
-    const { error } = await supabase.storage.from('quote-pdfs').upload(path, file, {
-      contentType: 'application/pdf',
-      upsert: false,
-    });
-    setUploading(false);
-    if (error) {
-      toast.error('Kunde inte ladda upp: ' + error.message);
-      return;
-    }
-    setForm((f) => ({ ...f, pdf_path: path, pdf_name: file.name }));
-    toast.success('PDF bifogad – kom ihåg att spara');
-  };
-
-  const openPdf = async () => {
-    if (!form.pdf_path) return;
-    const { data, error } = await supabase.storage.from('quote-pdfs').createSignedUrl(form.pdf_path, 3600);
-    if (error || !data) return toast.error('Kunde inte öppna filen');
-    window.open(data.signedUrl, '_blank');
-  };
-
-  const removePdf = () => {
-    if (!form.pdf_path) return;
-    if (!confirm('Ta bort bifogad PDF? Filen raderas när du sparar offerten.')) return;
-    setPendingPdfDelete((p) => [...p, form.pdf_path as string]);
-    setForm((f) => ({ ...f, pdf_path: null, pdf_name: null }));
-    toast.info('PDF tas bort när du sparar');
   };
 
   const handleDelete = async () => {
@@ -208,7 +194,14 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-[1180px]">
+      <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-[1180px]"
+        onInteractOutside={event => { if (uploading || saving) event.preventDefault(); }}
+        onEscapeKeyDown={event => { if (uploading || saving) event.preventDefault(); }}
+        onDragEnter={event => { if (!event.dataTransfer.types.includes('Files')) return; event.preventDefault(); dragDepth.current += 1; setDraggingFiles(true); }}
+        onDragOver={event => { if (!event.dataTransfer.types.includes('Files')) return; event.preventDefault(); event.dataTransfer.dropEffect = uploading || saving ? 'none' : 'copy'; }}
+        onDragLeave={event => { event.preventDefault(); dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setDraggingFiles(false); }}
+        onDrop={event => { event.preventDefault(); dragDepth.current = 0; setDraggingFiles(false); if (uploading || saving) return; setDroppedFiles(Array.from(event.dataTransfer.files)); }}>
+        {draggingFiles && <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-background/95 text-primary"><div className="flex items-center gap-3 text-xl"><Upload className="h-6 w-6" />Släpp PDF-filer här</div></div>}
         <SheetHeader className="sticky top-0 z-10 border-b border-border bg-background px-6 py-4">
           <SheetTitle>{quote ? `Redigera offert ${quote.quote_number}` : 'Ny offert'}</SheetTitle>
         </SheetHeader>
@@ -303,29 +296,8 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             </Field>
             <Field label="Antal / specifikation"><Input value={form.quantity_spec || ''} onChange={(e) => upd('quantity_spec', e.target.value)} /></Field>
             <Field label="Offertbelopp (SEK)"><Input type="number" value={form.amount === undefined ? '' : String(form.amount)} placeholder="0" onChange={(e) => upd('amount', e.target.value === '' ? 0 : Number(e.target.value))} /></Field>
-            <Field label="Offert (PDF)">
-            {form.pdf_path ? (
-              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2">
-                <FileText className="h-4 w-4 text-primary" />
-                <button type="button" onClick={openPdf} className="flex-1 truncate text-left text-sm hover:underline">
-                  {form.pdf_name || 'Offert.pdf'}
-                </button>
-                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={removePdf}>
-                  Ta bort
-                </Button>
-              </div>
-            ) : (
-              <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-dashed border-border px-3 text-sm text-muted-foreground hover:bg-muted/40">
-                <Upload className="h-4 w-4" />
-                {uploading ? 'Laddar upp…' : 'Bifoga PDF'}
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePdfUpload(f); e.target.value = ''; }}
-                />
-              </label>
-            )}
+            <Field label="Bilagor (PDF)">
+              {open && <QuoteAttachments key={form.id || quote?.id || 'new'} quoteId={form.id || quote?.id} droppedFiles={droppedFiles} pendingFiles={pendingFiles} onPendingChange={setPendingFiles} onBusyChange={setUploading} />}
           </Field>
           </div>
         </div>
@@ -339,8 +311,8 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Avbryt</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? 'Sparar…' : 'Spara'}</Button>
+            <Button variant="outline" disabled={uploading || saving} onClick={() => onOpenChange(false)}>Avbryt</Button>
+            <Button onClick={handleSave} disabled={saving || uploading}>{saving ? 'Sparar…' : 'Spara'}</Button>
           </div>
         </div>
       </SheetContent>

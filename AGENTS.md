@@ -1,5 +1,7 @@
 # Architecture Rules
 
+- Store quote attachments as individual `crm_quote_attachments` records in private `quote-pdfs` storage; preserve legacy files via backfill and never write the legacy PDF mirror from quote forms, so attachment changes cannot be overwritten by stale edits.
+
 - Preserve legacy CRM update dates in `crm_quotes.source_updated_date`; imported business dates must not be inferred from database write timestamps.
 - Use the shared reference-list, list-heading and list-record styles for list-based workspaces so column headers and flat expandable rows remain consistent across modules.
 - Load heading fonts from bundled font packages at the application entry point to avoid remote font requests and ensure consistent rendering.
