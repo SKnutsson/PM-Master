@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Support multiple quote PDFs, preserve existing attachments, and allow dropping files anywhere in the open quote.
+- [ ] Verify upload, reopen, open and remove attachments in the app.
+
 - [x] Simplify login branding and allow existing email/password users only; verified Bebas Neue rendering, no Google/signup controls, hosted signup disabled and email login enabled.
 - [x] Secure sales targets, quote comments and installers while preserving workspace collaboration; live policies verified.
 
