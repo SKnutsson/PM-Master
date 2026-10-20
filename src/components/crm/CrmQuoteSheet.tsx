@@ -194,7 +194,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={next => { if (!uploading && !saving) onOpenChange(next); }}>
       <SheetContent side="right" className="w-full overflow-y-auto p-0 sm:max-w-[1180px]"
         onInteractOutside={event => { if (uploading || saving) event.preventDefault(); }}
         onEscapeKeyDown={event => { if (uploading || saving) event.preventDefault(); }}
