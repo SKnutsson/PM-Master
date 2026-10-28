@@ -266,7 +266,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             <div className="grid gap-4 sm:grid-cols-2"><Field label="Sannolikhet">
               <Select value={String(form.probability || 3)} onValueChange={(v) => upd('probability', Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n} – {n === 1 ? 'lägst' : n === 5 ? 'högst' : ''}</SelectItem>)}</SelectContent>
+                <SelectContent>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n === 1 ? '1 – lägst' : n === 5 ? '5 – högst' : String(n)}</SelectItem>)}</SelectContent>
               </Select>
             </Field><Field label="Leveranstid"><Input placeholder="2027 Q1 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} /></Field></div>
             <div className="grid gap-4 sm:grid-cols-2">
