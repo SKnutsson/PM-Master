@@ -140,7 +140,8 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       quote_date: form.quote_date,
       source_updated_date: form.source_updated_date || null,
       salesperson: form.salesperson || '',
-      responsible: form.responsible || '',
+      responsible: form.salesperson || '',
+
       customer_name: form.customer_name || '',
       country: form.country || '',
       city: form.city || null,
@@ -265,18 +266,21 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             <div className="grid gap-4 sm:grid-cols-2"><Field label="Sannolikhet">
               <Select value={String(form.probability || 3)} onValueChange={(v) => upd('probability', Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n} – {n === 1 ? 'lägst' : n === 5 ? 'högst' : ''}</SelectItem>)}</SelectContent>
+                <SelectContent>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n === 1 ? '1 – lägst' : n === 5 ? '5 – högst' : String(n)}</SelectItem>)}</SelectContent>
               </Select>
             </Field><Field label="Leveranstid"><Input placeholder="2027 Q1 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} /></Field></div>
-            <div className="grid gap-4 sm:grid-cols-2"><Field label="Säljare">
-              <PersonSelect value={form.salesperson || ''} onChange={(v) => upd('salesperson', v)} />
-            </Field><Field label="Ansvarig"><PersonSelect value={form.responsible || ''} onChange={(v) => upd('responsible', v)} /></Field></div>
-            <Field label="Föreskriven">
-              <div className="flex h-10 items-center gap-3">
-                <Switch checked={!!form.prescriber} onCheckedChange={(v) => upd('prescriber', v)} />
-                <span className="text-sm">{form.prescriber ? 'Ja' : 'Nej'}</span>
-              </div>
-            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Säljare (ansvarig)">
+                <PersonSelect value={form.salesperson || ''} onChange={(v) => upd('salesperson', v)} />
+              </Field>
+              <Field label="Föreskriven">
+                <div className="flex h-10 items-center gap-3">
+                  <Switch checked={!!form.prescriber} onCheckedChange={(v) => upd('prescriber', v)} />
+                  <span className="text-sm">{form.prescriber ? 'Ja' : 'Nej'}</span>
+                </div>
+              </Field>
+            </div>
+
             <Field label="Kopplat projekt i PM Master">
               <Select value={form.project_id || '__none__'} onValueChange={(v) => { upd('project_id', v === '__none__' ? null : v); if (v !== '__none__') setCreateProject(false); }}>
                 <SelectTrigger aria-label="Kopplat projekt"><SelectValue /></SelectTrigger>
@@ -364,12 +368,13 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-4">
-      <h3 className="border-b border-border pb-1.5 text-sm uppercase tracking-wide text-primary">{title}</h3>
-      {children}
+    <section className="border border-border bg-card shadow-sm">
+      <h3 className="border-b border-border bg-muted/60 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-primary">{title}</h3>
+      <div className="space-y-4 p-4">{children}</div>
     </section>
   );
 }
+
 
 function Field({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (

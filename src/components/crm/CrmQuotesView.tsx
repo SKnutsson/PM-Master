@@ -27,7 +27,6 @@ const COLUMNS: { key: string; label: string }[] = [
   { key: 'prescriber', label: 'Föresk.' },
   { key: 'probability', label: 'Sannol.' },
   { key: 'amount', label: 'Belopp' },
-  { key: 'responsible', label: 'Ansvarig' },
   { key: 'next_followup', label: 'Uppföljning' },
   { key: 'status', label: 'Status' },
   { key: 'comment', label: 'Kommentar' },
@@ -72,7 +71,7 @@ export function CrmQuotesView() {
       if (country !== 'all' && q.country !== country) return false;
       if (search) {
         const s = search.toLowerCase();
-        const hay = [q.customer_name, q.project_arena, q.product, q.quote_number, q.comment, q.city, q.responsible].join(' ').toLowerCase();
+        const hay = [q.customer_name, q.project_arena, q.product, q.quote_number, q.comment, q.city].join(' ').toLowerCase();
         if (!hay.includes(s)) return false;
       }
       return true;
@@ -190,7 +189,6 @@ export function CrmQuotesView() {
                     <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-1.5 text-xs font-semibold text-primary">{q.probability}</span>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap font-semibold tabular-nums">{formatSEK(q.amount)}</td>
-                  <td className="px-3 py-2 whitespace-nowrap">{q.responsible}</td>
                   <td className={cn('px-3 py-2 whitespace-nowrap', q.next_followup && (q.next_followup < today ? 'followup-overdue' : 'followup-upcoming'))} title={q.next_followup && q.next_followup < today ? 'Uppföljningsdatum passerat' : undefined}>{q.next_followup || '—'}</td>
                   <td className="px-3 py-2">
                     <Badge variant="outline" className={cn('text-xs', statusBadgeClass(q.status))}>{q.status}</Badge>
