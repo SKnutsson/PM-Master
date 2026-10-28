@@ -12,3 +12,4 @@
 
 - Keep the landing entry delegated to the shared authentication screen and enforce disabled public signup in hosted auth settings, not just hidden controls, to prevent alternate registration paths.
 - Link CRM quotes to PM Master projects via crm_quotes.project_id (nullable, set null on project delete) so archived projects keep their quote link.
+- Link sales-budget rows to quotes via forecasts.quote_id (set null on quote delete) and save the link separately from budget edits, so linking never rewrites month amounts or schedule history.

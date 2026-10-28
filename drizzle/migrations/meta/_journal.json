@@ -148,6 +148,13 @@
       "when": 1792473833660,
       "tag": "0020_multiple_quote_attachments",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793181205083,
+      "tag": "0021_quote_delivery_month_and_forecast_link",
+      "breakpoints": true
     }
   ]
 }
