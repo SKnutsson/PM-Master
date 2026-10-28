@@ -250,35 +250,32 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
           <SheetTitle>{quote ? `Redigera offert ${quote.quote_number}` : 'Ny offert'}</SheetTitle>
         </SheetHeader>
 
-        <div className="grid gap-8 px-6 py-5 lg:grid-cols-2">
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Offertdatum"><DatePick value={form.quote_date} onChange={(v) => upd('quote_date', v)} /></Field>
-              <Field label="Uppdaterad"><DatePick value={form.source_updated_date} onChange={(v) => upd('source_updated_date', v)} clearable /></Field>
-            </div>
-            <Field label="Offertnummer"><Input value={form.quote_number || ''} placeholder="Skapas automatiskt" onChange={(e) => upd('quote_number', e.target.value)} /></Field>
-            <Field label="Säljare">
-              <PersonSelect value={form.salesperson || ''} onChange={(v) => upd('salesperson', v)} />
-            </Field>
-            <Field label="Leveranstid"><Input placeholder="2027 Q1 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} /></Field>
-            <Field label="Sannolikhet">
-              <Select value={String(form.probability || 3)} onValueChange={(v) => upd('probability', Number(v))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n} – {n === 1 ? 'lägst' : n === 5 ? 'högst' : ''}</SelectItem>)}</SelectContent>
-              </Select>
-            </Field>
-            <Field label="Föreskriven">
-              <div className="flex h-10 items-center gap-3 rounded-md border border-border px-3">
-                <Switch checked={!!form.prescriber} onCheckedChange={(v) => upd('prescriber', v)} />
-                <span className="text-sm">{form.prescriber ? 'Ja' : 'Nej'}</span>
-              </div>
-            </Field>
-            <Field label="Ansvarig"><PersonSelect value={form.responsible || ''} onChange={(v) => upd('responsible', v)} /></Field>
-            <Field label="Status">
+        <div className="grid gap-x-8 gap-y-6 px-6 py-5 lg:grid-cols-2">
+          <Section title="Offert & status">
+            <div className="grid gap-4 sm:grid-cols-2"><Field label="Offertnummer"><Input value={form.quote_number || ''} placeholder="Skapas automatiskt" onChange={(e) => upd('quote_number', e.target.value)} /></Field><Field label="Status">
               <Select value={form.status || 'Öppen'} onValueChange={(v) => upd('status', v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{QUOTE_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
+            </Field></div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Offertdatum"><DatePick value={form.quote_date} onChange={(v) => upd('quote_date', v)} /></Field>
+              <Field label="Uppdaterad"><DatePick value={form.source_updated_date} onChange={(v) => upd('source_updated_date', v)} clearable /></Field>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2"><Field label="Sannolikhet">
+              <Select value={String(form.probability || 3)} onValueChange={(v) => upd('probability', Number(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n} – {n === 1 ? 'lägst' : n === 5 ? 'högst' : ''}</SelectItem>)}</SelectContent>
+              </Select>
+            </Field><Field label="Leveranstid"><Input placeholder="2027 Q1 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} /></Field></div>
+            <div className="grid gap-4 sm:grid-cols-2"><Field label="Säljare">
+              <PersonSelect value={form.salesperson || ''} onChange={(v) => upd('salesperson', v)} />
+            </Field><Field label="Ansvarig"><PersonSelect value={form.responsible || ''} onChange={(v) => upd('responsible', v)} /></Field></div>
+            <Field label="Föreskriven">
+              <div className="flex h-10 items-center gap-3">
+                <Switch checked={!!form.prescriber} onCheckedChange={(v) => upd('prescriber', v)} />
+                <span className="text-sm">{form.prescriber ? 'Ja' : 'Nej'}</span>
+              </div>
             </Field>
             <Field label="Kopplat projekt i PM Master">
               <Select value={form.project_id || '__none__'} onValueChange={(v) => { upd('project_id', v === '__none__' ? null : v); if (v !== '__none__') setCreateProject(false); }}>
@@ -298,27 +295,24 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
                 </label>
               </div>
             )}
-            <Field label="Ny kommentar">
-              <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Skriv en ny daterad kommentar" rows={4} />
-            </Field>
-            {form.comment && <Field label="Kommentarshistorik"><div className="max-h-52 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-muted/30 p-3 text-sm leading-relaxed">{form.comment}</div></Field>}
-            <Field label="Nästa uppföljning"><DatePick value={form.next_followup} onChange={(v) => upd('next_followup', v)} clearable /></Field>
-          </div>
-
-          <div className="space-y-4">
+          </Section>
+          <Section title="Kund & arena">
             <Field label="Kund"><Input value={form.customer_name || ''} onChange={(e) => upd('customer_name', e.target.value)} /></Field>
+            <Field label="Projekt / arena"><Input value={form.project_arena || ''} onChange={(e) => upd('project_arena', e.target.value)} /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Ort"><Input placeholder="Ange ort" value={form.city || ''} onChange={(e) => upd('city', e.target.value)} /></Field>
               <Field label="Land">
                 <Select value={form.country || ''} onValueChange={(v) => upd('country', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
               </Field>
             </div>
-            <Field label="Projekt / arena"><Input value={form.project_arena || ''} onChange={(e) => upd('project_arena', e.target.value)} /></Field>
             <Field label="Kontaktperson"><Input placeholder="Namn" value={form.contact_name || ''} onChange={(e) => upd('contact_name', e.target.value)} /></Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Telefon"><Input placeholder="070-123 45 67" value={form.contact_phone || ''} onChange={(e) => upd('contact_phone', e.target.value)} /></Field>
               <Field label="E-post"><Input type="email" placeholder="namn@foretag.se" value={form.contact_email || ''} onChange={(e) => upd('contact_email', e.target.value)} /></Field>
             </div>
+          </Section>
+          <Section title="Ekonomi & produkter">
+            <div className="grid gap-4 sm:grid-cols-2"><Field label="Offertbelopp (SEK)"><Input type="number" value={form.amount === undefined ? '' : String(form.amount)} placeholder="0" onChange={(e) => upd('amount', e.target.value === '' ? 0 : Number(e.target.value))} /></Field><Field label="Antal / specifikation"><Input value={form.quantity_spec || ''} onChange={(e) => upd('quantity_spec', e.target.value)} /></Field></div>
             <Field label="Produktgrupper">
               <div className="border border-border">
                 <div className="grid grid-cols-[minmax(0,1fr)_130px_32px] gap-2 bg-muted px-2 py-2 text-xs uppercase text-muted-foreground"><span>Produktgrupp</span><span>Belopp (SEK)</span><span /></div>
@@ -338,14 +332,18 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
                 </div>
               </div>
             </Field>
-            <Field label="Antal / specifikation"><Input value={form.quantity_spec || ''} onChange={(e) => upd('quantity_spec', e.target.value)} /></Field>
-            <Field label="Offertbelopp (SEK)"><Input type="number" value={form.amount === undefined ? '' : String(form.amount)} placeholder="0" onChange={(e) => upd('amount', e.target.value === '' ? 0 : Number(e.target.value))} /></Field>
+          </Section>
+          <Section title="Uppföljning & dokument">
+            <Field label="Nästa uppföljning"><DatePick value={form.next_followup} onChange={(v) => upd('next_followup', v)} clearable /></Field>
+            <Field label="Ny kommentar">
+              <Textarea value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Skriv en ny daterad kommentar" rows={4} />
+            </Field>
+            {form.comment && <Field label="Kommentarshistorik"><div className="max-h-52 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-muted/30 p-3 text-sm leading-relaxed">{form.comment}</div></Field>}
             <Field label="Bilagor (PDF)">
               {open && <QuoteAttachments key={form.id || quote?.id || 'new'} quoteId={form.id || quote?.id} droppedFiles={droppedFiles} pendingFiles={pendingFiles} onPendingChange={setPendingFiles} onBusyChange={setUploading} />}
           </Field>
-          </div>
+          </Section>
         </div>
-
         <div className="sticky bottom-0 flex items-center justify-between gap-2 border-t border-border bg-background px-6 py-4">
           <div>
             {quote && (
@@ -361,6 +359,15 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
         </div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-4">
+      <h3 className="border-b border-border pb-1.5 text-sm uppercase tracking-wide text-primary">{title}</h3>
+      {children}
+    </section>
   );
 }
 
