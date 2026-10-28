@@ -117,8 +117,9 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
     }
   }, [quote, open]);
 
-  const upd = (k: keyof CrmQuote, v: any) => setForm((f) => ({ ...f, [k]: v }));
-  const changeProducts = (rows: ProductAllocation[]) => { setProductRows(rows); setProductsChanged(true); };
+  const today = () => format(new Date(), 'yyyy-MM-dd');
+  const upd = (k: keyof CrmQuote, v: any) => setForm((f) => ({ ...f, [k]: v, ...(k === 'source_updated_date' ? {} : { source_updated_date: today() }) }));
+  const changeProducts = (rows: ProductAllocation[]) => { setProductRows(rows); setProductsChanged(true); setForm((f) => ({ ...f, source_updated_date: today() })); };
   const allocated = productRows.reduce((sum, row) => sum + (row.amount ?? 0), 0);
   const allocationDifference = Number(form.amount || 0) - allocated;
   const productOptions = [...new Set([...PRODUCTS, ...productRows.map((r) => r.product).filter(Boolean)])];
@@ -138,7 +139,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
 
     const payload: any = {
       quote_date: form.quote_date,
-      source_updated_date: form.source_updated_date || null,
+      source_updated_date: (newComment.trim() ? today() : form.source_updated_date) || null,
       salesperson: form.salesperson || '',
       responsible: form.salesperson || '',
 
