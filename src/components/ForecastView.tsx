@@ -13,8 +13,6 @@ import { cn } from '@/lib/utils';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { StatusLegend } from './StatusLegend';
 import { toast } from 'sonner';
-import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
-import { CrmQuoteSheet } from './crm/CrmQuoteSheet';
 
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -109,11 +107,7 @@ const printSection = (element: HTMLElement | null, title: string) => {
 type PeriodView = '2026' | '2027' | '2028' | '2029' | '2030' | 'rolling12';
 
 export function ForecastView() {
-  const { forecast, isLoading, salesTargets, setSalesTarget, projects } = useProjectDataContext();
-  const { quotes, refresh: refreshQuotes } = useCrmData();
-  const [openQuote, setOpenQuote] = useState<CrmQuote | null>(null);
-  const quoteById = useMemo(() => new Map(quotes.map((q) => [q.id, q])), [quotes]);
-  const projectCodeById = useMemo(() => new Map(projects.map((p) => [p.id, p.code])), [projects]);
+  const { forecast, isLoading, salesTargets, setSalesTarget } = useProjectDataContext();
   const forecastTableRef = useRef<HTMLDivElement>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodView>('2026');
   const [editingTarget, setEditingTarget] = useState(false);
@@ -334,7 +328,7 @@ export function ForecastView() {
                   {/* Quarter header row */}
                   {selectedPeriod !== 'rolling12' &&
                   <tr className="bg-sidebar-accent/60">
-                      <th colSpan={4} className="py-0.5 px-3 bg-secondary-foreground"></th>
+                      <th colSpan={3} className="py-0.5 px-3 bg-secondary-foreground"></th>
                       {[1, 2, 3, 4].map((q) =>
                     <th
                       key={q}
@@ -349,7 +343,6 @@ export function ForecastView() {
                   }
                   <tr className="bg-sidebar-accent text-primary-foreground">
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Projekt</th>
-                    <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide whitespace-nowrap">Projekt-nr</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Produkt</th>
                     <th className="text-left font-semibold py-1.5 px-3 text-xs tracking-wide">Status</th>
                     {displayMonths.map((dm, i) => {
@@ -372,8 +365,6 @@ export function ForecastView() {
                     {filteredForecast.map((item, rowIdx) => {
                       const isLost = item.dealStatus === 'Förlorad';
                       const rowTotal = Object.values(item.months).reduce((s, v) => s + v, 0);
-                      const linkedQuote = item.quoteId ? quoteById.get(item.quoteId) : undefined;
-                      const projectCode = linkedQuote?.project_id ? projectCodeById.get(linkedQuote.project_id) : undefined;
 
                       return (
                         <tr
@@ -386,19 +377,9 @@ export function ForecastView() {
                           
                           <td className={cn("py-0 px-3 text-xs font-medium border-b border-border/40", isLost && "line-through")}>
                             <div className="flex items-center gap-1.5">
-                              {linkedQuote ?
-                              <button
-                                type="button"
-                                onClick={() => setOpenQuote(linkedQuote)}
-                                className="text-sm text-left text-primary hover:underline"
-                                title={`Öppna offert ${linkedQuote.quote_number}`}>
-                                  {item.project}
-                                </button> :
                               <span className="text-sm">{item.project}</span>
-                              }
                             </div>
                           </td>
-                          <td className="py-0 px-3 border-b border-border/40 text-sm tabular-nums text-muted-foreground">{projectCode || '–'}</td>
                           <td className="py-0 px-3 text-muted-foreground border-b border-border/40 text-sm">{item.product}</td>
                           <td className="py-0 px-3 border-b border-border/40">
                             <span className={cn("inline-flex items-center leading-none px-2.5 whitespace-nowrap text-xs font-semibold text-left mx-0 py-[5px] rounded-none uppercase",
@@ -464,7 +445,7 @@ export function ForecastView() {
                   </TooltipProvider>
                   {filteredForecast.length === 0 &&
                   <tr>
-                      <td colSpan={16} className="text-center py-10 text-muted-foreground text-sm">
+                      <td colSpan={15} className="text-center py-10 text-muted-foreground text-sm">
                         Inga affärer ännu. Klicka på "Ny affär" för att börja.
                       </td>
                     </tr>
@@ -472,7 +453,7 @@ export function ForecastView() {
                   {/* Totals row */}
                   {filteredForecast.length > 0 &&
                   <tr className="bg-sidebar-accent/80 text-primary-foreground font-bold">
-                      <td colSpan={4} className="py-1.5 px-3 text-xs">
+                      <td colSpan={3} className="py-1.5 px-3 text-xs">
                         Summa per månad
                         <span className="text-xs font-normal opacity-60 ml-2">(exkl. förlorade)</span>
                       </td>
@@ -496,11 +477,6 @@ export function ForecastView() {
           </CardContent>
         </Card>
       </motion.div>
-      <CrmQuoteSheet
-        open={!!openQuote}
-        onOpenChange={(o) => { if (!o) setOpenQuote(null); }}
-        quote={openQuote}
-        onSaved={refreshQuotes} />
     </motion.div>);
 
 }

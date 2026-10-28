@@ -41,7 +41,6 @@ export interface ExtendedSalesForecast {
   dealStatus: DealStatus;
   notes?: string;
   salesPerson?: string;
-  quoteId?: string | null;
   scheduleHistory?: ScheduleChange[];
   createdAt?: string;
   updatedAt?: string;
@@ -296,7 +295,6 @@ export function useDatabaseData() {
           dealStatus: f.deal_status as DealStatus,
           notes: f.notes || undefined,
           salesPerson: (f as any).sales_person || undefined,
-          quoteId: (f as any).quote_id || null,
           months,
           monthEntries,
           scheduleHistory,

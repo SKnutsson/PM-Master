@@ -32,7 +32,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useProjectDataContext, ExtendedSalesForecast, DealStatus, ForecastMonthEntry } from '@/contexts/ProjectDataContext';
 import { ForecastChangelog } from '@/components/ForecastChangelog';
-import { ForecastQuoteLink } from './ForecastQuoteLink';
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const monthLabels: { [key: string]: string } = {
@@ -166,9 +165,6 @@ export function EditForecastDialog({ forecast, trigger }: EditForecastDialogProp
                 onChange={(e) => setProject(e.target.value)}
               />
             </div>
-
-            {open && <ForecastQuoteLink forecastId={forecast.id} quoteId={forecast.quoteId ?? null} />}
-
 
             <div className="grid gap-2">
               <Label>Produkttyp</Label>

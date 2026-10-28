@@ -20,7 +20,6 @@ import { CrmQuote } from '@/hooks/useCrmData';
 import { SALESPEOPLE, COUNTRIES, PRODUCTS, QUOTE_STATUSES } from '@/lib/crmConstants';
 import { getQuoteProducts, productAllocationError, ProductAllocation } from '@/lib/quoteProducts';
 import { formatSEK } from '@/lib/crmConstants';
-import { requiresDeliveryMonth, deliveryMonthError, monthInputToDate, dateToMonthInput } from '@/lib/deliveryMonth';
 
 const isDroppable = (dt: DataTransfer) => dt.types.includes('Files') || dt.types.includes('text/uri-list') || dt.types.includes('text/plain');
 
@@ -128,8 +127,6 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
     const mustAllocate = !quote || productsChanged || !!quote.product_allocations || Number(form.amount) !== Number(quote.amount);
     const allocationError = mustAllocate ? productAllocationError(productRows, Number(form.amount || 0)) : null;
     if (allocationError) { toast.error(allocationError); return; }
-    const monthError = deliveryMonthError(form.probability, form.status, (form as any).delivery_month);
-    if (monthError) { toast.error(monthError); return; }
     setSaving(true);
     let combinedComment = form.comment || '';
     if (newComment.trim()) {
@@ -153,7 +150,6 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
       quantity_spec: form.quantity_spec || '',
       amount: Number(form.amount || 0),
       delivery_time: form.delivery_time || '',
-      delivery_month: (form as any).delivery_month || null,
       prescriber: !!form.prescriber,
       probability: Number(form.probability || 3),
       status: form.status || 'Öppen',
@@ -264,11 +260,7 @@ export function CrmQuoteSheet({ open, onOpenChange, quote, onSaved }: Props) {
             <Field label="Säljare">
               <PersonSelect value={form.salesperson || ''} onChange={(v) => upd('salesperson', v)} />
             </Field>
-            <Field label={requiresDeliveryMonth(form.probability, form.status) ? 'Leveransmånad *' : 'Leveransmånad'}>
-              <Input type="month" value={dateToMonthInput((form as any).delivery_month)} onChange={(e) => upd('delivery_month' as any, monthInputToDate(e.target.value))}
-                className={cn(requiresDeliveryMonth(form.probability, form.status) && !(form as any).delivery_month && 'border-destructive')} />
-            </Field>
-            <Field label="Leveranstid (fritext)"><Input placeholder="2027 Q1 / Vecka 34" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} /></Field>
+            <Field label="Leveranstid"><Input placeholder="2027 Q1 / TBD" value={form.delivery_time || ''} onChange={(e) => upd('delivery_time', e.target.value)} /></Field>
             <Field label="Sannolikhet">
               <Select value={String(form.probability || 3)} onValueChange={(v) => upd('probability', Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
