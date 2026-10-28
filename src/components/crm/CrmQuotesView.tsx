@@ -71,7 +71,7 @@ export function CrmQuotesView() {
       if (country !== 'all' && q.country !== country) return false;
       if (search) {
         const s = search.toLowerCase();
-        const hay = [q.customer_name, q.project_arena, q.product, q.quote_number, q.comment, q.city, q.responsible].join(' ').toLowerCase();
+        const hay = [q.customer_name, q.project_arena, q.product, q.quote_number, q.comment, q.city].join(' ').toLowerCase();
         if (!hay.includes(s)) return false;
       }
       return true;
