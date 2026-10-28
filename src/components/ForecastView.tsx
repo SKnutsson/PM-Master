@@ -496,6 +496,11 @@ export function ForecastView() {
           </CardContent>
         </Card>
       </motion.div>
+      <CrmQuoteSheet
+        open={!!openQuote}
+        onOpenChange={(o) => { if (!o) setOpenQuote(null); }}
+        quote={openQuote}
+        onSaved={refreshQuotes} />
     </motion.div>);
 
 }
