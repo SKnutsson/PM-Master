@@ -310,6 +310,7 @@ export type Database = {
           created_at: string
           customer_id: string | null
           customer_name: string | null
+          delivery_month: string | null
           delivery_time: string | null
           id: string
           next_followup: string | null
@@ -342,6 +343,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           customer_name?: string | null
+          delivery_month?: string | null
           delivery_time?: string | null
           id?: string
           next_followup?: string | null
@@ -374,6 +376,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           customer_name?: string | null
+          delivery_month?: string | null
           delivery_time?: string | null
           id?: string
           next_followup?: string | null
@@ -619,6 +622,7 @@ export type Database = {
           notes: string | null
           product: string
           project: string
+          quote_id: string | null
           sales_person: string | null
           updated_at: string | null
         }
@@ -629,6 +633,7 @@ export type Database = {
           notes?: string | null
           product: string
           project: string
+          quote_id?: string | null
           sales_person?: string | null
           updated_at?: string | null
         }
@@ -639,10 +644,19 @@ export type Database = {
           notes?: string | null
           product?: string
           project?: string
+          quote_id?: string | null
           sales_person?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "forecasts_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "crm_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       installers: {
         Row: {
