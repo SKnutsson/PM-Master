@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Show follow-up dates in green for quotes with status Avböjd or Förlorad, regardless of the date (326 lost rows green, 19 open overdue rows still red, verified in the live list).
+
+
 - [x] Support multiple quote PDFs, preserve existing attachments, and allow dropping files anywhere in the open quote.
 - [x] Verify upload, reopen, open and remove attachments in the app (two dropped PDFs persisted; PDF bytes verified; test attachments removed; five tests passed).
 
