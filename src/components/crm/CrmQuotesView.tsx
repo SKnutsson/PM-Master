@@ -189,7 +189,7 @@ export function CrmQuotesView() {
                     <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-1.5 text-xs font-semibold text-primary">{q.probability}</span>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap font-semibold tabular-nums">{formatSEK(q.amount)}</td>
-                  <td className={cn('px-3 py-2 whitespace-nowrap', q.next_followup && (q.next_followup < today ? 'followup-overdue' : 'followup-upcoming'))} title={q.next_followup && q.next_followup < today ? 'Uppföljningsdatum passerat' : undefined}>{q.next_followup || '—'}</td>
+                  <td className={cn('px-3 py-2 whitespace-nowrap', followupCellClass(q.status, q.next_followup, today))} title={q.next_followup && !isClosedLostQuote(q.status) && q.next_followup < today ? 'Uppföljningsdatum passerat' : undefined}>{q.next_followup || '—'}</td>
                   <td className="px-3 py-2">
                     <Badge variant="outline" className={cn('text-xs', statusBadgeClass(q.status))}>{q.status}</Badge>
                   </td>
