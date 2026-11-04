@@ -6,6 +6,7 @@ const aliases: Record<string, string> = {
   'abacus': 'Läktarstol Abacus',
   'kalle': 'Hörsalsstol Kalle',
   'teater': 'Teaterstol',
+  'teleskopsläktare': 'Teleskopläktare',
 };
 
 export function getQuoteProducts(quote: { product?: string; amount?: number; product_allocations?: ProductAllocation[] | null }): ProductAllocation[] {
