@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
 import { CrmQuoteSheet } from './CrmQuoteSheet';
-import { formatSEK, statusRowClass, statusBadgeClass } from '@/lib/crmConstants';
+import { formatSEK, statusRowClass, statusBadgeClass, followupCellClass, isClosedLostQuote } from '@/lib/crmConstants';
 import { cn } from '@/lib/utils';
 import { getQuoteProducts } from '@/lib/quoteProducts';
 import { format } from 'date-fns';
