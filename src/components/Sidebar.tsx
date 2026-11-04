@@ -25,7 +25,6 @@ import {
   TrendingUp,
   Wrench,
   FileText,
-  Users,
   PieChart,
   Flag,
   ChevronDown } from
@@ -60,7 +59,6 @@ const pmMainItems = [
 const crmTopItems = [{ id: 'crm-dashboard' as View, label: 'Dashboard', icon: LayoutDashboard }];
 const crmMainItems = [
   { id: 'crm-quotes' as View, label: 'Alla offerter', icon: FileText },
-  { id: 'crm-customers' as View, label: 'Kunder', icon: Users },
   { id: 'forecast' as View, label: 'Försäljningsbudget', icon: BarChart3 },
   { id: 'services' as View, label: 'Servicar', icon: Wrench },
   { id: 'crm-stats' as View, label: 'Statistik', icon: PieChart },
