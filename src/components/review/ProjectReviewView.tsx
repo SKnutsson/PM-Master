@@ -265,7 +265,7 @@ export function ProjectReviewView() {
   return (
     <div className="flex h-full flex-col">
       {/* Top bar */}
-      <div className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur px-6 py-3">
+      <div className="list-page sticky top-0 z-20 bg-background/95 backdrop-blur px-6 pt-6 pb-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="mr-2">
             <h1 className="text-3xl">Projektgenomgång</h1>
