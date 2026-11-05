@@ -411,8 +411,8 @@ export function ProjectsView() {
     <div className="list-page p-4 md:p-6 space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Projekt</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-3xl">Alla projekt</h1>
+          <p className="text-sm uppercase text-muted-foreground">
             {activeProjects.length} aktiva · {archivedProjects.length} arkiverade
           </p>
         </div>

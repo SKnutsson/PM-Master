@@ -199,7 +199,8 @@ export function TimelineView() {
         }
       });
     });
-    return { startYear: minYear, endYear: maxYear };
+    // Alltid minst två år framåt från idag så man kan planera längre fram.
+    return { startYear: minYear, endYear: Math.max(maxYear, new Date().getFullYear() + 2) };
   }, [allProjects]);
 
   const weeks = useMemo(() => generateWeeksForRange(startYear, endYear), [startYear, endYear]);

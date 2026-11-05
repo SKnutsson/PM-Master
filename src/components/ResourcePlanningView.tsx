@@ -47,22 +47,22 @@ function getISOWeekNumber(date: Date): number {
   return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
-function generateWeeks(year: number) {
+function generateWeeks(year: number, endYear: number) {
   const weeks: {weekNum: number;startDate: Date;label: string;}[] = [];
   // Find Monday of ISO week 1: Monday of the week containing Jan 4
   const jan4 = new Date(year, 0, 4);
   let current = new Date(jan4);
   current.setDate(current.getDate() - ((current.getDay() + 6) % 7));
-  const endLimit = new Date(year + 1, 1, 1);
+  const endLimit = new Date(endYear + 1, 1, 1);
   while (current < endLimit) {
     const wn = getISOWeekNumber(current);
     // Only include weeks belonging to this year (ISO week year)
     const d = new Date(Date.UTC(current.getFullYear(), current.getMonth(), current.getDate()));
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
     const isoYear = d.getUTCFullYear();
-    if (isoYear > year) break;
-    if (isoYear === year) {
-      weeks.push({ weekNum: wn, startDate: new Date(current), label: `V${wn}` });
+    if (isoYear > endYear) break;
+    if (isoYear >= year) {
+      weeks.push({ weekNum: isoYear * 100 + wn, startDate: new Date(current), label: `V${wn}` });
     }
     current.setDate(current.getDate() + 7);
   }
@@ -76,10 +76,10 @@ function formatLocalDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function generateAllDays(year: number) {
+function generateAllDays(year: number, endYear: number) {
   const days: {date: Date;dateStr: string;label: string;dayOfWeek: number;}[] = [];
   const current = new Date(year, 0, 1);
-  const endDate = new Date(year, 11, 31);
+  const endDate = new Date(endYear, 11, 31);
   while (current <= endDate) {
     days.push({
       date: new Date(current),
@@ -153,8 +153,10 @@ export function ResourcePlanningView() {
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [reassignTarget, setReassignTarget] = useState<ProjectInstaller | null>(null);
 
-  const weeks = useMemo(() => generateWeeks(2026), []);
-  const allDays = useMemo(() => generateAllDays(2026), []);
+  // Visa alltid från föregående år till två år framåt från idag.
+  const currentYear = new Date().getFullYear();
+  const weeks = useMemo(() => generateWeeks(currentYear - 1, currentYear + 2), [currentYear]);
+  const allDays = useMemo(() => generateAllDays(currentYear - 1, currentYear + 2), [currentYear]);
 
   const today = useMemo(() => {const d = new Date();d.setHours(0, 0, 0, 0);return d;}, []);
   const todayStr = formatLocalDate(today);
@@ -457,7 +459,7 @@ export function ResourcePlanningView() {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
-                <p>V{week.weekNum}</p>
+                <p>{week.label}</p>
                 <p>Arbete: {workH}h</p>
                 <p>Resa: {travelH}h</p>
               </TooltipContent>
@@ -492,7 +494,7 @@ export function ResourcePlanningView() {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="text-xs">
-                <p>V{week.weekNum}: {totalH}h totalt</p>
+                <p>{week.label}: {totalH}h totalt</p>
                 <p>Arbete: {workH}h</p>
                 <p>Resa: {travelH}h</p>
               </TooltipContent>

@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -169,16 +170,20 @@ export function ProjectCloseoutView() {
       {!project && (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">Aktiva projekt som behöver ett projektavslut ({sorted.filter(p => p.status !== 'Avslutat').length} st). Klicka på ett projekt för att genomföra avslutet.</p>
-          <div className="reference-list border">
+          <div className="reference-list">
+            <div className="grid grid-cols-[minmax(200px,2fr)_1fr_140px_150px] items-center gap-3 list-heading border-b px-4 py-3">
+              <span>Projekt</span><span>Kund</span><span>Status</span><span className="text-right">Åtgärd</span>
+            </div>
             {sorted.filter(p => p.status !== 'Avslutat').map(p => (
-              <button key={p.id} type="button" onClick={() => setProjectId(p.id)}
-                className="list-record flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/60 border-b last:border-b-0">
-                <span className="font-mono text-xs text-muted-foreground w-14">{p.code ?? '—'}</span>
-                <span className="flex-1 font-medium">{p.name}</span>
-                <span className="text-xs text-muted-foreground hidden sm:inline">{p.customer}</span>
-                <span className="text-xs text-muted-foreground w-24">{p.status}</span>
-                <span className="text-xs font-semibold uppercase text-primary">Genomför avslut →</span>
-              </button>
+              <div key={p.id} className="list-record">
+                <div role="button" tabIndex={0} onClick={() => setProjectId(p.id)} onKeyDown={e => e.key === 'Enter' && setProjectId(p.id)}
+                  className="grid cursor-pointer grid-cols-[minmax(200px,2fr)_1fr_140px_150px] items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-accent/40">
+                  <span className="truncate font-medium">{p.code ? `${p.code} – ` : ''}{p.name}</span>
+                  <span className="truncate text-muted-foreground">{p.customer || '–'}</span>
+                  <span><Badge className="border-status-in-progress/30 bg-status-in-progress/15 text-[10px] text-status-in-progress">Ej avslutat</Badge></span>
+                  <span className="text-right"><Button size="sm" className="h-7 text-xs">Genomför avslut</Button></span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
