@@ -166,7 +166,23 @@ export function ProjectCloseoutView() {
         </div>
       </div>
 
-      {!project && <p className="text-sm text-muted-foreground">Välj ett projekt för att starta projektavslutet.</p>}
+      {!project && (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">Aktiva projekt som behöver ett projektavslut ({sorted.filter(p => p.status !== 'Avslutat').length} st). Klicka på ett projekt för att genomföra avslutet.</p>
+          <div className="reference-list border">
+            {sorted.filter(p => p.status !== 'Avslutat').map(p => (
+              <button key={p.id} type="button" onClick={() => setProjectId(p.id)}
+                className="list-record flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/60 border-b last:border-b-0">
+                <span className="font-mono text-xs text-muted-foreground w-14">{p.code ?? '—'}</span>
+                <span className="flex-1 font-medium">{p.name}</span>
+                <span className="text-xs text-muted-foreground hidden sm:inline">{p.customer}</span>
+                <span className="text-xs text-muted-foreground w-24">{p.status}</span>
+                <span className="text-xs font-semibold uppercase text-primary">Genomför avslut →</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       </div>
       {project && loaded && (
