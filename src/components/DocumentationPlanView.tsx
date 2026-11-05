@@ -234,7 +234,19 @@ export function DocumentationPlanView() {
                   {hasOverdue && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-muted-foreground tabular-nums">{allProjectItems.length} dok</span>
+                  {(() => {
+                    const done = allProjectItems.filter(i => i.status === 'Inlämnad').length;
+                    const total = allProjectItems.length;
+                    const complete = total > 0 && done === total;
+                    return (
+                      <span
+                        className={cn('text-xs tabular-nums px-2 py-0.5', complete ? 'bg-primary/15 text-primary font-semibold' : 'text-muted-foreground')}
+                        title={complete ? 'Alla dokument inlämnade' : `${total - done} kvar att lämna in`}
+                      >
+                        {done}/{total} inlämnade
+                      </span>
+                    );
+                  })()}
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={(e) => { e.stopPropagation(); openAddDialog(project.id); }}>
                     <Plus className="h-3.5 w-3.5 mr-1" />Lägg till
                   </Button>
