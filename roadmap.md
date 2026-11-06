@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Show follow-up dates in green for quotes with status Order, Avböjd or Förlorad, regardless of the date (Order rows verified green in the live list, open overdue rows still red).
+
 - [x] Show follow-up dates in green for quotes with status Avböjd or Förlorad, regardless of the date (326 lost rows green, 19 open overdue rows still red, verified in the live list).
 
 
