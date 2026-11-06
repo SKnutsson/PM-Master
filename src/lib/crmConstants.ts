@@ -52,14 +52,14 @@ export function formatMSEK(n: number): string {
   return (n / 1_000_000).toLocaleString('sv-SE', { maximumFractionDigits: 2 });
 }
 
-// Affärer som lagts ner är avgjorda – uppföljningsdatumet får aldrig markeras som försenat.
-export function isClosedLostQuote(status: string): boolean {
-  return status === 'Avböjd' || status === 'Förlorad';
+// Avgjorda affärer (Order, Avböjd, Förlorad) – uppföljningsdatumet får aldrig markeras som försenat.
+export function isSettledQuote(status: string): boolean {
+  return status === 'Order' || status === 'Avböjd' || status === 'Förlorad';
 }
 
 export function followupCellClass(status: string, nextFollowup: string | null, today: string): string {
   if (!nextFollowup) return '';
-  if (isClosedLostQuote(status)) return 'followup-upcoming';
+  if (isSettledQuote(status)) return 'followup-upcoming';
   return nextFollowup < today ? 'followup-overdue' : 'followup-upcoming';
 }
 

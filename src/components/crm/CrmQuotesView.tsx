@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useCrmData, CrmQuote } from '@/hooks/useCrmData';
 import { CrmQuoteSheet } from './CrmQuoteSheet';
-import { formatSEK, statusRowClass, statusBadgeClass, followupCellClass, isClosedLostQuote } from '@/lib/crmConstants';
+import { formatSEK, statusRowClass, statusBadgeClass, followupCellClass, isSettledQuote } from '@/lib/crmConstants';
 import { cn } from '@/lib/utils';
 import { getQuoteProducts } from '@/lib/quoteProducts';
 import { format } from 'date-fns';
@@ -189,7 +189,7 @@ export function CrmQuotesView() {
                     <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-primary/10 px-1.5 text-xs font-semibold text-primary">{q.probability}</span>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap font-semibold tabular-nums">{formatSEK(q.amount)}</td>
-                  <td className={cn('px-3 py-2 whitespace-nowrap', followupCellClass(q.status, q.next_followup, today))} title={q.next_followup && !isClosedLostQuote(q.status) && q.next_followup < today ? 'Uppföljningsdatum passerat' : undefined}>{q.next_followup || '—'}</td>
+                  <td className={cn('px-3 py-2 whitespace-nowrap', followupCellClass(q.status, q.next_followup, today))} title={q.next_followup && !isSettledQuote(q.status) && q.next_followup < today ? 'Uppföljningsdatum passerat' : undefined}>{q.next_followup || '—'}</td>
                   <td className="px-3 py-2">
                     <Badge variant="outline" className={cn('text-xs', statusBadgeClass(q.status))}>{q.status}</Badge>
                   </td>
