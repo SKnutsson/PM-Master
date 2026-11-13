@@ -199,6 +199,15 @@ export function CrmQuotesView() {
                 </tr>
               ))}
             </tbody>
+            {!loading && sorted.length > 0 && (
+              <tfoot className="sticky bottom-0 z-10 bg-muted text-sm font-semibold shadow-[0_-1px_0_hsl(var(--border))]">
+                <tr>
+                  <td colSpan={12} className="px-3 py-2 whitespace-nowrap uppercase tracking-wide text-xs text-muted-foreground">Summa · {sorted.length} offerter</td>
+                  <td className="px-3 py-2 whitespace-nowrap tabular-nums">{formatSEK(sorted.reduce((sum, q) => sum + (Number(q.amount) || 0), 0))}</td>
+                  <td colSpan={3} />
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       </div>
